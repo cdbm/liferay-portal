@@ -845,7 +845,23 @@ public class UserImpl extends UserBaseImpl {
 			return false;
 		}
 
-		return getPasswordReset();
+		boolean isUpdatePasswordRequired = false;
+
+		try {
+			Company company = CompanyLocalServiceUtil.getCompany(
+				getCompanyId());
+
+			isUpdatePasswordRequired = company.isUpdatePasswordRequired();
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		if (isUpdatePasswordRequired) {
+			return getPasswordReset();
+		}
+
+		return false;
 	}
 
 	@Override
