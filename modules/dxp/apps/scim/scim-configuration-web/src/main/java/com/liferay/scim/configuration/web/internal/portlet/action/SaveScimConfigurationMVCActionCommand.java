@@ -6,6 +6,9 @@
 package com.liferay.scim.configuration.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.oauth.client.LocalOAuthClient;
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
@@ -14,13 +17,24 @@ import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.ClassName;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -155,6 +169,48 @@ public class SaveScimConfigurationMVCActionCommand
 
 			_oAuth2ApplicationLocalService.deleteOAuth2Application(
 				oAuth2Application);
+
+			Indexer<User> userIndexer = IndexerRegistryUtil.nullSafeGetIndexer(
+				User.class);
+
+			Indexer<UserGroup> userGroupIndexer =
+				IndexerRegistryUtil.nullSafeGetIndexer(UserGroup.class);
+
+			ActionableDynamicQuery query =
+				_expandoValueLocalService.getActionableDynamicQuery();
+
+			query.setAddCriteriaMethod(
+				dynamicQuery -> {
+					Property dataProperty = PropertyFactoryUtil.forName("data");
+
+					dynamicQuery.add(dataProperty.eq(scimClientId));
+				});
+
+			query.setPerformActionMethod(
+				(ExpandoValue expandoValue) -> {
+					_expandoRowLocalService.deleteRow(
+						expandoValue.getTableId(), expandoValue.getClassPK());
+
+					ClassName className = _classNameLocalService.getClassName(
+						expandoValue.getClassNameId());
+
+					String classNameString = className.getClassName();
+
+					if (classNameString.equals(User.class.getName())) {
+						userIndexer.reindex(
+							_userLocalService.getUser(
+								expandoValue.getClassPK()));
+					}
+					else if (classNameString.equals(
+								UserGroup.class.getName())) {
+
+						userGroupIndexer.reindex(
+							_userGroupLocalService.getUserGroup(
+								expandoValue.getClassPK()));
+					}
+				});
+
+			query.performActions();
 		}
 		else {
 			Configuration[] configurations =
@@ -204,7 +260,16 @@ public class SaveScimConfigurationMVCActionCommand
 	}
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private ConfigurationAdmin _configurationAdmin;
+
+	@Reference
+	private ExpandoRowLocalService _expandoRowLocalService;
+
+	@Reference
+	private ExpandoValueLocalService _expandoValueLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -220,5 +285,11 @@ public class SaveScimConfigurationMVCActionCommand
 
 	@Reference
 	private OAuth2AuthorizationService _oAuth2AuthorizationService;
+
+	@Reference
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }
