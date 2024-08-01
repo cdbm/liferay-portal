@@ -167,7 +167,7 @@ String oAuth2ApplicationName = GetterUtil.getString(request.getAttribute(ScimWeb
 	}
 
 	var resetSCIMClientData = document.getElementById(
-			'<portlet:namespace />resetSCIMClientData'
+		'<portlet:namespace />resetSCIMClientData'
 	);
 
 	if (resetSCIMClientData) {
