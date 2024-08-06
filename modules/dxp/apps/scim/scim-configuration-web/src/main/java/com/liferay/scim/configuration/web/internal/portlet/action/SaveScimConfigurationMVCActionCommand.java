@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -41,6 +40,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.scim.configuration.web.internal.constants.ScimWebKeys;
@@ -191,19 +191,15 @@ public class SaveScimConfigurationMVCActionCommand
 					_expandoRowLocalService.deleteRow(
 						expandoValue.getTableId(), expandoValue.getClassPK());
 
-					ClassName className = _classNameLocalService.getClassName(
+					String className = _portal.getClassName(
 						expandoValue.getClassNameId());
 
-					String classNameString = className.getClassName();
-
-					if (classNameString.equals(User.class.getName())) {
+					if (className.equals(User.class.getName())) {
 						userIndexer.reindex(
 							_userLocalService.getUser(
 								expandoValue.getClassPK()));
 					}
-					else if (classNameString.equals(
-								UserGroup.class.getName())) {
-
+					else if (className.equals(UserGroup.class.getName())) {
 						userGroupIndexer.reindex(
 							_userGroupLocalService.getUserGroup(
 								expandoValue.getClassPK()));
@@ -285,6 +281,9 @@ public class SaveScimConfigurationMVCActionCommand
 
 	@Reference
 	private OAuth2AuthorizationService _oAuth2AuthorizationService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;
