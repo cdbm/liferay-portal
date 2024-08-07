@@ -991,6 +991,7 @@
 			"template_de": {
 				"mapping": {
 					"analyzer": "german",
+					"search_analyzer": "liferay_analyzer_de",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1097,6 +1098,7 @@
 			"template_fr": {
 				"mapping": {
 					"analyzer": "french",
+					"search_analyzer": "liferay_analyzer_fr",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1136,6 +1138,7 @@
 			"template_hu": {
 				"mapping": {
 					"analyzer": "hungarian",
+					"search_analyzer": "liferay_analyzer_hu",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1227,6 +1230,7 @@
 			"template_nl": {
 				"mapping": {
 					"analyzer": "dutch",
+					"search_analyzer": "liferay_analyzer_nl",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1279,6 +1283,7 @@
 			"template_pt_br": {
 				"mapping": {
 					"analyzer": "brazilian",
+					"search_analyzer": "liferay_analyzer_pt_BR",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1695,6 +1700,10 @@
 			"type": "date"
 		},
 		"extension": {
+			"store": true,
+			"type": "keyword"
+		},
+		"externalReferenceCode": {
 			"store": true,
 			"type": "keyword"
 		},

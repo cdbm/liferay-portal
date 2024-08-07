@@ -9,6 +9,7 @@ import classNames from 'classnames';
 import {FieldArray, Formik} from 'formik';
 import {useEffect, useState} from 'react';
 import SearchBuilder from '~/common/core/SearchBuilder';
+import isSupportSeatRole from '~/common/utils/isSupportSeatRole';
 import {STATUS_CODE} from '../../../../routes/customer-portal/utils/constants';
 import i18n from '../../../I18n';
 import {Badge, Button} from '../../../components';
@@ -17,6 +18,7 @@ import {
 	addTeamMembersInvitation,
 	assignUserAccountWithAccount,
 	assignUserAccountWithAccountAndAccountRole,
+	deleteAccountUserAccount,
 	getUserAccountByEmail,
 	patchUserAccount,
 } from '../../../services/liferay/graphql/queries';
@@ -28,9 +30,9 @@ import Layout from '../Layout';
 import TeamMemberInputs from './TeamMemberInputs';
 
 const INITIAL_INVITES_COUNT = 1;
-const MAXIMUM_REQUESTORS_DEFAULT = -1;
+const MAXIMUM_SUPPORT_SEATS_DEFAULT = -1;
 const MAXIMUM_INVITES_COUNT = 10;
-const UNLIMITED_RESQUESTORS = 9999;
+const UNLIMITED_SUPPORT_SEATS = 9999;
 
 const DEFAULT_WARNING = {
 	message: i18n.translate('one-or-more-requests-may-have-failed'),
@@ -39,7 +41,7 @@ const DEFAULT_WARNING = {
 };
 
 const InviteTeamMembersPage = ({
-	availableAdministratorAssets = 0,
+	availableSupportSeatsCount = 0,
 	errors,
 	handlePage,
 	leftButton,
@@ -69,10 +71,9 @@ const InviteTeamMembersPage = ({
 			refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
 		}
 	);
-	const [
-		isSelectdAdministratorOrRequestorRole,
-		setIsSelectedAdministratorOrRequestorRole,
-	] = useState(false);
+	const [deleteUserAccount] = useMutation(
+		deleteAccountUserAccount,
+	);
 
 	const [baseButtonDisabled, setBaseButtonDisabled] = useState(true);
 	const [hasInitialError, setInitialError] = useState();
@@ -90,6 +91,8 @@ const InviteTeamMembersPage = ({
 		project?.slaCurrent?.includes(SLA_TYPES.gold) ||
 		project?.slaCurrent?.includes(SLA_TYPES.platinum);
 
+	const isUnlimitedSupportSeats = project.maxRequestors === MAXIMUM_SUPPORT_SEATS_DEFAULT;
+
 	useEffect(() => {
 		const getRoles = async () => {
 			const roles = await getProjectRoles(client, project);
@@ -103,7 +106,7 @@ const InviteTeamMembersPage = ({
 
 				setFieldValue(
 					'invites[0].role',
-					availableAdministratorAssets < 1
+					availableSupportSeatsCount < 1
 						? [accountMember]
 						: [
 								roles?.find(
@@ -131,7 +134,7 @@ const InviteTeamMembersPage = ({
 
 		getRoles();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [availableAdministratorAssets, client, setFieldValue]);
+	}, [availableSupportSeatsCount, client, setFieldValue]);
 
 	useEffect(() => {
 		if (values && accountRoles?.length) {
@@ -150,14 +153,14 @@ const InviteTeamMembersPage = ({
 				0
 			);
 
-			const remainingAdmins = availableAdministratorAssets - totalAdmins;
+			const remainingAdmins = availableSupportSeatsCount - totalAdmins;
 
-			return project.maxRequestors === MAXIMUM_REQUESTORS_DEFAULT
-				? setAvailableAdminsRoles(UNLIMITED_RESQUESTORS)
+			return project.maxRequestors === MAXIMUM_SUPPORT_SEATS_DEFAULT
+				? setAvailableAdminsRoles(UNLIMITED_SUPPORT_SEATS)
 				: setAvailableAdminsRoles(remainingAdmins);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [values, project, accountRoles, availableAdministratorAssets]);
+	}, [values, project, accountRoles, availableSupportSeatsCount]);
 
 	useEffect(() => {
 		const inviteMembers =
@@ -166,14 +169,21 @@ const InviteTeamMembersPage = ({
 		const failedEmails =
 			errors?.invites?.filter((email) => email)?.length || 0;
 
+		const hasSupportSeatRoleInvited = values?.invites?.some((invite) =>
+			invite.role.some((roleSelected) => isSupportSeatRole(roleSelected.name))
+		);
+		const supportSeatRoleInvitedCount = values?.invites.flatMap((invite) =>
+			invite.role.filter((roleSelected) => isSupportSeatRole(roleSelected.name))).length;
+
 		if (inviteMembers) {
 			const successfullyEmails = totalEmails - failedEmails;
-
 			if (
-				availableAdministratorAssets === 0 &&
-				project.maxRequestors !== MAXIMUM_REQUESTORS_DEFAULT &&
-				isSelectdAdministratorOrRequestorRole
+				availableSupportSeatsCount === 0 &&
+				!isUnlimitedSupportSeats &&
+				hasSupportSeatRoleInvited
 			) {
+				setBaseButtonDisabled(true);
+			} else if (!isUnlimitedSupportSeats && availableSupportSeatsCount < supportSeatRoleInvitedCount) {
 				setBaseButtonDisabled(true);
 			} else {
 				setInitialError(false);
@@ -184,14 +194,7 @@ const InviteTeamMembersPage = ({
 			setInitialError(true);
 			setBaseButtonDisabled(true);
 		}
-	}, [
-		touched,
-		values,
-		availableAdministratorAssets,
-		isSelectdAdministratorOrRequestorRole,
-		errors,
-		project.maxRequestors,
-	]);
+	}, [touched, values, availableSupportSeatsCount, errors, project.maxRequestors, isUnlimitedSupportSeats]);
 
 	const handleSubmit = async () => {
 		const inviteMembers = values?.invites?.filter(({email}) => email) || [];
@@ -314,6 +317,14 @@ const InviteTeamMembersPage = ({
 							});
 						}
 						else {
+							await deleteUserAccount({
+								context,
+								variables: {
+									accountKey: project.accountKey,
+									emailAddress: inviteMember.email,
+								},
+							})
+
 							throw new Error('Error', {cause: error.cause});
 						}
 					}
@@ -442,11 +453,6 @@ const InviteTeamMembersPage = ({
 										id={index}
 										invite={invite}
 										key={index}
-										onSelectRole={(role) => {
-											setIsSelectedAdministratorOrRequestorRole(
-												role
-											);
-										}}
 										options={accountRolesOptions}
 										placeholderEmail={`username@${
 											project?.code?.toLowerCase() ||
@@ -547,6 +553,7 @@ const InviteTeamMembersPage = ({
 										className="btn-outline-primary cp-btn-add-members py-2 rounded-xs"
 										onClick={() => {
 											setBaseButtonDisabled(false);
+											setRoleSelectorFilled(false);
 
 											const hasEmptyEmails = isAnyEmptyEmail();
 

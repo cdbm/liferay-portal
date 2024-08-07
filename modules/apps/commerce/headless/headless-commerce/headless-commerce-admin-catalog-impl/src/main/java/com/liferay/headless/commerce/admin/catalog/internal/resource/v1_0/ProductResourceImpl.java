@@ -14,6 +14,7 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
@@ -34,6 +35,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
 import com.liferay.commerce.product.service.CPInstanceService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureService;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.commerce.product.service.CProductLocalService;
@@ -72,6 +74,7 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductTaxConfigurat
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettings;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.ProductEntityModel;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.AttachmentUtil;
@@ -88,6 +91,7 @@ import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductTax
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductVirtualSettingsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.RelatedProductUtil;
+import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUnitOfMeasureUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
@@ -112,6 +116,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -455,11 +460,13 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	}
 
 	private CPDefinition _addOrUpdateProduct(Product product) throws Exception {
-		CommerceCatalog commerceCatalog =
-			_commerceCatalogLocalService.fetchCommerceCatalog(
-				product.getCatalogId());
+		CommerceCatalog commerceCatalog = null;
 
-		if (commerceCatalog == null) {
+		if (product.getCatalogId() != null) {
+			commerceCatalog = _commerceCatalogLocalService.fetchCommerceCatalog(
+				product.getCatalogId());
+		}
+		else if (product.getCatalogExternalReferenceCode() != null) {
 			commerceCatalog =
 				_commerceCatalogLocalService.
 					getCommerceCatalogByExternalReferenceCode(
@@ -1081,15 +1088,28 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 				serviceContext.setExpandoBridgeAttributes(null);
 
-				SkuUtil.updateCommercePriceEntries(
-					_commercePriceEntryLocalService,
-					_commercePriceListLocalService, _configurationProvider,
-					cpInstance,
-					(BigDecimal)GetterUtil.get(
-						sku.getPrice(), cpInstance.getPrice()),
-					(BigDecimal)GetterUtil.get(
-						sku.getPromoPrice(), cpInstance.getPromoPrice()),
-					serviceContext);
+				if (ArrayUtil.isEmpty(sku.getSkuUnitOfMeasures())) {
+					SkuUtil.updateCommercePriceEntries(
+						_commercePriceEntryLocalService,
+						_commercePriceListLocalService, _configurationProvider,
+						cpInstance,
+						(BigDecimal)GetterUtil.get(
+							sku.getPrice(), cpInstance.getPrice()),
+						(BigDecimal)GetterUtil.get(
+							sku.getPromoPrice(), cpInstance.getPromoPrice()),
+						StringPool.BLANK, serviceContext);
+				}
+				else {
+					for (SkuUnitOfMeasure skuUnitOfMeasure :
+							sku.getSkuUnitOfMeasures()) {
+
+						SkuUnitOfMeasureUtil.addOrUpdateCPInstanceUnitOfMeasure(
+							_cpInstanceUnitOfMeasureService,
+							_commercePriceEntryService,
+							_commercePriceListLocalService, cpInstance,
+							skuUnitOfMeasure, serviceContext);
+					}
+				}
 			}
 		}
 
@@ -1532,6 +1552,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
 
 	@Reference
+	private CommercePriceEntryService _commercePriceEntryService;
+
+	@Reference
 	private CommercePriceListLocalService _commercePriceListLocalService;
 
 	@Reference
@@ -1579,6 +1602,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CPInstanceService _cpInstanceService;
+
+	@Reference
+	private CPInstanceUnitOfMeasureService _cpInstanceUnitOfMeasureService;
 
 	@Reference
 	private CPOptionService _cpOptionService;

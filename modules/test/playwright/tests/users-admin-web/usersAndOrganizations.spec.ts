@@ -279,3 +279,119 @@ test('LPD-31978 Remove member', async ({
 		)
 	).toHaveCount(0);
 });
+
+test('LPD-31020 Assign User', async ({
+	apiHelpers,
+	usersAndOrganizationsPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationActionsMenu(
+			organization.name
+		)
+	).click();
+
+	await usersAndOrganizationsPage.assignUsersMenuItem.click();
+
+	await (
+		await usersAndOrganizationsPage.assignUsersCheckbox(user.name)
+	).check();
+
+	await usersAndOrganizationsPage.assignUsersDoneButton.click();
+
+	apiHelpers.data.push({
+		id: `${organization.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationsTableRowLink(
+			organization.name
+		)
+	).click();
+
+	await expect(
+		(
+			await usersAndOrganizationsPage.organizationUsersTableRow(
+				1,
+				user.name,
+				true
+			)
+		).row
+	).toBeVisible();
+});
+
+test('LPD-31645 Search by Organizations when setting a users organization roles', async ({
+	apiHelpers,
+	editUserPage,
+	page,
+	usersAndOrganizationsPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	const organization1 = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization1.id,
+		user.emailAddress
+	);
+
+	apiHelpers.data.push({
+		id: `${organization1.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	const organization2 = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization2.id,
+		user.emailAddress
+	);
+
+	apiHelpers.data.push({
+		id: `${organization2.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToUsers();
+	await (
+		await usersAndOrganizationsPage.usersTableRowLink(user.alternateName)
+	).click();
+
+	await editUserPage.rolesLink.click();
+	await editUserPage.selectOrganizationRolesButton.click();
+
+	await page.waitForTimeout(500);
+
+	expect(
+		(await editUserPage.selectOrganizationRolesTable.getByRole('row').all())
+			.length
+	).toEqual(3);
+
+	await editUserPage.selectOrganizationRolesSearchBar.fill(
+		organization1.name
+	);
+	await editUserPage.selectOrganizationRolesSearchBarButton.click();
+
+	await page.waitForTimeout(500);
+
+	await expect(
+		(
+			await editUserPage.selectOrganizationRolesTableRow(
+				0,
+				organization1.name,
+				true
+			)
+		).row
+	).toBeVisible();
+	expect(
+		(await editUserPage.selectOrganizationRolesTable.getByRole('row').all())
+			.length
+	).toEqual(2);
+});

@@ -17,6 +17,16 @@
 				"filter": "lowercase",
 				"tokenizer": "keyword"
 			},
+			"liferay_analyzer_de": {
+				"filter": [
+					"lowercase",
+					"german_stop",
+					"liferay_filter_synonym_de",
+					"german_normalization",
+					"german_stemmer"
+				],
+				"tokenizer": "standard"
+			},
 			"liferay_analyzer_en": {
 				"filter": [
 					"english_possessive_stemmer",
@@ -33,6 +43,44 @@
 					"spanish_stop",
 					"liferay_filter_synonym_es",
 					"spanish_stemmer"
+				],
+				"tokenizer": "standard"
+			},
+			"liferay_analyzer_fr": {
+				"filter": [
+					"french_elision",
+					"lowercase",
+					"french_stop",
+					"liferay_filter_synonym_fr",
+					"french_stemmer"
+				],
+				"tokenizer": "standard"
+			},
+			"liferay_analyzer_hu": {
+				"filter": [
+					"lowercase",
+					"hungarian_stop",
+					"liferay_filter_synonym_hu",
+					"hungarian_stemmer"
+				],
+				"tokenizer": "standard"
+			},
+			"liferay_analyzer_nl": {
+				"filter": [
+					"lowercase",
+					"dutch_stop",
+					"liferay_filter_synonym_nl",
+					"dutch_stemmer",
+					"dutch_override"
+				],
+				"tokenizer": "standard"
+			},
+			"liferay_analyzer_pt_BR": {
+				"filter": [
+					"lowercase",
+					"brazilian_stop",
+					"liferay_filter_synonym_pt_BR",
+					"brazilian_stemmer"
 				],
 				"tokenizer": "standard"
 			},
@@ -55,6 +103,31 @@
 				"min_gram": 1,
 				"type": "ngram"
 			},
+			"brazilian_stemmer": {
+				"language": "brazilian",
+				"type": "stemmer"
+			},
+			"brazilian_stop": {
+				"stopwords": "_brazilian_",
+				"type": "stop"
+			},
+			"dutch_override": {
+				"rules": [
+					"fiets=>fiets",
+					"bromfiets=>bromfiets",
+					"ei=>eier",
+					"kind=>kinder"
+				],
+				"type": "stemmer_override"
+			},
+			"dutch_stemmer": {
+				"language": "dutch",
+				"type": "stemmer"
+			},
+			"dutch_stop": {
+				"stopwords": "_dutch_",
+				"type": "stop"
+			},
 			"english_possessive_stemmer": {
 				"language": "possessive_english",
 				"type": "stemmer"
@@ -67,6 +140,55 @@
 				"stopwords": "_english_",
 				"type": "stop"
 			},
+			"french_elision": {
+				"articles": [
+					"l",
+					"m",
+					"t",
+					"qu",
+					"n",
+					"s",
+					"j",
+					"d",
+					"c",
+					"jusqu",
+					"quoiqu",
+					"lorsqu",
+					"puisqu"
+				],
+				"articles_case": true,
+				"type": "elision"
+			},
+			"french_stemmer": {
+				"language": "light_french",
+				"type": "stemmer"
+			},
+			"french_stop": {
+				"stopwords": "_french_",
+				"type": "stop"
+			},
+			"german_stemmer": {
+				"language": "light_german",
+				"type": "stemmer"
+			},
+			"german_stop": {
+				"stopwords": "_german_",
+				"type": "stop"
+			},
+			"hungarian_stemmer": {
+				"language": "hungarian",
+				"type": "stemmer"
+			},
+			"hungarian_stop": {
+				"stopwords": "_hungarian_",
+				"type": "stop"
+			},
+			"liferay_filter_synonym_de": {
+				"lenient": true,
+				"synonyms": [
+				],
+				"type": "synonym_graph"
+			},
 			"liferay_filter_synonym_en": {
 				"lenient": true,
 				"synonyms": [
@@ -74,6 +196,30 @@
 				"type": "synonym_graph"
 			},
 			"liferay_filter_synonym_es": {
+				"lenient": true,
+				"synonyms": [
+				],
+				"type": "synonym_graph"
+			},
+			"liferay_filter_synonym_fr": {
+				"lenient": true,
+				"synonyms": [
+				],
+				"type": "synonym_graph"
+			},
+			"liferay_filter_synonym_hu": {
+				"lenient": true,
+				"synonyms": [
+				],
+				"type": "synonym_graph"
+			},
+			"liferay_filter_synonym_nl": {
+				"lenient": true,
+				"synonyms": [
+				],
+				"type": "synonym_graph"
+			},
+			"liferay_filter_synonym_pt_BR": {
 				"lenient": true,
 				"synonyms": [
 				],

@@ -8,8 +8,12 @@ package com.liferay.fragment.internal.renderer.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.fragment.cache.FragmentEntryLinkCache;
+import com.liferay.fragment.configuration.FragmentJavascriptConfiguration;
 import com.liferay.fragment.constants.FragmentConstants;
+import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
@@ -22,7 +26,10 @@ import com.liferay.fragment.test.util.FragmentTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -38,7 +45,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.struts.Definition;
@@ -49,6 +58,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -58,6 +68,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.service.cm.ConfigurationAdmin;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -81,13 +93,13 @@ public class FragmentEntryFragmentRendererTest {
 			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(), 0);
 
 		_layout = LayoutTestUtil.addTypeContentLayout(_group);
+		_locale = _portal.getSiteDefaultLocale(_group);
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			_group.getGroupId());
 
 		_defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				_layout.getPlid());
-
-		_serviceContext = ServiceContextTestUtil.getServiceContext(
-			_group.getGroupId());
 	}
 
 	@Test
@@ -104,23 +116,16 @@ public class FragmentEntryFragmentRendererTest {
 				StringPool.BLANK, 0, null, fragmentEntry.getType(),
 				_serviceContext);
 
-		DefaultFragmentRendererContext defaultFragmentRendererContext =
-			new DefaultFragmentRendererContext(fragmentEntryLink);
-
-		defaultFragmentRendererContext.setLocale(LocaleUtil.US);
-
-		_fragmentRenderer.render(
-			defaultFragmentRendererContext, _getMockHttpServletRequest(),
-			new MockHttpServletResponse());
+		_renderFragmentEntryLink(fragmentEntryLink);
 
 		String content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
-			fragmentEntryLink, LocaleUtil.US);
+			fragmentEntryLink, _locale);
 
 		Assert.assertTrue(content.contains(fragmentEntry.getHtml()));
 	}
 
 	@Test
-	public void testNoncacheableFragmentEntryLink() throws Exception {
+	public void testJavascriptModuleConfiguration() throws Exception {
 		FragmentEntry fragmentEntry = _getFragmentEntry(false);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -138,13 +143,63 @@ public class FragmentEntryFragmentRendererTest {
 
 		defaultFragmentRendererContext.setLocale(LocaleUtil.US);
 
+		HttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
+
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
 		_fragmentRenderer.render(
-			defaultFragmentRendererContext, _getMockHttpServletRequest(),
-			new MockHttpServletResponse());
+			defaultFragmentRendererContext, mockHttpServletRequest,
+			mockHttpServletResponse);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertTrue(content.contains("type=\"module\""));
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						FragmentJavascriptConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"javascriptModuleEnabled", false
+						).build())) {
+
+			mockHttpServletResponse = new MockHttpServletResponse();
+
+			_fragmentRenderer.render(
+				defaultFragmentRendererContext, mockHttpServletRequest,
+				mockHttpServletResponse);
+
+			content = mockHttpServletResponse.getContentAsString();
+
+			Assert.assertFalse(content.contains("type=\"module\""));
+		}
+	}
+
+	@Test
+	public void testNoncacheableFragmentEntryLink() throws Exception {
+		FragmentEntry fragmentEntry = _getFragmentEntry(false);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				_serviceContext);
+
+		_renderFragmentEntryLink(fragmentEntryLink);
 
 		Assert.assertNull(
 			_fragmentEntryLinkCache.getFragmentEntryLinkContent(
-				fragmentEntryLink, LocaleUtil.US));
+				fragmentEntryLink, _locale));
 	}
 
 	@Test
@@ -171,7 +226,7 @@ public class FragmentEntryFragmentRendererTest {
 		DefaultFragmentRendererContext defaultFragmentRendererContext =
 			new DefaultFragmentRendererContext(fragmentEntryLink);
 
-		defaultFragmentRendererContext.setLocale(LocaleUtil.US);
+		defaultFragmentRendererContext.setLocale(_locale);
 
 		Assert.assertTrue(
 			_isFragmentEntryLinkCacheable(
@@ -195,6 +250,85 @@ public class FragmentEntryFragmentRendererTest {
 	}
 
 	@Test
+	@TestInfo("LPD-32929")
+	public void testShouldRemoveCacheFragmentEntryLinkOnPublishPublication()
+		throws Exception {
+
+		String originalText = RandomTestUtil.randomString();
+
+		FragmentEntryLink fragmentEntryLink = _addHeadingFragmentEntryLink(
+			originalText);
+
+		_renderFragmentEntryLink(fragmentEntryLink);
+
+		String content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
+			fragmentEntryLink, _locale);
+
+		Assert.assertTrue(content.contains(originalText));
+
+		CTCollection ctCollection = _ctCollectionLocalService.addCTCollection(
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, FragmentEntryFragmentRendererTest.class.getSimpleName(), null);
+		String updatedText = RandomTestUtil.randomString();
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollection.getCtCollectionId())) {
+
+			_renderFragmentEntryLink(
+				_fragmentEntryLinkLocalService.updateFragmentEntryLink(
+					TestPropsValues.getUserId(),
+					fragmentEntryLink.getFragmentEntryLinkId(),
+					JSONUtil.put(
+						FragmentEntryProcessorConstants.
+							KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+						JSONUtil.put(
+							"element-text",
+							JSONUtil.put(
+								LocaleUtil.toLanguageId(_locale), updatedText))
+					).toString()));
+
+			String curContent =
+				_fragmentEntryLinkCache.getFragmentEntryLinkContent(
+					fragmentEntryLink, _locale);
+
+			Assert.assertFalse(curContent.contains(updatedText));
+			Assert.assertEquals(content, curContent);
+
+			_fragmentEntryLinkCache.removeFragmentEntryLinkCache(
+				fragmentEntryLink.getFragmentEntryLinkId());
+
+			Assert.assertEquals(
+				content,
+				_fragmentEntryLinkCache.getFragmentEntryLinkContent(
+					fragmentEntryLink, _locale));
+		}
+
+		Assert.assertEquals(
+			content,
+			_fragmentEntryLinkCache.getFragmentEntryLinkContent(
+				fragmentEntryLink, _locale));
+
+		_ctCollectionService.publishCTCollection(
+			TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
+
+		Assert.assertNull(
+			_fragmentEntryLinkCache.getFragmentEntryLinkContent(
+				fragmentEntryLink, _locale));
+
+		_renderFragmentEntryLink(
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				fragmentEntryLink.getFragmentEntryLinkId()));
+
+		String updatedContent =
+			_fragmentEntryLinkCache.getFragmentEntryLinkContent(
+				fragmentEntryLink, _locale);
+
+		Assert.assertTrue(updatedContent.contains(updatedText));
+		Assert.assertNotEquals(content, updatedContent);
+	}
+
+	@Test
 	public void testUpdateCacheableFragmentEntryLink() throws Exception {
 		FragmentEntry fragmentEntry = _getFragmentEntry(true);
 
@@ -208,14 +342,7 @@ public class FragmentEntryFragmentRendererTest {
 				StringPool.BLANK, 0, null, fragmentEntry.getType(),
 				_serviceContext);
 
-		DefaultFragmentRendererContext defaultFragmentRendererContext =
-			new DefaultFragmentRendererContext(fragmentEntryLink);
-
-		defaultFragmentRendererContext.setLocale(LocaleUtil.US);
-
-		_fragmentRenderer.render(
-			defaultFragmentRendererContext, _getMockHttpServletRequest(),
-			new MockHttpServletResponse());
+		_renderFragmentEntryLink(fragmentEntryLink);
 
 		fragmentEntry = _fragmentEntryLocalService.updateFragmentEntry(
 			fragmentEntry.getUserId(), fragmentEntry.getFragmentEntryId(),
@@ -228,20 +355,37 @@ public class FragmentEntryFragmentRendererTest {
 		_fragmentEntryLinkLocalService.updateLatestChanges(
 			fragmentEntryLink.getFragmentEntryLinkId());
 
-		defaultFragmentRendererContext = new DefaultFragmentRendererContext(
+		_renderFragmentEntryLink(
 			_fragmentEntryLinkLocalService.getFragmentEntryLink(
 				fragmentEntryLink.getFragmentEntryLinkId()));
 
-		defaultFragmentRendererContext.setLocale(LocaleUtil.US);
-
-		_fragmentRenderer.render(
-			defaultFragmentRendererContext, _getMockHttpServletRequest(),
-			new MockHttpServletResponse());
-
 		String content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
-			fragmentEntryLink, LocaleUtil.US);
+			fragmentEntryLink, _locale);
 
 		Assert.assertTrue(content.contains(fragmentEntry.getHtml()));
+	}
+
+	private FragmentEntryLink _addHeadingFragmentEntryLink(String text)
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				"BASIC_COMPONENT-heading");
+
+		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			fragmentEntry.getFragmentEntryId(), _defaultSegmentsExperienceId,
+			_layout.getPlid(), fragmentEntry.getCss(), fragmentEntry.getHtml(),
+			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text",
+					JSONUtil.put(LocaleUtil.toLanguageId(_locale), text))
+			).toString(),
+			StringPool.BLANK, 0, fragmentEntry.getFragmentEntryKey(),
+			fragmentEntry.getType(), _serviceContext);
 	}
 
 	private FragmentEntry _getFragmentEntry(boolean cacheable)
@@ -254,22 +398,9 @@ public class FragmentEntryFragmentRendererTest {
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), StringPool.BLANK,
-			"Fragment Entry HTML", StringPool.BLANK, cacheable, null, null, 0,
-			false, FragmentConstants.TYPE_COMPONENT, null,
+			"Fragment Entry HTML", "console.log('test');", cacheable, null,
+			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
-	}
-
-	private HttpServletRequest _getMockHttpServletRequest() throws Exception {
-		HttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
-
-		mockHttpServletRequest.setAttribute(
-			TilesUtil.DEFINITION,
-			new Definition(StringPool.BLANK, new HashMap<>()));
-		mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
-
-		return mockHttpServletRequest;
 	}
 
 	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
@@ -285,7 +416,7 @@ public class FragmentEntryFragmentRendererTest {
 		themeDisplay.setLookAndFeel(
 			layoutSet.getTheme(), layoutSet.getColorScheme());
 
-		themeDisplay.setLocale(LocaleUtil.US);
+		themeDisplay.setLocale(_locale);
 		themeDisplay.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
 		themeDisplay.setRealUser(TestPropsValues.getUser());
@@ -309,13 +440,48 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentEntryLink, defaultFragmentRendererContext);
 	}
 
+	private void _renderFragmentEntryLink(FragmentEntryLink fragmentEntryLink)
+		throws Exception {
+
+		DefaultFragmentRendererContext defaultFragmentRendererContext =
+			new DefaultFragmentRendererContext(fragmentEntryLink);
+
+		defaultFragmentRendererContext.setLocale(_locale);
+
+		HttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			TilesUtil.DEFINITION,
+			new Definition(StringPool.BLANK, new HashMap<>()));
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
+
+		_fragmentRenderer.render(
+			defaultFragmentRendererContext, mockHttpServletRequest,
+			new MockHttpServletResponse());
+	}
+
 	@Inject
 	private static CTCollectionLocalService _ctCollectionLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
+
+	@Inject
+	private ConfigurationProvider _configurationProvider;
+
+	@Inject
+	private CTCollectionService _ctCollectionService;
+
 	private long _defaultSegmentsExperienceId;
+
+	@Inject
+	private FragmentCollectionContributorRegistry
+		_fragmentCollectionContributorRegistry;
 
 	@Inject
 	private FragmentEntryLinkCache _fragmentEntryLinkCache;
@@ -335,6 +501,10 @@ public class FragmentEntryFragmentRendererTest {
 	private Group _group;
 
 	private Layout _layout;
+	private Locale _locale;
+
+	@Inject
+	private Portal _portal;
 
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

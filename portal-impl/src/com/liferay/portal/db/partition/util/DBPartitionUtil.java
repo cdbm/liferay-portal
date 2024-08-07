@@ -386,6 +386,14 @@ public class DBPartitionUtil {
 				}
 			}
 
+			try (Statement statement = connection.createStatement()) {
+				for (String createRuleSQL :
+						_dbPartitionDB.getCreateRulesSQL(partitionName)) {
+
+					statement.executeUpdate(createRuleSQL);
+				}
+			}
+
 			connection.commit();
 		}
 		catch (Exception exception) {
@@ -507,6 +515,14 @@ public class DBPartitionUtil {
 								fromCompanyId, "' and scope = ",
 								ResourceConstants.SCOPE_COMPANY));
 					}
+				}
+			}
+
+			try (Statement statement = connection.createStatement()) {
+				for (String createRuleSQL :
+						_dbPartitionDB.getCreateRulesSQL(toPartitionName)) {
+
+					statement.executeUpdate(createRuleSQL);
 				}
 			}
 

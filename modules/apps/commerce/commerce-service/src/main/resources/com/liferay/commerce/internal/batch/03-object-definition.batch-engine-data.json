@@ -9,9 +9,7 @@
 			"importStrategy": "ON_ERROR_FAIL",
 			"updateStrategy": "UPDATE"
 		},
-		"taskItemDelegateName": "DEFAULT",
-		"userId": 0,
-		"version": "v1.0"
+		"taskItemDelegateName": "DEFAULT"
 	},
 	"items": [
 		{
@@ -67,6 +65,36 @@
 					"state": false,
 					"system": true,
 					"type": "Long"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "CURRENCY_CODE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Currency Code"
+					},
+					"name": "currencyCode",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "CURRENCY_SYMBOL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Currency Symbol"
+					},
+					"name": "currencySymbol",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String"
 				},
 				{
 					"DBType": "BigDecimal",

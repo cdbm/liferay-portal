@@ -3,30 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import moment from 'moment';
 import React from 'react';
 
 import lang from '../../../../util/lang';
+import toLocalDateTimeFormatted from '../../../util/toLocalDateTimeFormatted';
 
-moment.locale(Liferay.ThemeDisplay.getBCP47LanguageId());
+import './DetailsTab.scss';
 
 interface DetailsTabProps {
 	definitionInfo: DefinitionInfo;
+	timeZoneId: string;
 }
 
-export function DetailsTab({definitionInfo}: DetailsTabProps) {
-	const titleCreated = Liferay.Language.get('created');
-	const titleLastModified = Liferay.Language.get('last-modified');
-	const titleTotalModifications = Liferay.Language.get('total-modifications');
-
-	const dateCreated = moment(definitionInfo.dateCreated).format(
-		Liferay.Language.get('mmm-dd-yyyy-lt')
-	);
-
-	const dateModified = moment(definitionInfo.dateModified).format(
-		Liferay.Language.get('mmm-dd-yyyy-lt')
-	);
-
+export function DetailsTab({definitionInfo, timeZoneId}: DetailsTabProps) {
 	const totalModifications = definitionInfo.totalModifications;
 
 	const revisionMessage =
@@ -36,31 +25,47 @@ export function DetailsTab({definitionInfo}: DetailsTabProps) {
 				])
 			: `${totalModifications} ${Liferay.Language.get('revision')}`;
 
+	const language = Liferay.ThemeDisplay.getBCP47LanguageId();
+
+	const workflowDefinitionDetails = [
+		{
+			title: Liferay.Language.get('created'),
+			value: toLocalDateTimeFormatted(
+				definitionInfo.dateCreated,
+				language,
+				timeZoneId
+			),
+		},
+		{
+			title: Liferay.Language.get('last-modified'),
+			value: toLocalDateTimeFormatted(
+				definitionInfo.dateModified,
+				language,
+				timeZoneId
+			),
+		},
+		{
+			title: Liferay.Language.get('total-modifications'),
+			value: revisionMessage,
+		},
+	];
+
 	return (
-		<>
-			<div className="info-group">
-				<label className="text-secondary">
-					{titleCreated.toUpperCase()}
-				</label>
+		<div className="lfr-workflow__details-tab-container">
+			{workflowDefinitionDetails.map(({title, value}) => (
+				<div
+					className="lfr-workflow__details-tab-info-container"
+					key={title}
+				>
+					<label className="lfr-workflow__details-tab-info-title">
+						{title.toUpperCase()}
+					</label>
 
-				<span>{dateCreated}</span>
-			</div>
-
-			<div className="info-group">
-				<label className="text-secondary">
-					{titleLastModified.toUpperCase()}
-				</label>
-
-				<span>{dateModified}</span>
-			</div>
-
-			<div className="info-group">
-				<label className="text-secondary">
-					{titleTotalModifications.toUpperCase()}
-				</label>
-
-				<span>{revisionMessage}</span>
-			</div>
-		</>
+					<span className="lfr-workflow__details-tab-info-details">
+						{value}
+					</span>
+				</div>
+			))}
+		</div>
 	);
 }

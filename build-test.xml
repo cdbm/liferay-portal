@@ -569,19 +569,34 @@ module.framework.properties.osgi.console=11312</echo>
 						<![CDATA[
 							#!/bin/bash
 
-							mysqldump \
-								--compact \
-								--no-data \
-								--order-by-primary \
-								--password=${database.mysql.password} \
-								--skip-comments \
-								--skip-extended-insert \
-								--user=${database.mysql.username} \
-								--default-character-set=utf8 \
-								--databases ${database.schema.name} > \
-								${docker.src.file.path}
+							function get_modifiable_system_object_definition_table_names() {
+								mysql --execute="SHOW TABLES" --password=${database.mysql.password} --user=${database.mysql.username} ${database.schema.name} | grep -E '^L_[0-9]+_'
+							}
 
-							sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							function main {
+								local ignore_table_argument="";
+
+								while IFS= read -r table; do
+									ignore_table_argument+=" --ignore-table=${database.schema.name}.$table"
+								done < <(get_modifiable_system_object_definition_table_names)
+
+								mysqldump \
+									--compact \
+									--no-data \
+									--order-by-primary \
+									--password=${database.mysql.password} \
+									--skip-comments \
+									--skip-extended-insert \
+									--user=${database.mysql.username} \
+									--default-character-set=utf8 \
+									${ignore_table_argument} \
+									--databases ${database.schema.name} > \
+									${docker.src.file.path}
+
+								sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							}
+
+							main
 						]]>
 					</echo>
 
@@ -5270,16 +5285,6 @@ passwords.encryption.algorithm.legacy=SHA
 company.default.web.id=www.able.com</echo>
 						</then>
 					</if>
-				</then>
-			</if>
-
-			<get-testcase-property property.name="upgrade.reports.enabled" />
-
-			<if>
-				<equals arg1="${upgrade.reports.enabled}" arg2="true" />
-				<then>
-					<echo append="true" file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-ext.properties">
-upgrade.report.enabled=true</echo>
 				</then>
 			</if>
 
@@ -12162,16 +12167,6 @@ cluster.link.channel.properties.transport.0=${project.dir}/portal-web/test/funct
 				<echo append="true" file="portal-impl/src/portal-ext.properties">
 
 upgrade.database.auto.run=true</echo>
-			</then>
-		</if>
-
-		<get-testcase-property property.name="upgrade.reports.enabled" />
-
-		<if>
-			<equals arg1="${upgrade.reports.enabled}" arg2="true" />
-			<then>
-				<echo append="true" file="portal-impl/src/portal-ext.properties">
-upgrade.report.enabled=true</echo>
 			</then>
 		</if>
 

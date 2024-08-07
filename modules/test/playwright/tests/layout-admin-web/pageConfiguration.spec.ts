@@ -63,13 +63,12 @@ test('Can configure an embedded page', async ({
 
 	await pagesAdminPage.goto(site.friendlyUrlPath);
 
-	await pageConfigurationPage.goToSection('Embedded', 'General');
-
-	await expect(page.getByLabel('URL').first()).toHaveValue('');
-
-	await pageConfigurationPage.fillURL('https://www.google.com');
-
-	await pageConfigurationPage.save();
+	await pageConfigurationPage.setInputValueAndSave(
+		page.getByLabel('URL').first(),
+		'Embedded',
+		'General',
+		'https://www.google.com'
+	);
 
 	// Check URL was updated
 
@@ -160,6 +159,99 @@ test('Can not select pages from other sites for Link to a Page', async ({
 
 	await expect(modal.getByText('Sites and Libraries')).not.toBeVisible();
 });
+
+test(
+	'Can configure a link to page',
+	{
+		tag: '@LPS-159631',
+	},
+	async ({apiHelpers, page, pageConfigurationPage, pagesAdminPage, site}) => {
+
+		// Create widget page
+
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
+
+		// Create link to URL page
+
+		const linkToURLTitle = getRandomString();
+
+		await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			options: {
+				type: 'url',
+			},
+			title: linkToURLTitle,
+		});
+
+		// Update URL
+
+		await pagesAdminPage.goto(site.friendlyUrlPath);
+
+		await pageConfigurationPage.setInputValueAndSave(
+			page.getByLabel('URL').first(),
+			linkToURLTitle,
+			'General',
+			'https://www.google.com'
+		);
+
+		// Navigate to page
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+		// Check target is not set
+
+		await expect(
+			page.getByRole('menuitem', {name: linkToURLTitle})
+		).not.toHaveAttribute('target');
+
+		// Update specific target to _blank
+
+		await pagesAdminPage.goto(site.friendlyUrlPath);
+
+		await pageConfigurationPage.setInputValueAndSave(
+			page.getByLabel('Target', {exact: true}),
+			linkToURLTitle,
+			'General',
+			'_blank'
+		);
+
+		// Navigate to page
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+		// Check target is set to _blank
+
+		await expect(
+			page.getByRole('menuitem', {name: linkToURLTitle})
+		).toHaveAttribute('target', '_blank');
+
+		// Update target type to new tab
+
+		await pagesAdminPage.goto(site.friendlyUrlPath);
+
+		await pageConfigurationPage.goToSection(linkToURLTitle, 'General');
+
+		await selectAndExpectToHaveValue({
+			optionLabel: 'New Tab',
+			select: page.getByLabel('Target type'),
+		});
+
+		await pageConfigurationPage.save();
+
+		// Navigate to page
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+		// Check target is set to _blank
+
+		await expect(
+			page.getByRole('menuitem', {name: linkToURLTitle})
+		).toHaveAttribute('target', '_blank');
+	}
+);
 
 test('Can configure a panel page', async ({
 	apiHelpers,

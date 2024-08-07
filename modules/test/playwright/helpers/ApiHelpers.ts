@@ -30,6 +30,7 @@ import {ListTypeAdminApiHelper} from './ListTypeAdminApiHelper';
 import {NotificationApiHelper} from './NotificationApiHelper';
 import {ObjectAdminApiHelper} from './ObjectAdminApiHelper';
 import {ObjectEntryApiHelper} from './ObjectEntryApiHelper';
+import {SCIMApiHelper} from './SCIMApiHelper';
 import {SearchExperiencesApiHelper} from './SearchExperiencesApiHelper';
 import {JSONWebServicesAnnouncementsEntryApiHelper} from './json-web-services/JSONWebServicesAnnouncementsEntryApiHelper';
 import {JSONWebServicesClassNameApiHelper} from './json-web-services/JSONWebServicesClassNameApiHelper';
@@ -95,6 +96,7 @@ export class ApiHelpers {
 	readonly objectAdmin: ObjectAdminApiHelper;
 	readonly objectEntry: ObjectEntryApiHelper;
 	readonly page: Page;
+	readonly scim: SCIMApiHelper;
 	readonly searchExperiences: SearchExperiencesApiHelper;
 
 	private static readonly _authorization = `Basic ${btoa(
@@ -153,6 +155,7 @@ export class ApiHelpers {
 		this.objectAdmin = new ObjectAdminApiHelper(this);
 		this.objectEntry = new ObjectEntryApiHelper(this);
 		this.page = page;
+		this.scim = new SCIMApiHelper(this);
 		this.searchExperiences = new SearchExperiencesApiHelper(this);
 	}
 

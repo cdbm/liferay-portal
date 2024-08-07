@@ -15,7 +15,9 @@ import {
 	ARROW_UP_KEY_CODE,
 	BACKSPACE_KEY_CODE,
 	D_KEY_CODE,
+	H_KEY_CODE,
 	PERIOD_KEY_CODE,
+	R_KEY_CODE,
 	S_KEY_CODE,
 	Z_KEY_CODE,
 } from '../config/constants/keyboardCodes';
@@ -26,6 +28,11 @@ import {
 	useActiveItemType,
 	useSelectItem,
 } from '../contexts/ControlsContext';
+import {
+	useOpenShorcutModal,
+	useSetEditedNodeId,
+	useSetOpenShorcutModal,
+} from '../contexts/ShortcutContext';
 import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectCanUpdatePageStructure from '../selectors/selectCanUpdatePageStructure';
 import deleteItem from '../thunks/deleteItem';
@@ -35,9 +42,12 @@ import redoThunk from '../thunks/redo';
 import switchSidebarPanel from '../thunks/switchSidebarPanel';
 import undoThunk from '../thunks/undo';
 import canBeDuplicated from '../utils/canBeDuplicated';
+import canBeHidden from '../utils/canBeHidden';
 import canBeRemoved from '../utils/canBeRemoved';
+import canBeRenamed from '../utils/canBeRenamed';
 import canBeSaved from '../utils/canBeSaved';
 import isCtrlOrMeta from '../utils/isCtrlOrMeta';
+import updateItemStyle from '../utils/updateItemStyle';
 import SaveFragmentCompositionModal from './SaveFragmentCompositionModal';
 import ShortcutModal from './ShortcutModal';
 
@@ -68,8 +78,10 @@ export default function ShortcutManager() {
 	const dispatch = useDispatch();
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const [openSaveModal, setOpenSaveModal] = useState(false);
-	const [openShortcutModal, setOpenShorcutModal] = useState(false);
+	const openShortcutModal = useOpenShorcutModal();
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
+	const setOpenShorcutModal = useSetOpenShorcutModal();
 	const state = useSelector((state) => state);
 	const sidebarHidden = state.sidebar.hidden;
 	const {widgets} = state;
@@ -90,6 +102,14 @@ export default function ShortcutManager() {
 			? layoutData.items[activeItemId]
 			: null;
 
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
+
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
+
 	const duplicate = () => {
 		dispatch(
 			duplicateItem({
@@ -97,6 +117,19 @@ export default function ShortcutManager() {
 				selectItem,
 			})
 		);
+	};
+
+	const hideShow = () => {
+		updateItemStyle({
+			dispatch,
+			itemId: activeItemId,
+			selectedViewportSize,
+			styleName: 'display',
+			styleValue:
+				layoutData.items[activeItemId].config.styles.display === 'none'
+					? 'block'
+					: 'none',
+		});
 	};
 
 	const hideSidebar = () => {
@@ -142,10 +175,6 @@ export default function ShortcutManager() {
 				position,
 			})
 		);
-	};
-
-	const openShortcutModalAction = () => {
-		setOpenShorcutModal(true);
 	};
 
 	const remove = () => {
@@ -221,6 +250,23 @@ export default function ShortcutManager() {
 			isKeyCombination: (event) =>
 				isCtrlOrMeta(event) && event.code === D_KEY_CODE,
 		},
+		hideShow: {
+			action: hideShow,
+			canBeExecuted: () =>
+				canUpdatePageStructure &&
+				!!layoutData.items[activeItemId] &&
+				canBeHidden({
+					fragmentEntryLinks,
+					item: layoutData.items[activeItemId],
+					layoutData,
+					masterLayoutData,
+					selectedViewportSize,
+				}),
+			isKeyCombination: (event) =>
+				isCtrlOrMeta(event) &&
+				event.altKey &&
+				event.code === H_KEY_CODE,
+		},
 		hideSidebar: {
 			action: hideSidebar,
 			canBeExecuted: (event) =>
@@ -266,7 +312,7 @@ export default function ShortcutManager() {
 			},
 		},
 		openShortcutModal: {
-			action: openShortcutModalAction,
+			action: () => setOpenShorcutModal(true),
 			canBeExecuted: (event) =>
 				!isInteractiveElement(event.target) &&
 				!isWithinIframe() &&
@@ -281,6 +327,19 @@ export default function ShortcutManager() {
 				canBeRemoved(layoutData.items[activeItemId], layoutData) &&
 				!isInteractiveElement(event.target),
 			isKeyCombination: (event) => event.code === BACKSPACE_KEY_CODE,
+		},
+		rename: {
+			action: () => {
+				setEditedNodeId(activeItemId);
+			},
+			canBeExecuted: () =>
+				canUpdatePageStructure &&
+				!!layoutData.items[activeItemId] &&
+				canBeRenamed(layoutData.items[activeItemId]),
+			isKeyCombination: (event) =>
+				isCtrlOrMeta(event) &&
+				event.altKey &&
+				event.code === R_KEY_CODE,
 		},
 		save: {
 			action: save,

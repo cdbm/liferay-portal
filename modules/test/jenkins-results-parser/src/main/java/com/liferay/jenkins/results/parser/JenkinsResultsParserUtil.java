@@ -1710,7 +1710,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static long getCurrentTimeMillis() {
-		if (!isCINode()) {
+		if (!isCINode() || isJenkinsMaster()) {
 			return System.currentTimeMillis();
 		}
 
@@ -3610,6 +3610,17 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return false;
+	}
+
+	public static boolean isJenkinsMaster() {
+		try {
+			JenkinsMaster.getInstance(getHostName(null));
+		}
+		catch (Exception exception) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public static boolean isJenkinsSlaveInNetwork(

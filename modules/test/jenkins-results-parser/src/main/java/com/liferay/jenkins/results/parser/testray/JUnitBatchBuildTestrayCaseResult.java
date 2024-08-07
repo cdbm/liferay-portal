@@ -63,11 +63,11 @@ public class JUnitBatchBuildTestrayCaseResult
 
 	@Override
 	public String getErrors() {
+		Build build = getBuild();
+
 		List<TestClassResult> testClassResults = _getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
-			Build build = getBuild();
-
 			if (build == null) {
 				return "Unable to run build on CI";
 			}
@@ -89,6 +89,10 @@ public class JUnitBatchBuildTestrayCaseResult
 			return "Failed prior to running test";
 		}
 
+		if (_isTestClassResultsSkipped()) {
+			return "Failed prior to running test";
+		}
+
 		if (!_isTestClassResultsFailing()) {
 			return null;
 		}
@@ -101,6 +105,10 @@ public class JUnitBatchBuildTestrayCaseResult
 			}
 
 			String errorMessage = testResult.getErrorDetails();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+				errorMessage = build.getFailureMessage();
+			}
 
 			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
 				errorMessage = "Failed for unknown reason";
@@ -170,6 +178,10 @@ public class JUnitBatchBuildTestrayCaseResult
 			}
 
 			return Status.FAILED;
+		}
+
+		if (_isTestClassResultsSkipped()) {
+			return Status.UNTESTED;
 		}
 
 		if (_isTestClassResultsFailing()) {
@@ -300,6 +312,16 @@ public class JUnitBatchBuildTestrayCaseResult
 	private boolean _isTestClassResultsFailing() {
 		for (TestClassResult testClassResult : _getTestClassResults()) {
 			if (testClassResult.isFailing()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _isTestClassResultsSkipped() {
+		for (TestClassResult testClassResult : _getTestClassResults()) {
+			if (testClassResult.isSkipped()) {
 				return true;
 			}
 		}

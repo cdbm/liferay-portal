@@ -11,6 +11,7 @@ import {useCallback, useEffect, useState} from 'react';
 import useProvisioningLicenseKeys from '~/common/hooks/useProvisioningLicenseKeys';
 import {assignUserAccountWithAccountAndAccountRole} from '~/common/services/liferay/graphql/queries';
 import {getRolesFiltered} from '~/common/utils/getProjectRoles';
+import isSupportSeatRole from '~/common/utils/isSupportSeatRole';
 import {rolesHighPriorityContacts} from '~/routes/customer-portal/utils/getHighPriorityContacts';
 import i18n from '../../../../../../../common/I18n';
 import StatusTag from '../../../../../../../common/components/StatusTag';
@@ -30,8 +31,8 @@ import useUserAccountsByAccountExternalReferenceCode from './hooks/useUserAccoun
 import {getColumns} from './utils/getColumns';
 import getFilteredRoleBriefsByName from './utils/getFilteredRoleBriefsByName';
 
-const MAXIMUM_REQUESTORS_DEFAULT = -1;
-const UNLIMITED_RESQUESTORS = 9999;
+const MAXIMUM_SUPPORT_SEATS_DEFAULT = -1;
+const UNLIMITED_SUPPORT_SEATS = 9999;
 
 const TeamMembersTable = ({
 	koroneikiAccount,
@@ -80,6 +81,9 @@ const TeamMembersTable = ({
 
 	const loggedUserAccount = myUserAccountData?.myUserAccount;
 
+	const isUnlimitedSupportSeats =
+		koroneikiAccount?.maxRequestors === MAXIMUM_SUPPORT_SEATS_DEFAULT;
+
 	const [
 		supportSeatsCount,
 		{
@@ -102,16 +106,16 @@ const TeamMembersTable = ({
 	] = useState(1);
 
 	useEffect(() => {
-		let remainingAdmins =
+		let availableSupportSeats =
 			koroneikiAccount?.maxRequestors - supportSeatsCount;
-		remainingAdmins = remainingAdmins < 0 ? 0 : remainingAdmins;
+		availableSupportSeats = availableSupportSeats < 0 ? 0 : availableSupportSeats;
 
 		setAvailableSupportSeatsCount(
-			koroneikiAccount?.maxRequestors === MAXIMUM_REQUESTORS_DEFAULT
-				? UNLIMITED_RESQUESTORS
-				: remainingAdmins
+			isUnlimitedSupportSeats 
+				? UNLIMITED_SUPPORT_SEATS 
+				: availableSupportSeats
 		);
-	}, [koroneikiAccount, supportSeatsCount]);
+	}, [koroneikiAccount, supportSeatsCount, isUnlimitedSupportSeats]);
 
 	const userAccounts =
 		userAccountsData?.accountUserAccountsByExternalReferenceCode.items;
@@ -282,6 +286,33 @@ const TeamMembersTable = ({
 		});
 	};
 
+	const handleSaveDisabled = () => {
+		if (!selectedAccountRoleItem || updating) {
+			return true;
+		}
+	
+		if (isUnlimitedSupportSeats) {
+			return false;
+		}
+	
+		const noSupportSeatsAvailable = availableSupportSeatsCount === 0;
+		const selectedSupportSeatRole = isSupportSeatRole(selectedAccountRoleItem?.label);
+		const currentAccountRoles = currentUserEditing.selectedAccountSummary.roleBriefs;
+		
+		if (noSupportSeatsAvailable) {
+			for (const role of currentAccountRoles) {
+				if (isSupportSeatRole(role.name)) {
+					return false;
+				}
+			}
+
+			return selectedSupportSeatRole;
+		}
+	
+		return availableSupportSeatsCount <= 0;
+	};
+	
+
 	return (
 		<>
 			{open && currentUserRemoving !== undefined && !loadingModal && (
@@ -438,10 +469,7 @@ const TeamMembersTable = ({
 												);
 											}}
 											onSave={() => handleEdit()}
-											saveDisabled={
-												!selectedAccountRoleItem ||
-												updating
-											}
+											saveDisabled={handleSaveDisabled()}
 											userAccount={userAccount}
 										/>
 									),

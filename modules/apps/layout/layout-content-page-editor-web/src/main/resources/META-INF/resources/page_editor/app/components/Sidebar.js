@@ -4,7 +4,11 @@
  */
 
 import {ClayButtonWithIcon, default as ClayButton} from '@clayui/button';
-import {ReactPortal, useStateSafe} from '@liferay/frontend-js-react-web';
+import {
+	ReactDOMServer,
+	ReactPortal,
+	useStateSafe,
+} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import {useId, useSessionState} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
@@ -19,6 +23,7 @@ import PageDesignOptionsSidebar from '../../plugins/page_design_options/componen
 import RulesSidebar from '../../plugins/page_rules/components/RulesSidebar';
 import {config} from '../config/index';
 import {useSelectItem} from '../contexts/ControlsContext';
+import {useSetOpenShorcutModal} from '../contexts/ShortcutContext';
 import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectAvailablePanels from '../selectors/selectAvailablePanels';
 import selectItemConfigurationOpen from '../selectors/selectItemConfigurationOpen';
@@ -47,6 +52,19 @@ function getActiveSidebarPanel({
 	return {sidebarPanel: panel, sidebarPanelId: panel.sidebarPanelId};
 }
 
+const getOpenShortcutModalTooltip = () => (
+	<>
+		<div>{Liferay.Language.get('open-keyboard-shortcuts')}</div>
+		<kbd className="c-kbd c-kbd-dark mt-1">
+			<kbd className="c-kbd">⇧</kbd>
+
+			<span className="c-kbd-separator">+</span>
+
+			<kbd className="c-kbd">?</kbd>
+		</kbd>
+	</>
+);
+
 export default function Sidebar() {
 	const dropClearRef = useDropClear();
 	const [hasError, setHasError] = useStateSafe(false);
@@ -54,6 +72,8 @@ export default function Sidebar() {
 	const [resizing, setResizing] = useStateSafe(false);
 	const selectItem = useSelectItem();
 	const separatorRef = useRef();
+	const setOpenShorcutModal = useSetOpenShorcutModal();
+	const shortcutButtonTitleId = useId();
 	const sidebarContentId = useId();
 	const sidebarId = useId();
 	const sidebar = useSelector((state) => state.sidebar);
@@ -284,6 +304,8 @@ export default function Sidebar() {
 		}
 	};
 
+	const shortcutButtonTitle = getOpenShortcutModalTooltip();
+
 	return (
 		<ReactPortal className="cadmin">
 			<div
@@ -292,46 +314,70 @@ export default function Sidebar() {
 				style={{'--sidebar-content-width': `${sidebarWidth}px`}}
 			>
 				<div
-					aria-orientation="vertical"
 					className={classNames('page-editor__sidebar__buttons', {
-						'light': true,
 						'page-editor__sidebar__buttons--hidden': sidebarHidden,
 					})}
-					onClick={deselectItem}
-					onKeyDown={handleTabKeyDown}
-					ref={tabListRef}
-					role="tablist"
 				>
-					{sidebarPanels.map((panel) => {
-						const active =
-							sidebarOpen &&
-							panel.sidebarPanelId === sidebarPanelId;
-						const {icon, label} = panel;
+					<div
+						aria-orientation="vertical"
+						onClick={deselectItem}
+						onKeyDown={handleTabKeyDown}
+						ref={tabListRef}
+						role="tablist"
+					>
+						{sidebarPanels.map((panel) => {
+							const active =
+								sidebarOpen &&
+								panel.sidebarPanelId === sidebarPanelId;
+							const {icon, label} = panel;
 
-						return (
-							<ClayButtonWithIcon
-								aria-controls={sidebarContentId}
-								aria-label={Liferay.Language.get(panel.label)}
-								aria-selected={active}
-								className={classNames({active})}
-								data-panel-id={panel.sidebarPanelId}
-								data-tooltip-align="left"
-								displayType="unstyled"
-								id={`${sidebarId}${panel.sidebarPanelId}`}
-								key={panel.sidebarPanelId}
-								onClick={() => handleClick(panel)}
-								role="tab"
-								size="sm"
-								symbol={icon}
-								tabIndex={
-									panel.sidebarPanelId !== sidebarPanelId
-										? '-1'
-										: null
-								}
-								title={label}
-							/>
-						);
-					})}
+							return (
+								<ClayButtonWithIcon
+									aria-controls={sidebarContentId}
+									aria-label={Liferay.Language.get(
+										panel.label
+									)}
+									aria-selected={active}
+									className={classNames({active})}
+									data-panel-id={panel.sidebarPanelId}
+									data-tooltip-align="left"
+									displayType="unstyled"
+									id={`${sidebarId}${panel.sidebarPanelId}`}
+									key={panel.sidebarPanelId}
+									onClick={() => handleClick(panel)}
+									role="tab"
+									size="sm"
+									symbol={icon}
+									tabIndex={
+										panel.sidebarPanelId !== sidebarPanelId
+											? '-1'
+											: null
+									}
+									title={label}
+								/>
+							);
+						})}
+					</div>
+
+					<ClayButtonWithIcon
+						aria-haspopup="dialog"
+						aria-labelledby={shortcutButtonTitleId}
+						className="mt-auto"
+						data-title={ReactDOMServer.renderToString(
+							shortcutButtonTitle
+						)}
+						data-title-set-as-html
+						data-tooltip-align="left"
+						displayType="unstyled"
+						id={`${sidebarId}keyboard_shortcuts`}
+						onClick={() => setOpenShorcutModal(true)}
+						size="sm"
+						symbol="question-circle-full"
+					/>
+				</div>
+
+				<div className="sr-only" id={shortcutButtonTitleId}>
+					{shortcutButtonTitle}
 				</div>
 
 				<div

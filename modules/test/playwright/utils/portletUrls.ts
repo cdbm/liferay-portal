@@ -55,6 +55,8 @@ export const PORTLET_URLS = {
 	teams: '/~/control_panel/manage/-/site_teams/teams',
 	utilityPages:
 		'/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_tabs1=utility-pages',
+	widgetPageTemplates:
+		'/group/global/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=page-templates',
 	wikiAdmin:
 		'/~/control_panel/manage?p_p_id=com_liferay_wiki_web_portlet_WikiAdminPortlet',
 	workflow:

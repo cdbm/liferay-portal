@@ -12,7 +12,6 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import getAllEditables from '../../../../../app/components/fragment_content/getAllEditables';
 import {fromControlsId} from '../../../../../app/components/layout_data_items/Collection';
 import getAllPortals from '../../../../../app/components/layout_data_items/getAllPortals';
-import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/editableFragmentEntryProcessor';
 import {EDITABLE_TYPE_LABELS} from '../../../../../app/config/constants/editableTypeLabels';
 import {EDITABLE_TYPES} from '../../../../../app/config/constants/editableTypes';
@@ -38,6 +37,7 @@ import {
 	useSelectItem,
 } from '../../../../../app/contexts/ControlsContext';
 import {useMovementTarget} from '../../../../../app/contexts/KeyboardMovementContext';
+import {useEditedNodeId} from '../../../../../app/contexts/ShortcutContext';
 import {
 	useDispatch,
 	useSelector,
@@ -57,7 +57,9 @@ import {formIsRestricted} from '../../../../../app/utils/formIsRestricted';
 import getFirstControlsId from '../../../../../app/utils/getFirstControlsId';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import getSelectedField from '../../../../../app/utils/getSelectedField';
+import isHideable from '../../../../../app/utils/isHideable';
 import {isItemHidden} from '../../../../../app/utils/isItemHidden';
+import isRemovable from '../../../../../app/utils/isRemovable';
 import usePageContents from '../../../../../app/utils/usePageContents';
 import StructureTreeNode from './StructureTreeNode';
 import StructureTreeNodeActions from './StructureTreeNodeActions';
@@ -113,7 +115,6 @@ export default function PageStructureSidebar() {
 	const [dragAndDropHoveredItemId, setDragAndDropHoveredItemId] =
 		useState(null);
 
-	const [editingNodeId, setEditingNodeId] = useState(null);
 	const [expandedKeys, setExpandedKeys] = useState([]);
 
 	const isMasterPage = config.layoutType === LAYOUT_TYPES.master;
@@ -132,7 +133,6 @@ export default function PageStructureSidebar() {
 				activeItemIds,
 				canUpdateEditables,
 				canUpdateItemConfiguration,
-				editingNodeId,
 				fragmentEntryLinks,
 				hoveredItemId,
 				isMasterPage,
@@ -152,7 +152,6 @@ export default function PageStructureSidebar() {
 			canUpdateItemConfiguration,
 			data.items,
 			data.rootItems.main,
-			editingNodeId,
 			fragmentEntryLinks,
 			hoveredItemId,
 			isMasterPage,
@@ -200,6 +199,7 @@ export default function PageStructureSidebar() {
 
 	const ItemActions = ({item}) => {
 		const activeItemIds = useActiveItemIds();
+		const editedNodeId = useEditedNodeId();
 		const dispatch = useDispatch();
 		const hoveredItemId = useHoveredItemId();
 		const isMultiSelect =
@@ -218,7 +218,7 @@ export default function PageStructureSidebar() {
 			item.activable &&
 			!item.isMasterItem;
 
-		if (item.editingName) {
+		if (editedNodeId) {
 			return null;
 		}
 
@@ -231,7 +231,7 @@ export default function PageStructureSidebar() {
 				onFocus={(event) => event.stopPropagation()}
 				onKeyDown={handleButtonsKeyDown}
 			>
-				{(item.hidable || item.hidden) && (
+				{(item.hideable || item.hidden) && (
 					<VisibilityButton
 						className="ml-0"
 						disabled={
@@ -250,7 +250,6 @@ export default function PageStructureSidebar() {
 					<StructureTreeNodeActions
 						disabled={isMultiSelect}
 						item={item}
-						setEditingNodeId={setEditingNodeId}
 						visible={item.hidden || isHovered || isSelected}
 					/>
 				)}
@@ -461,10 +460,7 @@ export default function PageStructureSidebar() {
 							>
 								<span className="sr-only">{item.name}</span>
 
-								<StructureTreeNode
-									node={item}
-									setEditingNodeId={setEditingNodeId}
-								/>
+								<StructureTreeNode node={item} />
 							</ClayTreeView.ItemStack>
 
 							<ClayTreeView.Group items={item.children}>
@@ -476,10 +472,7 @@ export default function PageStructureSidebar() {
 											{item.name}
 										</span>
 
-										<StructureTreeNode
-											node={item}
-											setEditingNodeId={setEditingNodeId}
-										/>
+										<StructureTreeNode node={item} />
 									</ClayTreeView.Item>
 								)}
 							</ClayTreeView.Group>
@@ -618,33 +611,6 @@ function fragmentIsMapped(item, fragmentEntryLinks) {
 	return false;
 }
 
-function isHidable(item, fragmentEntryLinks, layoutData) {
-	if (!isRemovable(item, layoutData)) {
-		return false;
-	}
-
-	if (item.type !== LAYOUT_DATA_ITEM_TYPES.fragment) {
-		return true;
-	}
-
-	const fragmentEntryLink =
-		fragmentEntryLinks[item.config.fragmentEntryLinkId];
-
-	return fragmentEntryLink.fragmentEntryType !== FRAGMENT_ENTRY_TYPES.input;
-}
-
-function isRemovable(item, layoutData) {
-	if (
-		item.type === LAYOUT_DATA_ITEM_TYPES.dropZone ||
-		item.type === LAYOUT_DATA_ITEM_TYPES.column ||
-		item.type === LAYOUT_DATA_ITEM_TYPES.collectionItem
-	) {
-		return false;
-	}
-
-	return !hasDropZoneChild(item, layoutData);
-}
-
 function visit(
 	item,
 	items,
@@ -738,9 +704,9 @@ function visit(
 						: childId === activeItemIds,
 					children: [],
 					draggable: false,
-					hidable: false,
 					hidden: false,
 					hiddenAncestor: hasHiddenAncestor || hidden,
+					hideable: false,
 					hovered: childId === hoveredItemId,
 					icon: EDITABLE_TYPE_ICONS[type],
 					id: childId,
@@ -863,12 +829,11 @@ function visit(
 		children,
 		config: layoutDataRef?.current?.items[item.itemId]?.config,
 		draggable: true,
-		editingName: editingNodeId === item.itemId,
-		hidable:
-			!itemInMasterLayout &&
-			isHidable(item, fragmentEntryLinks, layoutData),
 		hidden,
 		hiddenAncestor: hasHiddenAncestor,
+		hideable:
+			!itemInMasterLayout &&
+			isHideable(item, fragmentEntryLinks, layoutData),
 		hovered: item.itemId === hoveredItemId,
 		icon,
 		id: item.itemId,

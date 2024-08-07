@@ -51,11 +51,11 @@ public class JSUnitBatchBuildTestrayCaseResult
 
 	@Override
 	public String getErrors() {
+		Build build = getBuild();
+
 		List<TestClassResult> testClassResults = _getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
-			Build build = getBuild();
-
 			if (build == null) {
 				return "Unable to run build on CI";
 			}
@@ -94,6 +94,10 @@ public class JSUnitBatchBuildTestrayCaseResult
 				}
 
 				String errorMessage = testResult.getErrorDetails();
+
+				if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+					errorMessage = build.getFailureMessage();
+				}
 
 				if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
 					errorMessage = "Failed for unknown reason";

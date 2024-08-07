@@ -100,6 +100,9 @@ public class SynonymSearchTest {
 
 			addSynonymSet("dxp,portal");
 			addSynonymSet("efectivo,productivo");
+			addSynonymSet("effectief,productief");
+			addSynonymSet("feliz,alegre");
+			addSynonymSet("glücklich,heiter");
 			addSynonymSet("hatékony,produktív");
 			addSynonymSet("maison,logement");
 		}
@@ -118,18 +121,13 @@ public class SynonymSearchTest {
 	public void testSearchOnLocalesWithDefaultSynonymFilters()
 		throws Exception {
 
-		doAssertSearch("efectivo", Field.TITLE, LocaleUtil.SPAIN, 2);
 		doAssertSearch("dxp", Field.TITLE, LocaleUtil.US, 2);
-	}
-
-	@Test
-	public void testSearchOnLocaleWithCustomSynonymFilter() throws Exception {
+		doAssertSearch("efectivo", Field.TITLE, LocaleUtil.SPAIN, 2);
+		doAssertSearch("effectief", Field.TITLE, LocaleUtil.NETHERLANDS, 2);
+		doAssertSearch("feliz", Field.TITLE, LocaleUtil.BRAZIL, 2);
+		doAssertSearch("glücklich", Field.TITLE, LocaleUtil.GERMANY, 2);
+		doAssertSearch("hatékony", Field.TITLE, LocaleUtil.HUNGARY, 2);
 		doAssertSearch("maison", Field.TITLE, LocaleUtil.FRANCE, 2);
-	}
-
-	@Test
-	public void testSearchOnLocaleWithoutSynonymFilter() throws Exception {
-		doAssertSearch("hatékony", Field.TITLE, LocaleUtil.HUNGARY, 1);
 	}
 
 	protected static void addJournalArticle(Map<Locale, String> localeStringMap)
@@ -154,9 +152,15 @@ public class SynonymSearchTest {
 
 		addJournalArticle(
 			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, "feliz"
+			).put(
 				LocaleUtil.FRANCE, "maison"
 			).put(
+				LocaleUtil.GERMANY, "glücklich"
+			).put(
 				LocaleUtil.HUNGARY, "hatékony"
+			).put(
+				LocaleUtil.NETHERLANDS, "effectief"
 			).put(
 				LocaleUtil.SPAIN, "efectivo"
 			).put(
@@ -164,9 +168,15 @@ public class SynonymSearchTest {
 			).build());
 		addJournalArticle(
 			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, "alegre"
+			).put(
 				LocaleUtil.FRANCE, "logement"
 			).put(
+				LocaleUtil.GERMANY, "heiter"
+			).put(
 				LocaleUtil.HUNGARY, "produktív"
+			).put(
+				LocaleUtil.NETHERLANDS, "productief"
 			).put(
 				LocaleUtil.SPAIN, "productivo"
 			).put(
@@ -238,9 +248,6 @@ public class SynonymSearchTest {
 			properties = new HashMapDictionary<>();
 		}
 
-		properties.put(
-			"additionalIndexConfigurations",
-			loadAdditionalIndexConfigurations());
 		properties.put("overrideTypeMappings", loadOverrideTypeMappings());
 
 		return properties;
@@ -250,8 +257,10 @@ public class SynonymSearchTest {
 		return HashMapDictionaryBuilder.<String, Object>put(
 			"filterNames",
 			new String[] {
-				"liferay_filter_synonym_en", "liferay_filter_synonym_es",
-				"custom-synonym-filter-fr"
+				"liferay_filter_synonym_de", "liferay_filter_synonym_en",
+				"liferay_filter_synonym_es", "liferay_filter_synonym_fr",
+				"liferay_filter_synonym_hu", "liferay_filter_synonym_nl",
+				"liferay_filter_synonym_pt_BR"
 			}
 		).build();
 	}

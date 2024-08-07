@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import useUserAccountsByAccountExternalReferenceCode from '~/routes/customer-portal/pages/Project/TeamMembers/components/TeamMembersTable/hooks/useUserAccountsByAccountExternalReferenceCode';
 import i18n from '../../../common/I18n';
 import InviteTeamMembersForm from '../../../common/containers/setup-forms/InviteTeamMembersForm';
 import SetupAnalyticsCloudForm from '../../../common/containers/setup-forms/SetupAnalyticsCloudForm';
@@ -28,10 +29,13 @@ const Pages = () => {
 			sessionId,
 			step,
 			subscriptionGroups,
-			totalAdministratorAccounts,
 		},
 		dispatch,
 	] = useOnboarding();
+
+	const [supportSeatsCount] = useUserAccountsByAccountExternalReferenceCode(
+		project?.accountKey
+	);
 
 	const {client, featureFlags} = useAppPropertiesContext();
 
@@ -99,14 +103,16 @@ const Pages = () => {
 		pageHandle();
 	};
 
-	const availableAdministratorAssets =
-		project && project.maxRequestors - totalAdministratorAccounts;
+	let availableSupportSeatsCount =
+		project && project.maxRequestors - supportSeatsCount;
+	availableSupportSeatsCount =
+		availableSupportSeatsCount < 0 ? 0 : availableSupportSeatsCount;
 
 	const StepsLayout = {
 		[ONBOARDING_STEP_TYPES.invites]: {
 			Component: (
 				<InviteTeamMembersForm
-					availableAdministratorAssets={availableAdministratorAssets}
+					availableSupportSeatsCount={availableSupportSeatsCount}
 					handlePage={invitesPageHandle}
 					leftButton={i18n.translate('skip-for-now')}
 					project={project}

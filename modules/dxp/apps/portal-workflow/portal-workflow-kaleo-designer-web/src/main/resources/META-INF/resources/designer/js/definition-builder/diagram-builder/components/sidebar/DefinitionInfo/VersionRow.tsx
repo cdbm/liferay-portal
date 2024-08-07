@@ -13,19 +13,36 @@ import {
 	saveDefinitionRequest,
 } from '../../../../util/fetchUtil';
 import lang from '../../../../util/lang';
+import toLocalDateTimeFormatted from '../../../util/toLocalDateTimeFormatted';
+
+import './VersionRow.scss';
+
 interface RetrieveWorkflowDefinitionResponseProps {
 	active: boolean;
 	content: string;
+	timeZoneId: string;
 	title: string;
 	title_i18n: Liferay.Language.FullyLocalizedValue<string>;
 	version: string;
 }
 
 interface VersionRowProps {
+	creatorName: string;
+	dateCreated: string;
+	setWorkflowDefinitionVersions: React.Dispatch<
+		React.SetStateAction<WorkflowDefinitionVersion[]>
+	>;
+	timeZoneId: string;
 	versionNumber: number;
 }
 
-export function VersionRow({versionNumber}: VersionRowProps) {
+export function VersionRow({
+	creatorName,
+	dateCreated,
+	setWorkflowDefinitionVersions,
+	timeZoneId,
+	versionNumber,
+}: VersionRowProps) {
 	const {
 		definitionName,
 		setAlertMessage,
@@ -34,6 +51,16 @@ export function VersionRow({versionNumber}: VersionRowProps) {
 		setShowAlert,
 		setVersion,
 	} = useContext(DefinitionBuilderContext);
+
+	let versionCreationDate = '';
+
+	if (Liferay.FeatureFlags['LPD-29635']) {
+		versionCreationDate = toLocalDateTimeFormatted(
+			dateCreated,
+			Liferay.ThemeDisplay.getBCP47LanguageId(),
+			timeZoneId
+		);
+	}
 
 	const restoreSuccess = async (response: Response) => {
 		const alertMessage = lang.sub(
@@ -46,13 +73,26 @@ export function VersionRow({versionNumber}: VersionRowProps) {
 
 		setShowAlert(true);
 
-		const {name, version} = (await response.json()) as {
-			name: string;
-			version: string;
-		};
+		const restoredWorkflowDefinition =
+			(await response.json()) as WorkflowDefinition;
 
-		setDefinitionName(name);
-		setVersion(parseInt(version, 10));
+		setDefinitionName(restoredWorkflowDefinition.name);
+		setVersion(parseInt(restoredWorkflowDefinition.version, 10));
+
+		if (Liferay.FeatureFlags['LPD-29635']) {
+			setWorkflowDefinitionVersions((prevValues) => [
+				{
+					creatorName: restoredWorkflowDefinition.creator
+						?.name as string,
+					dateCreated:
+						restoredWorkflowDefinition.dateModified as string,
+					version: String(
+						parseInt(restoredWorkflowDefinition.version, 10)
+					),
+				},
+				...prevValues,
+			]);
+		}
 	};
 
 	const restoreFailed = () => {
@@ -103,27 +143,40 @@ export function VersionRow({versionNumber}: VersionRowProps) {
 				version,
 			});
 		}
-
-		await restoreWorkflowDefinition(saveDefinitionRequest, {
-			active,
-			content,
-			name: definitionName,
-			title,
-			title_i18n,
-			version,
-		});
+		else {
+			await restoreWorkflowDefinition(saveDefinitionRequest, {
+				active,
+				content,
+				name: definitionName,
+				title,
+				title_i18n,
+				version,
+			});
+		}
 	};
 
 	return (
-		<div className="info-group">
-			<div className="version-row">
-				<label className="text-secondary">
-					{Liferay.Language.get('version')} {versionNumber}
-				</label>
+		<>
+			<div className="lfr-workflow__version-row-container">
+				{Liferay.FeatureFlags['LPD-29635'] ? (
+					<div className="lfr-workflow__version-row-info-container">
+						<label className="lfr-workflow__version-row-info-number">
+							{Liferay.Language.get('version')} {versionNumber}
+						</label>
+
+						<span className="lfr-workflow__version-row-info-date-user">
+							{`${versionCreationDate} ${Liferay.Language.get('by').toLowerCase()} ${creatorName}`}
+						</span>
+					</div>
+				) : (
+					<label className="text-secondary">
+						{Liferay.Language.get('version')} {versionNumber}
+					</label>
+				)}
 
 				<ClayButtonWithIcon
 					aria-labelledby={Liferay.Language.get('restore')}
-					className="text-secondary"
+					className="lfr-workflow__version-row-restore-button"
 					displayType="unstyled"
 					onClick={() => handleRestoreWorkflowDefinitionVersion()}
 					symbol="restore"
@@ -132,6 +185,6 @@ export function VersionRow({versionNumber}: VersionRowProps) {
 			</div>
 
 			<div className="sheet-subtitle" />
-		</div>
+		</>
 	);
 }

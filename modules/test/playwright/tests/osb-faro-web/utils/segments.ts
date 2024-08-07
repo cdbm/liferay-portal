@@ -108,9 +108,9 @@ export async function dragAndDropCriteriaItem({
 	page: Page;
 	segmentField: string;
 }) {
-	const source = page.locator(`[data-testid*="criteria-item-"]`, {
-		hasText: segmentField,
-	});
+	const source = page
+		.locator(`[data-testid*="criteria-item-"]`)
+		.getByText(segmentField, {exact: true});
 
 	let target: Locator;
 	if (nestedSegmentField) {
@@ -191,6 +191,10 @@ export async function selectAsset({
 }) {
 	await page.getByRole('button', {name: 'Select'}).nth(index).click();
 
+	await page.getByPlaceholder('Search').first().click();
+	await page.getByPlaceholder('Search').first().fill(assetName);
+	await page.getByPlaceholder('Search').first().press('Enter');
+
 	await page.locator('.table-title').getByText(assetName).click();
 
 	await page.getByRole('button', {name: 'Add'}).click();
@@ -253,4 +257,28 @@ export async function viewSegmentCriteriaCard({
 	criteriaRowValue = criteriaRowValue.replace(/\s/g, '');
 
 	expect(criteriaRowText).toEqual(criteriaRowValue);
+}
+
+export async function viewSegmentMembershipCount({
+	anonymousMemberCount,
+	knownMemberCount,
+	page,
+	totalMemberCount,
+}: {
+	anonymousMemberCount: string;
+	knownMemberCount: string;
+	page: Page;
+	totalMemberCount: string;
+}) {
+	await expect(
+		page.locator('li').filter({hasText: 'Known Members:'}).locator('b')
+	).toHaveText(knownMemberCount);
+
+	await expect(
+		page.locator('li').filter({hasText: 'Anonymous Members:'}).locator('b')
+	).toHaveText(anonymousMemberCount);
+
+	await expect(
+		page.locator('li').filter({hasText: 'Total Members:'}).locator('b')
+	).toHaveText(totalMemberCount);
 }

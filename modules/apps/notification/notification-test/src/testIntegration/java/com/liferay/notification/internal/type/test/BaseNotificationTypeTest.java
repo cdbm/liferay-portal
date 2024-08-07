@@ -530,36 +530,15 @@ public class BaseNotificationTypeTest {
 	}
 
 	protected void assertTermValues(
-		List<Object> expectedTermValues, List<String> actualTermValues) {
+		List<String> expectedTermValues, List<String> actualTermValues) {
 
 		Assert.assertEquals(
 			expectedTermValues.toString(), expectedTermValues.size(),
 			actualTermValues.size());
 
 		for (int i = 0; i < actualTermValues.size(); i++) {
-			Object expectedTermValue = expectedTermValues.get(i);
-			Object actualTermValue = actualTermValues.get(i);
-
-			if (expectedTermValue instanceof List) {
-				List<ListEntry> listTypeEntries =
-					(List<ListEntry>)expectedTermValue;
-
-				Assert.assertEquals(
-					StringUtil.merge(
-						TransformUtil.transform(
-							listTypeEntries, ListEntry::getName),
-						StringPool.COMMA_AND_SPACE),
-					actualTermValue);
-			}
-			else if (expectedTermValue instanceof ListEntry) {
-				ListEntry listEntry = (ListEntry)expectedTermValue;
-
-				Assert.assertEquals(listEntry.getName(), actualTermValue);
-			}
-			else {
-				Assert.assertEquals(
-					String.valueOf(expectedTermValue), actualTermValue);
-			}
+			Assert.assertEquals(
+				expectedTermValues.get(i), actualTermValues.get(i));
 		}
 	}
 
@@ -660,13 +639,32 @@ public class BaseNotificationTypeTest {
 				getTermName(true, "textObjectField")));
 	}
 
-	protected List<Object> getTermValues() {
-		return ListUtil.concat(
-			ListUtil.fromMapValues(_childAuthorTermValues),
-			ListUtil.fromMapValues(_generalTermValues),
-			ListUtil.fromMapValues(_parentAuthorTermValues),
-			ListUtil.fromMapValues(childObjectEntryValues),
-			ListUtil.fromMapValues(parentObjectEntryValues));
+	protected List<String> getTermValues() {
+		return TransformUtil.transform(
+			ListUtil.concat(
+				ListUtil.fromMapValues(_childAuthorTermValues),
+				ListUtil.fromMapValues(_generalTermValues),
+				ListUtil.fromMapValues(_parentAuthorTermValues),
+				ListUtil.fromMapValues(childObjectEntryValues),
+				ListUtil.fromMapValues(parentObjectEntryValues)),
+			this::parseTermValueToString);
+	}
+
+	protected String parseTermValueToString(Object termValue) {
+		if (termValue instanceof List) {
+			List<ListEntry> listTypeEntries = (List<ListEntry>)termValue;
+
+			return StringUtil.merge(
+				TransformUtil.transform(listTypeEntries, ListEntry::getName),
+				StringPool.COMMA_AND_SPACE);
+		}
+		else if (termValue instanceof ListEntry) {
+			ListEntry listEntry = (ListEntry)termValue;
+
+			return listEntry.getName();
+		}
+
+		return String.valueOf(termValue);
 	}
 
 	@DeleteAfterTestRun

@@ -36,25 +36,37 @@ export default function getLiferayLanguageGetPlugin(
 				async (args) => {
 					let contents = await fs.readFile(args.path, 'utf-8');
 
-					const matches = contents.matchAll(REGEXP);
+					for (const match of contents.matchAll(REGEXP)) {
+						let key = match[1].trim();
 
-					if ([...matches].length) {
+						if (
+							(!key.startsWith('"') &&
+								!key.startsWith("'") &&
+								!key.startsWith('`')) ||
+							(!key.endsWith('"') &&
+								!key.endsWith("'") &&
+								!key.endsWith('`'))
+						) {
+							console.warn(`
+⚠️ Liferay.Language.get key cannot be parsed, it will be ignored and won't show up at runtime: ${key}
+     in file: ${args.path}
+
+`);
+							continue;
+						}
+
+						key = key.slice(1, key.length - 1);
+
+						languageJSON.keys.push(key);
+					}
+
+					if (languageJSON.keys.length) {
 						contents =
 							'await import(`@liferay/language/' +
 							'${Liferay.ThemeDisplay.getLanguageId()}' +
 							projectWebContextPath +
 							'/all.js`);\n' +
 							contents;
-
-						for (const match of matches) {
-							languageJSON.keys.push(
-								match[1]
-									.trim()
-									.replaceAll("'", '')
-									.replaceAll('"', '')
-									.replaceAll('`', '')
-							);
-						}
 					}
 
 					let loader = 'jsx';

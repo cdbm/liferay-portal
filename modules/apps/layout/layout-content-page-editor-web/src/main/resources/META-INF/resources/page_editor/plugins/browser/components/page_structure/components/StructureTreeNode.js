@@ -37,6 +37,10 @@ import {
 	useSetMovementText,
 } from '../../../../../app/contexts/KeyboardMovementContext';
 import {
+	useEditedNodeId,
+	useSetEditedNodeId,
+} from '../../../../../app/contexts/ShortcutContext';
+import {
 	useDispatch,
 	useSelector,
 	useSelectorCallback,
@@ -99,7 +103,7 @@ const loadCollectionFields = (
 		});
 };
 
-export default function StructureTreeNode({node, setEditingNodeId}) {
+export default function StructureTreeNode({node}) {
 	const activationOrigin = useActivationOrigin();
 	const activeItemIds = useActiveItemIds();
 	const dispatch = useDispatch();
@@ -162,7 +166,6 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 			isActive={node.activable && isSelected}
 			isMapped={node.mapped}
 			node={node}
-			setEditingNodeId={setEditingNodeId}
 		/>
 	);
 }
@@ -185,7 +188,6 @@ function StructureTreeNodeContent({
 	isActive,
 	isMapped,
 	node,
-	setEditingNodeId,
 }) {
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const dispatch = useDispatch();
@@ -195,6 +197,7 @@ function StructureTreeNodeContent({
 		(state) => state.selectedViewportSize
 	);
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 
 	const layoutDataRef = useSelectorRef((store) => store.layoutData);
@@ -280,7 +283,7 @@ function StructureTreeNodeContent({
 			);
 		}
 
-		setEditingNodeId(null);
+		setEditedNodeId(null);
 		setText(Liferay.Language.get('name-saved'));
 	};
 
@@ -379,8 +382,9 @@ function StructureTreeNodeContent({
 				}}
 				onDoubleClick={(event) => {
 					event.stopPropagation();
+
 					if (canBeRenamed(item)) {
-						setEditingNodeId(item.itemId);
+						setEditedNodeId(item.itemId);
 					}
 				}}
 				ref={
@@ -402,11 +406,11 @@ function StructureTreeNodeContent({
 			/>
 
 			<NameLabel
-				editingName={node.editingName}
 				hidden={node.hidden || node.hiddenAncestor}
 				icon={node.icon}
 				isMapped={isMapped}
 				isMasterItem={node.isMasterItem}
+				itemId={node.id}
 				name={node.name}
 				nameInfo={node.nameInfo}
 				onEditName={onEditName}
@@ -434,11 +438,11 @@ function StructureTreeNodeContent({
 const NameLabel = React.forwardRef(
 	(
 		{
-			editingName,
 			hidden,
 			icon,
 			isMapped,
 			isMasterItem,
+			itemId,
 			name: defaultName,
 			nameInfo,
 			onEditName,
@@ -447,9 +451,11 @@ const NameLabel = React.forwardRef(
 		},
 		ref
 	) => {
+		const editedNodeId = useEditedNodeId();
 		const inputRef = useRef();
-
 		const [name, setName] = useControlledState(defaultName);
+
+		const editingName = editedNodeId === itemId;
 
 		useEffect(() => {
 			if (editingName && inputRef.current) {

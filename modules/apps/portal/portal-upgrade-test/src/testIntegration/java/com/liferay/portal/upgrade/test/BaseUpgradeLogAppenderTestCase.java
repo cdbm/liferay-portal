@@ -31,6 +31,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.tools.DBUpgrader;
@@ -43,6 +45,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -86,13 +89,10 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "UPGRADE_LOG_CONTEXT_ENABLED",
 			_originalUpgradeLogContextEnabled);
-		ReflectionTestUtil.setFieldValue(
-			PropsValues.class, "UPGRADE_REPORT_ENABLED",
-			_originalUpgradeReportEnabled);
 	}
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 		PatternLayout.Builder builder = PatternLayout.newBuilder();
 
 		builder.withPattern("%level - %m%n %X");
@@ -103,6 +103,10 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 		_logContextAppender.start();
 
+		_updatePortalRelease(
+			new Version(1, 0, 0), new Date(0),
+			ReleaseInfo.RELEASE_7_1_0_BUILD_NUMBER);
+
 		_upgradeReportLogger = (Logger)LogManager.getLogger(
 			"com.liferay.portal.upgrade.internal.report.UpgradeReport");
 
@@ -110,7 +114,7 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws Exception {
 		_appender.stop();
 
 		File reportsDir = null;
@@ -133,6 +137,10 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 			reportsDir.delete();
 		}
+
+		_updatePortalRelease(
+			PortalUpgradeProcess.getLatestSchemaVersion(),
+			ReleaseInfo.getBuildDate(), ReleaseInfo.getBuildNumber());
 
 		_upgradeReportLogger.removeAppender(_logContextAppender);
 
@@ -211,6 +219,21 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 		_assertLogContextContains(
 			"upgrade.report.tables.initial.final.rows",
 			"UpgradeReportTable2:1:0");
+	}
+
+	@Test
+	public void testDatabaseTablesEmpty() throws Exception {
+		_updatePortalRelease(
+			new Version(1, 0, 0), ReleaseInfo.getBuildDate(),
+			ReleaseInfo.RELEASE_7_1_0_BUILD_NUMBER);
+
+		_appender.start();
+
+		_appender.stop();
+
+		Assert.assertFalse(
+			StringUtil.contains(
+				_getReportContent(), "Table Name", StringPool.BLANK));
 	}
 
 	@Test
@@ -441,6 +464,34 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 	}
 
 	@Test
+	public void testNoUpgrade() throws Exception {
+		_updatePortalRelease(
+			PortalUpgradeProcess.getLatestSchemaVersion(),
+			ReleaseInfo.getBuildDate(), ReleaseInfo.getBuildNumber());
+
+		_appender.start();
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.upgrade.internal.report.UpgradeReport",
+				LoggerTestUtil.INFO)) {
+
+			_appender.stop();
+
+			Assert.assertTrue(
+				StringUtil.contains(
+					String.valueOf(logCapture.getLogEntries()),
+					"Upgrade report was not generated because no upgrade " +
+						"processes were executed",
+					StringPool.BLANK));
+		}
+
+		File file = new File(
+			new File(getFilePath(), "reports"), "upgrade_report.info");
+
+		Assert.assertTrue(!file.exists());
+	}
+
+	@Test
 	public void testProperties() throws Exception {
 		_appender.start();
 
@@ -470,23 +521,39 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 	}
 
 	@Test
-	public void testSchemaVersion() throws Exception {
-		int initialBuildNumber = 0;
-		Version initialSchemaVersion = null;
+	public void testRenameUpgradeReport() throws Exception {
+		_appender.start();
 
-		try (Connection connection = DataAccess.getConnection()) {
-			initialBuildNumber = PortalUpgradeProcess.getCurrentBuildNumber(
-				connection);
-			initialSchemaVersion = PortalUpgradeProcess.getCurrentSchemaVersion(
-				connection);
-		}
+		_appender.stop();
 
-		_updatePortalRelease(
-			new Version(1, 0, 0), ReleaseInfo.RELEASE_7_1_0_BUILD_NUMBER);
+		File reportFile1 = _getReportFile("upgrade_report.info");
+
+		Assert.assertTrue(reportFile1.exists());
+
+		long reportFile1LastModified = reportFile1.lastModified();
 
 		_appender.start();
 
-		_updatePortalRelease(initialSchemaVersion, initialBuildNumber);
+		_appender.stop();
+
+		File reportFile2 = _getReportFile("upgrade_report.info");
+
+		Assert.assertTrue(
+			_getReportFile(
+				"upgrade_report.info." + reportFile1LastModified
+			).exists());
+		Assert.assertTrue(reportFile2.exists());
+		Assert.assertTrue(
+			reportFile2.lastModified() != reportFile1LastModified);
+	}
+
+	@Test
+	public void testSchemaVersion() throws Exception {
+		_appender.start();
+
+		_updatePortalRelease(
+			PortalUpgradeProcess.getLatestSchemaVersion(),
+			ReleaseInfo.getBuildDate(), ReleaseInfo.getBuildNumber());
 
 		_appender.stop();
 
@@ -571,9 +638,6 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 		_originalUpgradeLogContextEnabled =
 			ReflectionTestUtil.getAndSetFieldValue(
 				PropsValues.class, "UPGRADE_LOG_CONTEXT_ENABLED", true);
-
-		_originalUpgradeReportEnabled = ReflectionTestUtil.getAndSetFieldValue(
-			PropsValues.class, "UPGRADE_REPORT_ENABLED", true);
 	}
 
 	protected abstract String getFilePath();
@@ -659,6 +723,14 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 	}
 
 	private String _getReportContent() throws Exception {
+		File reportFile = _getReportFile("upgrade_report.info");
+
+		Assert.assertTrue(reportFile.exists());
+
+		return FileUtil.read(reportFile);
+	}
+
+	private File _getReportFile(String fileName) throws Exception {
 		File reportsDir = null;
 
 		if (Validator.isBlank(_upgradeReportDir)) {
@@ -670,11 +742,7 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 		Assert.assertTrue(reportsDir.exists());
 
-		File reportFile = new File(reportsDir, "upgrade_report.info");
-
-		Assert.assertTrue(reportFile.exists());
-
-		return FileUtil.read(reportFile);
+		return new File(reportsDir, fileName);
 	}
 
 	private SafeCloseable _setUpgradeReportDLStorageSizeTimeout(long timeout) {
@@ -688,17 +756,20 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 			originalUpgradeReportDLStorageSizeTimeout);
 	}
 
-	private void _updatePortalRelease(Version schemaVersion, int buildNumber)
+	private void _updatePortalRelease(
+			Version schemaVersion, Date buildDate, int buildNumber)
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				"update Release_ set schemaVersion = ?, buildNumber = ? " +
-					"where releaseId = ?")) {
+				"update Release_ set schemaVersion = ?, buildDate = ?, " +
+					"buildNumber = ? where releaseId = ?")) {
 
 			preparedStatement.setString(1, schemaVersion.toString());
-			preparedStatement.setInt(2, buildNumber);
-			preparedStatement.setLong(3, ReleaseConstants.DEFAULT_ID);
+			preparedStatement.setDate(
+				2, new java.sql.Date(buildDate.getTime()));
+			preparedStatement.setInt(3, buildNumber);
+			preparedStatement.setLong(4, ReleaseConstants.DEFAULT_ID);
 
 			preparedStatement.executeUpdate();
 		}
@@ -715,7 +786,6 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 		Pattern.compile("(\\w+_?):(\\d+|-):(\\d+|-)");
 	private static boolean _originalUpgradeClient;
 	private static boolean _originalUpgradeLogContextEnabled;
-	private static boolean _originalUpgradeReportEnabled;
 	private static final Pattern _pattern = Pattern.compile(
 		"(\\w+_?)\\s+(\\d+|-)\\s+(\\d+|-)\n");
 

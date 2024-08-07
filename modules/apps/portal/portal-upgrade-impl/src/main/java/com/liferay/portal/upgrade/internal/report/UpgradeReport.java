@@ -7,6 +7,7 @@ package com.liferay.portal.upgrade.internal.report;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -68,10 +69,23 @@ public class UpgradeReport {
 
 	public UpgradeReport() {
 		_initialBuildNumber = _getBuildNumber();
-		_initialTableCounts = _getTableCounts();
+
+		if (StartupHelperUtil.isNewRelease()) {
+			_initialTableCounts = _getTableCounts();
+		}
 	}
 
 	public void generateReport(UpgradeRecorder upgradeRecorder) {
+		if (StringUtil.equals(upgradeRecorder.getType(), "no upgrade")) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Upgrade report was not generated because no upgrade " +
+						"processes were executed");
+			}
+
+			return;
+		}
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Starting upgrade report generation");
 		}
@@ -605,9 +619,13 @@ public class UpgradeReport {
 
 		try {
 			for (Map.Entry<String, Object> entry1 : reportData.entrySet()) {
-				String key = "upgrade.report." + entry1.getKey();
-
 				Object value = entry1.getValue();
+
+				if (value == null) {
+					continue;
+				}
+
+				String key = "upgrade.report." + entry1.getKey();
 
 				if (value instanceof Map<?, ?>) {
 					Map<?, ?> map = (Map<?, ?>)value;
@@ -632,8 +650,13 @@ public class UpgradeReport {
 		StringBundler sb = new StringBundler();
 
 		for (Map.Entry<String, Object> entry1 : reportData.entrySet()) {
-			String key = entry1.getKey();
 			Object value = entry1.getValue();
+
+			if (value == null) {
+				continue;
+			}
+
+			String key = entry1.getKey();
 
 			if (value instanceof List<?>) {
 				String reportHeader = _getReportHeader(key);
@@ -732,7 +755,7 @@ public class UpgradeReport {
 	private double _dlSize;
 	private final Thread _dlSizeThread = new DLSizeThread();
 	private final int _initialBuildNumber;
-	private final Map<String, Integer> _initialTableCounts;
+	private Map<String, Integer> _initialTableCounts;
 	private String _rootDir;
 
 	private class DLSizeThread extends Thread {
