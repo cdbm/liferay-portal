@@ -517,6 +517,8 @@ public class EditUserMVCActionCommand
 			new ArrayList<Website>(), new ArrayList<AnnouncementsDelivery>(),
 			sendEmail, serviceContext);
 
+		userLocalService.updatePasswordReset(user.getUserId(), false);
+
 		byte[] portraitBytes = null;
 
 		long fileEntryId = ParamUtil.getLong(actionRequest, "fileEntryId");
