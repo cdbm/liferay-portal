@@ -306,8 +306,7 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 						"mvcPath", "/update_account.jsp");
 				}
 			}
-
-			if (exception instanceof AddressCityException ||
+			else if (exception instanceof AddressCityException ||
 				exception instanceof AddressStreetException ||
 				exception instanceof AddressZipException ||
 				exception instanceof CaptchaException ||
