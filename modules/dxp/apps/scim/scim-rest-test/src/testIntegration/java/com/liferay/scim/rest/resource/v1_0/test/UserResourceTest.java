@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
@@ -84,6 +85,7 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
+		com.liferay.portal.kernel.model.User user = UserLocalServiceUtil.getUser(TestPropsValues.getUserId());
 		_pid = ConfigurationTestUtil.createFactoryConfiguration(
 			"com.liferay.scim.rest.internal.configuration." +
 				"ScimClientOAuth2ApplicationConfiguration",
