@@ -137,6 +137,12 @@ public interface UserResource {
 			return this;
 		}
 
+		public Builder host(String host) {
+			_host = host;
+
+			return this;
+		}
+
 		public Builder locale(Locale locale) {
 			_locale = locale;
 
