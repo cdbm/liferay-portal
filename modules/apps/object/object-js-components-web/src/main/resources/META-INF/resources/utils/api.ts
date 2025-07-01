@@ -465,11 +465,15 @@ export async function save<T>({
 }: saveProps) {
 	const isFormData = item instanceof FormData;
 
+	console.log(item);
+
 	const response = await fetch(url, {
 		body: isFormData ? item : JSON.stringify(item),
 		...(!isFormData && {headers}),
 		method,
 	});
+
+	console.log(response);
 
 	if (response.status === 401) {
 		window.location.reload();

@@ -69,7 +69,7 @@ public class ObjectDefinitionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(81);
+		StringBundler sb = new StringBundler(83);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -121,6 +121,8 @@ public class ObjectDefinitionCacheModel
 		sb.append(enableObjectEntryHistory);
 		sb.append(", enableObjectEntryVersioning=");
 		sb.append(enableObjectEntryVersioning);
+		sb.append(", enableRecycleBinSupport=");
+		sb.append(enableRecycleBinSupport);
 		sb.append(", friendlyURLSeparator=");
 		sb.append(friendlyURLSeparator);
 		sb.append(", label=");
@@ -236,6 +238,8 @@ public class ObjectDefinitionCacheModel
 			enableObjectEntryHistory);
 		objectDefinitionImpl.setEnableObjectEntryVersioning(
 			enableObjectEntryVersioning);
+		objectDefinitionImpl.setEnableRecycleBinSupport(
+			enableRecycleBinSupport);
 
 		if (friendlyURLSeparator == null) {
 			objectDefinitionImpl.setFriendlyURLSeparator("");
@@ -365,6 +369,8 @@ public class ObjectDefinitionCacheModel
 		enableObjectEntryHistory = objectInput.readBoolean();
 
 		enableObjectEntryVersioning = objectInput.readBoolean();
+
+		enableRecycleBinSupport = objectInput.readBoolean();
 		friendlyURLSeparator = objectInput.readUTF();
 		label = objectInput.readUTF();
 
@@ -462,6 +468,8 @@ public class ObjectDefinitionCacheModel
 		objectOutput.writeBoolean(enableObjectEntryHistory);
 
 		objectOutput.writeBoolean(enableObjectEntryVersioning);
+
+		objectOutput.writeBoolean(enableRecycleBinSupport);
 
 		if (friendlyURLSeparator == null) {
 			objectOutput.writeUTF("");
@@ -569,6 +577,7 @@ public class ObjectDefinitionCacheModel
 	public boolean enableObjectEntryDraft;
 	public boolean enableObjectEntryHistory;
 	public boolean enableObjectEntryVersioning;
+	public boolean enableRecycleBinSupport;
 	public String friendlyURLSeparator;
 	public String label;
 	public boolean modifiable;

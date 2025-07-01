@@ -66,6 +66,7 @@ public class ObjectDefinitionWrapper
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
 		attributes.put(
 			"enableObjectEntryVersioning", isEnableObjectEntryVersioning());
+		attributes.put("enableRecycleBinSupport", isEnableRecycleBinSupport());
 		attributes.put("friendlyURLSeparator", getFriendlyURLSeparator());
 		attributes.put("label", getLabel());
 		attributes.put("modifiable", isModifiable());
@@ -248,6 +249,13 @@ public class ObjectDefinitionWrapper
 
 		if (enableObjectEntryVersioning != null) {
 			setEnableObjectEntryVersioning(enableObjectEntryVersioning);
+		}
+
+		Boolean enableRecycleBinSupport = (Boolean)attributes.get(
+			"enableRecycleBinSupport");
+
+		if (enableRecycleBinSupport != null) {
+			setEnableRecycleBinSupport(enableRecycleBinSupport);
 		}
 
 		String friendlyURLSeparator = (String)attributes.get(
@@ -526,6 +534,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean getEnableObjectEntryVersioning() {
 		return model.getEnableObjectEntryVersioning();
+	}
+
+	/**
+	 * Returns the enable recycle bin support of this object definition.
+	 *
+	 * @return the enable recycle bin support of this object definition
+	 */
+	@Override
+	public boolean getEnableRecycleBinSupport() {
+		return model.getEnableRecycleBinSupport();
 	}
 
 	@Override
@@ -1097,6 +1115,16 @@ public class ObjectDefinitionWrapper
 		return model.isEnableObjectEntryVersioning();
 	}
 
+	/**
+	 * Returns <code>true</code> if this object definition is enable recycle bin support.
+	 *
+	 * @return <code>true</code> if this object definition is enable recycle bin support; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableRecycleBinSupport() {
+		return model.isEnableRecycleBinSupport();
+	}
+
 	@Override
 	public boolean isLinkedToObjectFolder(long objectFolderId) {
 		return model.isLinkedToObjectFolder(objectFolderId);
@@ -1342,6 +1370,16 @@ public class ObjectDefinitionWrapper
 		boolean enableObjectEntryVersioning) {
 
 		model.setEnableObjectEntryVersioning(enableObjectEntryVersioning);
+	}
+
+	/**
+	 * Sets whether this object definition is enable recycle bin support.
+	 *
+	 * @param enableRecycleBinSupport the enable recycle bin support of this object definition
+	 */
+	@Override
+	public void setEnableRecycleBinSupport(boolean enableRecycleBinSupport) {
+		model.setEnableRecycleBinSupport(enableRecycleBinSupport);
 	}
 
 	/**

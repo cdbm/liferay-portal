@@ -517,6 +517,27 @@ public interface ObjectDefinitionModel
 		boolean enableObjectEntryVersioning);
 
 	/**
+	 * Returns the enable recycle bin support of this object definition.
+	 *
+	 * @return the enable recycle bin support of this object definition
+	 */
+	public boolean getEnableRecycleBinSupport();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable recycle bin support.
+	 *
+	 * @return <code>true</code> if this object definition is enable recycle bin support; <code>false</code> otherwise
+	 */
+	public boolean isEnableRecycleBinSupport();
+
+	/**
+	 * Sets whether this object definition is enable recycle bin support.
+	 *
+	 * @param enableRecycleBinSupport the enable recycle bin support of this object definition
+	 */
+	public void setEnableRecycleBinSupport(boolean enableRecycleBinSupport);
+
+	/**
 	 * Returns the friendly url separator of this object definition.
 	 *
 	 * @return the friendly url separator of this object definition

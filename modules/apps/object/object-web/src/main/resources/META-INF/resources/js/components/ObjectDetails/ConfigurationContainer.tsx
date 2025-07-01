@@ -202,6 +202,30 @@ export function ConfigurationContainer({
 					/>
 				</ClayForm.Group>
 			)}
+
+			<ClayForm.Group>
+				<Toggle
+					disabled={disabled}
+					label={Liferay.Language.get(
+						'support-recycle-bin'
+					)}
+					name="enableRecycleBinSupport"
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableRecycleBinSupport:
+								!values.enableRecycleBinSupport,
+						})
+					}
+					toggled={values.enableRecycleBinSupport}
+				/>
+			</ClayForm.Group>
 		</div>
 	);
 }
