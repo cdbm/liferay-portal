@@ -36,8 +36,6 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.test.log.LogCapture;
-import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -95,11 +93,11 @@ public class DDMFieldUpgradeProcessTest {
 			StorageType.DEFAULT.toString(), DDMStructureConstants.TYPE_DEFAULT,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		List<DDMStructureVersion> structureVersions =
+		List<DDMStructureVersion> ddmStructureVersions =
 			_ddmStructureVersionLocalService.getStructureVersions(
 				ddmStructure.getStructureId());
 
-		DDMStructureVersion ddmStructureVersion = structureVersions.get(0);
+		DDMStructureVersion ddmStructureVersion = ddmStructureVersions.get(0);
 
 		DDMField ddmField = _addDDMField(
 			ddmStructureVersion.getStructureVersionId());
@@ -152,17 +150,13 @@ public class DDMFieldUpgradeProcessTest {
 	}
 
 	private void _runUpgrade() throws Exception {
-		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				_CLASS_NAME, LoggerTestUtil.OFF)) {
+		UpgradeProcess upgradeProcess = UpgradeTestUtil.getUpgradeStep(
+			_upgradeStepRegistrator, _CLASS_NAME);
 
-			UpgradeProcess upgradeProcess = UpgradeTestUtil.getUpgradeStep(
-				_upgradeStepRegistrator, _CLASS_NAME);
+		upgradeProcess.upgrade();
 
-			upgradeProcess.upgrade();
-
-			_entityCache.clearCache();
-			_multiVMPool.clear();
-		}
+		_entityCache.clearCache();
+		_multiVMPool.clear();
 	}
 
 	private static final String _CLASS_NAME =

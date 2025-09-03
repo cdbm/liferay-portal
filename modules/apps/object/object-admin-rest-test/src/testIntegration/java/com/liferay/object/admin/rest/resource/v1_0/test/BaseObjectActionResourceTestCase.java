@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectAction;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseObjectActionResourceTestCase {
 			testCompany.getCompanyId());
 
 		objectActionResource = ObjectActionResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -230,7 +243,6 @@ public abstract class BaseObjectActionResourceTestCase {
 			404,
 			objectActionResource.getObjectActionHttpResponse(
 				objectAction.getId()));
-
 		assertHttpResponseStatusCode(
 			404, objectActionResource.getObjectActionHttpResponse(0L));
 	}
@@ -319,6 +331,47 @@ public abstract class BaseObjectActionResourceTestCase {
 		throws Exception {
 
 		return testGraphQLObjectAction_addObjectAction();
+	}
+
+	@Test
+	public void testDeleteObjectActionBatch() throws Exception {
+		ObjectAction objectAction1 =
+			testDeleteObjectActionBatch_addObjectAction();
+
+		testDeleteObjectActionBatch_deleteObjectAction(
+			202, null, objectAction1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectActionResource.getObjectActionHttpResponse(
+				objectAction1.getId()));
+	}
+
+	protected ObjectAction testDeleteObjectActionBatch_addObjectAction()
+		throws Exception {
+
+		return testDeleteObjectAction_addObjectAction();
+	}
+
+	protected void testDeleteObjectActionBatch_deleteObjectAction(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectActionResource.deleteObjectActionBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -627,61 +680,6 @@ public abstract class BaseObjectActionResourceTestCase {
 	}
 
 	@Test
-	public void testPatchObjectAction() throws Exception {
-		ObjectAction postObjectAction = testPatchObjectAction_addObjectAction();
-
-		ObjectAction randomPatchObjectAction = randomPatchObjectAction();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectAction patchObjectAction = objectActionResource.patchObjectAction(
-			postObjectAction.getId(), randomPatchObjectAction);
-
-		ObjectAction expectedPatchObjectAction = postObjectAction.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchObjectAction, expectedPatchObjectAction);
-
-		ObjectAction getObjectAction = objectActionResource.getObjectAction(
-			patchObjectAction.getId());
-
-		assertEquals(expectedPatchObjectAction, getObjectAction);
-		assertValid(getObjectAction);
-	}
-
-	protected ObjectAction testPatchObjectAction_addObjectAction()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutObjectAction() throws Exception {
-		ObjectAction postObjectAction = testPutObjectAction_addObjectAction();
-
-		ObjectAction randomObjectAction = randomObjectAction();
-
-		ObjectAction putObjectAction = objectActionResource.putObjectAction(
-			postObjectAction.getId(), randomObjectAction);
-
-		assertEquals(randomObjectAction, putObjectAction);
-		assertValid(putObjectAction);
-
-		ObjectAction getObjectAction = objectActionResource.getObjectAction(
-			putObjectAction.getId());
-
-		assertEquals(randomObjectAction, getObjectAction);
-		assertValid(getObjectAction);
-	}
-
-	protected ObjectAction testPutObjectAction_addObjectAction()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetObjectDefinitionByExternalReferenceCodeObjectActionsPage()
 		throws Exception {
 
@@ -763,13 +761,13 @@ public abstract class BaseObjectActionResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectActionsPage_getExternalReferenceCode();
 
-		Page<ObjectAction> objectActionPage =
+		Page<ObjectAction> objectActionsPage =
 			objectActionResource.
 				getObjectDefinitionByExternalReferenceCodeObjectActionsPage(
 					externalReferenceCode, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectActionPage.getTotalCount());
+			objectActionsPage.getTotalCount());
 
 		ObjectAction objectAction1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectActionsPage_addObjectAction(
@@ -1046,29 +1044,6 @@ public abstract class BaseObjectActionResourceTestCase {
 	}
 
 	@Test
-	public void testPostObjectDefinitionByExternalReferenceCodeObjectAction()
-		throws Exception {
-
-		ObjectAction randomObjectAction = randomObjectAction();
-
-		ObjectAction postObjectAction =
-			testPostObjectDefinitionByExternalReferenceCodeObjectAction_addObjectAction(
-				randomObjectAction);
-
-		assertEquals(randomObjectAction, postObjectAction);
-		assertValid(postObjectAction);
-	}
-
-	protected ObjectAction
-			testPostObjectDefinitionByExternalReferenceCodeObjectAction_addObjectAction(
-				ObjectAction objectAction)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetObjectDefinitionObjectActionsPage() throws Exception {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectActionsPage_getObjectDefinitionId();
@@ -1154,12 +1129,12 @@ public abstract class BaseObjectActionResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectActionsPage_getObjectDefinitionId();
 
-		Page<ObjectAction> objectActionPage =
+		Page<ObjectAction> objectActionsPage =
 			objectActionResource.getObjectDefinitionObjectActionsPage(
 				objectDefinitionId, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectActionPage.getTotalCount());
+			objectActionsPage.getTotalCount());
 
 		ObjectAction objectAction1 =
 			testGetObjectDefinitionObjectActionsPage_addObjectAction(
@@ -1426,6 +1401,58 @@ public abstract class BaseObjectActionResourceTestCase {
 	}
 
 	@Test
+	public void testPatchObjectAction() throws Exception {
+		ObjectAction postObjectAction = testPatchObjectAction_addObjectAction();
+
+		ObjectAction randomPatchObjectAction = randomPatchObjectAction();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectAction patchObjectAction = objectActionResource.patchObjectAction(
+			postObjectAction.getId(), randomPatchObjectAction);
+
+		ObjectAction expectedPatchObjectAction = postObjectAction.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchObjectAction, expectedPatchObjectAction);
+
+		ObjectAction getObjectAction = objectActionResource.getObjectAction(
+			patchObjectAction.getId());
+
+		assertEquals(expectedPatchObjectAction, getObjectAction);
+		assertValid(getObjectAction);
+	}
+
+	protected ObjectAction testPatchObjectAction_addObjectAction()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostObjectDefinitionByExternalReferenceCodeObjectAction()
+		throws Exception {
+
+		ObjectAction randomObjectAction = randomObjectAction();
+
+		ObjectAction postObjectAction =
+			testPostObjectDefinitionByExternalReferenceCodeObjectAction_addObjectAction(
+				randomObjectAction);
+
+		assertEquals(randomObjectAction, postObjectAction);
+		assertValid(postObjectAction);
+	}
+
+	protected ObjectAction
+			testPostObjectDefinitionByExternalReferenceCodeObjectAction_addObjectAction(
+				ObjectAction objectAction)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostObjectDefinitionObjectAction() throws Exception {
 		ObjectAction randomObjectAction = randomObjectAction();
 
@@ -1444,6 +1471,87 @@ public abstract class BaseObjectActionResourceTestCase {
 		return objectActionResource.postObjectDefinitionObjectAction(
 			testGetObjectDefinitionObjectActionsPage_getObjectDefinitionId(),
 			objectAction);
+	}
+
+	@Test
+	public void testPutObjectAction() throws Exception {
+		ObjectAction postObjectAction = testPutObjectAction_addObjectAction();
+
+		ObjectAction randomObjectAction = randomObjectAction();
+
+		ObjectAction putObjectAction = objectActionResource.putObjectAction(
+			postObjectAction.getId(), randomObjectAction);
+
+		assertEquals(randomObjectAction, putObjectAction);
+		assertValid(putObjectAction);
+
+		ObjectAction getObjectAction = objectActionResource.getObjectAction(
+			putObjectAction.getId());
+
+		assertEquals(randomObjectAction, getObjectAction);
+		assertValid(getObjectAction);
+	}
+
+	protected ObjectAction testPutObjectAction_addObjectAction()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ObjectAction objectAction1 =
+			testBatchEngineDeleteImportTask_addObjectAction();
+
+		testBatchEngineDeleteImportTask_deleteObjectAction(
+			200, null, objectAction1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectActionResource.getObjectActionHttpResponse(
+				objectAction1.getId()));
+	}
+
+	protected ObjectAction testBatchEngineDeleteImportTask_addObjectAction()
+		throws Exception {
+
+		return testDeleteObjectAction_addObjectAction();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteObjectAction(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectAction", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ObjectAction testGraphQLObjectAction_addObjectAction()
@@ -2505,7 +2613,30 @@ public abstract class BaseObjectActionResourceTestCase {
 		return randomObjectAction();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectActionResource objectActionResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -30,14 +30,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 public class CategoriesInputFragmentRenderer extends BaseInputFragmentRenderer {
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
@@ -70,7 +70,7 @@ public class CategoriesInputFragmentRenderer extends BaseInputFragmentRenderer {
 				_log.debug(jsonException);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -180,8 +180,8 @@ public class CategoriesInputFragmentRenderer extends BaseInputFragmentRenderer {
 	private int[] _getVisibilityTypes(FragmentEntryLink fragmentEntryLink) {
 		String vocabularyType = GetterUtil.getString(
 			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				LocaleUtil.getMostRelevantLocale(), "vocabularyType"));
 
 		if (Objects.equals(vocabularyType, "all")) {

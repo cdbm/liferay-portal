@@ -5,11 +5,9 @@
 
 package com.liferay.portal.kernel.security.auth;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.model.CompanyConstants;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.ProxyFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,8 +32,6 @@ public class CompanyInheritableThreadLocalCallableTest {
 		).thenReturn(
 			1L
 		);
-
-		PropsUtil.setProps(ProxyFactory.newDummyInstance(Props.class));
 	}
 
 	@Test
@@ -46,19 +42,21 @@ public class CompanyInheritableThreadLocalCallableTest {
 	}
 
 	private void _test(Long companyId, boolean locked) throws Exception {
-		CompanyThreadLocal.setCompanyId(companyId);
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId)) {
 
-		Assert.assertEquals(
-			companyId,
-			new CompanyInheritableThreadLocalCallable<Long>(
-				CompanyThreadLocal::getCompanyId
-			).call());
+			Assert.assertEquals(
+				companyId,
+				new CompanyInheritableThreadLocalCallable<Long>(
+					CompanyThreadLocal::getCompanyId
+				).call());
 
-		Assert.assertEquals(
-			locked,
-			new CompanyInheritableThreadLocalCallable<>(
-				CompanyThreadLocal::isLocked
-			).call());
+			Assert.assertEquals(
+				locked,
+				new CompanyInheritableThreadLocalCallable<>(
+					CompanyThreadLocal::isLocked
+				).call());
+		}
 	}
 
 }

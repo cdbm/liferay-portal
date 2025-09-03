@@ -48,14 +48,15 @@ import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortle
 import com.liferay.portal.search.web.internal.search.bar.portlet.configuration.SearchBarPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.search.bar.portlet.display.context.SearchBarPortletDisplayContext;
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author André de Oliveira
@@ -149,7 +150,8 @@ public class SearchBarPortletDisplayContextFactory {
 
 		searchBarPortletDisplayContext.setInputPlaceholder(
 			LanguageUtil.get(
-				getHttpServletRequest(_renderRequest), "search-..."));
+				getHttpServletRequest(_renderRequest),
+				searchBarPortletPreferences.getInputPlaceholder()));
 
 		String keywordsParameterName = _getKeywordsParameterName(
 			portletPreferencesLookup,
@@ -250,14 +252,10 @@ public class SearchBarPortletDisplayContextFactory {
 			searchBarPortletInstanceConfiguration,
 		ThemeDisplay themeDisplay) {
 
-		long displayStyleGroupId =
-			searchBarPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			searchBarPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			themeDisplay);
 	}
 
 	protected HttpServletRequest getHttpServletRequest(

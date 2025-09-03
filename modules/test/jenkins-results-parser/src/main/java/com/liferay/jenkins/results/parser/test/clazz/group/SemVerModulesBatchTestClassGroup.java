@@ -8,15 +8,12 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
-import com.liferay.jenkins.results.parser.test.clazz.TestClass;
-import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
 
 import java.io.File;
 import java.io.IOException;
 
 import java.nio.file.PathMatcher;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,11 +60,7 @@ public class SemVerModulesBatchTestClassGroup
 			_quarterlyReleaseNamePattern.matcher(
 				portalGitWorkingDirectory.getUpstreamBranchName());
 
-		if (quarterlyReleaseNameMatcher.find()) {
-			return true;
-		}
-
-		return false;
+		return quarterlyReleaseNameMatcher.find();
 	}
 
 	@Override
@@ -136,18 +129,9 @@ public class SemVerModulesBatchTestClassGroup
 			}
 
 			moduleDirsList.add(moduleDir);
-
-			TestClass testClass = TestClassFactory.newTestClass(
-				this, moduleDir);
-
-			if (!testClass.hasTestClassMethods()) {
-				continue;
-			}
-
-			testClasses.add(testClass);
 		}
 
-		Collections.sort(testClasses);
+		addTestClasses(moduleDirsList);
 	}
 
 	private static final Pattern _quarterlyReleaseNamePattern = Pattern.compile(

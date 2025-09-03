@@ -16,11 +16,11 @@ import com.liferay.commerce.product.content.web.internal.display.context.CPPubli
 import com.liferay.commerce.product.content.web.internal.helper.CPPublisherWebHelper;
 import com.liferay.commerce.product.content.web.internal.util.CPQueryRule;
 import com.liferay.commerce.product.data.source.CPDataSourceRegistry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.type.CPTypeRegistry;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -44,18 +44,18 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,7 +64,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
-	property = "javax.portlet.name=" + CPPortletKeys.CP_PUBLISHER_WEB,
+	property = "jakarta.portlet.name=" + CPPortletKeys.CP_PUBLISHER_WEB,
 	service = ConfigurationAction.class
 )
 public class CPPublisherConfigurationAction extends BaseConfigurationAction {

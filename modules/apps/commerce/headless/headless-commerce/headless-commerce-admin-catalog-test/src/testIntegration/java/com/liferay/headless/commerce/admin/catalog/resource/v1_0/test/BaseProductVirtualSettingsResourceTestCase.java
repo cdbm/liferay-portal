@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -210,16 +210,16 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		assertValid(getProductVirtualSettings);
 	}
 
-	protected String
-			testGetProductByExternalReferenceCodeProductVirtualSettings_getExternalReferenceCode()
+	protected ProductVirtualSettings
+			testGetProductByExternalReferenceCodeProductVirtualSettings_addProductVirtualSettings()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected ProductVirtualSettings
-			testGetProductByExternalReferenceCodeProductVirtualSettings_addProductVirtualSettings()
+	protected String
+			testGetProductByExternalReferenceCodeProductVirtualSettings_getExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -360,15 +360,16 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		assertValid(getProductVirtualSettings);
 	}
 
-	protected Long testGetProductIdProductVirtualSettings_getId(
-			ProductVirtualSettings productVirtualSettings)
-		throws Exception {
-
-		return productVirtualSettings.getId();
-	}
-
 	protected ProductVirtualSettings
 			testGetProductIdProductVirtualSettings_addProductVirtualSettings()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetProductIdProductVirtualSettings_getId(
+			ProductVirtualSettings productVirtualSettings)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -434,7 +435,8 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 			ProductVirtualSettings productVirtualSettings)
 		throws Exception {
 
-		return productVirtualSettings.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test

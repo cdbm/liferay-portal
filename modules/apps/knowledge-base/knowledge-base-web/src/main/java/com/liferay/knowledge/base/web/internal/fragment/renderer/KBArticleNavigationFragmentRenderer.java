@@ -33,17 +33,17 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,7 +60,7 @@ public class KBArticleNavigationFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		return JSONUtil.put(
@@ -96,8 +96,7 @@ public class KBArticleNavigationFragmentRenderer implements FragmentRenderer {
 								).put(
 									"type", "number"
 								))
-						))))
-		).toString();
+						)))));
 	}
 
 	@Override
@@ -207,8 +206,8 @@ public class KBArticleNavigationFragmentRenderer implements FragmentRenderer {
 
 			JSONObject jsonObject =
 				(JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
-					getConfiguration(fragmentRendererContext),
-					fragmentEntryLink.getEditableValues(),
+					getConfigurationJSONObject(fragmentRendererContext),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					fragmentRendererContext.getLocale(), "itemSelector");
 
 			if ((jsonObject != null) && jsonObject.has("className") &&
@@ -255,8 +254,8 @@ public class KBArticleNavigationFragmentRenderer implements FragmentRenderer {
 
 		return GetterUtil.getInteger(
 			_fragmentEntryConfigurationParser.getFieldValue(
-				getConfiguration(fragmentRendererContext),
-				fragmentEntryLink.getEditableValues(),
+				getConfigurationJSONObject(fragmentRendererContext),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				fragmentRendererContext.getLocale(), "maxNestingLevel"),
 			_MAX_NESTING_LEVEL);
 	}

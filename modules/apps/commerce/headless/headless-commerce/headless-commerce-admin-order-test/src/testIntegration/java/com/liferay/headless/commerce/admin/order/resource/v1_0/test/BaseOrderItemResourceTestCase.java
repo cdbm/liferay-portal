@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseOrderItemResourceTestCase {
 			testCompany.getCompanyId());
 
 		orderItemResource = OrderItemResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -236,627 +249,6 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	@Test
-	public void testGetOrderItemsPage() throws Exception {
-		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		page = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(orderItem1, (List<OrderItem>)page.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page.getItems());
-		assertValid(page, testGetOrderItemsPage_getExpectedActions());
-
-		orderItemResource.deleteOrderItem(orderItem1.getId());
-
-		orderItemResource.deleteOrderItem(orderItem2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrderItemsPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		OrderItem orderItem1 = randomOrderItem();
-
-		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
-
-		for (EntityField entityField : entityFields) {
-			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
-				null, getFilterString(entityField, "between", orderItem1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(orderItem1),
-				(List<OrderItem>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithFilterDoubleEquals() throws Exception {
-		testGetOrderItemsPageWithFilter("eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetOrderItemsPageWithFilter("contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithFilterStringEquals() throws Exception {
-		testGetOrderItemsPageWithFilter("eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetOrderItemsPageWithFilter("startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetOrderItemsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		for (EntityField entityField : entityFields) {
-			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
-				null, getFilterString(entityField, operator, orderItem1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(orderItem1),
-				(List<OrderItem>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithPagination() throws Exception {
-		Page<OrderItem> orderItemPage = orderItemResource.getOrderItemsPage(
-			null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
-
-		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		OrderItem orderItem3 = testGetOrderItemsPage_addOrderItem(
-			randomOrderItem());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
-
-			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
-
-			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-		else {
-			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, totalCount + 2), null);
-
-			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
-
-			Assert.assertEquals(
-				orderItems1.toString(), totalCount + 2, orderItems1.size());
-
-			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
-
-			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
-
-			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithSortDateTime() throws Exception {
-		testGetOrderItemsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, orderItem1, orderItem2) -> {
-				BeanTestUtil.setProperty(
-					orderItem1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithSortDouble() throws Exception {
-		testGetOrderItemsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, orderItem1, orderItem2) -> {
-				BeanTestUtil.setProperty(
-					orderItem1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					orderItem2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithSortInteger() throws Exception {
-		testGetOrderItemsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, orderItem1, orderItem2) -> {
-				BeanTestUtil.setProperty(orderItem1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(orderItem2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetOrderItemsPageWithSortString() throws Exception {
-		testGetOrderItemsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, orderItem1, orderItem2) -> {
-				Class<?> clazz = orderItem1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						orderItem1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						orderItem2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						orderItem1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						orderItem2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						orderItem1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						orderItem2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetOrderItemsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, OrderItem, OrderItem, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		OrderItem orderItem1 = randomOrderItem();
-		OrderItem orderItem2 = randomOrderItem();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, orderItem1, orderItem2);
-		}
-
-		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
-
-		orderItem2 = testGetOrderItemsPage_addOrderItem(orderItem2);
-
-		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
-			null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<OrderItem> ascPage = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(orderItem1, (List<OrderItem>)ascPage.getItems());
-			assertContains(orderItem2, (List<OrderItem>)ascPage.getItems());
-
-			Page<OrderItem> descPage = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":desc");
-
-			assertContains(orderItem2, (List<OrderItem>)descPage.getItems());
-			assertContains(orderItem1, (List<OrderItem>)descPage.getItems());
-		}
-	}
-
-	protected OrderItem testGetOrderItemsPage_addOrderItem(OrderItem orderItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetOrderItemsPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"orderItems",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/orderItems");
-
-		long totalCount = orderItemsJSONObject.getLong("totalCount");
-
-		OrderItem orderItem1 = testGraphQLGetOrderItemsPage_addOrderItem();
-		OrderItem orderItem2 = testGraphQLGetOrderItemsPage_addOrderItem();
-
-		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/orderItems");
-
-		Assert.assertEquals(
-			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			orderItem1,
-			Arrays.asList(
-				OrderItemSerDes.toDTOs(
-					orderItemsJSONObject.getString("items"))));
-		assertContains(
-			orderItem2,
-			Arrays.asList(
-				OrderItemSerDes.toDTOs(
-					orderItemsJSONObject.getString("items"))));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminOrder_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
-			"JSONObject/orderItems");
-
-		Assert.assertEquals(
-			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			orderItem1,
-			Arrays.asList(
-				OrderItemSerDes.toDTOs(
-					orderItemsJSONObject.getString("items"))));
-		assertContains(
-			orderItem2,
-			Arrays.asList(
-				OrderItemSerDes.toDTOs(
-					orderItemsJSONObject.getString("items"))));
-	}
-
-	protected OrderItem testGraphQLGetOrderItemsPage_addOrderItem()
-		throws Exception {
-
-		return testGraphQLOrderItem_addOrderItem();
-	}
-
-	@Test
-	public void testDeleteOrderItemByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		OrderItem orderItem =
-			testDeleteOrderItemByExternalReferenceCode_addOrderItem();
-
-		assertHttpResponseStatusCode(
-			204,
-			orderItemResource.
-				deleteOrderItemByExternalReferenceCodeHttpResponse(
-					orderItem.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				orderItem.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				orderItem.getExternalReferenceCode()));
-	}
-
-	protected OrderItem
-			testDeleteOrderItemByExternalReferenceCode_addOrderItem()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetOrderItemByExternalReferenceCode() throws Exception {
-		OrderItem postOrderItem =
-			testGetOrderItemByExternalReferenceCode_addOrderItem();
-
-		OrderItem getOrderItem =
-			orderItemResource.getOrderItemByExternalReferenceCode(
-				postOrderItem.getExternalReferenceCode());
-
-		assertEquals(postOrderItem, getOrderItem);
-		assertValid(getOrderItem);
-	}
-
-	protected OrderItem testGetOrderItemByExternalReferenceCode_addOrderItem()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetOrderItemByExternalReferenceCode()
-		throws Exception {
-
-		OrderItem orderItem =
-			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				orderItem,
-				OrderItemSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"orderItemByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												orderItem.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/orderItemByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				orderItem,
-				OrderItemSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminOrder_v1_0",
-								new GraphQLField(
-									"orderItemByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													orderItem.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminOrder_v1_0",
-						"Object/orderItemByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetOrderItemByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"orderItemByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"orderItemByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected OrderItem
-			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem()
-		throws Exception {
-
-		return testGraphQLOrderItem_addOrderItem();
-	}
-
-	@Test
-	public void testPatchOrderItemByExternalReferenceCode() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPutOrderItemByExternalReferenceCode() throws Exception {
-		OrderItem postOrderItem =
-			testPutOrderItemByExternalReferenceCode_addOrderItem();
-
-		OrderItem randomOrderItem = randomOrderItem();
-
-		OrderItem putOrderItem =
-			orderItemResource.putOrderItemByExternalReferenceCode(
-				postOrderItem.getExternalReferenceCode(), randomOrderItem);
-
-		assertEquals(randomOrderItem, putOrderItem);
-		assertValid(putOrderItem);
-
-		OrderItem getOrderItem =
-			orderItemResource.getOrderItemByExternalReferenceCode(
-				putOrderItem.getExternalReferenceCode());
-
-		assertEquals(randomOrderItem, getOrderItem);
-		assertValid(getOrderItem);
-
-		OrderItem newOrderItem =
-			testPutOrderItemByExternalReferenceCode_createOrderItem();
-
-		putOrderItem = orderItemResource.putOrderItemByExternalReferenceCode(
-			newOrderItem.getExternalReferenceCode(), newOrderItem);
-
-		assertEquals(newOrderItem, putOrderItem);
-		assertValid(putOrderItem);
-
-		getOrderItem = orderItemResource.getOrderItemByExternalReferenceCode(
-			putOrderItem.getExternalReferenceCode());
-
-		assertEquals(newOrderItem, getOrderItem);
-
-		Assert.assertEquals(
-			newOrderItem.getExternalReferenceCode(),
-			putOrderItem.getExternalReferenceCode());
-	}
-
-	protected OrderItem
-			testPutOrderItemByExternalReferenceCode_createOrderItem()
-		throws Exception {
-
-		return randomOrderItem();
-	}
-
-	protected OrderItem testPutOrderItemByExternalReferenceCode_addOrderItem()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteOrderItem() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		OrderItem orderItem = testDeleteOrderItem_addOrderItem();
@@ -867,9 +259,8 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, orderItemResource.getOrderItemHttpResponse(orderItem.getId()));
-
 		assertHttpResponseStatusCode(
-			404, orderItemResource.getOrderItemHttpResponse(orderItem.getId()));
+			404, orderItemResource.getOrderItemHttpResponse(0L));
 	}
 
 	protected OrderItem testDeleteOrderItem_addOrderItem() throws Exception {
@@ -950,6 +341,439 @@ public abstract class BaseOrderItemResourceTestCase {
 		throws Exception {
 
 		return testGraphQLOrderItem_addOrderItem();
+	}
+
+	@Test
+	public void testDeleteOrderItemBatch() throws Exception {
+		OrderItem orderItem1 = testDeleteOrderItemBatch_addOrderItem();
+
+		testDeleteOrderItemBatch_deleteOrderItem(
+			202, orderItem1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
+
+		orderItem1 = testDeleteOrderItemBatch_addOrderItem();
+
+		testDeleteOrderItemBatch_deleteOrderItem(202, null, orderItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
+
+		orderItem1 = testDeleteOrderItemBatch_addOrderItem();
+		OrderItem orderItem2 = testDeleteOrderItemBatch_addOrderItem();
+
+		testDeleteOrderItemBatch_deleteOrderItem(
+			202, orderItem2.getExternalReferenceCode(), orderItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			orderItemResource.getOrderItemHttpResponse(orderItem2.getId()));
+
+		testDeleteOrderItemBatch_deleteOrderItem(
+			202, orderItem2.getExternalReferenceCode(), orderItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem2.getId()));
+	}
+
+	protected OrderItem testDeleteOrderItemBatch_addOrderItem()
+		throws Exception {
+
+		return testDeleteOrderItem_addOrderItem();
+	}
+
+	protected void testDeleteOrderItemBatch_deleteOrderItem(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			orderItemResource.deleteOrderItemBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteOrderItemByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem orderItem =
+			testDeleteOrderItemByExternalReferenceCode_addOrderItem();
+
+		assertHttpResponseStatusCode(
+			204,
+			orderItemResource.
+				deleteOrderItemByExternalReferenceCodeHttpResponse(
+					orderItem.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
+				orderItem.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected OrderItem
+			testDeleteOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetOrderByExternalReferenceCodeOrderItemsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getIrrelevantExternalReferenceCode();
+
+		Page<OrderItem> page =
+			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+				externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			OrderItem irrelevantOrderItem =
+				testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantOrderItem());
+
+			page =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					irrelevantExternalReferenceCode,
+					Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOrderItem, (List<OrderItem>)page.getItems());
+			assertValid(
+				page,
+				testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		OrderItem orderItem1 =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				externalReferenceCode, randomOrderItem());
+
+		OrderItem orderItem2 =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				externalReferenceCode, randomOrderItem());
+
+		page = orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+			externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
+		assertValid(
+			page,
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+				externalReferenceCode));
+
+		orderItemResource.deleteOrderItem(orderItem1.getId());
+
+		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrderByExternalReferenceCodeOrderItemsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
+
+		Page<OrderItem> orderItemsPage =
+			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+				externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(orderItemsPage.getTotalCount());
+
+		OrderItem orderItem1 =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				externalReferenceCode, randomOrderItem());
+
+		OrderItem orderItem2 =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				externalReferenceCode, randomOrderItem());
+
+		OrderItem orderItem3 =
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				externalReferenceCode, randomOrderItem());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
+
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
+
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+	}
+
+	protected OrderItem
+			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
+				String externalReferenceCode, OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetOrderIdOrderItemsPage() throws Exception {
+		Long id = testGetOrderIdOrderItemsPage_getId();
+		Long irrelevantId = testGetOrderIdOrderItemsPage_getIrrelevantId();
+
+		Page<OrderItem> page = orderItemResource.getOrderIdOrderItemsPage(
+			id, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantId != null) {
+			OrderItem irrelevantOrderItem =
+				testGetOrderIdOrderItemsPage_addOrderItem(
+					irrelevantId, randomIrrelevantOrderItem());
+
+			page = orderItemResource.getOrderIdOrderItemsPage(
+				irrelevantId, Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOrderItem, (List<OrderItem>)page.getItems());
+			assertValid(
+				page,
+				testGetOrderIdOrderItemsPage_getExpectedActions(irrelevantId));
+		}
+
+		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
+			id, randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderIdOrderItemsPage_addOrderItem(
+			id, randomOrderItem());
+
+		page = orderItemResource.getOrderIdOrderItemsPage(
+			id, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
+		assertValid(page, testGetOrderIdOrderItemsPage_getExpectedActions(id));
+
+		orderItemResource.deleteOrderItem(orderItem1.getId());
+
+		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderIdOrderItemsPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrderIdOrderItemsPageWithPagination() throws Exception {
+		Long id = testGetOrderIdOrderItemsPage_getId();
+
+		Page<OrderItem> orderItemsPage =
+			orderItemResource.getOrderIdOrderItemsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(orderItemsPage.getTotalCount());
+
+		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
+			id, randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderIdOrderItemsPage_addOrderItem(
+			id, randomOrderItem());
+
+		OrderItem orderItem3 = testGetOrderIdOrderItemsPage_addOrderItem(
+			id, randomOrderItem());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+	}
+
+	protected OrderItem testGetOrderIdOrderItemsPage_addOrderItem(
+			Long id, OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOrderIdOrderItemsPage_getId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOrderIdOrderItemsPage_getIrrelevantId()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -1249,8 +1073,635 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	@Test
+	public void testGetOrderItemByExternalReferenceCode() throws Exception {
+		OrderItem postOrderItem =
+			testGetOrderItemByExternalReferenceCode_addOrderItem();
+
+		OrderItem getOrderItem =
+			orderItemResource.getOrderItemByExternalReferenceCode(
+				postOrderItem.getExternalReferenceCode());
+
+		assertEquals(postOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+	}
+
+	protected OrderItem testGetOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemByExternalReferenceCode()
+		throws Exception {
+
+		OrderItem orderItem =
+			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				orderItem,
+				OrderItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"orderItemByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												orderItem.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/orderItemByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderItem,
+				OrderItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderItemByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													orderItem.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderItemByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"orderItemByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderItemByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected OrderItem
+			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		return testGraphQLOrderItem_addOrderItem();
+	}
+
+	@Test
+	public void testGetOrderItemsPage() throws Exception {
+		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		page = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
+		assertValid(page, testGetOrderItemsPage_getExpectedActions());
+
+		orderItemResource.deleteOrderItem(orderItem1.getId());
+
+		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderItemsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = randomOrderItem();
+
+		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+				null, getFilterString(entityField, "between", orderItem1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(orderItem1),
+				(List<OrderItem>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterDoubleEquals() throws Exception {
+		testGetOrderItemsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetOrderItemsPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterStringEquals() throws Exception {
+		testGetOrderItemsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetOrderItemsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetOrderItemsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+				null, getFilterString(entityField, operator, orderItem1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(orderItem1),
+				(List<OrderItem>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithPagination() throws Exception {
+		Page<OrderItem> orderItemsPage = orderItemResource.getOrderItemsPage(
+			null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(orderItemsPage.getTotalCount());
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem3 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortDateTime() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(
+					orderItem1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortDouble() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(
+					orderItem1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					orderItem2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortInteger() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(orderItem1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(orderItem2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortString() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, orderItem1, orderItem2) -> {
+				Class<?> clazz = orderItem1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetOrderItemsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, OrderItem, OrderItem, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = randomOrderItem();
+		OrderItem orderItem2 = randomOrderItem();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, orderItem1, orderItem2);
+		}
+
+		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
+
+		orderItem2 = testGetOrderItemsPage_addOrderItem(orderItem2);
+
+		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+			null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> ascPage = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(orderItem1, (List<OrderItem>)ascPage.getItems());
+			assertContains(orderItem2, (List<OrderItem>)ascPage.getItems());
+
+			Page<OrderItem> descPage = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(orderItem2, (List<OrderItem>)descPage.getItems());
+			assertContains(orderItem1, (List<OrderItem>)descPage.getItems());
+		}
+	}
+
+	protected OrderItem testGetOrderItemsPage_addOrderItem(OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemsPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"orderItems",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderItems");
+
+		long totalCount = orderItemsJSONObject.getLong("totalCount");
+
+		OrderItem orderItem1 = testGraphQLGetOrderItemsPage_addOrderItem();
+		OrderItem orderItem2 = testGraphQLGetOrderItemsPage_addOrderItem();
+
+		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderItems");
+
+		Assert.assertEquals(
+			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			orderItem1,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+		assertContains(
+			orderItem2,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+			"JSONObject/orderItems");
+
+		Assert.assertEquals(
+			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			orderItem1,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+		assertContains(
+			orderItem2,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+	}
+
+	protected OrderItem testGraphQLGetOrderItemsPage_addOrderItem()
+		throws Exception {
+
+		return testGraphQLOrderItem_addOrderItem();
+	}
+
+	@Test
 	public void testPatchOrderItem() throws Exception {
-		Assert.assertTrue(false);
+		OrderItem postOrderItem = testPatchOrderItem_addOrderItem();
+
+		OrderItem randomPatchOrderItem = randomPatchOrderItem();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem patchOrderItem = orderItemResource.patchOrderItem(
+			postOrderItem.getId(), randomPatchOrderItem);
+
+		OrderItem expectedPatchOrderItem = postOrderItem.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchOrderItem, expectedPatchOrderItem);
+
+		OrderItem getOrderItem = orderItemResource.getOrderItem(
+			patchOrderItem.getId());
+
+		assertEquals(expectedPatchOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+	}
+
+	protected OrderItem testPatchOrderItem_addOrderItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchOrderItemByExternalReferenceCode() throws Exception {
+		OrderItem postOrderItem =
+			testPatchOrderItemByExternalReferenceCode_addOrderItem();
+
+		OrderItem randomPatchOrderItem = randomPatchOrderItem();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem patchOrderItem =
+			orderItemResource.patchOrderItemByExternalReferenceCode(
+				postOrderItem.getExternalReferenceCode(), randomPatchOrderItem);
+
+		OrderItem expectedPatchOrderItem = postOrderItem.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchOrderItem, expectedPatchOrderItem);
+
+		OrderItem getOrderItem =
+			orderItemResource.getOrderItemByExternalReferenceCode(
+				patchOrderItem.getExternalReferenceCode());
+
+		assertEquals(expectedPatchOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+	}
+
+	protected OrderItem testPatchOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostOrderByExternalReferenceCodeOrderItem()
+		throws Exception {
+
+		OrderItem randomOrderItem = randomOrderItem();
+
+		OrderItem postOrderItem =
+			testPostOrderByExternalReferenceCodeOrderItem_addOrderItem(
+				randomOrderItem);
+
+		assertEquals(randomOrderItem, postOrderItem);
+		assertValid(postOrderItem);
+	}
+
+	protected OrderItem
+			testPostOrderByExternalReferenceCodeOrderItem_addOrderItem(
+				OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostOrderIdOrderItem() throws Exception {
+		OrderItem randomOrderItem = randomOrderItem();
+
+		OrderItem postOrderItem = testPostOrderIdOrderItem_addOrderItem(
+			randomOrderItem);
+
+		assertEquals(randomOrderItem, postOrderItem);
+		assertValid(postOrderItem);
+	}
+
+	protected OrderItem testPostOrderIdOrderItem_addOrderItem(
+			OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1278,381 +1729,139 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	@Test
-	public void testGetOrderByExternalReferenceCodeOrderItemsPage()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getIrrelevantExternalReferenceCode();
-
-		Page<OrderItem> page =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			OrderItem irrelevantOrderItem =
-				testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-					irrelevantExternalReferenceCode,
-					randomIrrelevantOrderItem());
-
-			page =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					irrelevantExternalReferenceCode,
-					Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantOrderItem, (List<OrderItem>)page.getItems());
-			assertValid(
-				page,
-				testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		OrderItem orderItem1 =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				externalReferenceCode, randomOrderItem());
-
-		OrderItem orderItem2 =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				externalReferenceCode, randomOrderItem());
-
-		page = orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-			externalReferenceCode, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(orderItem1, (List<OrderItem>)page.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page.getItems());
-		assertValid(
-			page,
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
-				externalReferenceCode));
-
-		orderItemResource.deleteOrderItem(orderItem1.getId());
-
-		orderItemResource.deleteOrderItem(orderItem2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrderByExternalReferenceCodeOrderItemsPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
-
-		Page<OrderItem> orderItemPage =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, null);
-
-		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
-
-		OrderItem orderItem1 =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				externalReferenceCode, randomOrderItem());
-
-		OrderItem orderItem2 =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				externalReferenceCode, randomOrderItem());
-
-		OrderItem orderItem3 =
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				externalReferenceCode, randomOrderItem());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OrderItem> page1 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
-
-			Page<OrderItem> page2 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
-
-			Page<OrderItem> page3 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-		else {
-			Page<OrderItem> page1 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
-
-			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
-
-			Assert.assertEquals(
-				orderItems1.toString(), totalCount + 2, orderItems1.size());
-
-			Page<OrderItem> page2 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
-
-			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
-
-			Page<OrderItem> page3 =
-				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-	}
-
-	protected OrderItem
-			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
-				String externalReferenceCode, OrderItem orderItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOrderByExternalReferenceCodeOrderItemsPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostOrderByExternalReferenceCodeOrderItem()
-		throws Exception {
-
-		OrderItem randomOrderItem = randomOrderItem();
-
+	public void testPutOrderItemByExternalReferenceCode() throws Exception {
 		OrderItem postOrderItem =
-			testPostOrderByExternalReferenceCodeOrderItem_addOrderItem(
-				randomOrderItem);
+			testPutOrderItemByExternalReferenceCode_addOrderItem();
 
-		assertEquals(randomOrderItem, postOrderItem);
-		assertValid(postOrderItem);
+		OrderItem randomOrderItem = randomOrderItem();
+
+		OrderItem putOrderItem =
+			orderItemResource.putOrderItemByExternalReferenceCode(
+				postOrderItem.getExternalReferenceCode(), randomOrderItem);
+
+		assertEquals(randomOrderItem, putOrderItem);
+		assertValid(putOrderItem);
+
+		OrderItem getOrderItem =
+			orderItemResource.getOrderItemByExternalReferenceCode(
+				putOrderItem.getExternalReferenceCode());
+
+		assertEquals(randomOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+
+		OrderItem newOrderItem =
+			testPutOrderItemByExternalReferenceCode_createOrderItem();
+
+		putOrderItem = orderItemResource.putOrderItemByExternalReferenceCode(
+			newOrderItem.getExternalReferenceCode(), newOrderItem);
+
+		assertEquals(newOrderItem, putOrderItem);
+		assertValid(putOrderItem);
+
+		getOrderItem = orderItemResource.getOrderItemByExternalReferenceCode(
+			putOrderItem.getExternalReferenceCode());
+
+		assertEquals(newOrderItem, getOrderItem);
+
+		Assert.assertEquals(
+			newOrderItem.getExternalReferenceCode(),
+			putOrderItem.getExternalReferenceCode());
+	}
+
+	protected OrderItem testPutOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected OrderItem
-			testPostOrderByExternalReferenceCodeOrderItem_addOrderItem(
-				OrderItem orderItem)
+			testPutOrderItemByExternalReferenceCode_createOrderItem()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return randomOrderItem();
 	}
 
 	@Test
-	public void testGetOrderIdOrderItemsPage() throws Exception {
-		Long id = testGetOrderIdOrderItemsPage_getId();
-		Long irrelevantId = testGetOrderIdOrderItemsPage_getIrrelevantId();
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OrderItem orderItem1 = testBatchEngineDeleteImportTask_addOrderItem();
 
-		Page<OrderItem> page = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, 10));
+		testBatchEngineDeleteImportTask_deleteOrderItem(
+			200, orderItem1.getExternalReferenceCode(), null);
 
-		long totalCount = page.getTotalCount();
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
 
-		if (irrelevantId != null) {
-			OrderItem irrelevantOrderItem =
-				testGetOrderIdOrderItemsPage_addOrderItem(
-					irrelevantId, randomIrrelevantOrderItem());
+		orderItem1 = testBatchEngineDeleteImportTask_addOrderItem();
 
-			page = orderItemResource.getOrderIdOrderItemsPage(
-				irrelevantId, Pagination.of(1, (int)totalCount + 1));
+		testBatchEngineDeleteImportTask_deleteOrderItem(
+			200, null, orderItem1.getId());
 
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
 
-			assertContains(
-				irrelevantOrderItem, (List<OrderItem>)page.getItems());
-			assertValid(
-				page,
-				testGetOrderIdOrderItemsPage_getExpectedActions(irrelevantId));
+		orderItem1 = testBatchEngineDeleteImportTask_addOrderItem();
+		OrderItem orderItem2 = testBatchEngineDeleteImportTask_addOrderItem();
+
+		testBatchEngineDeleteImportTask_deleteOrderItem(
+			200, orderItem2.getExternalReferenceCode(), orderItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			orderItemResource.getOrderItemHttpResponse(orderItem2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteOrderItem(
+			200, orderItem2.getExternalReferenceCode(), orderItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderItemResource.getOrderItemHttpResponse(orderItem2.getId()));
+	}
+
+	protected OrderItem testBatchEngineDeleteImportTask_addOrderItem()
+		throws Exception {
+
+		return testDeleteOrderItem_addOrderItem();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOrderItem(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 		}
-
-		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
-			id, randomOrderItem());
-
-		OrderItem orderItem2 = testGetOrderIdOrderItemsPage_addOrderItem(
-			id, randomOrderItem());
-
-		page = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(orderItem1, (List<OrderItem>)page.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page.getItems());
-		assertValid(page, testGetOrderIdOrderItemsPage_getExpectedActions(id));
-
-		orderItemResource.deleteOrderItem(orderItem1.getId());
-
-		orderItemResource.deleteOrderItem(orderItem2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrderIdOrderItemsPage_getExpectedActions(Long id)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrderIdOrderItemsPageWithPagination() throws Exception {
-		Long id = testGetOrderIdOrderItemsPage_getId();
-
-		Page<OrderItem> orderItemPage =
-			orderItemResource.getOrderIdOrderItemsPage(id, null);
-
-		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
-
-		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
-			id, randomOrderItem());
-
-		OrderItem orderItem2 = testGetOrderIdOrderItemsPage_addOrderItem(
-			id, randomOrderItem());
-
-		OrderItem orderItem3 = testGetOrderIdOrderItemsPage_addOrderItem(
-			id, randomOrderItem());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
-
-			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
-
-			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-		else {
-			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
-				id, Pagination.of(1, totalCount + 2));
-
-			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
-
-			Assert.assertEquals(
-				orderItems1.toString(), totalCount + 2, orderItems1.size());
-
-			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
-				id, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
-
-			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
-
-			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
-				id, Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
-		}
-	}
-
-	protected OrderItem testGetOrderIdOrderItemsPage_addOrderItem(
-			Long id, OrderItem orderItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOrderIdOrderItemsPage_getId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOrderIdOrderItemsPage_getIrrelevantId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostOrderIdOrderItem() throws Exception {
-		OrderItem randomOrderItem = randomOrderItem();
-
-		OrderItem postOrderItem = testPostOrderIdOrderItem_addOrderItem(
-			randomOrderItem);
-
-		assertEquals(randomOrderItem, postOrderItem);
-		assertValid(postOrderItem);
-	}
-
-	protected OrderItem testPostOrderIdOrderItem_addOrderItem(
-			OrderItem orderItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Rule
@@ -3933,7 +4142,30 @@ public abstract class BaseOrderItemResourceTestCase {
 		return randomOrderItem();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OrderItemResource orderItemResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

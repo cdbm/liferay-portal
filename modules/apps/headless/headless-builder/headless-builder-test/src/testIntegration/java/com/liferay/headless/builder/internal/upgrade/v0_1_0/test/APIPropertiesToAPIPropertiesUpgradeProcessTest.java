@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -30,17 +30,16 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import org.apache.commons.lang.time.StopWatch;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.springframework.util.Assert;
-
 /**
  * @author Alejandro Tardín
  */
-@FeatureFlags("LPS-178642")
+@FeatureFlag("LPS-178642")
 public class APIPropertiesToAPIPropertiesUpgradeProcessTest
 	extends BaseTestCase {
 
@@ -99,7 +98,7 @@ public class APIPropertiesToAPIPropertiesUpgradeProcessTest
 			StartupHelperUtil.setUpgrading(false);
 		}
 
-		Assert.isNull(
+		Assert.assertNull(
 			_objectRelationshipLocalService.
 				fetchObjectRelationshipByExternalReferenceCode(
 					"L_API_PROPERTIES_TO_API_PROPERTIES",

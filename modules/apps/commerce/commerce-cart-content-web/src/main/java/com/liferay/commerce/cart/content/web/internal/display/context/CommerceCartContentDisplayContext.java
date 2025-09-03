@@ -20,10 +20,10 @@ import com.liferay.commerce.price.CommerceOrderPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.constants.CPActionKeys;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
@@ -46,16 +46,16 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo

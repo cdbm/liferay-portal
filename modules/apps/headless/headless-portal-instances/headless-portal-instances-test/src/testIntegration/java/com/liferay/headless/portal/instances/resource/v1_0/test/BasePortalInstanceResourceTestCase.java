@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -183,6 +183,52 @@ public abstract class BasePortalInstanceResourceTestCase {
 	}
 
 	@Test
+	public void testDeletePortalInstance() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PortalInstance portalInstance =
+			testDeletePortalInstance_addPortalInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			portalInstanceResource.deletePortalInstanceHttpResponse(
+				portalInstance.getPortalInstanceId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			portalInstanceResource.getPortalInstanceHttpResponse(
+				portalInstance.getPortalInstanceId()));
+		assertHttpResponseStatusCode(
+			404, portalInstanceResource.getPortalInstanceHttpResponse("-"));
+	}
+
+	protected PortalInstance testDeletePortalInstance_addPortalInstance()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetPortalInstance() throws Exception {
+		PortalInstance postPortalInstance =
+			testGetPortalInstance_addPortalInstance();
+
+		PortalInstance getPortalInstance =
+			portalInstanceResource.getPortalInstance(
+				postPortalInstance.getPortalInstanceId());
+
+		assertEquals(postPortalInstance, getPortalInstance);
+		assertValid(getPortalInstance);
+	}
+
+	protected PortalInstance testGetPortalInstance_addPortalInstance()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetPortalInstancesPage() throws Exception {
 		Page<PortalInstance> page =
 			portalInstanceResource.getPortalInstancesPage(null);
@@ -204,6 +250,12 @@ public abstract class BasePortalInstanceResourceTestCase {
 		assertContains(portalInstance1, (List<PortalInstance>)page.getItems());
 		assertContains(portalInstance2, (List<PortalInstance>)page.getItems());
 		assertValid(page, testGetPortalInstancesPage_getExpectedActions());
+
+		portalInstanceResource.deletePortalInstance(
+			portalInstance1.getPortalInstanceId());
+
+		portalInstanceResource.deletePortalInstance(
+			portalInstance2.getPortalInstanceId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -217,6 +269,39 @@ public abstract class BasePortalInstanceResourceTestCase {
 
 	protected PortalInstance testGetPortalInstancesPage_addPortalInstance(
 			PortalInstance portalInstance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchPortalInstance() throws Exception {
+		PortalInstance postPortalInstance =
+			testPatchPortalInstance_addPortalInstance();
+
+		PortalInstance randomPatchPortalInstance = randomPatchPortalInstance();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PortalInstance patchPortalInstance =
+			portalInstanceResource.patchPortalInstance(
+				postPortalInstance.getPortalInstanceId(),
+				randomPatchPortalInstance);
+
+		PortalInstance expectedPatchPortalInstance = postPortalInstance.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchPortalInstance, expectedPatchPortalInstance);
+
+		PortalInstance getPortalInstance =
+			portalInstanceResource.getPortalInstance(
+				patchPortalInstance.getPortalInstanceId());
+
+		assertEquals(expectedPatchPortalInstance, getPortalInstance);
+		assertValid(getPortalInstance);
+	}
+
+	protected PortalInstance testPatchPortalInstance_addPortalInstance()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -243,28 +328,50 @@ public abstract class BasePortalInstanceResourceTestCase {
 	}
 
 	@Test
-	public void testDeletePortalInstance() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetPortalInstance() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPatchPortalInstance() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testPutPortalInstanceActivate() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PortalInstance portalInstance =
+			testPutPortalInstanceActivate_addPortalInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			portalInstanceResource.putPortalInstanceActivateHttpResponse(
+				portalInstance.getPortalInstanceId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			portalInstanceResource.putPortalInstanceActivateHttpResponse("-"));
+	}
+
+	protected PortalInstance testPutPortalInstanceActivate_addPortalInstance()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testPutPortalInstanceDeactivate() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PortalInstance portalInstance =
+			testPutPortalInstanceDeactivate_addPortalInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			portalInstanceResource.putPortalInstanceDeactivateHttpResponse(
+				portalInstance.getPortalInstanceId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			portalInstanceResource.putPortalInstanceDeactivateHttpResponse(
+				"-"));
+	}
+
+	protected PortalInstance testPutPortalInstanceDeactivate_addPortalInstance()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertContains(
@@ -339,6 +446,10 @@ public abstract class BasePortalInstanceResourceTestCase {
 
 	protected void assertValid(PortalInstance portalInstance) throws Exception {
 		boolean valid = true;
+
+		if (portalInstance.getPortalInstanceId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {

@@ -1,0 +1,20 @@
+create table ExportImportReportEntry (
+	mvccVersion LONG default 0 not null,
+	exportImportReportEntryId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	createDate DATE null,
+	modifiedDate DATE null,
+	classExternalReferenceCode VARCHAR(75) null,
+	classNameId LONG,
+	classPK LONG,
+	exportImportConfigurationId LONG,
+	error TEXT null,
+	errorStacktrace TEXT null,
+	modelName VARCHAR(75) null,
+	origin INTEGER,
+	scope VARCHAR(75) null,
+	scopeKey VARCHAR(75) null,
+	type_ INTEGER,
+	status INTEGER
+);

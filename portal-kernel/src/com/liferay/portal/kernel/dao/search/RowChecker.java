@@ -17,12 +17,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -246,13 +246,13 @@ public class RowChecker {
 
 		StringBundler sb = new StringBundler(9);
 
-		sb.append("onClick=\"Liferay.Util.rowCheckerCheckAllBox(AUI().");
-		sb.append("one(this).ancestor('.table'), AUI().one(this).");
-		sb.append("ancestor('tr:not(.d-none)'), ");
+		sb.append("onClick=\"Liferay.Util.checkAllBox(");
+		sb.append("AUI().one(this).ancestor('.table'),");
 		sb.append(checkBoxRowIds);
-		sb.append(", ");
+		sb.append(",");
 		sb.append(checkBoxAllRowIds);
-		sb.append(", 'info');");
+		sb.append("); AUI().one(this).ancestor('tr:not(.d-none)')?.");
+		sb.append("toggleClass('info');");
 
 		if (Validator.isNotNull(checkBoxPostOnClick)) {
 			sb.append(checkBoxPostOnClick);

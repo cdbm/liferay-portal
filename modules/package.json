@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
-		"@liferay/eslint-plugin": "1.7.0",
+		"@liferay/eslint-plugin": "1.9.1",
 		"@liferay/prettier-plugin": "1.1.5",
 		"@liferay/stylelint-plugin": "1.1.0",
 		"@types/ckeditor4": "4.16.2",
@@ -9,6 +9,7 @@
 		"@types/react-dom": "^18.2.12",
 		"@types/react-router-dom": "^5.3.3",
 		"@types/react-transition-group": "^4.4.6",
+		"@types/uuid": "10.0.0",
 		"@types/warning": "^3.0.0",
 		"acorn": "7.1.1",
 		"alloy-ui": "^3.1.0-deprecated.40",
@@ -38,8 +39,7 @@
 			"apps/*/*",
 			"apps/*/*/*",
 			"dxp/apps/*/*",
-			"dxp/apps/*/!(osb-faro/osb-faro-web)*/*",
-			"dxp/apps/osb/*/!(osb-faro/osb-faro-web)*/*",
+			"dxp/apps/osb/osb-patcher/*",
 			"util/portal-tools-rest-builder-test-client-js",
 			"_node-scripts"
 		]

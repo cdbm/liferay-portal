@@ -46,6 +46,15 @@ import com.liferay.portlet.ActionResponseFactory;
 import com.liferay.portlet.internal.MutableRenderParametersImpl;
 import com.liferay.portlet.test.MockLiferayPortletContext;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -53,16 +62,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.logging.Level;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -645,8 +644,8 @@ public class PortalImplUnitTest {
 
 		Assert.assertFalse(_portalImpl.isValidResourceId(sb.toString()));
 
-		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
-				HttpComponentsUtil.class.getName(), Level.OFF)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				HttpComponentsUtil.class.getName(), LoggerTestUtil.OFF)) {
 
 			Assert.assertFalse(_portalImpl.isValidResourceId("%view.jsp"));
 		}

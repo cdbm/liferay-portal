@@ -68,9 +68,15 @@ public interface DB {
 			Connection connection, String tableName, String newTableName)
 		throws Exception;
 
+	public void dropIndexes(
+			Connection connection, List<String> indexNames, String tableName)
+		throws Exception;
+
 	public List<IndexMetadata> dropIndexes(
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException;
+
+	public String getCharacterSet(Connection connection) throws SQLException;
 
 	public DBType getDBType();
 
@@ -120,6 +126,9 @@ public interface DB {
 	public boolean isSupportsAlterColumnName();
 
 	public boolean isSupportsAlterColumnType();
+
+	public boolean isSupportsCharacterSet(Connection connection)
+		throws SQLException;
 
 	public boolean isSupportsDBPartition();
 
@@ -218,6 +227,11 @@ public interface DB {
 	public void updateIndexes(
 			Connection connection, String tableName, String indexesSQL,
 			boolean dropStaleIndexes)
+		throws Exception;
+
+	public void updatePrimaryKey(
+			Connection connection, String tableName,
+			String[] primaryKeyColumnNames)
 		throws Exception;
 
 }

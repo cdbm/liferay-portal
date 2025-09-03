@@ -31,11 +31,12 @@ export interface IBusinessEvent {
 	actualGoLiveDate?: string;
 	actualGoLiveDateTime?: string;
 	actualGoLiveTime?: string;
-	associatedTickets?: any;
+	associatedTickets?: string;
 	currentLiferayVersion?: {
 		key: string;
 		name: string;
 	};
+	dateModified?: string;
 	description?: string;
 	details?: string;
 	eventStatus?: {
@@ -47,6 +48,7 @@ export interface IBusinessEvent {
 		name: string;
 	};
 	id?: number;
+	lastComment?: string;
 	name?: string;
 	newLiferayVersion?: {
 		key: string;
@@ -60,6 +62,20 @@ export interface IBusinessEvent {
 		key: string;
 		name: string;
 	};
+}
+
+export interface IBusinessEventVersion {
+	change?: {
+		key: string;
+		name: string;
+	};
+	comment?: string;
+	creator?: {
+		name: string;
+	};
+	dateModified?: string;
+	r_accountEntryToBusinessEventVersions_accountEntryId?: number;
+	r_businessEventToBusinessEventVersions_c_businessEventId?: number;
 }
 
 export interface IKoroneikiAccount {
@@ -114,11 +130,36 @@ export interface IRoleBrief {
 	name: string;
 }
 
+export interface ITicket {
+	link: string;
+	selected?: boolean;
+	status: string;
+	subject: string;
+	ticketId: number;
+}
+
+export interface ITimeInput {
+	hours: string;
+	minutes: string;
+}
+
+export interface IUpload {
+	accountKey?: string;
+	attachmentName?: string;
+	errorCode?: string;
+	errorMessage?: string;
+	gcsSessionURL?: string;
+	ticketAttachmentId?: string;
+	ticketId?: string;
+	uploadAccountKey?: string;
+}
+
 export interface IUserAccount {
 	accountBriefs?: IAccountBrief[];
 	accountKey?: string;
 	code?: string;
 	email?: string;
+	emailAddress?: string;
 	familyName?: string;
 	firstName?: string;
 	givenName?: string;

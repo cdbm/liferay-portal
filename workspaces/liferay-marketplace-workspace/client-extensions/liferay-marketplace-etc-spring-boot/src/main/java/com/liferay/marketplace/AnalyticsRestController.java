@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.time.Duration;
 
+import java.util.Collections;
 import java.util.Objects;
 
 import org.apache.commons.logging.Log;
@@ -33,8 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import reactor.util.retry.Retry;
 
@@ -59,7 +59,8 @@ public class AnalyticsRestController extends BaseRestController {
 
 		return get(
 			"Bearer " + _analyticsAuthToken,
-			_defaultUriBuilderFactory.builder(
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
 			).path(
 				"/api/reports/pages"
 			).queryParam(
@@ -75,14 +76,19 @@ public class AnalyticsRestController extends BaseRestController {
 			).queryParam(
 				"sortOrder", sortOrder
 			).build(
-			).toString());
+			).toUri());
 	}
 
 	@GetMapping("project/{projectId}")
 	public String getProject(@PathVariable String projectId) throws Exception {
 		return get(
 			"Basic " + _analyticsAuthBasic,
-			"/o/faro/main/project/" + projectId);
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
+			).path(
+				"/o/faro/main/project/" + projectId
+			).build(
+			).toUri());
 	}
 
 	@GetMapping("project/{projectId}/data-source")
@@ -94,7 +100,8 @@ public class AnalyticsRestController extends BaseRestController {
 
 		return get(
 			"Basic " + _analyticsAuthBasic,
-			_defaultUriBuilderFactory.builder(
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
 			).path(
 				"/o/faro/contacts/" + projectId + "/data_source"
 			).queryParam(
@@ -102,22 +109,22 @@ public class AnalyticsRestController extends BaseRestController {
 			).queryParam(
 				"delta", delta
 			).build(
-			).toString());
+			).toUri());
 	}
 
 	@GetMapping("project/{projectId}/data-source/token")
 	public String getProjectDataSourceToken(@PathVariable String projectId)
 		throws Exception {
 
-		return _getWebClient(
-			"Basic " + _analyticsAuthBasic
-		).get(
-		).uri(
-			"/o/faro/contacts/" + projectId + "/data_source/token"
-		).retrieve(
-		).bodyToMono(
-			String.class
-		).block();
+		return get(
+			Collections.singletonMap(
+				HttpHeaders.AUTHORIZATION, "Basic " + _analyticsAuthBasic),
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
+			).path(
+				"/o/faro/contacts/" + projectId + "/data_source/token"
+			).build(
+			).toUri());
 	}
 
 	@GetMapping("project/{projectId}/email-address-domains")
@@ -126,7 +133,12 @@ public class AnalyticsRestController extends BaseRestController {
 
 		return get(
 			"Basic " + _analyticsAuthBasic,
-			"/o/faro/main/project/" + projectId + "/email_address_domains");
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
+			).path(
+				"/o/faro/main/project/" + projectId + "/email_address_domains"
+			).build(
+			).toUri());
 	}
 
 	@PostMapping("provisioning/{orderId}")
@@ -136,14 +148,7 @@ public class AnalyticsRestController extends BaseRestController {
 
 		JSONObject jsonObject = new JSONObject(json);
 
-		String projectJSON = _getWebClient(
-			"Basic " + _analyticsAuthBasic
-		).post(
-		).uri(
-			"/o/faro/main/project/unprovisioned"
-		).contentType(
-			MediaType.APPLICATION_FORM_URLENCODED
-		).body(
+		String projectJSON = post(
 			BodyInserters.fromFormData(
 				"corpProjectName", jsonObject.getString("corpProjectName")
 			).with(
@@ -172,11 +177,19 @@ public class AnalyticsRestController extends BaseRestController {
 				"trial", "true"
 			).with(
 				"ownerEmailAddress", jsonObject.getString("ownerEmailAddress")
-			)
-		).retrieve(
-		).bodyToMono(
-			String.class
-		).block();
+			).toString(),
+			HashMapBuilder.put(
+				HttpHeaders.AUTHORIZATION, "Basic " + _analyticsAuthBasic
+			).put(
+				HttpHeaders.CONTENT_TYPE,
+				MediaType.APPLICATION_FORM_URLENCODED_VALUE
+			).build(),
+			UriComponentsBuilder.fromUriString(
+				_analyticsAuthUrl
+			).path(
+				"/o/faro/main/project/unprovisioned"
+			).build(
+			).toUri());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Analytics project created for order " + orderId);
@@ -211,11 +224,6 @@ public class AnalyticsRestController extends BaseRestController {
 	}
 
 	@Override
-	protected String getWebClientBaseURL() {
-		return _analyticsAuthUrl;
-	}
-
-	@Override
 	protected ExchangeFilterFunction getWebClientExchangeFilterFunction() {
 		return (clientRequest, exchangeFunction) -> exchangeFunction.exchange(
 			clientRequest
@@ -233,17 +241,6 @@ public class AnalyticsRestController extends BaseRestController {
 		);
 	}
 
-	private WebClient _getWebClient(String authorization) {
-		return WebClient.builder(
-		).baseUrl(
-			_analyticsAuthUrl
-		).defaultHeader(
-			HttpHeaders.AUTHORIZATION, authorization
-		).filter(
-			getWebClientExchangeFilterFunction()
-		).build();
-	}
-
 	private static final Log _log = LogFactory.getLog(
 		AnalyticsRestController.class);
 
@@ -255,9 +252,6 @@ public class AnalyticsRestController extends BaseRestController {
 
 	@Value("${liferay.marketplace.analytics.auth.url}")
 	private String _analyticsAuthUrl;
-
-	private final DefaultUriBuilderFactory _defaultUriBuilderFactory =
-		new DefaultUriBuilderFactory();
 
 	@Autowired
 	private MarketplaceService _marketplaceService;

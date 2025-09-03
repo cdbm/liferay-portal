@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.inventory.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.exception.NoSuchWarehouseException;
@@ -30,11 +29,11 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -204,15 +203,9 @@ public class WarehouseAccountResourceImpl
 		}
 		else {
 			accountEntry =
-				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					commerceInventoryWarehouse.getCompanyId(),
-					warehouseAccount.getAccountExternalReferenceCode());
-
-			if (accountEntry == null) {
-				throw new NoSuchEntryException(
-					"Unable to find account with external reference code " +
-						warehouseAccount.getAccountExternalReferenceCode());
-			}
+				_accountEntryService.getAccountEntryByExternalReferenceCode(
+					warehouseAccount.getAccountExternalReferenceCode(),
+					commerceInventoryWarehouse.getCompanyId());
 		}
 
 		return _commerceInventoryWarehouseRelService.

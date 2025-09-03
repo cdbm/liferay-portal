@@ -19,15 +19,16 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetTagsSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.tag.facet.configuration.TagFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
+
+import jakarta.portlet.RenderRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.RenderRequest;
 
 /**
  * @author Lino Alves
@@ -74,14 +75,10 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	}
 
 	public long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_tagFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_tagFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	public void setDisplayStyle(String displayStyle) {

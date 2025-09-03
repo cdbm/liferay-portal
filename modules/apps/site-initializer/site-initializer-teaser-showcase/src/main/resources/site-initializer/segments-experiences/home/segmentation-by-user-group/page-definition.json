@@ -146,7 +146,7 @@
 																				},
 																				"text": {
 																					"value_i18n": {
-																						"en_US": "Discover How This Platform Can Help You Customizing Your Experience Using Out-Of-The-Box Capabilities"
+																						"en_US": "Discover how this platform can help you customize your experience using out of the box capabilities."
 																					}
 																				}
 																			}
@@ -484,6 +484,29 @@
 																					"id": "link",
 																					"value": {
 																						"fragmentLink": {
+																							"value": {
+																								"href": {
+																									"mapping": {
+																										"itemReference": {
+																											"className": "com.liferay.portal.kernel.model.Layout",
+																											"fields": [
+																												{
+																													"fieldName": "friendlyURL",
+																													"fieldValue": "/about-us"
+																												},
+																												{
+																													"fieldName": "privatePage",
+																													"fieldValue": "false"
+																												},
+																												{
+																													"fieldName": "siteKey",
+																													"fieldValue": "[$GROUP_KEY$]"
+																												}
+																											]
+																										}
+																									}
+																								}
+																							}
 																						},
 																						"text": {
 																							"value_i18n": {
@@ -672,7 +695,7 @@
 														},
 														"text": {
 															"value_i18n": {
-																"en_US": "Our Goal Is to Be Your Trusted Partner in Eye Care, Offering Unparalleled Support and Collaboration to Acheieve Your Vision. Elevate Your Brand With Premium Eyeglass Frames and Lenses."
+																"en_US": "Our Goal Is to Be Your Trusted Partner in Eye Care, Offering Unparalleled Support and Collaboration to Achieve Your Vision. Elevate Your Brand With Premium Eyeglass Frames and Lenses."
 															}
 														}
 													}
@@ -1349,7 +1372,7 @@
 																		},
 																		"text": {
 																			"value_i18n": {
-																				"en_US": "Thank You for Being a Distributor Today."
+																				"en_US": "Elevate Your Eyewear Business with Premium Quality"
 																			}
 																		}
 																	}
@@ -1374,7 +1397,7 @@
 																		},
 																		"text": {
 																			"value_i18n": {
-																				"en_US": "Clarity Is an Eyeglass and Contact Lens Manufacturer That Sells Directly to Consumer Brands. We Redefine Clarity Through Precision-Crafted Eyewear. Explore Our Curated Selection of Stylish Frames, Expertly Desgined to Enhance Your Vision and Style."
+																				"en_US": "Elevate your brand with a curated selection of glasses, sunglasses, contacts, and lenses."
 																			}
 																		}
 																	}
@@ -1405,13 +1428,31 @@
 																		"fragmentLink": {
 																			"value": {
 																				"href": {
-																					"value": ""
+																					"mapping": {
+																						"itemReference": {
+																							"className": "com.liferay.portal.kernel.model.Layout",
+																							"fields": [
+																								{
+																									"fieldName": "friendlyURL",
+																									"fieldValue": "/products"
+																								},
+																								{
+																									"fieldName": "privatePage",
+																									"fieldValue": "false"
+																								},
+																								{
+																									"fieldName": "siteKey",
+																									"fieldValue": "[$GROUP_KEY$]"
+																								}
+																							]
+																						}
+																					}
 																				}
 																			}
 																		},
 																		"text": {
 																			"value_i18n": {
-																				"en_US": "Apply Now"
+																				"en_US": "Explore our Products"
 																			}
 																		}
 																	}

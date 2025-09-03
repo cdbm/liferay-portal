@@ -32,12 +32,13 @@ public class AccountGroupServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountGroupServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static AccountGroup addAccountGroup(
-			long userId, String description, String name,
+			String externalReferenceCode, long userId, String description,
+			String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addAccountGroup(
-			userId, description, name, serviceContext);
+			externalReferenceCode, userId, description, name, serviceContext);
 	}
 
 	public static AccountGroup deleteAccountGroup(long accountGroupId)
@@ -72,6 +73,14 @@ public class AccountGroupServiceUtil {
 		return getService().getAccountGroup(accountGroupId);
 	}
 
+	public static AccountGroup getAccountGroupByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getAccountGroupByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	public static List<AccountGroup> getAccountGroupsByAccountEntryId(
 			long accountEntryId, int start, int end)
 		throws PortalException {
@@ -85,6 +94,14 @@ public class AccountGroupServiceUtil {
 
 		return getService().getAccountGroupsCountByAccountEntryId(
 			accountEntryId);
+	}
+
+	public static AccountGroup getOrAddEmptyAccountGroup(
+			String externalReferenceCode, String name)
+		throws Exception {
+
+		return getService().getOrAddEmptyAccountGroup(
+			externalReferenceCode, name);
 	}
 
 	/**
@@ -107,12 +124,14 @@ public class AccountGroupServiceUtil {
 	}
 
 	public static AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name,
+			String externalReferenceCode, long accountGroupId,
+			String description, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateAccountGroup(
-			accountGroupId, description, name, serviceContext);
+			externalReferenceCode, accountGroupId, description, name,
+			serviceContext);
 	}
 
 	public static AccountGroup updateExternalReferenceCode(

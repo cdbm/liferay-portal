@@ -1,0 +1,26 @@
+{
+	"dependencies": {
+		"@clayui/autocomplete": "3.145.0",
+		"@clayui/button": "3.144.1",
+		"@clayui/core": "3.145.0",
+		"@clayui/data-provider": "3.145.0",
+		"@clayui/form": "3.145.0",
+		"@clayui/modal": "3.145.0",
+		"@clayui/multi-select": "3.145.0",
+		"@clayui/shared": "3.145.0",
+		"@liferay/frontend-data-set-web": "*",
+		"classnames": "2.3.1",
+		"frontend-js-web": "*",
+		"react": "18.2.0",
+		"react-dom": "18.2.0"
+	},
+	"main": "index.ts",
+	"name": "frontend-js-item-selector-web",
+	"scripts": {
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
+	},
+	"version": "1.0.5"
+}

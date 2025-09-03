@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductAccountGroup;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		productAccountGroupResource = ProductAccountGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -223,11 +236,9 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			404,
 			productAccountGroupResource.getProductAccountGroupHttpResponse(
 				productAccountGroup.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
-			productAccountGroupResource.getProductAccountGroupHttpResponse(
-				productAccountGroup.getId()));
+			productAccountGroupResource.getProductAccountGroupHttpResponse(0L));
 	}
 
 	protected ProductAccountGroup
@@ -315,6 +326,49 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		throws Exception {
 
 		return testGraphQLProductAccountGroup_addProductAccountGroup();
+	}
+
+	@Test
+	public void testDeleteProductAccountGroupBatch() throws Exception {
+		ProductAccountGroup productAccountGroup1 =
+			testDeleteProductAccountGroupBatch_addProductAccountGroup();
+
+		testDeleteProductAccountGroupBatch_deleteProductAccountGroup(
+			202, null, productAccountGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productAccountGroupResource.getProductAccountGroupHttpResponse(
+				productAccountGroup1.getId()));
+	}
+
+	protected ProductAccountGroup
+			testDeleteProductAccountGroupBatch_addProductAccountGroup()
+		throws Exception {
+
+		return testDeleteProductAccountGroup_addProductAccountGroup();
+	}
+
+	protected void testDeleteProductAccountGroupBatch_deleteProductAccountGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productAccountGroupResource.
+				deleteProductAccountGroupBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -714,13 +768,13 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_getExternalReferenceCode();
 
-		Page<ProductAccountGroup> productAccountGroupPage =
+		Page<ProductAccountGroup> productAccountGroupsPage =
 			productAccountGroupResource.
 				getProductByExternalReferenceCodeProductAccountGroupsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productAccountGroupPage.getTotalCount());
+			productAccountGroupsPage.getTotalCount());
 
 		ProductAccountGroup productAccountGroup1 =
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_addProductAccountGroup(
@@ -925,12 +979,12 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 		Long id = testGetProductIdProductAccountGroupsPage_getId();
 
-		Page<ProductAccountGroup> productAccountGroupPage =
+		Page<ProductAccountGroup> productAccountGroupsPage =
 			productAccountGroupResource.getProductIdProductAccountGroupsPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productAccountGroupPage.getTotalCount());
+			productAccountGroupsPage.getTotalCount());
 
 		ProductAccountGroup productAccountGroup1 =
 			testGetProductIdProductAccountGroupsPage_addProductAccountGroup(
@@ -1051,6 +1105,62 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ProductAccountGroup productAccountGroup1 =
+			testBatchEngineDeleteImportTask_addProductAccountGroup();
+
+		testBatchEngineDeleteImportTask_deleteProductAccountGroup(
+			200, null, productAccountGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productAccountGroupResource.getProductAccountGroupHttpResponse(
+				productAccountGroup1.getId()));
+	}
+
+	protected ProductAccountGroup
+			testBatchEngineDeleteImportTask_addProductAccountGroup()
+		throws Exception {
+
+		return testDeleteProductAccountGroup_addProductAccountGroup();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteProductAccountGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductAccountGroup",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ProductAccountGroup
@@ -1625,7 +1735,30 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		return randomProductAccountGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductAccountGroupResource productAccountGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

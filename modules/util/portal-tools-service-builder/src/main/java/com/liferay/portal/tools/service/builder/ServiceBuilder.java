@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.Validator_IW;
 import com.liferay.portal.tools.ArgumentsUtil;
+import com.liferay.portal.tools.GitUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.portal.tools.java.parser.JavaParser;
 import com.liferay.portal.xml.SAXReaderFactory;
@@ -271,8 +272,8 @@ public class ServiceBuilder {
 					"\n", "\tservice.model.hints.file=",
 					"${basedir}/src/META-INF/portal-model-hints.xml\n",
 					"\tservice.osgi.module=false\n", "\tservice.plugin.name=\n",
-					"\tservice.props.util=com.liferay.portal.util.PropsUtil\n",
-					"\tservice.read.only.prefixes=",
+					"\tservice.props.util=com.liferay.portal.kernel.util.",
+					"PropsUtil\n\tservice.read.only.prefixes=",
 					StringUtil.merge(ServiceBuilderArgs.READ_ONLY_PREFIXES),
 					"\n", "\tservice.resource.actions.configs=",
 					StringUtil.merge(
@@ -1787,15 +1788,12 @@ public class ServiceBuilder {
 
 			String className = type.getFullyQualifiedName();
 
-			if (className.equals(CacheField.class.getName())) {
-				if (GetterUtil.getBoolean(
-						javaAnnotation.getNamedParameter("permanent"))) {
-
-					return true;
-				}
-
-				return false;
+			if (!className.equals(CacheField.class.getName())) {
+				continue;
 			}
+
+			return GetterUtil.getBoolean(
+				javaAnnotation.getNamedParameter("permanent"));
 		}
 
 		throw new IllegalArgumentException(javaField + " is not a cache field");
@@ -2042,11 +2040,7 @@ public class ServiceBuilder {
 			return false;
 		}
 
-		if (txRequiredMethodNames.contains(javaMethod.getName())) {
-			return true;
-		}
-
-		return false;
+		return txRequiredMethodNames.contains(javaMethod.getName());
 	}
 
 	public boolean isVersionGTE_7_0_0() {
@@ -2255,7 +2249,12 @@ public class ServiceBuilder {
 
 	private void _addIndexMetadata(
 		Map<String, List<IndexMetadata>> indexMetadatasMap, String tableName,
-		List<String> pkEntityColumnDBNames, IndexMetadata indexMetadata) {
+		List<String> pkEntityColumnDBNames, IndexMetadata indexMetadata,
+		boolean optimizeDBIndexes) {
+
+		if (indexMetadata == null) {
+			return;
+		}
 
 		if ((pkEntityColumnDBNames != null) &&
 			!pkEntityColumnDBNames.isEmpty()) {
@@ -2303,7 +2302,7 @@ public class ServiceBuilder {
 		List<IndexMetadata> indexMetadatas = indexMetadatasMap.computeIfAbsent(
 			tableName, key -> new ArrayList<>());
 
-		if (_optimizeDBIndexes) {
+		if (optimizeDBIndexes) {
 			indexMetadatas.add(indexMetadata);
 		}
 		else {
@@ -3140,6 +3139,60 @@ public class ServiceBuilder {
 			xmlFile, _formatXml(newContent), _modifiedFileNames);
 	}
 
+	private IndexMetadata _createIndexMetadata(
+		Entity entity, EntityFinder entityFinder, boolean optimizeDBIndexes) {
+
+		if (!entityFinder.isDBIndex()) {
+			return null;
+		}
+
+		List<EntityColumn> entityColumns = entityFinder.getEntityColumns();
+
+		if (entityColumns.equals(entity.getPKEntityColumns())) {
+			return null;
+		}
+
+		List<String> dbNames = new ArrayList<>();
+
+		for (EntityColumn entityColumn : entityColumns) {
+			if (entityColumn.isIndexable()) {
+				dbNames.add(entityColumn.getDBName());
+			}
+		}
+
+		if (dbNames.isEmpty()) {
+			return null;
+		}
+
+		boolean unique = entityFinder.isUnique();
+
+		if ((unique || !optimizeDBIndexes) &&
+			entity.isChangeTrackingEnabled() &&
+			!dbNames.contains("ctCollectionId")) {
+
+			dbNames.add("ctCollectionId");
+		}
+
+		if (optimizeDBIndexes && !unique) {
+			for (String highCardinalityColumnName :
+					_highCardinalityColumnNames) {
+
+				if (dbNames.contains(highCardinalityColumnName) &&
+					(dbNames.size() > 1)) {
+
+					dbNames.clear();
+
+					dbNames.add(highCardinalityColumnName);
+
+					break;
+				}
+			}
+		}
+
+		return IndexMetadataFactoryUtil.createIndexMetadata(
+			unique, entity.getTable(), dbNames.toArray(new String[0]));
+	}
+
 	private void _createModel(Entity entity) throws Exception {
 		Map<String, Object> context = _getContext();
 
@@ -3595,16 +3648,18 @@ public class ServiceBuilder {
 		if (propsFile.exists()) {
 			Properties properties = PropertiesUtil.load(_read(propsFile));
 
-			if (!_buildNumberIncrement) {
+			if (_buildNumberIncrement && !_hasLocalChanges(propsFile) &&
+				_hasModifiedSQLFiles()) {
+
+				buildNumber =
+					GetterUtil.getLong(properties.getProperty("build.number")) +
+						1;
+			}
+			else {
 				buildDate = GetterUtil.getLong(
 					properties.getProperty("build.date"));
 				buildNumber = GetterUtil.getLong(
 					properties.getProperty("build.number"));
-			}
-			else {
-				buildNumber =
-					GetterUtil.getLong(properties.getProperty("build.number")) +
-						1;
 			}
 		}
 
@@ -4144,7 +4199,7 @@ public class ServiceBuilder {
 
 				_addIndexMetadata(
 					indexMetadatasMap, indexMetadata.getTableName(),
-					pkEntityColumnDBNames, indexMetadata);
+					pkEntityColumnDBNames, indexMetadata, _optimizeDBIndexes);
 			}
 		}
 
@@ -4173,60 +4228,12 @@ public class ServiceBuilder {
 			List<EntityFinder> entityFinders = entity.getEntityFinders();
 
 			for (EntityFinder entityFinder : entityFinders) {
-				if (!entityFinder.isDBIndex()) {
-					continue;
-				}
-
-				List<EntityColumn> entityColumns =
-					entityFinder.getEntityColumns();
-
-				if (entityColumns.equals(entity.getPKEntityColumns())) {
-					continue;
-				}
-
-				List<String> dbNames = new ArrayList<>();
-
-				for (EntityColumn entityColumn : entityColumns) {
-					if (entityColumn.isIndexable()) {
-						dbNames.add(entityColumn.getDBName());
-					}
-				}
-
-				if (dbNames.isEmpty()) {
-					continue;
-				}
-
-				boolean unique = entityFinder.isUnique();
-
-				if (unique && entity.isChangeTrackingEnabled() &&
-					!dbNames.contains("ctCollectionId")) {
-
-					dbNames.add("ctCollectionId");
-				}
-
-				if (_optimizeDBIndexes && !unique) {
-					for (String highCardinalityColumnName :
-							_highCardinalityColumnNames) {
-
-						if (dbNames.contains(highCardinalityColumnName) &&
-							(dbNames.size() > 1)) {
-
-							dbNames.clear();
-
-							dbNames.add(highCardinalityColumnName);
-
-							break;
-						}
-					}
-				}
-
-				IndexMetadata indexMetadata =
-					IndexMetadataFactoryUtil.createIndexMetadata(
-						unique, tableName, dbNames.toArray(new String[0]));
-
 				_addIndexMetadata(
-					indexMetadatasMap, indexMetadata.getTableName(),
-					entity.getPKEntityColumnDBNames(), indexMetadata);
+					indexMetadatasMap, tableName,
+					entity.getPKEntityColumnDBNames(),
+					_createIndexMetadata(
+						entity, entityFinder, _optimizeDBIndexes),
+					_optimizeDBIndexes);
 			}
 
 			indexMetadatas = indexMetadatasMap.get(tableName);
@@ -4234,6 +4241,16 @@ public class ServiceBuilder {
 			if (_optimizeDBIndexes && (indexMetadatas != null)) {
 				indexMetadatasMap.put(
 					tableName, _optimizeForBTreeIndexes(indexMetadatas));
+			}
+
+			for (EntityFinder indexOnlyEntityFinder :
+					entity.getIndexOnlyEntityFinders()) {
+
+				_addIndexMetadata(
+					indexMetadatasMap, tableName,
+					entity.getPKEntityColumnDBNames(),
+					_createIndexMetadata(entity, indexOnlyEntityFinder, false),
+					false);
 			}
 		}
 
@@ -4514,7 +4531,7 @@ public class ServiceBuilder {
 					content.substring(0, x) + newCreateTableString +
 						content.substring(y + 2);
 
-				_write(sqlFile, content);
+				ToolsUtil.writeFileRaw(sqlFile, content, _modifiedFileNames);
 			}
 		}
 		else if (addMissingTables) {
@@ -5044,7 +5061,7 @@ public class ServiceBuilder {
 
 				_addIndexMetadata(
 					indexMetadatasMap, tableName, mappingPKEntityColumnDBNames,
-					indexMetadata);
+					indexMetadata, _optimizeDBIndexes);
 			}
 		}
 	}
@@ -5629,12 +5646,6 @@ public class ServiceBuilder {
 	}
 
 	private List<JavaMethod> _getMethods(JavaClass javaClass) {
-		return _getMethods(javaClass, false);
-	}
-
-	private List<JavaMethod> _getMethods(
-		JavaClass javaClass, boolean superclasses) {
-
 		List<JavaMethod> methods = new ArrayList<>();
 
 		List<String> cacheFieldMethods = new ArrayList<>();
@@ -5678,7 +5689,7 @@ public class ServiceBuilder {
 			}
 		}
 
-		for (JavaMethod javaMethod : javaClass.getMethods(superclasses)) {
+		for (JavaMethod javaMethod : javaClass.getMethods(false)) {
 			if (!cacheFieldMethods.contains(javaMethod.getName())) {
 				methods.add(javaMethod);
 			}
@@ -5971,6 +5982,28 @@ public class ServiceBuilder {
 	private boolean _hasHttpMethods(JavaClass javaClass) {
 		for (JavaMethod javaMethod : _getMethods(javaClass)) {
 			if (javaMethod.isPublic() && isCustomMethod(javaMethod)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _hasLocalChanges(File propsFile) throws Exception {
+		for (String localChangesFileName :
+				GitUtil.getLocalChangesFileNames("")) {
+
+			if (localChangesFileName.equals(propsFile.getPath())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _hasModifiedSQLFiles() {
+		for (String modifiedFileName : _modifiedFileNames) {
+			if (modifiedFileName.endsWith(".sql")) {
 				return true;
 			}
 		}
@@ -6639,6 +6672,7 @@ public class ServiceBuilder {
 		}
 
 		List<EntityFinder> entityFinders = new ArrayList<>();
+		List<EntityFinder> indexOnlyEntityFinders = new ArrayList<>();
 
 		List<Element> finderElements = entityElement.elements("finder");
 
@@ -6805,9 +6839,23 @@ public class ServiceBuilder {
 			String finderName = finderElement.attributeValue("name");
 			String finderPluralName = finderElement.attributeValue(
 				"plural-name");
+			boolean finderPretouch = GetterUtil.getBoolean(
+				finderElement.attributeValue("pretouch"));
 			String finderReturn = finderElement.attributeValue("return-type");
 			boolean finderUnique = GetterUtil.getBoolean(
 				finderElement.attributeValue("unique"));
+
+			if (isVersionGTE_7_4_0() &&
+				!Objects.equals(finderReturn, "Collection") && !finderUnique &&
+				ArrayUtil.contains(
+					_FORCE_UNIQUE_FINDER_PACKAGE_PATHS, _packagePath)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder \"", finderName, "\" defined by entity \"",
+						entityName, "\" must set unique=\"true\" as its ",
+						"return type is the name of the entity"));
+			}
 
 			String finderWhere = finderElement.attributeValue("where");
 
@@ -6833,9 +6881,6 @@ public class ServiceBuilder {
 					}
 				}
 			}
-
-			boolean finderDBIndex = GetterUtil.getBoolean(
-				finderElement.attributeValue("db-index"), true);
 
 			List<EntityColumn> finderEntityColumns = new ArrayList<>();
 
@@ -6887,11 +6932,25 @@ public class ServiceBuilder {
 						"company"));
 			}
 
-			entityFinders.add(
-				new EntityFinder(
-					this, finderName, finderPluralName, finderReturn,
-					finderUnique, finderWhere, finderDBWhere, finderDBIndex,
-					finderEntityColumns));
+			boolean finderDBIndex = GetterUtil.getBoolean(
+				finderElement.attributeValue("db-index"), true);
+
+			EntityFinder entityFinder = new EntityFinder(
+				this, finderName, finderPluralName, finderPretouch,
+				finderReturn, finderUnique, finderWhere, finderDBWhere,
+				finderDBIndex, finderEntityColumns);
+
+			if (GetterUtil.get(
+					finderElement.attributeValue(
+						"skip-db-index-optimization-and-finder-generation"),
+					false) &&
+				entityName.equals("ResourcePermission")) {
+
+				indexOnlyEntityFinders.add(entityFinder);
+			}
+			else {
+				entityFinders.add(entityFinder);
+			}
 		}
 
 		String uadOutputPath =
@@ -6984,9 +7043,9 @@ public class ServiceBuilder {
 			mvccEnabled, trashEnabled, uadApplicationName, uadAutoDelete,
 			uadOutputPath, uadPackagePath, deprecated, pkEntityColumns,
 			regularEntityColumns, blobEntityColumns, collectionEntityColumns,
-			entityColumns, entityOrder, entityFinders, referenceEntities,
-			unresolvedReferenceEntityNames, txRequiredMethodNames,
-			resourceActionModel);
+			entityColumns, entityOrder, entityFinders, indexOnlyEntityFinders,
+			referenceEntities, unresolvedReferenceEntityNames,
+			txRequiredMethodNames, resourceActionModel);
 
 		if (changeTrackingEnabled && !columnElements.isEmpty()) {
 			if (!mvccEnabled) {
@@ -7104,9 +7163,9 @@ public class ServiceBuilder {
 				listIterator.set(
 					new EntityFinder(
 						this, entityFinder.getName(),
-						entityFinder.getPluralName(), "Collection", false,
-						entityFinder.getWhere(), entityFinder.getDBWhere(),
-						entityFinder.isDBIndex(),
+						entityFinder.getPluralName(), entityFinder.isPretouch(),
+						"Collection", false, entityFinder.getWhere(),
+						entityFinder.getDBWhere(), entityFinder.isDBIndex(),
 						new ArrayList<>(entityFinder.getEntityColumns())));
 
 				List<EntityColumn> finderEntityColumns =
@@ -7119,9 +7178,10 @@ public class ServiceBuilder {
 				listIterator.add(
 					new EntityFinder(
 						this, entityFinder.getName() + "_Head", null,
-						entityFinder.getReturnType(), entityFinder.isUnique(),
-						entityFinder.getWhere(), entityFinder.getDBWhere(),
-						entityFinder.isDBIndex(), finderEntityColumns));
+						entityFinder.isPretouch(), entityFinder.getReturnType(),
+						entityFinder.isUnique(), entityFinder.getWhere(),
+						entityFinder.getDBWhere(), entityFinder.isDBIndex(),
+						finderEntityColumns));
 			}
 		}
 
@@ -7248,6 +7308,32 @@ public class ServiceBuilder {
 		newLocalizedColumnElement.addAttribute("name", "languageId");
 		newLocalizedColumnElement.addAttribute("type", "String");
 
+		// Manual columns
+
+		List<Element> columnElements = localizedEntityElement.elements(
+			"column");
+
+		for (Element columnElement : columnElements) {
+			String localized = columnElement.attributeValue("localized");
+
+			if (localized != null) {
+				throw new IllegalArgumentException(
+					"Unable to have localized columns in localized table for " +
+						"entity " + entity.getName());
+			}
+
+			Element newColumnElement = newLocalizedEntityElement.addElement(
+				"column", columnElement.getStringValue());
+
+			List<Attribute> columnAttributes = columnElement.attributes();
+
+			for (Attribute columnAttribute : columnAttributes) {
+				newColumnElement.addAttribute(
+					columnAttribute.getName(),
+					columnAttribute.getStringValue());
+			}
+		}
+
 		// Localized columns
 
 		List<Element> localizedColumnElements = localizedEntityElement.elements(
@@ -7330,32 +7416,6 @@ public class ServiceBuilder {
 			"finder-column");
 
 		newLocalizedFinderColumnElement.addAttribute("name", "languageId");
-
-		// Manual columns
-
-		List<Element> columnElements = localizedEntityElement.elements(
-			"column");
-
-		for (Element columnElement : columnElements) {
-			String localized = columnElement.attributeValue("localized");
-
-			if (localized != null) {
-				throw new IllegalArgumentException(
-					"Unable to have localized columns in localized table for " +
-						"entity " + entity.getName());
-			}
-
-			Element newColumnElement = newLocalizedEntityElement.addElement(
-				"column", columnElement.getStringValue());
-
-			List<Attribute> columnAttributes = columnElement.attributes();
-
-			for (Attribute columnAttribute : columnAttributes) {
-				newColumnElement.addAttribute(
-					columnAttribute.getName(),
-					columnAttribute.getStringValue());
-			}
-		}
 
 		// Manual Order
 
@@ -8055,7 +8115,7 @@ public class ServiceBuilder {
 		Files.createFile(file.toPath());
 	}
 
-	private void _write(File file, String s) throws IOException {
+	private void _write(File file, String s) throws Exception {
 		Path path = file.toPath();
 
 		Files.createDirectories(path.getParent());
@@ -8131,6 +8191,10 @@ public class ServiceBuilder {
 	}
 
 	private static final int _DEFAULT_COLUMN_MAX_LENGTH = 75;
+
+	private static final String[] _FORCE_UNIQUE_FINDER_PACKAGE_PATHS = {
+		"com.liferay.counter", "com.liferay.portal"
+	};
 
 	private static final String _HIBERNATE_3_HBM_NAMESPACE =
 		"\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"";

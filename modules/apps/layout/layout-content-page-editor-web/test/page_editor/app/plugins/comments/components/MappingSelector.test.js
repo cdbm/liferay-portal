@@ -74,11 +74,6 @@ const EMPTY_COLLECTION_CONFIG = {
 
 const onMappingSelect = jest.fn();
 
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
-	sub: jest.fn((key, arg) => key.replace('x', arg)),
-}));
-
 jest.mock(
 	'../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/index',
 	() => ({
@@ -184,6 +179,8 @@ function renderMappingSelector({
 
 describe('MappingSelector', () => {
 	beforeAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = true;
+
 		State.writeAtom(pageContentsAtom, {
 			data: [
 				{
@@ -200,6 +197,8 @@ describe('MappingSelector', () => {
 	});
 
 	afterAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = false;
+
 		State.writeAtom(pageContentsAtom, {
 			data: [],
 			status: 'idle',

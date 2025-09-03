@@ -24,16 +24,16 @@ import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.web.internal.constants.StyleBookWebKeys;
-import com.liferay.style.book.web.internal.util.StyleBookUtil;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -326,6 +326,22 @@ public class StyleBookEntryActionDropdownItemsProvider {
 			String defaultStyleBookEntryName = LanguageUtil.get(
 				_httpServletRequest, "styles-from-theme");
 
+			if (FeatureFlagManagerUtil.isEnabled(
+					_themeDisplay.getCompanyId(), "LPD-30204")) {
+
+				defaultStyleBookEntry =
+					StyleBookEntryLocalServiceUtil.fetchDefaultStyleBookEntry(
+						_styleBookEntry.getGroupId(),
+						_styleBookEntry.getThemeId());
+
+				defaultStyleBookEntryName = LanguageUtil.format(
+					_themeDisplay.getLocale(), "styles-from-x",
+					StyleBookUtil.getThemeName(
+						_styleBookEntry.getCompanyId(),
+						_themeDisplay.getLocale(),
+						_styleBookEntry.getThemeId()));
+			}
+
 			if (defaultStyleBookEntry != null) {
 				defaultStyleBookEntryName = defaultStyleBookEntry.getName();
 			}
@@ -346,7 +362,8 @@ public class StyleBookEntryActionDropdownItemsProvider {
 					LanguageUtil.format(
 						_httpServletRequest, "mark-as-default-for-x",
 						StyleBookUtil.getThemeName(
-							_themeDisplay.getCompanyId(), _httpServletRequest,
+							_themeDisplay.getCompanyId(),
+							_themeDisplay.getLocale(),
 							_styleBookEntry.getThemeId())));
 			}
 			else {

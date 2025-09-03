@@ -26,6 +26,14 @@ import com.liferay.portal.osgi.web.servlet.context.helper.internal.JspServletWra
 import com.liferay.portal.osgi.web.servlet.context.helper.internal.order.OrderUtil;
 import com.liferay.portal.osgi.web.servlet.context.helper.order.Order;
 
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebInitParam;
+import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -43,14 +51,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiFunction;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebInitParam;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.annotation.WebServlet;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -706,7 +706,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 						throw new Exception(
 							StringBundler.concat(
-								"Init paramter name ", initParameterName,
+								"Init parameter name ", initParameterName,
 								" conflicts with filter name ", filterName));
 					}
 
@@ -831,7 +831,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 						throw new Exception(
 							StringBundler.concat(
-								"Init paramter name ", initParameterName,
+								"Init parameter name ", initParameterName,
 								" conflicts with servlet name ", servletName));
 					}
 

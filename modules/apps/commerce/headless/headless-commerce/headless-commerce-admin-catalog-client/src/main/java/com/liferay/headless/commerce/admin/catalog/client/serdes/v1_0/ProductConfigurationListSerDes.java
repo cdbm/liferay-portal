@@ -9,6 +9,8 @@ import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductConfig
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductConfigurationList;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -17,8 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -108,6 +108,30 @@ public class ProductConfigurationListSerDes {
 					productConfigurationList.getCreateDate()));
 
 			sb.append("\"");
+		}
+
+		if (productConfigurationList.getCustomFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < productConfigurationList.getCustomFields().length; i++) {
+
+				sb.append(productConfigurationList.getCustomFields()[i]);
+
+				if ((i + 1) <
+						productConfigurationList.getCustomFields().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (productConfigurationList.getDisplayDate() != null) {
@@ -317,6 +341,15 @@ public class ProductConfigurationListSerDes {
 					productConfigurationList.getCreateDate()));
 		}
 
+		if (productConfigurationList.getCustomFields() == null) {
+			map.put("customFields", null);
+		}
+		else {
+			map.put(
+				"customFields",
+				String.valueOf(productConfigurationList.getCustomFields()));
+		}
+
 		if (productConfigurationList.getDisplayDate() == null) {
 			map.put("displayDate", null);
 		}
@@ -442,6 +475,9 @@ public class ProductConfigurationListSerDes {
 			else if (Objects.equals(jsonParserFieldName, "createDate")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "displayDate")) {
 				return false;
 			}
@@ -512,6 +548,27 @@ public class ProductConfigurationListSerDes {
 				if (jsonParserFieldValue != null) {
 					productConfigurationList.setCreateDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					com.liferay.headless.commerce.admin.catalog.client.custom.
+						field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.admin.catalog.client.
+							custom.field.CustomField
+							[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.admin.catalog.client.
+								custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
+					}
+
+					productConfigurationList.setCustomFields(customFieldsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "displayDate")) {

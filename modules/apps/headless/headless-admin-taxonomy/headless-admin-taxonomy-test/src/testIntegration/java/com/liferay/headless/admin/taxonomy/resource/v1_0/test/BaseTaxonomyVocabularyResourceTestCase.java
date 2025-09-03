@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyVocabulary;
@@ -22,6 +23,9 @@ import com.liferay.headless.admin.taxonomy.client.pagination.Pagination;
 import com.liferay.headless.admin.taxonomy.client.permission.Permission;
 import com.liferay.headless.admin.taxonomy.client.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.headless.admin.taxonomy.client.serdes.v1_0.TaxonomyVocabularySerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -65,6 +69,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -82,16 +96,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -132,16 +136,28 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_taxonomyVocabularyResource.setContextCompany(testCompany);
 
@@ -149,6 +165,16 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			testCompany.getCompanyId());
 
 		taxonomyVocabularyResource = TaxonomyVocabularyResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -248,6 +274,244 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		Assert.assertEquals(regex, taxonomyVocabulary.getName());
 		Assert.assertEquals(
 			regex, taxonomyVocabulary.getSiteExternalReferenceCode());
+	}
+
+	@Test
+	public void testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary =
+			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
+
+		assertHttpResponseStatusCode(
+			204,
+			taxonomyVocabularyResource.
+				deleteAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					taxonomyVocabulary.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				getAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					taxonomyVocabulary.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				getAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					"-"));
+	}
+
+	protected TaxonomyVocabulary
+			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
+			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
+	}
+
+	protected Long
+			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteSiteTaxonomyVocabularyByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary =
+			testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
+
+		assertHttpResponseStatusCode(
+			204,
+			taxonomyVocabularyResource.
+				deleteSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					taxonomyVocabulary.getSiteId(),
+					taxonomyVocabulary.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				getSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					taxonomyVocabulary.getSiteId(),
+					taxonomyVocabulary.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				getSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
+					taxonomyVocabulary.getSiteId(), "-"));
+	}
+
+	protected TaxonomyVocabulary
+			testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
+	public void testDeleteTaxonomyVocabulary() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary =
+			testDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+
+		assertHttpResponseStatusCode(
+			204,
+			taxonomyVocabularyResource.deleteTaxonomyVocabularyHttpResponse(
+				taxonomyVocabulary.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(
+				taxonomyVocabulary.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(0L));
+	}
+
+	protected TaxonomyVocabulary
+			testDeleteTaxonomyVocabulary_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
+	public void testGraphQLDeleteTaxonomyVocabulary() throws Exception {
+
+		// No namespace
+
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTaxonomyVocabulary",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"taxonomyVocabularyId",
+									taxonomyVocabulary1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteTaxonomyVocabulary"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"taxonomyVocabulary",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"taxonomyVocabularyId",
+								taxonomyVocabulary1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminTaxonomy_v1_0
+
+		TaxonomyVocabulary taxonomyVocabulary2 =
+			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminTaxonomy_v1_0",
+						new GraphQLField(
+							"deleteTaxonomyVocabulary",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"taxonomyVocabularyId",
+										taxonomyVocabulary2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminTaxonomy_v1_0",
+				"Object/deleteTaxonomyVocabulary"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminTaxonomy_v1_0",
+					new GraphQLField(
+						"taxonomyVocabulary",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"taxonomyVocabularyId",
+									taxonomyVocabulary2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected TaxonomyVocabulary
+			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary()
+		throws Exception {
+
+		return testGraphQLTaxonomyVocabulary_addTaxonomyVocabulary();
+	}
+
+	@Test
+	public void testDeleteTaxonomyVocabularyBatch() throws Exception {
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testDeleteTaxonomyVocabularyBatch_addTaxonomyVocabulary();
+
+		testDeleteTaxonomyVocabularyBatch_deleteTaxonomyVocabulary(
+			202, null, taxonomyVocabulary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(
+				taxonomyVocabulary1.getId()));
+	}
+
+	protected TaxonomyVocabulary
+			testDeleteTaxonomyVocabularyBatch_addTaxonomyVocabulary()
+		throws Exception {
+
+		return testDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+	}
+
+	protected void testDeleteTaxonomyVocabularyBatch_deleteTaxonomyVocabulary(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			taxonomyVocabularyResource.
+				deleteTaxonomyVocabularyBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -460,12 +724,12 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId();
 
-		Page<TaxonomyVocabulary> taxonomyVocabularyPage =
+		Page<TaxonomyVocabulary> taxonomyVocabulariesPage =
 			taxonomyVocabularyResource.getAssetLibraryTaxonomyVocabulariesPage(
 				assetLibraryId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			taxonomyVocabularyPage.getTotalCount());
+			taxonomyVocabulariesPage.getTotalCount());
 
 		TaxonomyVocabulary taxonomyVocabulary1 =
 			testGetAssetLibraryTaxonomyVocabulariesPage_addTaxonomyVocabulary(
@@ -753,106 +1017,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			testGetAssetLibraryTaxonomyVocabulariesPage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
-	}
-
-	@Test
-	public void testPostAssetLibraryTaxonomyVocabulary() throws Exception {
-		TaxonomyVocabulary randomTaxonomyVocabulary =
-			randomTaxonomyVocabulary();
-
-		TaxonomyVocabulary postTaxonomyVocabulary =
-			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
-				randomTaxonomyVocabulary);
-
-		assertEquals(randomTaxonomyVocabulary, postTaxonomyVocabulary);
-		assertValid(postTaxonomyVocabulary);
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary1 =
-			randomPermissionsTaxonomyVocabulary();
-
-		TaxonomyVocabulary postPermissionsTaxonomyVocabulary1 =
-			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
-				randomPermissionsTaxonomyVocabulary1);
-
-		Assert.assertNull(postPermissionsTaxonomyVocabulary1.getPermissions());
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary2 =
-			randomPermissionsTaxonomyVocabulary();
-
-		TaxonomyVocabulary postPermissionsTaxonomyVocabulary2 =
-			testPostAssetLibraryTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
-				randomPermissionsTaxonomyVocabulary2);
-
-		Assert.assertNotNull(
-			postPermissionsTaxonomyVocabulary2.getPermissions());
-	}
-
-	protected TaxonomyVocabulary
-			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
-			testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
-			taxonomyVocabulary);
-	}
-
-	protected TaxonomyVocabulary
-			testPostAssetLibraryTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return permissionsTaxonomyVocabularyResource.
-			postAssetLibraryTaxonomyVocabulary(
-				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
-				taxonomyVocabulary);
-	}
-
-	@Test
-	public void testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary =
-			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
-
-		assertHttpResponseStatusCode(
-			204,
-			taxonomyVocabularyResource.
-				deleteAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					taxonomyVocabulary.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				getAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					taxonomyVocabulary.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				getAssetLibraryTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					taxonomyVocabulary.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected TaxonomyVocabulary
-			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
-		throws Exception {
-
-		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
-			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
+		return irrelevantDepotEntry.getDepotEntryId();
 	}
 
 	@Test
@@ -882,20 +1047,20 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		Assert.assertNotNull(getTaxonomyVocabulary.getPermissions());
 	}
 
-	protected Long
-			testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
 	protected TaxonomyVocabulary
 			testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
 		throws Exception {
 
 		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
 			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
+	}
+
+	protected Long
+			testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -922,7 +1087,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 											"\"" +
 												testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -954,7 +1118,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 												"\"" +
 													testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -997,7 +1160,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 								put(
 									"assetLibraryId",
 									"\"" +
-										testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId() +
+										irrelevantDepotEntry.getDepotEntryId() +
 											"\"");
 								put(
 									"externalReferenceCode",
@@ -1023,8 +1186,8 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 									put(
 										"assetLibraryId",
 										"\"" +
-											testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId() +
-												"\"");
+											irrelevantDepotEntry.
+												getDepotEntryId() + "\"");
 									put(
 										"externalReferenceCode",
 										irrelevantExternalReferenceCode);
@@ -1043,113 +1206,12 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	}
 
 	@Test
-	public void testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode()
-		throws Exception {
-
-		TaxonomyVocabulary postTaxonomyVocabulary =
-			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
-
-		TaxonomyVocabulary randomTaxonomyVocabulary =
-			randomTaxonomyVocabulary();
-
-		TaxonomyVocabulary putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomTaxonomyVocabulary);
-
-		assertEquals(randomTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
-
-		TaxonomyVocabulary getTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				getAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					putTaxonomyVocabulary.getExternalReferenceCode());
-
-		assertEquals(randomTaxonomyVocabulary, getTaxonomyVocabulary);
-		assertValid(getTaxonomyVocabulary);
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary =
-			randomPermissionsTaxonomyVocabulary();
-
-		putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomPermissionsTaxonomyVocabulary);
-
-		assertEquals(
-			randomPermissionsTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
-
-		putTaxonomyVocabulary =
-			permissionsTaxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomPermissionsTaxonomyVocabulary);
-
-		Assert.assertNotNull(putTaxonomyVocabulary.getPermissions());
-
-		TaxonomyVocabulary newTaxonomyVocabulary =
-			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary();
-
-		putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					newTaxonomyVocabulary.getExternalReferenceCode(),
-					newTaxonomyVocabulary);
-
-		assertEquals(newTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		getTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				getAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
-					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
-					putTaxonomyVocabulary.getExternalReferenceCode());
-
-		assertEquals(newTaxonomyVocabulary, getTaxonomyVocabulary);
-
-		Assert.assertEquals(
-			newTaxonomyVocabulary.getExternalReferenceCode(),
-			putTaxonomyVocabulary.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected TaxonomyVocabulary
-			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary()
-		throws Exception {
-
-		return randomTaxonomyVocabulary();
-	}
-
-	protected TaxonomyVocabulary
-			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
-		throws Exception {
-
-		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
-			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
-	}
-
-	@Test
 	public void testGetAssetLibraryTaxonomyVocabularyPermissionsPage()
 		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testGetAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
 
 		Page<Permission> page =
 			taxonomyVocabularyResource.
@@ -1161,55 +1223,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 	protected TaxonomyVocabulary
 			testGetAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
-		throws Exception {
-
-		return testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
-			randomTaxonomyVocabulary());
-	}
-
-	@Test
-	public void testPutAssetLibraryTaxonomyVocabularyPermissionsPage()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary =
-			testPutAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			taxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyPermissionsPageHttpResponse(
-					testDepotEntry.getDepotEntryId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				putAssetLibraryTaxonomyVocabularyPermissionsPageHttpResponse(
-					testDepotEntry.getDepotEntryId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected TaxonomyVocabulary
-			testPutAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
 		throws Exception {
 
 		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
@@ -1412,12 +1425,12 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 		Long siteId = testGetSiteTaxonomyVocabulariesPage_getSiteId();
 
-		Page<TaxonomyVocabulary> taxonomyVocabularyPage =
+		Page<TaxonomyVocabulary> taxonomyVocabulariesPage =
 			taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
 				siteId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			taxonomyVocabularyPage.getTotalCount());
+			taxonomyVocabulariesPage.getTotalCount());
 
 		TaxonomyVocabulary taxonomyVocabulary1 =
 			testGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary(
@@ -1698,200 +1711,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetSiteTaxonomyVocabulariesPage() throws Exception {
-		Long siteId = testGetSiteTaxonomyVocabulariesPage_getSiteId();
-
-		GraphQLField graphQLField = new GraphQLField(
-			"taxonomyVocabularies",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-
-					put("siteKey", "\"" + siteId + "\"");
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject taxonomyVocabulariesJSONObject =
-			JSONUtil.getValueAsJSONObject(
-				invokeGraphQLQuery(graphQLField), "JSONObject/data",
-				"JSONObject/taxonomyVocabularies");
-
-		long totalCount = taxonomyVocabulariesJSONObject.getLong("totalCount");
-
-		TaxonomyVocabulary taxonomyVocabulary1 =
-			testGraphQLGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary();
-		TaxonomyVocabulary taxonomyVocabulary2 =
-			testGraphQLGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary();
-
-		taxonomyVocabulariesJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/taxonomyVocabularies");
-
-		Assert.assertEquals(
-			totalCount + 2,
-			taxonomyVocabulariesJSONObject.getLong("totalCount"));
-
-		assertContains(
-			taxonomyVocabulary1,
-			Arrays.asList(
-				TaxonomyVocabularySerDes.toDTOs(
-					taxonomyVocabulariesJSONObject.getString("items"))));
-		assertContains(
-			taxonomyVocabulary2,
-			Arrays.asList(
-				TaxonomyVocabularySerDes.toDTOs(
-					taxonomyVocabulariesJSONObject.getString("items"))));
-
-		// Using the namespace headlessAdminTaxonomy_v1_0
-
-		taxonomyVocabulariesJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("headlessAdminTaxonomy_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessAdminTaxonomy_v1_0",
-			"JSONObject/taxonomyVocabularies");
-
-		Assert.assertEquals(
-			totalCount + 2,
-			taxonomyVocabulariesJSONObject.getLong("totalCount"));
-
-		assertContains(
-			taxonomyVocabulary1,
-			Arrays.asList(
-				TaxonomyVocabularySerDes.toDTOs(
-					taxonomyVocabulariesJSONObject.getString("items"))));
-		assertContains(
-			taxonomyVocabulary2,
-			Arrays.asList(
-				TaxonomyVocabularySerDes.toDTOs(
-					taxonomyVocabulariesJSONObject.getString("items"))));
-	}
-
-	protected TaxonomyVocabulary
-			testGraphQLGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary()
-		throws Exception {
-
-		return testGraphQLTaxonomyVocabulary_addTaxonomyVocabulary();
-	}
-
-	@Test
-	public void testPostSiteTaxonomyVocabulary() throws Exception {
-		TaxonomyVocabulary randomTaxonomyVocabulary =
-			randomTaxonomyVocabulary();
-
-		TaxonomyVocabulary postTaxonomyVocabulary =
-			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
-				randomTaxonomyVocabulary);
-
-		assertEquals(randomTaxonomyVocabulary, postTaxonomyVocabulary);
-		assertValid(postTaxonomyVocabulary);
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary1 =
-			randomPermissionsTaxonomyVocabulary();
-
-		TaxonomyVocabulary postPermissionsTaxonomyVocabulary1 =
-			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
-				randomPermissionsTaxonomyVocabulary1);
-
-		Assert.assertNull(postPermissionsTaxonomyVocabulary1.getPermissions());
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary2 =
-			randomPermissionsTaxonomyVocabulary();
-
-		TaxonomyVocabulary postPermissionsTaxonomyVocabulary2 =
-			testPostSiteTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
-				randomPermissionsTaxonomyVocabulary2);
-
-		Assert.assertNotNull(
-			postPermissionsTaxonomyVocabulary2.getPermissions());
-	}
-
-	protected TaxonomyVocabulary
-			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
-			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
-			taxonomyVocabulary);
-	}
-
-	protected TaxonomyVocabulary
-			testPostSiteTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return permissionsTaxonomyVocabularyResource.postSiteTaxonomyVocabulary(
-			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
-			taxonomyVocabulary);
-	}
-
-	@Test
-	public void testGraphQLPostSiteTaxonomyVocabulary() throws Exception {
-		TaxonomyVocabulary randomTaxonomyVocabulary =
-			randomTaxonomyVocabulary();
-
-		TaxonomyVocabulary taxonomyVocabulary =
-			testGraphQLTaxonomyVocabulary_addTaxonomyVocabulary(
-				randomTaxonomyVocabulary);
-
-		Assert.assertTrue(equals(randomTaxonomyVocabulary, taxonomyVocabulary));
-	}
-
-	@Test
-	public void testDeleteSiteTaxonomyVocabularyByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary =
-			testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
-
-		assertHttpResponseStatusCode(
-			204,
-			taxonomyVocabularyResource.
-				deleteSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						taxonomyVocabulary),
-					taxonomyVocabulary.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				getSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						taxonomyVocabulary),
-					taxonomyVocabulary.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				getSiteTaxonomyVocabularyByExternalReferenceCodeHttpResponse(
-					testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						taxonomyVocabulary),
-					taxonomyVocabulary.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabulary.getSiteId();
-	}
-
-	protected TaxonomyVocabulary
-			testDeleteSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
-		throws Exception {
-
-		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
-			testGroup.getGroupId(), randomTaxonomyVocabulary());
-	}
-
-	@Test
 	public void testGetSiteTaxonomyVocabularyByExternalReferenceCode()
 		throws Exception {
 
@@ -1901,8 +1720,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		TaxonomyVocabulary getTaxonomyVocabulary =
 			taxonomyVocabularyResource.
 				getSiteTaxonomyVocabularyByExternalReferenceCode(
-					testGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						postTaxonomyVocabulary),
+					postTaxonomyVocabulary.getSiteId(),
 					postTaxonomyVocabulary.getExternalReferenceCode());
 
 		assertEquals(postTaxonomyVocabulary, getTaxonomyVocabulary);
@@ -1913,19 +1731,10 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		getTaxonomyVocabulary =
 			permissionsTaxonomyVocabularyResource.
 				getSiteTaxonomyVocabularyByExternalReferenceCode(
-					testGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						postTaxonomyVocabulary),
+					postTaxonomyVocabulary.getSiteId(),
 					postTaxonomyVocabulary.getExternalReferenceCode());
 
 		Assert.assertNotNull(getTaxonomyVocabulary.getPermissions());
-	}
-
-	protected Long
-			testGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabulary.getSiteId();
 	}
 
 	protected TaxonomyVocabulary
@@ -1958,9 +1767,8 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 										put(
 											"siteKey",
 											"\"" +
-												testGraphQLGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-													taxonomyVocabulary) + "\"");
-
+												taxonomyVocabulary.getSiteId() +
+													"\"");
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -1990,10 +1798,8 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 											put(
 												"siteKey",
 												"\"" +
-													testGraphQLGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-														taxonomyVocabulary) +
-															"\"");
-
+													taxonomyVocabulary.
+														getSiteId() + "\"");
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -2006,14 +1812,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 						"JSONObject/data",
 						"JSONObject/headlessAdminTaxonomy_v1_0",
 						"Object/taxonomyVocabularyByExternalReferenceCode"))));
-	}
-
-	protected Long
-			testGraphQLGetSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabulary.getSiteId();
 	}
 
 	@Test
@@ -2079,119 +1877,12 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	}
 
 	@Test
-	public void testPutSiteTaxonomyVocabularyByExternalReferenceCode()
-		throws Exception {
-
-		TaxonomyVocabulary postTaxonomyVocabulary =
-			testPutSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
-
-		TaxonomyVocabulary randomTaxonomyVocabulary =
-			randomTaxonomyVocabulary();
-
-		TaxonomyVocabulary putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						postTaxonomyVocabulary),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomTaxonomyVocabulary);
-
-		assertEquals(randomTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
-
-		TaxonomyVocabulary getTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				getSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						putTaxonomyVocabulary),
-					putTaxonomyVocabulary.getExternalReferenceCode());
-
-		assertEquals(randomTaxonomyVocabulary, getTaxonomyVocabulary);
-		assertValid(getTaxonomyVocabulary);
-
-		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary =
-			randomPermissionsTaxonomyVocabulary();
-
-		putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						postTaxonomyVocabulary),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomPermissionsTaxonomyVocabulary);
-
-		assertEquals(
-			randomPermissionsTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
-
-		putTaxonomyVocabulary =
-			permissionsTaxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						postTaxonomyVocabulary),
-					postTaxonomyVocabulary.getExternalReferenceCode(),
-					randomPermissionsTaxonomyVocabulary);
-
-		Assert.assertNotNull(putTaxonomyVocabulary.getPermissions());
-
-		TaxonomyVocabulary newTaxonomyVocabulary =
-			testPutSiteTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary();
-
-		putTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						newTaxonomyVocabulary),
-					newTaxonomyVocabulary.getExternalReferenceCode(),
-					newTaxonomyVocabulary);
-
-		assertEquals(newTaxonomyVocabulary, putTaxonomyVocabulary);
-		assertValid(putTaxonomyVocabulary);
-
-		getTaxonomyVocabulary =
-			taxonomyVocabularyResource.
-				getSiteTaxonomyVocabularyByExternalReferenceCode(
-					testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-						putTaxonomyVocabulary),
-					putTaxonomyVocabulary.getExternalReferenceCode());
-
-		assertEquals(newTaxonomyVocabulary, getTaxonomyVocabulary);
-
-		Assert.assertEquals(
-			newTaxonomyVocabulary.getExternalReferenceCode(),
-			putTaxonomyVocabulary.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutSiteTaxonomyVocabularyByExternalReferenceCode_getSiteId(
-				TaxonomyVocabulary taxonomyVocabulary)
-		throws Exception {
-
-		return taxonomyVocabulary.getSiteId();
-	}
-
-	protected TaxonomyVocabulary
-			testPutSiteTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary()
-		throws Exception {
-
-		return randomTaxonomyVocabulary();
-	}
-
-	protected TaxonomyVocabulary
-			testPutSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
-		throws Exception {
-
-		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
-			testGroup.getGroupId(), randomTaxonomyVocabulary());
-	}
-
-	@Test
 	public void testGetSiteTaxonomyVocabularyPermissionsPage()
 		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testGetSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
 
 		Page<Permission> page =
 			taxonomyVocabularyResource.getSiteTaxonomyVocabularyPermissionsPage(
@@ -2204,169 +1895,505 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			testGetSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
 		throws Exception {
 
-		return testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
-			randomTaxonomyVocabulary());
-	}
-
-	@Test
-	public void testPutSiteTaxonomyVocabularyPermissionsPage()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary =
-			testPutSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			taxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyPermissionsPageHttpResponse(
-					taxonomyVocabulary.getSiteId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.
-				putSiteTaxonomyVocabularyPermissionsPageHttpResponse(
-					taxonomyVocabulary.getSiteId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected TaxonomyVocabulary
-			testPutSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
-		throws Exception {
-
 		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
 			testGroup.getGroupId(), randomTaxonomyVocabulary());
 	}
 
 	@Test
-	public void testDeleteTaxonomyVocabulary() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxonomyVocabulary taxonomyVocabulary =
-			testDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+	public void testGetTaxonomyVocabulariesPage() throws Exception {
+		Page<TaxonomyVocabulary> page =
+			taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+				null, null, null, Pagination.of(1, 10), null);
 
-		assertHttpResponseStatusCode(
-			204,
-			taxonomyVocabularyResource.deleteTaxonomyVocabularyHttpResponse(
-				taxonomyVocabulary.getId()));
+		long totalCount = page.getTotalCount();
 
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(
-				taxonomyVocabulary.getId()));
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
 
-		assertHttpResponseStatusCode(
-			404,
-			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(0L));
+		TaxonomyVocabulary taxonomyVocabulary2 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		page = taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(
+			taxonomyVocabulary1, (List<TaxonomyVocabulary>)page.getItems());
+		assertContains(
+			taxonomyVocabulary2, (List<TaxonomyVocabulary>)page.getItems());
+		assertValid(page, testGetTaxonomyVocabulariesPage_getExpectedActions());
+
+		for (TaxonomyVocabulary taxonomyVocabulary : page.getItems()) {
+			Assert.assertNull(taxonomyVocabulary.getPermissions());
+		}
+
+		page =
+			permissionsTaxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+				null, null, null, Pagination.of(1, 10), null);
+
+		for (TaxonomyVocabulary taxonomyVocabulary : page.getItems()) {
+			Assert.assertNotNull(taxonomyVocabulary.getPermissions());
+		}
+
+		taxonomyVocabularyResource.deleteTaxonomyVocabulary(
+			taxonomyVocabulary1.getId());
+
+		taxonomyVocabularyResource.deleteTaxonomyVocabulary(
+			taxonomyVocabulary2.getId());
 	}
 
-	protected TaxonomyVocabulary
-			testDeleteTaxonomyVocabulary_addTaxonomyVocabulary()
+	protected Map<String, Map<String, String>>
+			testGetTaxonomyVocabulariesPage_getExpectedActions()
 		throws Exception {
 
-		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
-			testGroup.getGroupId(), randomTaxonomyVocabulary());
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
-	public void testGraphQLDeleteTaxonomyVocabulary() throws Exception {
+	public void testGetTaxonomyVocabulariesPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		TaxonomyVocabulary taxonomyVocabulary1 = randomTaxonomyVocabulary();
+
+		taxonomyVocabulary1 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				taxonomyVocabulary1);
+
+		for (EntityField entityField : entityFields) {
+			Page<TaxonomyVocabulary> page =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null,
+					getFilterString(
+						entityField, "between", taxonomyVocabulary1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(taxonomyVocabulary1),
+				(List<TaxonomyVocabulary>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithFilterStringContains()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetTaxonomyVocabulariesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary2 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		for (EntityField entityField : entityFields) {
+			Page<TaxonomyVocabulary> page =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null,
+					getFilterString(entityField, operator, taxonomyVocabulary1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(taxonomyVocabulary1),
+				(List<TaxonomyVocabulary>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithPagination()
+		throws Exception {
+
+		Page<TaxonomyVocabulary> taxonomyVocabulariesPage =
+			taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+				null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			taxonomyVocabulariesPage.getTotalCount());
+
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		TaxonomyVocabulary taxonomyVocabulary2 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		TaxonomyVocabulary taxonomyVocabulary3 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<TaxonomyVocabulary> page1 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				taxonomyVocabulary1,
+				(List<TaxonomyVocabulary>)page1.getItems());
+
+			Page<TaxonomyVocabulary> page2 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(
+				taxonomyVocabulary2,
+				(List<TaxonomyVocabulary>)page2.getItems());
+
+			Page<TaxonomyVocabulary> page3 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(
+				taxonomyVocabulary3,
+				(List<TaxonomyVocabulary>)page3.getItems());
+		}
+		else {
+			Page<TaxonomyVocabulary> page1 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<TaxonomyVocabulary> taxonomyVocabularies1 =
+				(List<TaxonomyVocabulary>)page1.getItems();
+
+			Assert.assertEquals(
+				taxonomyVocabularies1.toString(), totalCount + 2,
+				taxonomyVocabularies1.size());
+
+			Page<TaxonomyVocabulary> page2 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<TaxonomyVocabulary> taxonomyVocabularies2 =
+				(List<TaxonomyVocabulary>)page2.getItems();
+
+			Assert.assertEquals(
+				taxonomyVocabularies2.toString(), 1,
+				taxonomyVocabularies2.size());
+
+			Page<TaxonomyVocabulary> page3 =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(
+				taxonomyVocabulary1,
+				(List<TaxonomyVocabulary>)page3.getItems());
+			assertContains(
+				taxonomyVocabulary2,
+				(List<TaxonomyVocabulary>)page3.getItems());
+			assertContains(
+				taxonomyVocabulary3,
+				(List<TaxonomyVocabulary>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithSortDateTime()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, taxonomyVocabulary1, taxonomyVocabulary2) -> {
+				BeanTestUtil.setProperty(
+					taxonomyVocabulary1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithSortDouble()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, taxonomyVocabulary1, taxonomyVocabulary2) -> {
+				BeanTestUtil.setProperty(
+					taxonomyVocabulary1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					taxonomyVocabulary2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithSortInteger()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, taxonomyVocabulary1, taxonomyVocabulary2) -> {
+				BeanTestUtil.setProperty(
+					taxonomyVocabulary1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					taxonomyVocabulary2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetTaxonomyVocabulariesPageWithSortString()
+		throws Exception {
+
+		testGetTaxonomyVocabulariesPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, taxonomyVocabulary1, taxonomyVocabulary2) -> {
+				Class<?> clazz = taxonomyVocabulary1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						taxonomyVocabulary2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetTaxonomyVocabulariesPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, TaxonomyVocabulary, TaxonomyVocabulary, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		TaxonomyVocabulary taxonomyVocabulary1 = randomTaxonomyVocabulary();
+		TaxonomyVocabulary taxonomyVocabulary2 = randomTaxonomyVocabulary();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(
+				entityField, taxonomyVocabulary1, taxonomyVocabulary2);
+		}
+
+		taxonomyVocabulary1 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				taxonomyVocabulary1);
+
+		taxonomyVocabulary2 =
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				taxonomyVocabulary2);
+
+		Page<TaxonomyVocabulary> page =
+			taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+				null, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<TaxonomyVocabulary> ascPage =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(
+				taxonomyVocabulary1,
+				(List<TaxonomyVocabulary>)ascPage.getItems());
+			assertContains(
+				taxonomyVocabulary2,
+				(List<TaxonomyVocabulary>)ascPage.getItems());
+
+			Page<TaxonomyVocabulary> descPage =
+				taxonomyVocabularyResource.getTaxonomyVocabulariesPage(
+					null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(
+				taxonomyVocabulary2,
+				(List<TaxonomyVocabulary>)descPage.getItems());
+			assertContains(
+				taxonomyVocabulary1,
+				(List<TaxonomyVocabulary>)descPage.getItems());
+		}
+	}
+
+	protected TaxonomyVocabulary
+			testGetTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetTaxonomyVocabulariesPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"taxonomyVocabularies",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
 
 		// No namespace
 
+		JSONObject taxonomyVocabulariesJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/taxonomyVocabularies");
+
+		long totalCount = taxonomyVocabulariesJSONObject.getLong("totalCount");
+
 		TaxonomyVocabulary taxonomyVocabulary1 =
-			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+			testGraphQLGetTaxonomyVocabulariesPage_addTaxonomyVocabulary();
+		TaxonomyVocabulary taxonomyVocabulary2 =
+			testGraphQLGetTaxonomyVocabulariesPage_addTaxonomyVocabulary();
 
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteTaxonomyVocabulary",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"taxonomyVocabularyId",
-									taxonomyVocabulary1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteTaxonomyVocabulary"));
+		taxonomyVocabulariesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/taxonomyVocabularies");
 
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"taxonomyVocabulary",
-					new HashMap<String, Object>() {
-						{
-							put(
-								"taxonomyVocabularyId",
-								taxonomyVocabulary1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
+		Assert.assertEquals(
+			totalCount + 2,
+			taxonomyVocabulariesJSONObject.getLong("totalCount"));
 
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
+		assertContains(
+			taxonomyVocabulary1,
+			Arrays.asList(
+				TaxonomyVocabularySerDes.toDTOs(
+					taxonomyVocabulariesJSONObject.getString("items"))));
+		assertContains(
+			taxonomyVocabulary2,
+			Arrays.asList(
+				TaxonomyVocabularySerDes.toDTOs(
+					taxonomyVocabulariesJSONObject.getString("items"))));
 
 		// Using the namespace headlessAdminTaxonomy_v1_0
 
-		TaxonomyVocabulary taxonomyVocabulary2 =
-			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminTaxonomy_v1_0",
-						new GraphQLField(
-							"deleteTaxonomyVocabulary",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"taxonomyVocabularyId",
-										taxonomyVocabulary2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminTaxonomy_v1_0",
-				"Object/deleteTaxonomyVocabulary"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+		taxonomyVocabulariesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminTaxonomy_v1_0",
-					new GraphQLField(
-						"taxonomyVocabulary",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"taxonomyVocabularyId",
-									taxonomyVocabulary2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
+				new GraphQLField("headlessAdminTaxonomy_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminTaxonomy_v1_0",
+			"JSONObject/taxonomyVocabularies");
 
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
+		Assert.assertEquals(
+			totalCount + 2,
+			taxonomyVocabulariesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			taxonomyVocabulary1,
+			Arrays.asList(
+				TaxonomyVocabularySerDes.toDTOs(
+					taxonomyVocabulariesJSONObject.getString("items"))));
+		assertContains(
+			taxonomyVocabulary2,
+			Arrays.asList(
+				TaxonomyVocabularySerDes.toDTOs(
+					taxonomyVocabulariesJSONObject.getString("items"))));
 	}
 
 	protected TaxonomyVocabulary
-			testGraphQLDeleteTaxonomyVocabulary_addTaxonomyVocabulary()
+			testGraphQLGetTaxonomyVocabulariesPage_addTaxonomyVocabulary()
 		throws Exception {
 
 		return testGraphQLTaxonomyVocabulary_addTaxonomyVocabulary();
@@ -2697,6 +2724,27 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	}
 
 	@Test
+	public void testGetTaxonomyVocabularyPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testGetTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
+
+		Page<Permission> page =
+			taxonomyVocabularyResource.getTaxonomyVocabularyPermissionsPage(
+				postTaxonomyVocabulary.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected TaxonomyVocabulary
+			testGetTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
 	public void testPatchTaxonomyVocabulary() throws Exception {
 		TaxonomyVocabulary postTaxonomyVocabulary =
 			testPatchTaxonomyVocabulary_addTaxonomyVocabulary();
@@ -2725,6 +2773,473 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 	protected TaxonomyVocabulary
 			testPatchTaxonomyVocabulary_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
+	public void testPostAssetLibraryTaxonomyVocabulary() throws Exception {
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary);
+
+		assertEquals(randomTaxonomyVocabulary, postTaxonomyVocabulary);
+		assertValid(postTaxonomyVocabulary);
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary1 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary1 =
+			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary1);
+
+		Assert.assertNull(postPermissionsTaxonomyVocabulary1.getPermissions());
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary2 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary2 =
+			testPostAssetLibraryTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary2);
+
+		Assert.assertNotNull(
+			postPermissionsTaxonomyVocabulary2.getPermissions());
+	}
+
+	protected TaxonomyVocabulary
+			testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
+			testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
+			taxonomyVocabulary);
+	}
+
+	protected TaxonomyVocabulary
+			testPostAssetLibraryTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		return permissionsTaxonomyVocabularyResource.
+			postAssetLibraryTaxonomyVocabulary(
+				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
+				taxonomyVocabulary);
+	}
+
+	@Test
+	public void testPostSiteTaxonomyVocabulary() throws Exception {
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary);
+
+		assertEquals(randomTaxonomyVocabulary, postTaxonomyVocabulary);
+		assertValid(postTaxonomyVocabulary);
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary1 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary1 =
+			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary1);
+
+		Assert.assertNull(postPermissionsTaxonomyVocabulary1.getPermissions());
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary2 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary2 =
+			testPostSiteTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary2);
+
+		Assert.assertNotNull(
+			postPermissionsTaxonomyVocabulary2.getPermissions());
+	}
+
+	protected TaxonomyVocabulary
+			testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
+			taxonomyVocabulary);
+	}
+
+	protected TaxonomyVocabulary
+			testPostSiteTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		return permissionsTaxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
+			taxonomyVocabulary);
+	}
+
+	@Test
+	public void testGraphQLPostSiteTaxonomyVocabulary() throws Exception {
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary taxonomyVocabulary =
+			testGraphQLTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary);
+
+		Assert.assertTrue(equals(randomTaxonomyVocabulary, taxonomyVocabulary));
+	}
+
+	@Test
+	public void testPostTaxonomyVocabulary() throws Exception {
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testPostTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomTaxonomyVocabulary);
+
+		assertEquals(randomTaxonomyVocabulary, postTaxonomyVocabulary);
+		assertValid(postTaxonomyVocabulary);
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary1 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary1 =
+			testPostTaxonomyVocabulary_addTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary1);
+
+		Assert.assertNull(postPermissionsTaxonomyVocabulary1.getPermissions());
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary2 =
+			randomPermissionsTaxonomyVocabulary();
+
+		TaxonomyVocabulary postPermissionsTaxonomyVocabulary2 =
+			testPostTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				randomPermissionsTaxonomyVocabulary2);
+
+		Assert.assertNotNull(
+			postPermissionsTaxonomyVocabulary2.getPermissions());
+	}
+
+	protected TaxonomyVocabulary
+			testPostTaxonomyVocabulary_addTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected TaxonomyVocabulary
+			testPostTaxonomyVocabulary_addPermissionsTaxonomyVocabulary(
+				TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode()
+		throws Exception {
+
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
+
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomTaxonomyVocabulary);
+
+		assertEquals(randomTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
+
+		TaxonomyVocabulary getTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				getAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					putTaxonomyVocabulary.getExternalReferenceCode());
+
+		assertEquals(randomTaxonomyVocabulary, getTaxonomyVocabulary);
+		assertValid(getTaxonomyVocabulary);
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary =
+			randomPermissionsTaxonomyVocabulary();
+
+		putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomPermissionsTaxonomyVocabulary);
+
+		assertEquals(
+			randomPermissionsTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
+
+		putTaxonomyVocabulary =
+			permissionsTaxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomPermissionsTaxonomyVocabulary);
+
+		Assert.assertNotNull(putTaxonomyVocabulary.getPermissions());
+
+		TaxonomyVocabulary newTaxonomyVocabulary =
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary();
+
+		putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					newTaxonomyVocabulary.getExternalReferenceCode(),
+					newTaxonomyVocabulary);
+
+		assertEquals(newTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		getTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				getAssetLibraryTaxonomyVocabularyByExternalReferenceCode(
+					testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId(),
+					putTaxonomyVocabulary.getExternalReferenceCode());
+
+		assertEquals(newTaxonomyVocabulary, getTaxonomyVocabulary);
+
+		Assert.assertEquals(
+			newTaxonomyVocabulary.getExternalReferenceCode(),
+			putTaxonomyVocabulary.getExternalReferenceCode());
+	}
+
+	protected TaxonomyVocabulary
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
+			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
+	}
+
+	protected Long
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected TaxonomyVocabulary
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary()
+		throws Exception {
+
+		return randomTaxonomyVocabulary();
+	}
+
+	@Test
+	public void testPutAssetLibraryTaxonomyVocabularyPermissionsPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary =
+			testPutAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			taxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyPermissionsPageHttpResponse(
+					testDepotEntry.getDepotEntryId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"PERMISSIONS"});
+								setRoleName(role.getName());
+							}
+						}
+					}));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				putAssetLibraryTaxonomyVocabularyPermissionsPageHttpResponse(
+					testDepotEntry.getDepotEntryId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"-"});
+								setRoleName("-");
+							}
+						}
+					}));
+	}
+
+	protected TaxonomyVocabulary
+			testPutAssetLibraryTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postAssetLibraryTaxonomyVocabulary(
+			testDepotEntry.getDepotEntryId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
+	public void testPutSiteTaxonomyVocabularyByExternalReferenceCode()
+		throws Exception {
+
+		TaxonomyVocabulary postTaxonomyVocabulary =
+			testPutSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
+
+		TaxonomyVocabulary randomTaxonomyVocabulary =
+			randomTaxonomyVocabulary();
+
+		TaxonomyVocabulary putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyByExternalReferenceCode(
+					postTaxonomyVocabulary.getSiteId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomTaxonomyVocabulary);
+
+		assertEquals(randomTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
+
+		TaxonomyVocabulary getTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				getSiteTaxonomyVocabularyByExternalReferenceCode(
+					putTaxonomyVocabulary.getSiteId(),
+					putTaxonomyVocabulary.getExternalReferenceCode());
+
+		assertEquals(randomTaxonomyVocabulary, getTaxonomyVocabulary);
+		assertValid(getTaxonomyVocabulary);
+
+		TaxonomyVocabulary randomPermissionsTaxonomyVocabulary =
+			randomPermissionsTaxonomyVocabulary();
+
+		putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyByExternalReferenceCode(
+					postTaxonomyVocabulary.getSiteId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomPermissionsTaxonomyVocabulary);
+
+		assertEquals(
+			randomPermissionsTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		Assert.assertNull(putTaxonomyVocabulary.getPermissions());
+
+		putTaxonomyVocabulary =
+			permissionsTaxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyByExternalReferenceCode(
+					postTaxonomyVocabulary.getSiteId(),
+					postTaxonomyVocabulary.getExternalReferenceCode(),
+					randomPermissionsTaxonomyVocabulary);
+
+		Assert.assertNotNull(putTaxonomyVocabulary.getPermissions());
+
+		TaxonomyVocabulary newTaxonomyVocabulary =
+			testPutSiteTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary();
+
+		putTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyByExternalReferenceCode(
+					newTaxonomyVocabulary.getSiteId(),
+					newTaxonomyVocabulary.getExternalReferenceCode(),
+					newTaxonomyVocabulary);
+
+		assertEquals(newTaxonomyVocabulary, putTaxonomyVocabulary);
+		assertValid(putTaxonomyVocabulary);
+
+		getTaxonomyVocabulary =
+			taxonomyVocabularyResource.
+				getSiteTaxonomyVocabularyByExternalReferenceCode(
+					putTaxonomyVocabulary.getSiteId(),
+					putTaxonomyVocabulary.getExternalReferenceCode());
+
+		assertEquals(newTaxonomyVocabulary, getTaxonomyVocabulary);
+
+		Assert.assertEquals(
+			newTaxonomyVocabulary.getExternalReferenceCode(),
+			putTaxonomyVocabulary.getExternalReferenceCode());
+	}
+
+	protected TaxonomyVocabulary
+			testPutSiteTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	protected TaxonomyVocabulary
+			testPutSiteTaxonomyVocabularyByExternalReferenceCode_createTaxonomyVocabulary()
+		throws Exception {
+
+		return randomTaxonomyVocabulary();
+	}
+
+	@Test
+	public void testPutSiteTaxonomyVocabularyPermissionsPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxonomyVocabulary taxonomyVocabulary =
+			testPutSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			taxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyPermissionsPageHttpResponse(
+					taxonomyVocabulary.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"PERMISSIONS"});
+								setRoleName(role.getName());
+							}
+						}
+					}));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.
+				putSiteTaxonomyVocabularyPermissionsPageHttpResponse(
+					taxonomyVocabulary.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"-"});
+								setRoleName("-");
+							}
+						}
+					}));
+	}
+
+	protected TaxonomyVocabulary
+			testPutSiteTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
 		throws Exception {
 
 		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
@@ -2786,26 +3301,6 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	}
 
 	@Test
-	public void testGetTaxonomyVocabularyPermissionsPage() throws Exception {
-		TaxonomyVocabulary postTaxonomyVocabulary =
-			testGetTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary();
-
-		Page<Permission> page =
-			taxonomyVocabularyResource.getTaxonomyVocabularyPermissionsPage(
-				postTaxonomyVocabulary.getId(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected TaxonomyVocabulary
-			testGetTaxonomyVocabularyPermissionsPage_addTaxonomyVocabulary()
-		throws Exception {
-
-		return testPostSiteTaxonomyVocabulary_addTaxonomyVocabulary(
-			randomTaxonomyVocabulary());
-	}
-
-	@Test
 	public void testPutTaxonomyVocabularyPermissionsPage() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		TaxonomyVocabulary taxonomyVocabulary =
@@ -2850,6 +3345,62 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 		return taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
 			testGroup.getGroupId(), randomTaxonomyVocabulary());
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		TaxonomyVocabulary taxonomyVocabulary1 =
+			testBatchEngineDeleteImportTask_addTaxonomyVocabulary();
+
+		testBatchEngineDeleteImportTask_deleteTaxonomyVocabulary(
+			200, null, taxonomyVocabulary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			taxonomyVocabularyResource.getTaxonomyVocabularyHttpResponse(
+				taxonomyVocabulary1.getId()));
+	}
+
+	protected TaxonomyVocabulary
+			testBatchEngineDeleteImportTask_addTaxonomyVocabulary()
+		throws Exception {
+
+		return testDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteTaxonomyVocabulary(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyVocabulary",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -3060,10 +3611,9 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			valid = false;
 		}
 
-		com.liferay.portal.kernel.model.Group group = testDepotEntry.getGroup();
-
 		if (!Objects.equals(
-				taxonomyVocabulary.getAssetLibraryKey(), group.getGroupKey()) &&
+				taxonomyVocabulary.getAssetLibraryKey(),
+				testDepotEntryGroup.getGroupKey()) &&
 			!Objects.equals(
 				taxonomyVocabulary.getSiteId(), testGroup.getGroupId())) {
 
@@ -3075,6 +3625,14 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
 				if (taxonomyVocabulary.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("assetLibraries", additionalAssertFieldName)) {
+				if (taxonomyVocabulary.getAssetLibraries() == null) {
 					valid = false;
 				}
 
@@ -3141,6 +3699,14 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("multiValued", additionalAssertFieldName)) {
+				if (taxonomyVocabulary.getMultiValued() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (taxonomyVocabulary.getName() == null) {
 					valid = false;
@@ -3189,6 +3755,14 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 			if (Objects.equals("viewableBy", additionalAssertFieldName)) {
 				if (taxonomyVocabulary.getViewableBy() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("visibilityType", additionalAssertFieldName)) {
+				if (taxonomyVocabulary.getVisibilityType() == null) {
 					valid = false;
 				}
 
@@ -3329,6 +3903,17 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("assetLibraries", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						taxonomyVocabulary1.getAssetLibraries(),
+						taxonomyVocabulary2.getAssetLibraries())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("assetTypes", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						taxonomyVocabulary1.getAssetTypes(),
@@ -3432,6 +4017,17 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("multiValued", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						taxonomyVocabulary1.getMultiValued(),
+						taxonomyVocabulary2.getMultiValued())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						taxonomyVocabulary1.getName(),
@@ -3495,6 +4091,17 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				if (!Objects.deepEquals(
 						taxonomyVocabulary1.getViewableBy(),
 						taxonomyVocabulary2.getViewableBy())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("visibilityType", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						taxonomyVocabulary1.getVisibilityType(),
+						taxonomyVocabulary2.getVisibilityType())) {
 
 					return false;
 				}
@@ -3611,6 +4218,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("assetLibraries")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -3836,6 +4448,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("multiValued")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("name")) {
 			Object object = taxonomyVocabulary.getName();
 
@@ -3956,6 +4573,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("visibilityType")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -4001,8 +4623,8 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 	protected TaxonomyVocabulary randomTaxonomyVocabulary() throws Exception {
 		return new TaxonomyVocabulary() {
 			{
-				assetLibraryKey = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				assetLibraryKey = String.valueOf(
+					testDepotEntry.getDepotEntryId());
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
@@ -4010,10 +4632,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
+				multiValued = RandomTestUtil.randomBoolean();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				numberOfTaxonomyCategories = RandomTestUtil.randomInt();
-				siteExternalReferenceCode = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				siteExternalReferenceCode =
+					testGroup.getExternalReferenceCode();
 				siteId = testGroup.getGroupId();
 			}
 		};
@@ -4024,6 +4647,12 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 		TaxonomyVocabulary randomIrrelevantTaxonomyVocabulary =
 			randomTaxonomyVocabulary();
+
+		randomIrrelevantTaxonomyVocabulary.setAssetLibraryKey(
+			String.valueOf(irrelevantDepotEntry.getDepotEntryId()));
+
+		randomIrrelevantTaxonomyVocabulary.setSiteExternalReferenceCode(
+			irrelevantGroup.getExternalReferenceCode());
 
 		randomIrrelevantTaxonomyVocabulary.setSiteId(
 			irrelevantGroup.getGroupId());
@@ -4058,11 +4687,37 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		return taxonomyVocabulary;
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected TaxonomyVocabularyResource taxonomyVocabularyResource;
-	protected TaxonomyVocabularyResource permissionsTaxonomyVocabularyResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected TaxonomyVocabularyResource permissionsTaxonomyVocabularyResource;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {

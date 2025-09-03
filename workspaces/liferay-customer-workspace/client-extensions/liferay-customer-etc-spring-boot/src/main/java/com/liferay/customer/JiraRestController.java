@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Jenny Chen
@@ -47,7 +48,8 @@ public class JiraRestController extends BaseRestController {
 				throw new PrincipalException();
 			}
 
-			_jiraService.cacheEvict();
+			_jiraService.scheduledAffectedVersionsCacheEviction();
+			_jiraService.scheduledIssuesCacheEviction();
 
 			return new ResponseEntity<>(HttpStatus.OK);
 		}
@@ -152,7 +154,10 @@ public class JiraRestController extends BaseRestController {
 			return new JSONObject(
 				get(
 					"Bearer " + jwt.getTokenValue(),
-					"/o/headless-admin-user/v1.0/my-user-account"));
+					UriComponentsBuilder.fromPath(
+						"/o/headless-admin-user/v1.0/my-user-account"
+					).build(
+					).toUri()));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -186,11 +191,7 @@ public class JiraRestController extends BaseRestController {
 	private boolean _hasAdministrator(Jwt jwt) throws Exception {
 		List<String> userRoleNames = _getUserRoleNames(jwt);
 
-		if (userRoleNames.contains(RoleConstants.NAME_ADMINISTRATOR)) {
-			return true;
-		}
-
-		return false;
+		return userRoleNames.contains(RoleConstants.NAME_ADMINISTRATOR);
 	}
 
 	private boolean _hasEarlyPublishAccess(Jwt jwt) throws Exception {

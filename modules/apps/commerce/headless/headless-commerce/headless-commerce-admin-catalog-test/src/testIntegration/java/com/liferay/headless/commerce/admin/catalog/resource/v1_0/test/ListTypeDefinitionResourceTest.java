@@ -62,7 +62,7 @@ public class ListTypeDefinitionResourceTest
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				serviceContext);
+				true, serviceContext);
 	}
 
 	@Override
@@ -134,14 +134,6 @@ public class ListTypeDefinitionResourceTest
 		throws Exception {
 
 		return _cpSpecificationOption.getCPSpecificationOptionId();
-	}
-
-	@Override
-	protected ListTypeDefinition
-			testGraphQLListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		return _addListTypeDefinition(randomListTypeDefinition());
 	}
 
 	@Override

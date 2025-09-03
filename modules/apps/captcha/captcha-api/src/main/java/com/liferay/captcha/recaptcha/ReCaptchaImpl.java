@@ -26,15 +26,15 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,11 +57,6 @@ public class ReCaptchaImpl extends SimpleCaptchaImpl {
 	}
 
 	@Override
-	public String getTaglibPath() {
-		return _TAGLIB_PATH;
-	}
-
-	@Override
 	public void serveImage(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
@@ -74,6 +69,11 @@ public class ReCaptchaImpl extends SimpleCaptchaImpl {
 		ResourceRequest resourceRequest, ResourceResponse resourceResponse) {
 
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected String getTaglibPath() {
+		return _TAGLIB_PATH;
 	}
 
 	@Override

@@ -83,8 +83,22 @@ public class ProductOptionValueResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testDeleteProductOptionValue() throws Exception {
 		super.testDeleteProductOptionValue();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteProductOptionValueBatch() throws Exception {
+		super.testDeleteProductOptionValueBatch();
 	}
 
 	@Ignore

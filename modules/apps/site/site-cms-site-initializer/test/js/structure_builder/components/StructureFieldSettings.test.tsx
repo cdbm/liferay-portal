@@ -6,22 +6,21 @@
 import '@testing-library/jest-dom';
 
 import '@testing-library/jest-dom/extend-expect';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import StructureFieldSettings from '../../../../src/main/resources/META-INF/resources/js/structure_builder/components/StructureFieldSettings';
-import {
-	Action,
-	State,
-	Uuid,
-} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/contexts/StateContext';
+import {Picklist} from '../../../../src/main/resources/META-INF/resources/js/common/types/Picklist';
+import StructureFieldSettings from '../../../../src/main/resources/META-INF/resources/js/structure_builder/components/settings/StructureFieldSettings';
+import {State} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/contexts/StateContext';
+import {Uuid} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/types/Uuid';
 import {
 	Field,
 	getDefaultField,
 } from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/field';
 import getUuid from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/getUuid';
-import {MockStateProvider} from '../mocks/MockStateProvider';
+import {MockCacheProvider} from '../mocks/MockCacheProvider';
+import {MockState, MockStateProvider} from '../mocks/MockStateProvider';
 
 const TEXT_FIELD_UUID = getUuid();
 
@@ -36,6 +35,7 @@ const FIELD: Field = {
 	},
 	localized: false,
 	name: 'TextField',
+	parent: getUuid(),
 	required: false,
 	settings: {},
 	type: 'text',
@@ -43,30 +43,51 @@ const FIELD: Field = {
 };
 
 const DEFAULT_STATE: State = {
-	erc: 'structure-erc',
 	error: null,
-	fields: new Map([[TEXT_FIELD_UUID, FIELD]]),
-	id: null,
-	label: 'untitled-structure',
-	name: 'UntitledStructure',
-	publishedFields: new Set(),
+	history: {deletedChildren: false},
+	invalids: new Map(),
+	publishedChildren: new Set(),
 	selection: [],
-	status: 'new',
-	uuid: getUuid(),
+	structure: {
+		children: new Map([[TEXT_FIELD_UUID, FIELD]]),
+		erc: 'structure-erc',
+		label: 'untitled-structure' as any,
+		name: 'UntitledStructure',
+		spaces: [],
+		status: 'new',
+		uuid: getUuid(),
+	},
+	unsavedChanges: false,
 };
 
+const DEFAULT_PICKLISTS = [
+	{
+		externalReferenceCode: '1',
+		id: 1,
+		listTypeEntries: [],
+		name: 'papaya',
+		name_i18n: {en_US: 'Papaya'},
+	},
+];
+
+const MOCK_DISPATCH = jest.fn();
+
 const renderComponent = ({
-	dispatch = jest.fn(),
+	picklists = DEFAULT_PICKLISTS,
 	state = DEFAULT_STATE,
 	uuid = TEXT_FIELD_UUID,
 }: {
-	dispatch?: React.Dispatch<Action>;
-	state?: State;
+	picklists?: Picklist[];
+	state?: MockState;
 	uuid?: Uuid;
 } = {}) => {
+	const field = state.structure?.children?.get(uuid) as Field;
+
 	return render(
-		<MockStateProvider dispatch={dispatch} state={state}>
-			<StructureFieldSettings uuid={uuid} />
+		<MockStateProvider dispatch={MOCK_DISPATCH} state={state}>
+			<MockCacheProvider picklists={picklists}>
+				<StructureFieldSettings field={field} />
+			</MockCacheProvider>
 		</MockStateProvider>
 	);
 };
@@ -89,9 +110,7 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates field name when input changes', async () => {
-		const mockDispatch = jest.fn();
-
-		renderComponent({dispatch: mockDispatch});
+		renderComponent();
 
 		const nameInput = screen.getByLabelText('field-name');
 
@@ -100,7 +119,7 @@ describe('StructureFieldSettings', () => {
 
 		fireEvent.blur(nameInput);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			name: 'newFieldName',
 			type: 'update-field',
 			uuid: TEXT_FIELD_UUID,
@@ -108,13 +127,11 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('toggles required and localizable fields', async () => {
-		const mockDispatch = jest.fn();
-
-		renderComponent({dispatch: mockDispatch});
+		renderComponent();
 
 		await userEvent.click(screen.getByLabelText('mandatory'));
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			required: true,
 			type: 'update-field',
 			uuid: TEXT_FIELD_UUID,
@@ -122,7 +139,7 @@ describe('StructureFieldSettings', () => {
 
 		await userEvent.click(screen.getByLabelText('localizable'));
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			localized: true,
 			type: 'update-field',
 			uuid: TEXT_FIELD_UUID,
@@ -130,15 +147,13 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates searchable configuration', async () => {
-		const mockDispatch = jest.fn();
-
-		renderComponent({dispatch: mockDispatch});
+		renderComponent();
 
 		await userEvent.click(screen.getByText('search'));
 
 		await userEvent.click(screen.getByLabelText('searchable'));
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			indexableConfig: {
 				indexed: true,
 				indexedAsKeyword: false,
@@ -150,31 +165,31 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates keyword configuration', async () => {
-		const mockDispatch = jest.fn();
-
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				fields: new Map([
-					[
-						TEXT_FIELD_UUID,
-						{
-							...FIELD,
-							indexableConfig: {
-								indexed: true,
-								indexedAsKeyword: false,
-								indexedLanguageId: 'en_US',
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							TEXT_FIELD_UUID,
+							{
+								...FIELD,
+								indexableConfig: {
+									indexed: true,
+									indexedAsKeyword: false,
+									indexedLanguageId: 'en_US',
+								},
 							},
-						},
-					],
-				]),
+						],
+					]),
+				},
 			},
 		});
 
 		await userEvent.click(screen.getByLabelText('keyword'));
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			indexableConfig: {
 				indexed: true,
 				indexedAsKeyword: true,
@@ -186,23 +201,26 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates specific date time configuration', async () => {
-		const mockDispatch = jest.fn();
-
 		const uuid = getUuid();
 
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				fields: new Map([
-					[
-						uuid,
-						{
-							...getDefaultField('datetime'),
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
 							uuid,
-						},
-					],
-				]),
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'datetime',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
 			},
 			uuid,
 		});
@@ -211,7 +229,7 @@ describe('StructureFieldSettings', () => {
 
 		await userEvent.click(screen.getByText('use-input-as-entered'));
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				timeStorage: 'useInputAsEntered',
 			},
@@ -221,23 +239,26 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates specific long text configuration', async () => {
-		const mockDispatch = jest.fn();
-
 		const uuid = getUuid();
 
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				fields: new Map([
-					[
-						uuid,
-						{
-							...getDefaultField('long-text'),
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
 							uuid,
-						},
-					],
-				]),
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'long-text',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
 			},
 			uuid,
 		});
@@ -255,7 +276,7 @@ describe('StructureFieldSettings', () => {
 		await userEvent.type(numberOfCharactersInput, '10');
 		fireEvent.blur(numberOfCharactersInput);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				maxLength: 10,
 				showCounter: true,
@@ -266,23 +287,26 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates specific numeric configuration', async () => {
-		const mockDispatch = jest.fn();
-
 		const uuid = getUuid();
 
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				fields: new Map([
-					[
-						uuid,
-						{
-							...getDefaultField('integer'),
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
 							uuid,
-						},
-					],
-				]),
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'integer',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
 			},
 			uuid,
 		});
@@ -291,7 +315,7 @@ describe('StructureFieldSettings', () => {
 			screen.getByLabelText('accept-unique-values-only')
 		);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				uniqueValues: true,
 			},
@@ -301,15 +325,13 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates specific text configuration', async () => {
-		const mockDispatch = jest.fn();
-
-		renderComponent({dispatch: mockDispatch});
+		renderComponent();
 
 		await userEvent.click(
 			screen.getByLabelText('accept-unique-values-only')
 		);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				uniqueValues: true,
 			},
@@ -330,7 +352,7 @@ describe('StructureFieldSettings', () => {
 		await userEvent.type(numberOfCharactersInput, '10');
 		fireEvent.blur(numberOfCharactersInput);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				maxLength: 10,
 				showCounter: true,
@@ -341,23 +363,26 @@ describe('StructureFieldSettings', () => {
 	});
 
 	it('updates specific upload configuration', async () => {
-		const mockDispatch = jest.fn();
-
 		const uuid = getUuid();
 
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				fields: new Map([
-					[
-						uuid,
-						{
-							...getDefaultField('upload'),
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
 							uuid,
-						},
-					],
-				]),
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'upload',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
 			},
 			uuid,
 		});
@@ -370,7 +395,7 @@ describe('StructureFieldSettings', () => {
 			screen.getByLabelText('show-files-in-documents-and-media')
 		);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'jpeg, jpg, pdf, png',
 				fileSource: 'userComputer',
@@ -382,7 +407,7 @@ describe('StructureFieldSettings', () => {
 			uuid,
 		});
 
-		mockDispatch.mockClear();
+		MOCK_DISPATCH.mockClear();
 
 		const acceptedFileExtensionsInput = screen.getByLabelText(
 			'accepted-file-extensions'
@@ -392,7 +417,7 @@ describe('StructureFieldSettings', () => {
 		await userEvent.type(acceptedFileExtensionsInput, 'gif');
 		fireEvent.blur(acceptedFileExtensionsInput);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'gif',
 				fileSource: 'userComputer',
@@ -408,7 +433,7 @@ describe('StructureFieldSettings', () => {
 		await userEvent.type(maximumFileSizeInput, '200');
 		fireEvent.blur(maximumFileSizeInput);
 
-		expect(mockDispatch).toHaveBeenCalledWith({
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'jpeg, jpg, pdf, png',
 				fileSource: 'userComputer',
@@ -419,26 +444,127 @@ describe('StructureFieldSettings', () => {
 		});
 	});
 
-	it('disables fields when structure is published', () => {
-		const mockDispatch = jest.fn();
+	it('updates the single select field with the selected picklist', async () => {
+		const uuid = getUuid();
 
 		renderComponent({
-			dispatch: mockDispatch,
 			state: {
 				...DEFAULT_STATE,
-				publishedFields: new Set([TEXT_FIELD_UUID]),
-				status: 'published',
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'single-select',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await userEvent.click(screen.getByLabelText('picklist'));
+		await userEvent.click(screen.getByText('papaya'));
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			picklistId: 1,
+			type: 'update-field',
+			uuid,
+		});
+	});
+
+	it('updates the multiselect field with the selected picklist', async () => {
+		const uuid = getUuid();
+
+		renderComponent({
+			state: {
+				...DEFAULT_STATE,
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'multiselect',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await userEvent.click(screen.getByLabelText('picklist'));
+		await userEvent.click(screen.getByText('papaya'));
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			picklistId: 1,
+			type: 'update-field',
+			uuid,
+		});
+	});
+
+	it('disables the picklist picker when there are no picklists to select', async () => {
+		const uuid = getUuid();
+
+		renderComponent({
+			picklists: [],
+			state: {
+				...DEFAULT_STATE,
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'single-select',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await waitFor(() => {
+			expect(screen.getByLabelText('picklist')).toBeDisabled();
+		});
+	});
+
+	it('disables fields when structure is published', () => {
+		renderComponent({
+			state: {
+				...DEFAULT_STATE,
+				publishedChildren: new Set([TEXT_FIELD_UUID]),
+				structure: {
+					...DEFAULT_STATE.structure,
+					status: 'published',
+				},
 			},
 		});
 
 		expect(
 			screen.getByLabelText('accept-unique-values-only')
 		).toBeDisabled();
+		expect(screen.getByLabelText('erc')).toBeDisabled();
 		expect(screen.getByLabelText('field-name')).toBeDisabled();
 		expect(screen.getByLabelText('localizable')).toBeDisabled();
 		expect(screen.getByLabelText('mandatory')).toBeDisabled();
 
-		expect(screen.getByLabelText('erc')).not.toBeDisabled();
 		expect(screen.getByLabelText('limit-characters')).not.toBeDisabled();
 	});
 });

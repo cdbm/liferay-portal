@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Raymond Augé
@@ -34,7 +35,10 @@ public class TicketCommandLineRunner
 		JSONObject responseJSONObject = new JSONObject(
 			get(
 				"Bearer " + _oAuth2AccessToken.getTokenValue(),
-				"/o/c/j3y7tickets"));
+				UriComponentsBuilder.fromPath(
+					"/o/c/j3y7tickets"
+				).build(
+				).toUri()));
 
 		if (_log.isInfoEnabled()) {
 			_log.info(responseJSONObject.toString(4));
@@ -67,8 +71,11 @@ public class TicketCommandLineRunner
 			}
 
 			delete(
-				"Bearer " + _oAuth2AccessToken.getTokenValue(), null,
-				"/o/c/j3y7tickets/" + id);
+				"Bearer " + _oAuth2AccessToken.getTokenValue(), "",
+				UriComponentsBuilder.fromPath(
+					"/o/c/j3y7tickets/" + id
+				).build(
+				).toUri());
 		}
 	}
 

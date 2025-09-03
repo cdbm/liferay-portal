@@ -1,15 +1,14 @@
 {
-	"@generated": "06c9a089c19f6532371c00dbfe153283d81323df",
+	"@generated": "d669f082a6fbdb2da637799143656bb0e747b856",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"frontend-editor-ckeditor-web": [

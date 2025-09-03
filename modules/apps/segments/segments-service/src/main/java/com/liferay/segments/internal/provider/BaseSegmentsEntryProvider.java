@@ -15,13 +15,16 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -45,6 +48,8 @@ import com.liferay.segments.provider.SegmentsEntryProvider;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,10 +129,17 @@ public abstract class BaseSegmentsEntryProvider
 		long groupId, String className, long classPK, Context context,
 		long[] filterSegmentsEntryIds, long[] segmentsEntryIds) {
 
-		List<SegmentsEntry> segmentsEntries =
-			segmentsEntryLocalService.getSegmentsEntries(
+		List<SegmentsEntry> segmentsEntries = new ArrayList<>();
+
+		if (ArrayUtil.isNotEmpty(filterSegmentsEntryIds)) {
+			segmentsEntries = segmentsEntryLocalService.getSegmentsEntries(
+				filterSegmentsEntryIds, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		}
+		else {
+			segmentsEntries = segmentsEntryLocalService.getSegmentsEntries(
 				groupId, getSource(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				null);
+		}
 
 		if (segmentsEntries.isEmpty()) {
 			return new long[0];
@@ -135,26 +147,33 @@ public abstract class BaseSegmentsEntryProvider
 
 		User user = userLocalService.fetchUser(classPK);
 
-		if (user == null) {
+		if ((user == null) ||
+			(user.getType() == UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT)) {
+
 			return new long[0];
 		}
 
-		return TransformUtil.transformToLongArray(
-			segmentsEntries,
-			segmentsEntry -> {
-				if ((ArrayUtil.isNotEmpty(filterSegmentsEntryIds) &&
-					 !ArrayUtil.contains(
-						 filterSegmentsEntryIds,
-						 segmentsEntry.getSegmentsEntryId())) ||
-					!isMember(
-						className, classPK, context, segmentsEntry,
-						segmentsEntryIds, _getUserAttributes(user))) {
+		try {
+			Map<String, Object> userAttributes = _getUserAttributes(user);
+
+			return TransformUtil.transformToLongArray(
+				segmentsEntries,
+				segmentsEntry -> {
+					if (isMember(
+							className, classPK, context, segmentsEntry,
+							segmentsEntryIds, userAttributes)) {
+
+						return segmentsEntry.getSegmentsEntryId();
+					}
 
 					return null;
-				}
+				});
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 
-				return segmentsEntry.getSegmentsEntryId();
-			});
+		return new long[0];
 	}
 
 	protected Criteria.Conjunction getConjunction(
@@ -208,11 +227,14 @@ public abstract class BaseSegmentsEntryProvider
 
 		String contextFilterString = getFilterString(
 			segmentsEntry, Criteria.Type.CONTEXT);
+		String modelFilterString = getFilterString(
+			segmentsEntry, Criteria.Type.MODEL);
 
-		if (segmentsEntryRelLocalService.hasSegmentsEntryRel(
-				segmentsEntry.getSegmentsEntryId(),
-				portal.getClassNameId(className), classPK) &&
-			Validator.isNull(contextFilterString)) {
+		if (ArrayUtil.contains(
+				(long[])userAttributes.get("segmentsEntryIds"),
+				segmentsEntry.getSegmentsEntryId()) &&
+			Validator.isNull(contextFilterString) &&
+			Validator.isNull(modelFilterString)) {
 
 			return true;
 		}
@@ -225,10 +247,8 @@ public abstract class BaseSegmentsEntryProvider
 
 		Criteria.Conjunction contextConjunction = getConjunction(
 			segmentsEntry, Criteria.Type.CONTEXT);
-		String modelFilterString = getFilterString(
-			segmentsEntry, Criteria.Type.MODEL);
 
-		if (context != null) {
+		if ((context != null) && Validator.isNotNull(contextFilterString)) {
 			boolean guestUser = !GetterUtil.getBoolean(
 				context.get(Context.SIGNED_IN), true);
 
@@ -240,28 +260,26 @@ public abstract class BaseSegmentsEntryProvider
 
 			boolean matchesContext = false;
 
-			if (Validator.isNotNull(contextFilterString)) {
-				try {
-					matchesContext = oDataMatcher.matches(
-						contextFilterString, context);
+			try {
+				matchesContext = oDataMatcher.matches(
+					contextFilterString, context);
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
 				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(portalException);
-					}
-				}
+			}
 
-				if (matchesContext &&
-					contextConjunction.equals(Criteria.Conjunction.OR)) {
+			if (matchesContext &&
+				contextConjunction.equals(Criteria.Conjunction.OR)) {
 
-					return true;
-				}
+				return true;
+			}
 
-				if (!matchesContext &&
-					contextConjunction.equals(Criteria.Conjunction.AND)) {
+			if (!matchesContext &&
+				contextConjunction.equals(Criteria.Conjunction.AND)) {
 
-					return false;
-				}
+				return false;
 			}
 
 			if (guestUser) {
@@ -275,8 +293,7 @@ public abstract class BaseSegmentsEntryProvider
 			try {
 				matchesModel = UserSegmentsEntryMembershipChecker.isMember(
 					StringBundler.concat(
-						"(", modelFilterString, ") and (classPK eq '", classPK,
-						"')"),
+						"(", modelFilterString, ") and (classPK eq CLASS_PK)"),
 					userAttributes);
 			}
 			catch (Exception exception) {
@@ -370,9 +387,15 @@ public abstract class BaseSegmentsEntryProvider
 					expandoTable.getTableId(), expandoColumn.getColumnId(),
 					user.getUserId());
 
+				String expandoColumnName = expandoColumn.getName();
+
 				String key = StringBundler.concat(
 					"customField/_", expandoColumn.getColumnId(),
-					StringPool.UNDERLINE, expandoColumn.getName());
+					StringPool.UNDERLINE,
+					StringUtil.replace(
+						expandoColumnName.replaceAll(
+							":|;|'|\"", StringPool.BLANK),
+						CharPool.SPACE, CharPool.UNDERLINE));
 
 				if (expandoValue != null) {
 					expandoValues.put(key, expandoValue.getData());
@@ -406,7 +429,19 @@ public abstract class BaseSegmentsEntryProvider
 				new Long[0]
 			)
 		).put(
-			"birthDate", user.getBirthday()
+			"birthDate",
+			() -> {
+				try {
+					return user.getBirthday();
+				}
+				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
+
+					return new Date(0);
+				}
+			}
 		).put(
 			"classPK", user.getUserId()
 		).put(

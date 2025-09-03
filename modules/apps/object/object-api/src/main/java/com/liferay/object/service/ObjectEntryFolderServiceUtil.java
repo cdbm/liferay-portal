@@ -33,14 +33,14 @@ public class ObjectEntryFolderServiceUtil {
 	 */
 	public static ObjectEntryFolder addObjectEntryFolder(
 			String externalReferenceCode, long groupId,
-			long parentObjectEntryFolderId,
+			long parentObjectEntryFolderId, String description,
 			Map<java.util.Locale, String> labelMap, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addObjectEntryFolder(
-			externalReferenceCode, groupId, parentObjectEntryFolderId, labelMap,
-			name, serviceContext);
+			externalReferenceCode, groupId, parentObjectEntryFolderId,
+			description, labelMap, name, serviceContext);
 	}
 
 	public static ObjectEntryFolder deleteObjectEntryFolder(
@@ -50,11 +50,44 @@ public class ObjectEntryFolderServiceUtil {
 		return getService().deleteObjectEntryFolder(objectEntryFolderId);
 	}
 
+	public static ObjectEntryFolder
+			deleteObjectEntryFolderByExternalReferenceCode(
+				String externalReferenceCode, long groupId, long companyId)
+		throws PortalException {
+
+		return getService().deleteObjectEntryFolderByExternalReferenceCode(
+			externalReferenceCode, groupId, companyId);
+	}
+
+	public static ObjectEntryFolder fetchObjectEntryFolder(
+			long objectEntryFolderId)
+		throws PortalException {
+
+		return getService().fetchObjectEntryFolder(objectEntryFolderId);
+	}
+
+	public static ObjectEntryFolder
+			fetchObjectEntryFolderByExternalReferenceCode(
+				String externalReferenceCode, long groupId, long companyId)
+		throws PortalException {
+
+		return getService().fetchObjectEntryFolderByExternalReferenceCode(
+			externalReferenceCode, groupId, companyId);
+	}
+
 	public static ObjectEntryFolder getObjectEntryFolder(
 			long objectEntryFolderId)
 		throws PortalException {
 
 		return getService().getObjectEntryFolder(objectEntryFolderId);
+	}
+
+	public static ObjectEntryFolder getObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
+		throws PortalException {
+
+		return getService().getObjectEntryFolderByExternalReferenceCode(
+			externalReferenceCode, groupId, companyId);
 	}
 
 	public static List<ObjectEntryFolder> getObjectEntryFolders(
@@ -83,13 +116,50 @@ public class ObjectEntryFolderServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	public static ObjectEntryFolder moveObjectEntryFolderToTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().moveObjectEntryFolderToTrash(
+			userId, objectEntryFolder, serviceContext);
+	}
+
+	public static ObjectEntryFolder restoreObjectEntryFolderFromTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().restoreObjectEntryFolderFromTrash(
+			userId, objectEntryFolder, serviceContext);
+	}
+
+	public static void subscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException {
+
+		getService().subscribeObjectEntryFolder(
+			userId, groupId, objectEntryFolderId);
+	}
+
+	public static void unsubscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException {
+
+		getService().unsubscribeObjectEntryFolder(
+			userId, groupId, objectEntryFolderId);
+	}
+
 	public static ObjectEntryFolder updateObjectEntryFolder(
 			long objectEntryFolderId, long parentObjectEntryFolderId,
-			Map<java.util.Locale, String> labelMap, String name)
+			String description, Map<java.util.Locale, String> labelMap,
+			String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateObjectEntryFolder(
-			objectEntryFolderId, parentObjectEntryFolderId, labelMap, name);
+			objectEntryFolderId, parentObjectEntryFolderId, description,
+			labelMap, name, serviceContext);
 	}
 
 	public static ObjectEntryFolderService getService() {

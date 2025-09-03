@@ -14,11 +14,11 @@ import {fetch, navigate} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {
-	API_URL,
 	DEFAULT_FETCH_HEADERS,
 	DEFAULT_VISUALIZATION_MODES,
 	OBJECT_RELATIONSHIP,
 } from '../../utils/constants';
+import getDataSetResourceURL from '../../utils/getDataSetResourceURL';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import {TVisualizationMode} from '../../utils/types';
@@ -52,12 +52,17 @@ const Settings = ({
 			OBJECT_RELATIONSHIP.DATA_SET_TABLE_SECTIONS,
 		].join(',');
 
-		const response = await fetch(
-			`${API_URL.DATA_SETS}/by-external-reference-code/${dataSet.externalReferenceCode}?fields=${fields}&nestedFields=${fields}`,
-			{
-				headers: DEFAULT_FETCH_HEADERS,
-			}
-		);
+		const url = getDataSetResourceURL({
+			dataSetERC: dataSet.externalReferenceCode,
+			params: {
+				fields,
+				nestedFields: fields,
+			},
+		});
+
+		const response = await fetch(url, {
+			headers: DEFAULT_FETCH_HEADERS,
+		});
 
 		if (!response.ok) {
 			openDefaultFailureToast();
@@ -119,14 +124,15 @@ const Settings = ({
 			defaultVisualizationMode,
 		};
 
-		const response = await fetch(
-			`${API_URL.DATA_SETS}/by-external-reference-code/${dataSet.externalReferenceCode}`,
-			{
-				body: JSON.stringify(body),
-				headers: DEFAULT_FETCH_HEADERS,
-				method: 'PATCH',
-			}
-		);
+		const url = getDataSetResourceURL({
+			dataSetERC: dataSet.externalReferenceCode,
+		});
+
+		const response = await fetch(url, {
+			body: JSON.stringify(body),
+			headers: DEFAULT_FETCH_HEADERS,
+			method: 'PATCH',
+		});
 
 		if (!response.ok) {
 			openDefaultFailureToast();
@@ -149,156 +155,165 @@ const Settings = ({
 	useEffect(() => {
 		getActiveVisualizationModes();
 
+		// eslint-disable-next-line react-compiler/react-compiler
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (
-		<ClayLayout.Sheet className="mt-3" size="lg">
-			<ClayLayout.SheetHeader className="mb-4">
-				<h2 className="sheet-title">
-					{Liferay.Language.get('settings')}
-				</h2>
-			</ClayLayout.SheetHeader>
+		<ClayLayout.ContainerFluid className="mt-3" size="lg">
+			<ClayLayout.Sheet>
+				<ClayLayout.SheetHeader className="mb-4">
+					<h2 className="sheet-title">
+						{Liferay.Language.get('settings')}
+					</h2>
+				</ClayLayout.SheetHeader>
 
-			<ClayLayout.SheetSection>
-				<h3 className="sheet-subtitle">
-					{Liferay.Language.get('fragment-defaults')}
-				</h3>
+				<ClayLayout.SheetSection>
+					<h3 className="sheet-subtitle">
+						{Liferay.Language.get('fragment-defaults')}
+					</h3>
 
-				<ClayLayout.Row className="align-items-center justify-content-between">
-					<ClayLayout.Col size={8}>
-						<div>
-							<label htmlFor="view-mode-picker" id="view-mode">
-								{Liferay.Language.get(
-									'default-visualization-mode'
-								)}
-							</label>
-
-							<ClayTooltipProvider>
-								<span
-									className="ml-1 text-secondary"
-									data-tooltip-align="top"
-									title={Liferay.Language.get(
-										'default-visualization-mode-tooltip'
-									)}
+					<ClayLayout.Row className="align-items-center justify-content-between">
+						<ClayLayout.Col size={8}>
+							<div>
+								<label
+									htmlFor="view-mode-picker"
+									id="view-mode"
 								>
-									<ClayIcon
-										spritemap={spritemap}
-										symbol="question-circle-full"
-									/>
-								</span>
-							</ClayTooltipProvider>
-						</div>
+									{Liferay.Language.get(
+										'default-visualization-mode'
+									)}
+								</label>
 
-						<div>
-							{Liferay.Language.get(
-								'default-visualization-mode-help'
-							)}
-						</div>
-					</ClayLayout.Col>
-
-					<ClayLayout.Col size={4}>
-						{!loading && (
-							<Picker
-								aria-labelledby="view-mode"
-								className="mb-2"
-								disabled={!visualizationModes.length}
-								id="view-mode-picker"
-								items={visualizationModes}
-								onSelectionChange={(option: React.Key) => {
-									if (
-										option !==
-										NOT_CONFIGURED_VISUALIZATION_MODE.type
-									) {
-										setDefaultVisualizationMode(
-											option as string
-										);
-									}
-								}}
-								placeholder={
-									NOT_CONFIGURED_VISUALIZATION_MODE.type
-								}
-								selectedKey={defaultVisualizationMode}
-							>
-								{visualizationModes.length ? (
-									({label, mode, thumbnail}) => (
-										<Option key={mode} textValue={label}>
-											<ClayIcon
-												className="mr-3"
-												symbol={thumbnail}
-											/>
-
-											{label}
-										</Option>
-									)
-								) : (
-									<DropDown.Group
-										header={Liferay.Language.get(
-											'not-configured'
+								<ClayTooltipProvider>
+									<span
+										className="ml-1 text-secondary"
+										data-tooltip-align="top"
+										title={Liferay.Language.get(
+											'default-visualization-mode-tooltip'
 										)}
 									>
-										<Option
-											key={
-												NOT_CONFIGURED_VISUALIZATION_MODE.type
-											}
-											textValue={
-												NOT_CONFIGURED_VISUALIZATION_MODE.type
-											}
-										>
-											<ClayLayout.Row>
-												<ClayLayout.Col>
-													<Text size={3}>
-														{
-															NOT_CONFIGURED_VISUALIZATION_MODE.label
-														}
-													</Text>
-												</ClayLayout.Col>
-											</ClayLayout.Row>
-										</Option>
-									</DropDown.Group>
-								)}
-							</Picker>
-						)}
+										<ClayIcon
+											spritemap={spritemap}
+											symbol="question-circle-full"
+										/>
+									</span>
+								</ClayTooltipProvider>
+							</div>
 
-						{!loading && !visualizationModes.length && (
-							<ClayLink
-								borderless
-								onClick={() => onActiveSectionChange(1)}
-								onKeyPress={() => onActiveSectionChange(1)}
-								tabIndex={0}
-								weight="semi-bold"
-							>
-								<span className="inline-item inline-item-before">
-									<ClayIcon
-										spritemap={spritemap}
-										symbol="shortcut"
-									/>
-								</span>
-
+							<div>
 								{Liferay.Language.get(
-									'go-to-visualization-modes'
+									'default-visualization-mode-help'
 								)}
-							</ClayLink>
-						)}
-					</ClayLayout.Col>
-				</ClayLayout.Row>
-			</ClayLayout.SheetSection>
+							</div>
+						</ClayLayout.Col>
 
-			<ClayLayout.SheetFooter>
-				<ClayButton.Group spaced>
-					<ClayButton onClick={updateFDSViewSettings}>
-						{Liferay.Language.get('save')}
-					</ClayButton>
+						<ClayLayout.Col size={4}>
+							{!loading && (
+								<Picker
+									aria-labelledby="view-mode"
+									className="mb-2"
+									disabled={!visualizationModes.length}
+									id="view-mode-picker"
+									items={visualizationModes}
+									onSelectionChange={(option: React.Key) => {
+										if (
+											option !==
+											NOT_CONFIGURED_VISUALIZATION_MODE.type
+										) {
+											setDefaultVisualizationMode(
+												option as string
+											);
+										}
+									}}
+									placeholder={
+										NOT_CONFIGURED_VISUALIZATION_MODE.type
+									}
+									selectedKey={defaultVisualizationMode}
+								>
+									{visualizationModes.length ? (
+										({label, mode, thumbnail}) => (
+											<Option
+												key={mode}
+												textValue={label}
+											>
+												<ClayIcon
+													className="mr-3"
+													symbol={thumbnail}
+												/>
 
-					<ClayButton
-						displayType="secondary"
-						onClick={() => navigate(backURL)}
-					>
-						{Liferay.Language.get('cancel')}
-					</ClayButton>
-				</ClayButton.Group>
-			</ClayLayout.SheetFooter>
-		</ClayLayout.Sheet>
+												{label}
+											</Option>
+										)
+									) : (
+										<DropDown.Group
+											header={Liferay.Language.get(
+												'not-configured'
+											)}
+										>
+											<Option
+												key={
+													NOT_CONFIGURED_VISUALIZATION_MODE.type
+												}
+												textValue={
+													NOT_CONFIGURED_VISUALIZATION_MODE.type
+												}
+											>
+												<ClayLayout.Row>
+													<ClayLayout.Col>
+														<Text size={3}>
+															{
+																NOT_CONFIGURED_VISUALIZATION_MODE.label
+															}
+														</Text>
+													</ClayLayout.Col>
+												</ClayLayout.Row>
+											</Option>
+										</DropDown.Group>
+									)}
+								</Picker>
+							)}
+
+							{!loading && !visualizationModes.length && (
+								<ClayLink
+									borderless
+									onClick={() => onActiveSectionChange(1)}
+									onKeyPress={() => onActiveSectionChange(1)}
+									tabIndex={0}
+									weight="semi-bold"
+								>
+									<span className="inline-item inline-item-before">
+										<ClayIcon
+											spritemap={spritemap}
+											symbol="shortcut"
+										/>
+									</span>
+
+									{Liferay.Language.get(
+										'go-to-visualization-modes'
+									)}
+								</ClayLink>
+							)}
+						</ClayLayout.Col>
+					</ClayLayout.Row>
+				</ClayLayout.SheetSection>
+
+				<ClayLayout.SheetFooter>
+					<ClayButton.Group spaced>
+						<ClayButton onClick={updateFDSViewSettings}>
+							{Liferay.Language.get('save')}
+						</ClayButton>
+
+						<ClayButton
+							displayType="secondary"
+							onClick={() => navigate(backURL)}
+						>
+							{Liferay.Language.get('cancel')}
+						</ClayButton>
+					</ClayButton.Group>
+				</ClayLayout.SheetFooter>
+			</ClayLayout.Sheet>
+		</ClayLayout.ContainerFluid>
 	);
 };
 

@@ -511,6 +511,56 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
+	public void testDatabasePartitionSchemaNamePrefixes() throws Exception {
+		String[] databasePartitionSchemaNamePrefixes = {
+			ReflectionTestUtil.getFieldValue(
+				DBPartitionUtil.class,
+				"_DATABASE_EXPORTED_PARTITION_SCHEMA_NAME_PREFIX"),
+			ReflectionTestUtil.getFieldValue(
+				DBPartitionUtil.class,
+				"_DATABASE_EXPORTED_PARTITION_SCHEMA_NAME_PREFIX")
+		};
+
+		for (String databasePartitionSchemaNamePrefix :
+				databasePartitionSchemaNamePrefixes) {
+
+			String databasePartitionSchemaNamePrefixSQL = StringBundler.concat(
+				"drop view if exists ", databasePartitionSchemaNamePrefix,
+				COMPANY_IDS[0], ".TestView");
+
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						CompanyConstants.SYSTEM)) {
+
+				db.runSQL(databasePartitionSchemaNamePrefixSQL);
+			}
+
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						PortalInstancePool.getDefaultCompanyId())) {
+
+				db.runSQL(databasePartitionSchemaNamePrefixSQL);
+			}
+
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						COMPANY_IDS[0])) {
+
+				db.runSQL(databasePartitionSchemaNamePrefixSQL);
+
+				Assert.fail();
+			}
+			catch (UnsupportedOperationException
+						unsupportedOperationException) {
+
+				Assert.assertEquals(
+					"Unsupported SQL: " + databasePartitionSchemaNamePrefixSQL,
+					unsupportedOperationException.getMessage());
+			}
+		}
+	}
+
+	@Test
 	public void testDeployRemotePortlet() throws Exception {
 		String portletName = RandomTestUtil.randomString();
 

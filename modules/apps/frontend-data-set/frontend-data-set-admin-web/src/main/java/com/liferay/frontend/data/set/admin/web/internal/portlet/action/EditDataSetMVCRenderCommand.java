@@ -6,6 +6,7 @@
 package com.liferay.frontend.data.set.admin.web.internal.portlet.action;
 
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminPortletKeys;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
 import com.liferay.object.exception.NoSuchObjectEntryException;
 import com.liferay.object.model.ObjectDefinition;
@@ -25,9 +26,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
+		"jakarta.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
 		"mvc.command.name=/frontend_data_set_admin/edit_data_set"
 	},
 	service = MVCRenderCommand.class
@@ -63,7 +64,8 @@ public class EditDataSetMVCRenderCommand implements MVCRenderCommand {
 			}
 
 			ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
-				dataSetERC, objectDefinition.getObjectDefinitionId());
+				dataSetERC, ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+				objectDefinition.getObjectDefinitionId());
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);

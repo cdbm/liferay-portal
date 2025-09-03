@@ -12,18 +12,17 @@ import com.liferay.change.tracking.rest.internal.odata.entity.v1_0.CTEntryEntity
 import com.liferay.change.tracking.rest.resource.v1_0.CTEntryResource;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
-import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
-import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -42,9 +41,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Collections;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Collections;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +72,7 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 			com.liferay.change.tracking.model.CTEntry.class.getName(), search,
 			pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
-				Field.ENTRY_CLASS_PK),
+				Field.ENTRY_CLASS_PK, Field.UID),
 			searchContext -> {
 				searchContext.setAttribute("ctCollectionId", ctCollectionId);
 				searchContext.setAttribute("showHideable", showHideable);
@@ -84,8 +83,23 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 				}
 			},
 			sorts,
-			document -> _toCTEntry(
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+			document -> {
+				long ctEntryId = GetterUtil.getLong(
+					document.get(Field.ENTRY_CLASS_PK));
+
+				com.liferay.change.tracking.model.CTEntry ctEntry =
+					_ctEntryLocalService.fetchCTEntry(ctEntryId);
+
+				if (ctEntry == null) {
+					_indexer.delete(
+						contextCompany.getCompanyId(), document.get(Field.UID));
+
+					return null;
+				}
+
+				return _ctEntryDTOConverter.toDTO(
+					_getDTOConverterContext(ctEntry), ctEntry);
+			});
 	}
 
 	@Override
@@ -252,22 +266,6 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 						return null;
 					}
 
-					CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
-						_ctDisplayRendererRegistry.getCTSQLMode(
-							ctEntry.getCtCollectionId(), ctEntry);
-
-					T model = _ctDisplayRendererRegistry.fetchCTModel(
-						ctEntry.getCtCollectionId(), ctSQLMode,
-						ctEntry.getModelClassNameId(),
-						ctEntry.getModelClassPK());
-
-					if ((model == null) ||
-						!_ctDisplayRendererRegistry.isMovable(
-							model, ctEntry.getModelClassNameId())) {
-
-						return null;
-					}
-
 					return addAction(
 						ActionKeys.UPDATE, ctEntry.getCtCollectionId(),
 						"getCTEntry", _ctCollectionModelResourcePermission);
@@ -290,22 +288,6 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 				() -> {
 					if (ctCollection.getStatus() !=
 							WorkflowConstants.STATUS_DRAFT) {
-
-						return null;
-					}
-
-					CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
-						_ctDisplayRendererRegistry.getCTSQLMode(
-							ctEntry.getCtCollectionId(), ctEntry);
-
-					T model = _ctDisplayRendererRegistry.fetchCTModel(
-						ctEntry.getCtCollectionId(), ctSQLMode,
-						ctEntry.getModelClassNameId(),
-						ctEntry.getModelClassPK());
-
-					if ((model == null) ||
-						!_ctDisplayRendererRegistry.isMovable(
-							model, ctEntry.getModelClassNameId())) {
 
 						return null;
 					}
@@ -345,9 +327,6 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 	private volatile ModelResourcePermission<CTCollection>
 		_ctCollectionModelResourcePermission;
 
-	@Reference
-	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
-
 	@Reference(
 		target = "(component.name=com.liferay.change.tracking.rest.internal.dto.v1_0.converter.CTEntryDTOConverter)"
 	)
@@ -356,5 +335,10 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 
 	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
+
+	@Reference(
+		target = "(indexer.class.name=com.liferay.change.tracking.model.CTEntry)"
+	)
+	private Indexer<?> _indexer;
 
 }

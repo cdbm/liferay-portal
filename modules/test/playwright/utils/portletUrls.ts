@@ -8,11 +8,27 @@ export const PORTLET_URLS = {
 		'group/control_panel/manage?p_p_id=com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet',
 	announcements:
 		'/~/control_panel/manage?p_p_id=com_liferay_announcements_web_portlet_AnnouncementsAdminPortlet',
+	batchExportImport:
+		'/~/control_panel/manage?p_p_id=com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet',
 	blogs: '/~/control_panel/manage?p_p_id=com_liferay_blogs_web_portlet_BlogsAdminPortlet',
 	bookmarks:
 		'/~/control_panel/manage?p_p_id=com_liferay_bookmarks_web_portlet_BookmarksAdminPortlet',
 	categoriesAdmin: '/~/control_panel/manage/-/categories_admin/vocabularies',
+	cms: 'web/cms/home',
+	cmsAll: 'web/cms/all',
+	cmsCategories: 'web/cms/categorization/view-categories',
+	cmsContents: 'web/cms/contents',
+	cmsEditCategory: 'web/cms/categorization/edit-category',
+	cmsFiles: 'web/cms/files',
+	cmsNewCategory: 'web/cms/categorization/new-category',
+	cmsNewVocabulary: 'web/cms/categorization/new-vocabulary',
+	cmsPicklistBuilder: 'web/cms/picklist-builder',
+	cmsRecycleBin: 'web/cms/recycle-bin',
 	cmsStructureBuilder: 'web/cms/structure-builder',
+	cmsStructures: 'web/cms/structures',
+	cmsTags: 'web/cms/categorization/view-tags',
+	cmsViewFolder: 'web/cms/e/view-folder/',
+	cmsVocabularies: 'web/cms/categorization/view-vocabularies',
 	collections:
 		'/~/control_panel/manage?p_p_id=com_liferay_asset_list_web_portlet_AssetListPortlet',
 	contentDashboard:
@@ -23,14 +39,18 @@ export const PORTLET_URLS = {
 		'/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=display-page-templates',
 	documentLibrary:
 		'/~/control_panel/manage?p_p_id=com_liferay_document_library_web_portlet_DLAdminPortlet',
+	export: '/~/control_panel/manage?p_p_id=com_liferay_exportimport_web_portlet_ExportPortlet',
 	forms: '/~/control_panel/manage?p_p_id=com_liferay_dynamic_data_mapping_form_web_portlet_DDMFormAdminPortlet',
 	fragments: '/~/control_panel/manage/-/fragments/fragment_collections',
+	import: '/~/control_panel/manage?p_p_id=com_liferay_exportimport_web_portlet_ImportPortlet',
 	journal:
 		'/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet',
 	journalStructures:
 		'/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet&_com_liferay_journal_web_portlet_JournalPortlet_mvcPath=%2Fview_ddm_structures.jsp',
 	journalTemplates:
 		'/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet&_com_liferay_journal_web_portlet_JournalPortlet_mvcPath=%2Fview_ddm_templates.jsp',
+	kaleoFormsAdmin:
+		'/~/control_panel/manage?p_p_id=com_liferay_portal_workflow_kaleo_forms_web_portlet_KaleoFormsAdminPortlet',
 	knowledgeBase:
 		'/~/control_panel/manage?p_p_id=com_liferay_knowledge_base_web_portlet_AdminPortlet',
 	languageOverride:
@@ -63,6 +83,10 @@ export const PORTLET_URLS = {
 	publications:
 		'/~/control_panel/manage?p_p_id=com_liferay_change_tracking_web_portlet_PublicationsPortlet',
 	recycleBin: '/~/control_panel/manage/-/recycle_bin/',
+	redirect:
+		'/~/control_panel/manage?p_p_id=com_liferay_redirect_web_internal_portlet_RedirectPortlet',
+	roleSelector:
+		'/~/control_panel/manage?p_p_id=com_liferay_roles_selector_web_portlet_RolesSelectorPortlet',
 	scriptManagement:
 		'/~/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_configurationScreenKey=script-management',
 	segments:
@@ -76,6 +100,8 @@ export const PORTLET_URLS = {
 	staging:
 		'/~/control_panel/manage?p_p_id=com_liferay_staging_processes_web_portlet_StagingProcessesPortlet',
 	styleBooks: '/~/control_panel/manage/-/style_books/style_books',
+	systemBundleBlacklist:
+		'/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_pid=com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration',
 	systemFeatureFlagBeta:
 		'/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_configurationScreenKey=feature.flag.1.beta.system',
 	systemFeatureFlagDeprecation:
@@ -100,4 +126,6 @@ export const PORTLET_URLS = {
 		'/~/control_panel/manage?p_p_id=com_liferay_wiki_web_portlet_WikiAdminPortlet',
 	workflow:
 		'/~/control_panel/manage?p_p_id=com_liferay_portal_workflow_web_internal_portlet_SiteAdministrationWorkflowPortlet',
+	workflowMetrics:
+		'/~/control_panel/manage?p_p_id=com_liferay_portal_workflow_metrics_web_internal_portlet_WorkflowMetricsPortlet',
 };

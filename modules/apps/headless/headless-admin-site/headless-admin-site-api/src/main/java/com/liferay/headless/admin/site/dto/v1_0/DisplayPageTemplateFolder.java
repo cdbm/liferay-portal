@@ -17,6 +17,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -28,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -416,6 +416,55 @@ public class DisplayPageTemplateFolder implements Serializable {
 	private Supplier<String> _nameSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The parent display page template folder."
+	)
+	@Valid
+	public DisplayPageTemplateFolder getParentDisplayPageTemplateFolder() {
+		if (_parentDisplayPageTemplateFolderSupplier != null) {
+			parentDisplayPageTemplateFolder =
+				_parentDisplayPageTemplateFolderSupplier.get();
+
+			_parentDisplayPageTemplateFolderSupplier = null;
+		}
+
+		return parentDisplayPageTemplateFolder;
+	}
+
+	public void setParentDisplayPageTemplateFolder(
+		DisplayPageTemplateFolder parentDisplayPageTemplateFolder) {
+
+		this.parentDisplayPageTemplateFolder = parentDisplayPageTemplateFolder;
+
+		_parentDisplayPageTemplateFolderSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setParentDisplayPageTemplateFolder(
+		UnsafeSupplier<DisplayPageTemplateFolder, Exception>
+			parentDisplayPageTemplateFolderUnsafeSupplier) {
+
+		_parentDisplayPageTemplateFolderSupplier = () -> {
+			try {
+				return parentDisplayPageTemplateFolderUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The parent display page template folder.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected DisplayPageTemplateFolder parentDisplayPageTemplateFolder;
+
+	@JsonIgnore
+	private Supplier<DisplayPageTemplateFolder>
+		_parentDisplayPageTemplateFolderSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The parent display page template folder's external reference code."
 	)
 	public String getParentDisplayPageTemplateFolderExternalReferenceCode() {
@@ -667,6 +716,19 @@ public class DisplayPageTemplateFolder implements Serializable {
 			sb.append(_escape(name));
 
 			sb.append("\"");
+		}
+
+		DisplayPageTemplateFolder parentDisplayPageTemplateFolder =
+			getParentDisplayPageTemplateFolder();
+
+		if (parentDisplayPageTemplateFolder != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentDisplayPageTemplateFolder\": ");
+
+			sb.append(String.valueOf(parentDisplayPageTemplateFolder));
 		}
 
 		String parentDisplayPageTemplateFolderExternalReferenceCode =

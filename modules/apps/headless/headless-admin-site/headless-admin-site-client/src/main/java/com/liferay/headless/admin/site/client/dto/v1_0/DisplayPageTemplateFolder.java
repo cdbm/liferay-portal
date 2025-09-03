@@ -8,12 +8,12 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.DisplayPageTemplateFolderSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -193,6 +193,31 @@ public class DisplayPageTemplateFolder implements Cloneable, Serializable {
 	}
 
 	protected String name;
+
+	public DisplayPageTemplateFolder getParentDisplayPageTemplateFolder() {
+		return parentDisplayPageTemplateFolder;
+	}
+
+	public void setParentDisplayPageTemplateFolder(
+		DisplayPageTemplateFolder parentDisplayPageTemplateFolder) {
+
+		this.parentDisplayPageTemplateFolder = parentDisplayPageTemplateFolder;
+	}
+
+	public void setParentDisplayPageTemplateFolder(
+		UnsafeSupplier<DisplayPageTemplateFolder, Exception>
+			parentDisplayPageTemplateFolderUnsafeSupplier) {
+
+		try {
+			parentDisplayPageTemplateFolder =
+				parentDisplayPageTemplateFolderUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected DisplayPageTemplateFolder parentDisplayPageTemplateFolder;
 
 	public String getParentDisplayPageTemplateFolderExternalReferenceCode() {
 		return parentDisplayPageTemplateFolderExternalReferenceCode;

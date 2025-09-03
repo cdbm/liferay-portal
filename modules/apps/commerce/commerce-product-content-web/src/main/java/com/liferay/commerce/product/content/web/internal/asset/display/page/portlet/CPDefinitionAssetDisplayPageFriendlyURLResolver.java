@@ -19,13 +19,13 @@ import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
-import com.liferay.commerce.context.CommerceContextThreadLocal;
-import com.liferay.commerce.context.CommerceGroupThreadLocal;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.configuration.CPDisplayLayoutConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.constants.CPWebKeys;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.commerce.product.model.CProduct;
@@ -35,8 +35,8 @@ import com.liferay.commerce.product.service.CPDisplayLayoutLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.commerce.util.CommerceContextThreadLocal;
+import com.liferay.commerce.util.CommerceGroupThreadLocal;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -74,11 +74,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -190,7 +190,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 		}
 
 		return _getBasicLayoutURL(
-			groupId, privateLayout, mainPath, requestContext, cpDefinition);
+			groupId, privateLayout, mainPath, requestContext, cpCatalogEntry);
 	}
 
 	@Override
@@ -304,17 +304,13 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 	private String _getBasicLayoutURL(
 			long groupId, boolean privateLayout, String mainPath,
-			Map<String, Object> requestContext, CPDefinition cpDefinition)
+			Map<String, Object> requestContext, CPCatalogEntry cpCatalogEntry)
 		throws PortalException {
 
 		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)requestContext.get("request");
 
 		Locale locale = _portal.getLocale(httpServletRequest);
-
-		CPCatalogEntry cpCatalogEntry = _cpDefinitionHelper.getCPCatalogEntry(
-			_getCommerceAccountId(groupId, httpServletRequest), groupId,
-			cpDefinition.getCPDefinitionId(), locale);
 
 		Layout layout = _getProductLayout(
 			groupId, privateLayout, cpCatalogEntry.getCPDefinitionId());

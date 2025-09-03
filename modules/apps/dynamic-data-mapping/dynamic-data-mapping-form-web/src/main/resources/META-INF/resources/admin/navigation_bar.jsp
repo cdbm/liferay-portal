@@ -8,7 +8,6 @@
 <%@ include file="/admin/init.jsp" %>
 
 <clay:navigation-bar
-	cssClass="lfr-forms__navigation-bar"
 	inverted="<%= true %>"
 	navigationItems="<%= ddmFormAdminDisplayContext.getNavigationItems() %>"
 />

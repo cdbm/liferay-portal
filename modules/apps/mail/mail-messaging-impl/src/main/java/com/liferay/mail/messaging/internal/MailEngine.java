@@ -9,7 +9,7 @@ import com.liferay.mail.kernel.model.Account;
 import com.liferay.mail.kernel.model.FileAttachment;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.model.SMTPAccount;
-import com.liferay.mail.kernel.service.MailServiceUtil;
+import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.log.LogUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -25,10 +26,31 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+
+import jakarta.mail.Address;
+import jakarta.mail.Header;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Part;
+import jakarta.mail.SendFailedException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.InternetHeaders;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+
 import java.io.File;
+import java.io.InputStream;
 
 import java.net.SocketException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -36,25 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-
-import javax.mail.Address;
-import javax.mail.Header;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Part;
-import javax.mail.SendFailedException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.InternetHeaders;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 /**
  * @author Brian Wing Shun Chan
@@ -68,12 +71,12 @@ import javax.mail.internet.MimeMultipart;
 public class MailEngine {
 
 	public static void send(
-			InternetAddress from, InternetAddress[] to, InternetAddress[] cc,
-			InternetAddress[] bcc, InternetAddress[] bulkAddresses,
-			String subject, String body, boolean htmlFormat,
-			InternetAddress[] replyTo, String messageId, String inReplyTo,
-			List<FileAttachment> fileAttachments, SMTPAccount smtpAccount,
-			InternetHeaders internetHeaders)
+			MailService mailService, InternetAddress from, InternetAddress[] to,
+			InternetAddress[] cc, InternetAddress[] bcc,
+			InternetAddress[] bulkAddresses, String subject, String body,
+			boolean htmlFormat, InternetAddress[] replyTo, String messageId,
+			String inReplyTo, List<FileAttachment> fileAttachments,
+			SMTPAccount smtpAccount, InternetHeaders internetHeaders)
 		throws PortalException {
 
 		long startTime = System.currentTimeMillis();
@@ -95,19 +98,21 @@ public class MailEngine {
 				for (int i = 0; i < fileAttachments.size(); i++) {
 					FileAttachment fileAttachment = fileAttachments.get(i);
 
-					File file = fileAttachment.getFile();
+					InputStream inputStream = fileAttachment.getInputStream();
 
-					if (file == null) {
+					if (inputStream == null) {
 						continue;
 					}
 
 					_log.debug(
 						StringBundler.concat(
-							"Attachment ", i, " file ", file.getAbsolutePath(),
-							" and file name ", fileAttachment.getFileName()));
+							"Attachment ", i, " and file name ",
+							fileAttachment.getFileName()));
 				}
 			}
 		}
+
+		List<File> tempFiles = new ArrayList<>();
 
 		try {
 			_validateAddress(from);
@@ -135,10 +140,10 @@ public class MailEngine {
 			Session session = null;
 
 			if (smtpAccount == null) {
-				session = MailServiceUtil.getSession();
+				session = mailService.getSession();
 			}
 			else {
-				session = MailServiceUtil.getSession(smtpAccount);
+				session = mailService.getSession(smtpAccount);
 			}
 
 			Message message = new LiferayMimeMessage(session);
@@ -193,13 +198,17 @@ public class MailEngine {
 				}
 
 				for (FileAttachment fileAttachment : fileAttachments) {
-					File file = fileAttachment.getFile();
+					InputStream inputStream = fileAttachment.getInputStream();
 
-					if (file == null) {
+					if (inputStream == null) {
 						continue;
 					}
 
 					MimeBodyPart mimeBodyPart = new MimeBodyPart();
+
+					File file = FileUtil.createTempFile(inputStream);
+
+					tempFiles.add(file);
 
 					DataSource dataSource = new FileDataSource(file);
 
@@ -271,6 +280,11 @@ public class MailEngine {
 		catch (Exception exception) {
 			throw new PortalException(exception);
 		}
+		finally {
+			for (File file : tempFiles) {
+				file.delete();
+			}
+		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
@@ -279,15 +293,17 @@ public class MailEngine {
 		}
 	}
 
-	public static void send(MailMessage mailMessage) throws PortalException {
+	public static void send(MailService mailService, MailMessage mailMessage)
+		throws PortalException {
+
 		send(
-			mailMessage.getFrom(), mailMessage.getTo(), mailMessage.getCC(),
-			mailMessage.getBCC(), mailMessage.getBulkAddresses(),
-			mailMessage.getSubject(), mailMessage.getBody(),
-			mailMessage.isHTMLFormat(), mailMessage.getReplyTo(),
-			mailMessage.getMessageId(), mailMessage.getInReplyTo(),
-			mailMessage.getFileAttachments(), mailMessage.getSMTPAccount(),
-			mailMessage.getInternetHeaders());
+			mailService, mailMessage.getFrom(), mailMessage.getTo(),
+			mailMessage.getCC(), mailMessage.getBCC(),
+			mailMessage.getBulkAddresses(), mailMessage.getSubject(),
+			mailMessage.getBody(), mailMessage.isHTMLFormat(),
+			mailMessage.getReplyTo(), mailMessage.getMessageId(),
+			mailMessage.getInReplyTo(), mailMessage.getFileAttachments(),
+			mailMessage.getSMTPAccount(), mailMessage.getInternetHeaders());
 	}
 
 	private static Address[] _getBatchAddresses(

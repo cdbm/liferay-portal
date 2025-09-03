@@ -1,15 +1,14 @@
 {
-	"@generated": "52e8051dc10b2dd5ef359a7a2f65076cf7cd1a40",
+	"@generated": "4df5145f32a7fdfa50b3ff17d4e06011399f5602",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/address-web": [
@@ -19,7 +18,10 @@
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",

@@ -292,41 +292,53 @@ public class FilePropagator {
 		}
 
 		synchronized (this) {
-			String targetSlave = _targetSlaves.remove(0);
+			while (true) {
+				String targetSlave = _targetSlaves.remove(0);
 
-			_busySlaves.add(targetSlave);
+				_busySlaves.add(targetSlave);
 
-			try {
-				int result = _executeBashCommands(commands, targetSlave);
+				try {
+					Process process = _executeBashCommands(
+						commands, targetSlave);
 
-				_busySlaves.remove(targetSlave);
+					if (process.exitValue() != 0) {
+						throw new Exception(
+							JenkinsResultsParserUtil.readInputStream(
+								process.getErrorStream()));
+					}
 
-				if (result != 0) {
-					_errorSlaves.add(targetSlave);
-
-					_copyFromSource();
-				}
-				else {
+					_busySlaves.remove(targetSlave);
 					_mirrorSlaves.add(targetSlave);
-				}
-			}
-			catch (Exception exception) {
-				_busySlaves.remove(targetSlave);
 
-				if (!_errorSlaves.contains(targetSlave)) {
-					_errorSlaves.add(targetSlave);
+					break;
 				}
+				catch (Exception exception) {
+					_busySlaves.remove(targetSlave);
 
-				throw new FilePropagatorRuntimeException(
-					this, "Unable to copy from source. Executed: " + commands,
-					exception);
+					if (!_errorSlaves.contains(targetSlave)) {
+						_errorSlaves.add(targetSlave);
+					}
+
+					if (_targetSlaves.isEmpty()) {
+						throw new FilePropagatorRuntimeException(
+							this,
+							"Unable to copy from source. Executed: " + commands,
+							exception);
+					}
+
+					log(
+						JenkinsResultsParserUtil.combine(
+							"Unable to copy from source to ", targetSlave,
+							". Retrying with another node."));
+				}
 			}
 		}
 
 		log("Finished copying from source.");
 	}
 
-	private int _executeBashCommands(List<String> commands, String targetSlave)
+	private Process _executeBashCommands(
+			List<String> commands, String targetSlave)
 		throws IOException, TimeoutException {
 
 		StringBuffer sb = new StringBuffer();
@@ -356,10 +368,7 @@ public class FilePropagator {
 
 		sb.append("'");
 
-		Process process = JenkinsResultsParserUtil.executeBashCommands(
-			sb.toString());
-
-		return process.exitValue();
+		return JenkinsResultsParserUtil.executeBashCommands(sb.toString());
 	}
 
 	private String _getMkdirCommand(String fileName) {
@@ -448,6 +457,8 @@ public class FilePropagator {
 							filePropagatorTask._targetFileName);
 			}
 
+			String errorMessage = null;
+
 			Thread currentThread = Thread.currentThread();
 
 			if (currentThread.isInterrupted()) {
@@ -455,10 +466,15 @@ public class FilePropagator {
 			}
 			else {
 				try {
-					int value = _filePropagator._executeBashCommands(
+					Process process = _filePropagator._executeBashCommands(
 						commands, _targetSlave);
 
-					_successful = value == 0;
+					int exitValue = process.exitValue();
+
+					errorMessage = JenkinsResultsParserUtil.readInputStream(
+						process.getErrorStream(), true);
+
+					_successful = exitValue == 0;
 				}
 				catch (Exception exception) {
 					_successful = false;
@@ -481,6 +497,10 @@ public class FilePropagator {
 					JenkinsResultsParserUtil.combine(
 						"Unable to propagate to ", _targetSlave, " from ",
 						_mirrorSlave, "."));
+
+				if (!JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+					_filePropagator.log(errorMessage);
+				}
 			}
 
 			synchronized (_filePropagator) {

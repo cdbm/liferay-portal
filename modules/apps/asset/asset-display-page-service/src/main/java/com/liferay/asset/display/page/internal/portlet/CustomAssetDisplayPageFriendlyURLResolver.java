@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -90,6 +90,12 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 		if (Validator.isNumber(parts[2])) {
 			infoItemIdentifier = new ClassPKInfoItemIdentifier(
 				GetterUtil.getLong(parts[2]));
+
+			String version = getVersion(params);
+
+			if (Validator.isNotNull(version)) {
+				infoItemIdentifier.setVersion(version);
+			}
 		}
 		else {
 			infoItemIdentifier = new ERCInfoItemIdentifier(parts[2]);

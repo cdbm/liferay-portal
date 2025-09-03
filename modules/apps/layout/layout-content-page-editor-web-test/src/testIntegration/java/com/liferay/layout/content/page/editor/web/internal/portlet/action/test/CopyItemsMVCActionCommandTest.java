@@ -71,15 +71,15 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -125,7 +125,7 @@ public class CopyItemsMVCActionCommandTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(WebKeys.LAYOUT, _layout);
 
@@ -448,8 +448,8 @@ public class CopyItemsMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(), layoutStructure.toString());
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
 			_mvcActionCommand, "doTransactionalCommand",
@@ -529,7 +529,7 @@ public class CopyItemsMVCActionCommandTest {
 				fragmentCollection.getFragmentCollectionId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				StringPool.BLANK, html, StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -608,10 +608,9 @@ public class CopyItemsMVCActionCommandTest {
 			FragmentEntryLink fragmentEntryLink)
 		throws Exception {
 
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
-		JSONObject copiedJSONObject = _jsonFactory.createJSONObject(
-			copiedFragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
+		JSONObject copiedJSONObject =
+			copiedFragmentEntryLink.getEditableValuesJSONObject();
 
 		Assert.assertEquals(jsonObject.length(), copiedJSONObject.length());
 
@@ -728,7 +727,7 @@ public class CopyItemsMVCActionCommandTest {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 		mockLiferayPortletActionRequest.setAttribute(WebKeys.LAYOUT, _layout);
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _themeDisplay);

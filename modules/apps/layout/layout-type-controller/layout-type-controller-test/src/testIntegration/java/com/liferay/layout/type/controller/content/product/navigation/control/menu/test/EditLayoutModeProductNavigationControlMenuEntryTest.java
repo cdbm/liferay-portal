@@ -41,9 +41,9 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,11 +79,11 @@ public class EditLayoutModeProductNavigationControlMenuEntryTest {
 		FileEntry fileEntry = _addFileEntry(_group);
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(),
+			_group.getGroupId(), StringPool.BLANK,
 			_portal.getClassNameId(FileEntry.class.getName()),
-			fileEntry.getFileEntryId(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			layout.getPlid(), new ServiceContext());
+			fileEntry.getFileEntryId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), layout.getPlid(),
+			new ServiceContext());
 
 		_dlAppLocalService.deleteFileEntry(fileEntry.getFileEntryId());
 

@@ -52,19 +52,19 @@ function AddToCart({
 	channel,
 	cpInstance: initialCpInstance,
 	disabled: initialDisabled,
+	guestOrderEnabled,
 	productId,
 	settings,
-	showOrderTypeModal,
-	showOrderTypeModalURL,
 }) {
 	const account = useCommerceAccount({id: initialAccountId});
-	const cart = useCommerceCart(
-		{
+	const cart = useCommerceCart({
+		channelGroupId: channel.groupId,
+		guestOrderEnabled,
+		initialCart: {
 			UUID: initialCartUUID,
 			id: initialCartId,
 		},
-		channel.groupId
-	);
+	});
 	const [cpInstance, setCpInstance] = useState({
 		...initialCpInstance,
 		quantity: getQuantity(settings, initialCpInstance.skuUnitOfMeasure),
@@ -137,13 +137,17 @@ function AddToCart({
 
 	useEffect(() => {
 		function handleQuantityChanged({quantity, skuId}) {
-			setCpInstance((cpInstance) => ({
-				...cpInstance,
-				inCart:
-					skuId === cpInstance.skuId || skuId === ALL
-						? Boolean(quantity)
-						: cpInstance.inCart,
-			}));
+			setCpInstance((cpInstance) => {
+				const isModified =
+					skuId === cpInstance.skuId ||
+					skuId.toString() === cpInstance.skuId ||
+					skuId === ALL;
+
+				return {
+					...cpInstance,
+					inCart: isModified ? Boolean(quantity) : cpInstance.inCart,
+				};
+			});
 		}
 
 		function handleUOMChanged({unitOfMeasure}) {
@@ -292,18 +296,7 @@ function AddToCart({
 						inCart: true,
 					}));
 				}}
-				onClick={
-					cpInstance.validQuantity
-						? null
-						: (event) => {
-								event.preventDefault();
-
-								inputRef.current?.focus();
-							}
-				}
 				settings={settings}
-				showOrderTypeModal={showOrderTypeModal}
-				showOrderTypeModalURL={showOrderTypeModalURL}
 			/>
 		</div>
 	);
@@ -332,8 +325,6 @@ AddToCart.propTypes = {
 		showUnitOfMeasureSelector: PropTypes.bool,
 		size: PropTypes.oneOf(['lg', 'md', 'sm']),
 	}),
-	showOrderTypeModal: PropTypes.bool,
-	showOrderTypeModalURL: PropTypes.string,
 };
 
 export default AddToCart;

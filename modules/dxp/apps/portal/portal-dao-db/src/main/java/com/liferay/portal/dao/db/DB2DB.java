@@ -209,6 +209,21 @@ public class DB2DB extends BaseDB {
 	}
 
 	@Override
+	public String getCharacterSet(Connection connection) throws SQLException {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select value from sysibmadm.dbcfg where name = 'codeset'")) {
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getString(1);
+				}
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
+	@Override
 	public String getPopulateSQL(String databaseName, String sqlContent) {
 		return StringBundler.concat(
 			"connect to ", databaseName, ";\n", sqlContent);
@@ -221,6 +236,13 @@ public class DB2DB extends BaseDB {
 			databaseName,
 			" pagesize 32768 temporary tablespace managed by automatic ",
 			"storage;\n");
+	}
+
+	@Override
+	public boolean isSupportsCharacterSet(Connection connection)
+		throws SQLException {
+
+		return Objects.equals(getCharacterSet(connection), "UTF-8");
 	}
 
 	@Override
@@ -633,8 +655,8 @@ public class DB2DB extends BaseDB {
 	private static final String[] _DB2 = {
 		"--", "1", "0", "'1970-01-01-00.00.00.000000'", "current timestamp",
 		" blob", " blob", " decimal(30, 16)", " smallint", " timestamp",
-		" double", " integer", " bigint", " varchar(4000)", " clob", " varchar",
-		" generated always as identity", "commit"
+		" double", " integer", " bigint", " varchar(4000)", " clob(2G)",
+		" varchar", " generated always as identity", "commit"
 	};
 
 	private static final int _SQL_STRING_SIZE = 4000;

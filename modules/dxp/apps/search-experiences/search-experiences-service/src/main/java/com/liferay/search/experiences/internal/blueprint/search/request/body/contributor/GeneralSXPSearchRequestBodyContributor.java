@@ -5,21 +5,36 @@
 
 package com.liferay.search.experiences.internal.blueprint.search.request.body.contributor;
 
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.asset.AssetSubtypeIdentifier;
+import com.liferay.portal.search.asset.AssetSubtypeIdentifierBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.search.experiences.internal.blueprint.parameter.SXPParameterData;
 import com.liferay.search.experiences.rest.dto.v1_0.Configuration;
 import com.liferay.search.experiences.rest.dto.v1_0.GeneralConfiguration;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author André de Oliveira
  */
 public class GeneralSXPSearchRequestBodyContributor
 	implements SXPSearchRequestBodyContributor {
+
+	public GeneralSXPSearchRequestBodyContributor(
+		AssetSubtypeIdentifierBuilder assetSubtypeIdentifierBuilder) {
+
+		_assetSubtypeIdentifierBuilder = assetSubtypeIdentifierBuilder;
+	}
 
 	@Override
 	public void contribute(
@@ -75,10 +90,55 @@ public class GeneralSXPSearchRequestBodyContributor
 		if (ArrayUtil.isNotEmpty(
 				generalConfiguration.getSearchableAssetTypes())) {
 
-			searchRequestBuilder.entryClassNames(
-				generalConfiguration.getSearchableAssetTypes());
-			searchRequestBuilder.modelIndexerClassNames(
-				generalConfiguration.getSearchableAssetTypes());
+			String[] searchableAssetTypes =
+				generalConfiguration.getSearchableAssetTypes();
+
+			HashMap<String, List<AssetSubtypeIdentifier>>
+				assetSubtypeIdentifiersMap = new HashMap<>();
+
+			Set<String> classNamesSet = new HashSet<>();
+
+			for (String searchableAssetType : searchableAssetTypes) {
+				AssetSubtypeIdentifier assetSubtypeIdentifier =
+					_assetSubtypeIdentifierBuilder.searchableAssetType(
+						searchableAssetType
+					).build();
+
+				String className = assetSubtypeIdentifier.getClassName();
+
+				classNamesSet.add(className);
+
+				if ((assetSubtypeIdentifier.getSubtypeExternalReferenceCode() ==
+						null) ||
+					!FeatureFlagManagerUtil.isEnabled("LPS-129412")) {
+
+					continue;
+				}
+
+				List<AssetSubtypeIdentifier> assetSubtypeIdentifiers =
+					assetSubtypeIdentifiersMap.get(className);
+
+				if (assetSubtypeIdentifiers == null) {
+					assetSubtypeIdentifiers = new ArrayList<>();
+				}
+
+				assetSubtypeIdentifiers.add(assetSubtypeIdentifier);
+
+				assetSubtypeIdentifiersMap.put(
+					className, assetSubtypeIdentifiers);
+			}
+
+			String[] classNames = classNamesSet.toArray(new String[0]);
+
+			searchRequestBuilder.entryClassNames(classNames);
+			searchRequestBuilder.modelIndexerClassNames(classNames);
+
+			if (FeatureFlagManagerUtil.isEnabled("LPS-129412")) {
+				searchRequestBuilder.withSearchContext(
+					searchContext -> searchContext.setAttribute(
+						"assetSubtypeIdentifiersMap",
+						assetSubtypeIdentifiersMap));
+			}
 		}
 
 		if (!Validator.isBlank(generalConfiguration.getLanguageId())) {
@@ -99,5 +159,7 @@ public class GeneralSXPSearchRequestBodyContributor
 	public String getName() {
 		return "generalConfiguration";
 	}
+
+	private final AssetSubtypeIdentifierBuilder _assetSubtypeIdentifierBuilder;
 
 }

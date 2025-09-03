@@ -10,9 +10,13 @@ import com.liferay.commerce.product.exception.CPDefinitionSpecificationOptionVal
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionSpecificationOptionValueException;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPSpecificationOption;
+import com.liferay.commerce.product.model.CPSpecificationOptionListTypeDefinitionRel;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
+import com.liferay.commerce.product.service.CPSpecificationOptionListTypeDefinitionRelLocalService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.list.type.model.ListTypeEntry;
+import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -20,18 +24,21 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
 		"mvc.command.name=/cp_definitions/edit_cp_definition_specification_option_value"
 	},
 	service = MVCActionCommand.class
@@ -133,7 +140,7 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 				addCPDefinitionSpecificationOptionValue(
 					StringPool.BLANK, cpDefinitionId, cpSpecificationOptionId,
 					cpSpecificationOption.getCPOptionCategoryId(), i, null,
-					serviceContext);
+					cpSpecificationOption.isVisible(), serviceContext);
 		}
 	}
 
@@ -168,9 +175,27 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 		}
 	}
 
+	private List<ListTypeEntry> _getListTypeEntries(
+		long cpSpecificationOptionId) {
+
+		long[] listTypeDefinitionIds = TransformUtil.transformToLongArray(
+			_cpSpecificationOptionListTypeDefinitionRelLocalService.
+				getCPSpecificationOptionListTypeDefinitionRels(
+					cpSpecificationOptionId),
+			CPSpecificationOptionListTypeDefinitionRel::
+				getListTypeDefinitionId);
+
+		if (ArrayUtil.isEmpty(listTypeDefinitionIds)) {
+			return Collections.emptyList();
+		}
+
+		return _listTypeEntryLocalService.getListTypeEntries(
+			listTypeDefinitionIds);
+	}
+
 	private Map<Locale, String> _getValueMap(
-			long cpDefinitionSpecificationOptionValueId,
-			ActionRequest actionRequest)
+			ActionRequest actionRequest,
+			long cpDefinitionSpecificationOptionValueId)
 		throws Exception {
 
 		CPDefinitionSpecificationOptionValue
@@ -179,20 +204,17 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 					getCPDefinitionSpecificationOptionValue(
 						cpDefinitionSpecificationOptionValueId);
 
-		CPSpecificationOption cpSpecificationOption =
-			cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+		List<ListTypeEntry> listTypeEntries = _getListTypeEntries(
+			cpDefinitionSpecificationOptionValue.getCPSpecificationOptionId());
 
-		if (ListUtil.isEmpty(cpSpecificationOption.getListTypeEntries())) {
-			return _localization.getLocalizationMap(
-				actionRequest, "listTypeEntriesSelect");
+		if (ListUtil.isEmpty(listTypeEntries)) {
+			return _localization.getLocalizationMap(actionRequest, "value");
 		}
 
 		String value = ParamUtil.getString(
 			actionRequest, "listTypeEntriesSelect");
 
-		for (ListTypeEntry listTypeEntry :
-				cpSpecificationOption.getListTypeEntries()) {
-
+		for (ListTypeEntry listTypeEntry : listTypeEntries) {
 			if (value.equals(listTypeEntry.getKey())) {
 				return listTypeEntry.getNameMap();
 			}
@@ -214,7 +236,8 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 		String key = ParamUtil.getString(actionRequest, "key");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
 		Map<Locale, String> valueMap = _getValueMap(
-			cpDefinitionSpecificationOptionValueId, actionRequest);
+			actionRequest, cpDefinitionSpecificationOptionValueId);
+		boolean visible = ParamUtil.getBoolean(actionRequest, "visible");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CPDefinitionSpecificationOptionValue.class.getName(),
@@ -230,7 +253,7 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 			updateCPDefinitionSpecificationOptionValue(
 				cpDefinitionSpecificationOptionValue.getExternalReferenceCode(),
 				cpDefinitionSpecificationOptionValueId, cpOptionCategoryId, key,
-				priority, valueMap, serviceContext);
+				priority, valueMap, visible, serviceContext);
 	}
 
 	@Reference
@@ -238,7 +261,14 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 		_cpDefinitionSpecificationOptionValueService;
 
 	@Reference
+	private CPSpecificationOptionListTypeDefinitionRelLocalService
+		_cpSpecificationOptionListTypeDefinitionRelLocalService;
+
+	@Reference
 	private CPSpecificationOptionService _cpSpecificationOptionService;
+
+	@Reference
+	private ListTypeEntryLocalService _listTypeEntryLocalService;
 
 	@Reference
 	private Localization _localization;

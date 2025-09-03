@@ -1,0 +1,151 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {expect, mergeTests} from '@playwright/test';
+import {createReadStream} from 'fs';
+import path from 'path';
+
+import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
+import {loginTest} from '../../../fixtures/loginTest';
+import getRandomString from '../../../utils/getRandomString';
+import {EFDSVisualizationMode, waitForFDS} from '../../../utils/waitFor';
+import getPageDefinition from '../../layout-content-page-editor-web/main/utils/getPageDefinition';
+import getWidgetDefinition from '../../layout-content-page-editor-web/main/utils/getWidgetDefinition';
+import {itemSelectorSamplePageTest} from './fixtures/itemSelectorSamplePageTest';
+
+const test = mergeTests(
+	apiHelpersTest,
+	dataApiHelpersTest,
+	featureFlagsTest({
+		'LPS-178052': {enabled: true},
+	}),
+	itemSelectorSamplePageTest,
+	isolatedSiteTest,
+	loginTest()
+);
+
+let imageFile: any;
+let jsonFile: any;
+
+test.beforeEach(async ({apiHelpers, itemSelectorSamplePage, site}) => {
+	await test.step('Upload sample documents', async () => {
+		imageFile = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(
+				path.join(__dirname, '/dependencies/sample_image.png')
+			),
+			{
+				description: getRandomString(),
+				documentFolderId: 0,
+				fileName: getRandomString(),
+				title: 'Sample image',
+			}
+		);
+
+		jsonFile = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/file.json')),
+			{
+				description: getRandomString(),
+				documentFolderId: 0,
+				fileName: getRandomString(),
+				title: 'JSON File',
+			}
+		);
+	});
+
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_frontend_js_item_selector_sample_web_portlet_FrontendJSItemSelectorSampleWebPortlet',
+			}),
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	await itemSelectorSamplePage.goToPage({layout, site});
+});
+
+test.afterEach(async ({apiHelpers}) => {
+	imageFile &&
+		(await apiHelpers.headlessDelivery.deleteDocument(imageFile.id));
+	jsonFile && (await apiHelpers.headlessDelivery.deleteDocument(jsonFile.id));
+});
+
+test('Item Selector Modal with single selection', async ({
+	itemSelectorSamplePage,
+	page,
+}) => {
+	await test.step('Check that an Item Selector Modal appears in the page', async () => {
+		await expect(page.getByText('Item Selector Modal')).toBeVisible();
+	});
+
+	await test.step('Click in the Select File button opens the Item Selector Modal with a FDS component', async () => {
+		await itemSelectorSamplePage.selectDocumentButton.click();
+
+		await expect(
+			itemSelectorSamplePage.selectDocumentModalHeader
+		).toBeVisible();
+
+		waitForFDS({page, visualizationMode: EFDSVisualizationMode.CARDS});
+	});
+
+	await test.step('Check that a single item can be selected in the Cards visualization mode', async () => {
+		await expect(itemSelectorSamplePage.modal.selectButton).toBeDisabled();
+
+		await itemSelectorSamplePage.page
+			.locator('.custom-radio')
+			.first()
+			.click();
+
+		await expect(itemSelectorSamplePage.modal.selectButton).toBeEnabled();
+
+		await expect(
+			itemSelectorSamplePage.page.getByText(
+				`${imageFile.fileName} Selected`
+			)
+		).toBeVisible();
+
+		await itemSelectorSamplePage.page
+			.locator('.custom-radio')
+			.last()
+			.click();
+
+		await expect(
+			itemSelectorSamplePage.page.getByText(
+				`${jsonFile.fileName} Selected`
+			)
+		).toBeVisible();
+	});
+
+	await test.step('Check that it is possible to select an item in the Table visualization mode', async () => {
+		await itemSelectorSamplePage.changeVisualizationMode({
+			page,
+			visualizationMode: EFDSVisualizationMode.TABLE,
+		});
+
+		itemSelectorSamplePage.selectByRowAndRole({row: 0});
+
+		await expect(
+			itemSelectorSamplePage.page.getByText(
+				`${imageFile.fileName} Selected`
+			)
+		).toBeVisible();
+
+		itemSelectorSamplePage.selectByRowAndRole({row: 1});
+
+		await expect(
+			itemSelectorSamplePage.page.getByText(
+				`${jsonFile.fileName} Selected`
+			)
+		).toBeVisible();
+	});
+});

@@ -8,32 +8,39 @@ package com.liferay.fragment.entry.processor.util;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.fragment.entry.processor.helper.InfoItemFieldMapped;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
-import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.HTMLInfoFieldType;
-import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 
 import java.util.Locale;
 import java.util.Map;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Tag;
 
 /**
  * @author Eudaldo Alonso
  */
 public class AnalyticsAttributesUtil {
 
-	public static final String ACTION_IMPRESSION = "impression";
+	public static final String ACTION_DOWNLOAD = "download";
 
-	public static final String ACTION_VIEW = "view";
+	public static final String ACTION_IMPRESSION = "impression";
 
 	public static void addAnalyticsAttributes(
 		JSONObject editableValueJSONObject, Element element,
@@ -42,11 +49,61 @@ public class AnalyticsAttributesUtil {
 		Map<InfoItemReference, InfoItemFieldValues> infoDisplaysFieldValues,
 		InfoItemServiceRegistry infoItemServiceRegistry) {
 
+		JSONObject configJSONObject = editableValueJSONObject.getJSONObject(
+			"config");
+
+		if ((configJSONObject != null) &&
+			StringUtil.equals(
+				configJSONObject.getString("fieldId"),
+				"FileEntry_downloadURL")) {
+
+			element.attr("data-analytics-asset-action", ACTION_DOWNLOAD);
+			element.attr(
+				"data-analytics-asset-field",
+				configJSONObject.getString("fieldId"));
+			element.attr(
+				"data-analytics-asset-id",
+				configJSONObject.getString("classPK"));
+			element.attr(
+				"data-analytics-asset-subtype",
+				configJSONObject.getString("itemSubtype"));
+			element.attr(
+				"data-analytics-asset-title",
+				configJSONObject.getString("title"));
+			element.attr(
+				"data-analytics-asset-type",
+				_getAnalyticsAssetType(FileEntry.class.getName()));
+
+			return;
+		}
+
 		InfoItemFieldMapped infoItemFieldMapped =
 			fragmentEntryProcessorHelper.getInfoItemFieldMapped(
 				editableValueJSONObject, fragmentEntryProcessorContext);
 
 		if (infoItemFieldMapped == null) {
+			if (_isImageTag(element)) {
+				JSONObject jsonObject = editableValueJSONObject.getJSONObject(
+					String.valueOf(fragmentEntryProcessorContext.getLocale()));
+
+				if (jsonObject == null) {
+					jsonObject = editableValueJSONObject;
+				}
+
+				element.attr("data-analytics-asset-action", ACTION_IMPRESSION);
+				element.attr(
+					"data-analytics-asset-field",
+					jsonObject.getString("fieldId"));
+				element.attr(
+					"data-analytics-asset-id", jsonObject.getString("classPK"));
+				element.attr(
+					"data-analytics-asset-title",
+					jsonObject.getString("title"));
+				element.attr(
+					"data-analytics-asset-type",
+					_getAnalyticsAssetType(FileEntry.class.getName()));
+			}
+
 			return;
 		}
 
@@ -57,9 +114,12 @@ public class AnalyticsAttributesUtil {
 			return;
 		}
 
+		element.attr("data-analytics-asset-action", ACTION_IMPRESSION);
 		element.attr(
-			"data-analytics-asset-action",
-			_getAnalyticsAction(infoDisplaysFieldValues, infoItemFieldMapped));
+			"data-analytics-external-reference-code",
+			_getAnalyticsExternalReferenceCode(
+				infoDisplaysFieldValues, infoItemFieldMapped,
+				fragmentEntryProcessorContext.getLocale()));
 		element.attr(
 			"data-analytics-asset-field", infoItemFieldMapped.getFieldName());
 
@@ -70,6 +130,15 @@ public class AnalyticsAttributesUtil {
 			"data-analytics-asset-id",
 			String.valueOf(classPKInfoItemIdentifier.getClassPK()));
 
+		Object object = infoItemFieldMapped.getObject();
+
+		if (object instanceof ObjectEntry) {
+			element.attr(
+				"data-analytics-object-definition-name",
+				_getAnalyticsObjectDefinitionName(
+					infoItemServiceRegistry, (ObjectEntry)object));
+		}
+
 		element.attr(
 			"data-analytics-asset-subtype",
 			_getAnalyticsSubtype(infoItemFieldMapped, infoItemServiceRegistry));
@@ -79,37 +148,85 @@ public class AnalyticsAttributesUtil {
 				infoDisplaysFieldValues, infoItemFieldMapped,
 				fragmentEntryProcessorContext.getLocale()));
 		element.attr(
-			"data-analytics-asset-type", infoItemFieldMapped.getClassName());
+			"data-analytics-asset-type",
+			_getAnalyticsAssetType(infoItemFieldMapped.getClassName()));
 	}
 
-	private static String _getAnalyticsAction(
+	private static String _getAnalyticsAssetType(String className) {
+		if (className.startsWith(ObjectDefinition.class.getName())) {
+			return "object-entry";
+		}
+
+		return className;
+	}
+
+	private static String _getAnalyticsExternalReferenceCode(
 		Map<InfoItemReference, InfoItemFieldValues> infoDisplaysFieldValues,
-		InfoItemFieldMapped infoItemFieldMapped) {
+		InfoItemFieldMapped infoItemFieldMapped, Locale locale) {
+
+		Object object = infoItemFieldMapped.getObject();
+
+		if (object instanceof LiferayFileEntry) {
+			LiferayFileEntry liferayFileEntry = (LiferayFileEntry)object;
+
+			object = liferayFileEntry.getDLFileEntry();
+		}
+
+		if (object instanceof ExternalReferenceCodeModel) {
+			ExternalReferenceCodeModel externalReferenceCodeModel =
+				(ExternalReferenceCodeModel)object;
+
+			return externalReferenceCodeModel.getExternalReferenceCode();
+		}
 
 		InfoItemFieldValues infoItemFieldValues = infoDisplaysFieldValues.get(
 			infoItemFieldMapped.getInfoItemReference());
 
 		if (infoItemFieldValues == null) {
-			return ACTION_IMPRESSION;
+			return StringPool.BLANK;
 		}
 
 		InfoFieldValue<?> infoFieldValue =
-			infoItemFieldValues.getInfoFieldValue(
-				infoItemFieldMapped.getFieldName());
+			infoItemFieldValues.getInfoFieldValue("externalReferenceCode");
 
 		if (infoFieldValue == null) {
-			return ACTION_IMPRESSION;
+			return StringPool.BLANK;
 		}
 
-		InfoField<?> infoField = infoFieldValue.getInfoField();
+		return String.valueOf(infoFieldValue.getValue(locale));
+	}
 
-		if (infoField.getInfoFieldType() instanceof HTMLInfoFieldType ||
-			infoField.getInfoFieldType() instanceof TextInfoFieldType) {
+	private static String _getAnalyticsObjectDefinitionName(
+		InfoItemServiceRegistry infoItemServiceRegistry,
+		ObjectEntry objectEntry) {
 
-			return ACTION_VIEW;
+		try {
+			InfoItemObjectProvider<ObjectDefinition> infoItemObjectProvider =
+				infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemObjectProvider.class,
+					ObjectDefinition.class.getName());
+
+			if (infoItemObjectProvider == null) {
+				return StringPool.BLANK;
+			}
+
+			Object infoItem = infoItemObjectProvider.getInfoItem(
+				new ClassPKInfoItemIdentifier(
+					objectEntry.getObjectDefinitionId()));
+
+			if (infoItem == null) {
+				return StringPool.BLANK;
+			}
+
+			ObjectDefinition objectDefinition = (ObjectDefinition)infoItem;
+
+			return objectDefinition.getName();
+		}
+		catch (Exception exception) {
+			_log.error(exception);
 		}
 
-		return ACTION_IMPRESSION;
+		return StringPool.BLANK;
 	}
 
 	private static String _getAnalyticsSubtype(
@@ -149,5 +266,14 @@ public class AnalyticsAttributesUtil {
 
 		return String.valueOf(infoFieldValue.getValue(locale));
 	}
+
+	private static boolean _isImageTag(Element element) {
+		Tag tag = element.tag();
+
+		return StringUtil.equals(tag.getName(), "img");
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AnalyticsAttributesUtil.class);
 
 }

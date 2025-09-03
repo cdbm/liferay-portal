@@ -32,16 +32,14 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuSubscriptionConfi
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuVirtualSettings;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.SkuEntityModel;
 import com.liferay.headless.commerce.admin.catalog.internal.util.DateConfigUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUnitOfMeasureUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuVirtualSettingsUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SkuResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.DateConfig;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
-import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -49,7 +47,6 @@ import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.RepositoryLocalService;
@@ -62,6 +59,7 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -72,6 +70,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.upload.UniqueFileNameProvider;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -81,9 +82,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -579,16 +577,10 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			CPInstance.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			new UnsafeConsumer() {
-
-				public void accept(Object object) throws Exception {
-					SearchContext searchContext = (SearchContext)object;
-
-					searchContext.setAttribute(
-						Field.STATUS, WorkflowConstants.STATUS_ANY);
-					searchContext.setCompanyId(companyId);
-				}
-
+			searchContext -> {
+				searchContext.setAttribute(
+					Field.STATUS, WorkflowConstants.STATUS_ANY);
+				searchContext.setCompanyId(companyId);
 			},
 			sorts, transformUnsafeFunction);
 	}
@@ -721,9 +713,8 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 		}
 
-		long replacementCProductId = cpInstance.getReplacementCProductId();
-		String replacementCPInstanceUuid =
-			cpInstance.getReplacementCPInstanceUuid();
+		long replacementCProductId = 0;
+		String replacementCPInstanceUuid = StringPool.BLANK;
 
 		if (GetterUtil.getBoolean(sku.getDiscontinued())) {
 			CPInstance discontinuedCPInstance = null;
@@ -752,6 +743,11 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 				replacementCPInstanceUuid =
 					discontinuedCPInstance.getCPInstanceUuid();
+			}
+			else {
+				replacementCProductId = cpInstance.getReplacementCProductId();
+				replacementCPInstanceUuid =
+					cpInstance.getReplacementCPInstanceUuid();
 			}
 		}
 

@@ -68,7 +68,6 @@
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" column="accountERObjectFieldId" name="accountEntryRestrictedObjectFieldId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="descriptionObjectFieldId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectFolderId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
-		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="rootObjectDefinitionId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="titleObjectFieldId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="accountEntryRestricted" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" column="active_" name="active" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
@@ -81,6 +80,10 @@
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableLocalization" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableObjectEntryDraft" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableObjectEntryHistory" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableObjectEntrySchedule" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableObjectEntrySubscription" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="enableObjectEntryVersioning" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="friendlyURLSeparator" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="label" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="modifiable" type="com.liferay.portal.dao.orm.hibernate.BooleanType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="name" type="com.liferay.portal.dao.orm.hibernate.StringType" />
@@ -128,6 +131,9 @@
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectEntryFolderId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="rootObjectEntryId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="defaultLanguageId" type="com.liferay.portal.dao.orm.hibernate.StringType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="displayDate" type="org.hibernate.type.TimestampType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="expirationDate" type="org.hibernate.type.TimestampType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="reviewDate" type="org.hibernate.type.TimestampType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="treePath" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="version" type="com.liferay.portal.dao.orm.hibernate.IntegerType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="lastPublishDate" type="org.hibernate.type.TimestampType" />
@@ -150,9 +156,11 @@
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="createDate" type="org.hibernate.type.TimestampType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="modifiedDate" type="org.hibernate.type.TimestampType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="parentObjectEntryFolderId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="description" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="label" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="name" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="treePath" type="com.liferay.portal.dao.orm.hibernate.StringType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="status" type="com.liferay.portal.dao.orm.hibernate.IntegerType" />
 	</class>
 	<class dynamic-update="true" name="com.liferay.object.model.impl.ObjectEntryVersionImpl" table="ObjectEntryVersion">
 		<id access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectEntryVersionId" type="long">
@@ -165,10 +173,17 @@
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="userName" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="createDate" type="org.hibernate.type.TimestampType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="modifiedDate" type="org.hibernate.type.TimestampType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectDefinitionId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectEntryId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="content" type="com.liferay.portal.dao.orm.hibernate.StringClobType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="displayDate" type="org.hibernate.type.TimestampType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="expirationDate" type="org.hibernate.type.TimestampType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="reviewDate" type="org.hibernate.type.TimestampType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="version" type="com.liferay.portal.dao.orm.hibernate.IntegerType" />
 		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="status" type="com.liferay.portal.dao.orm.hibernate.IntegerType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="statusByUserId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="statusByUserName" type="com.liferay.portal.dao.orm.hibernate.StringType" />
+		<property access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="statusDate" type="org.hibernate.type.TimestampType" />
 	</class>
 	<class dynamic-update="true" name="com.liferay.object.model.impl.ObjectFieldImpl" table="ObjectField">
 		<id access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor" name="objectFieldId" type="long">

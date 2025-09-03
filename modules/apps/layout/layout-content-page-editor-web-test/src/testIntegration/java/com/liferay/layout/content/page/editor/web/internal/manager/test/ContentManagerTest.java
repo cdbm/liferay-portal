@@ -36,8 +36,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -84,23 +84,23 @@ public class ContentManagerTest {
 				TestPropsValues.getGroupId()));
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(),
+			_group.getGroupId(), StringPool.BLANK,
 			_portal.getClassNameId(FileEntry.class.getName()),
-			fileEntry.getFileEntryId(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			_layout.getPlid(), new ServiceContext());
+			fileEntry.getFileEntryId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), _layout.getPlid(),
+			new ServiceContext());
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(),
+			_group.getGroupId(), StringPool.BLANK,
 			_portal.getClassNameId(FileEntry.class.getName()),
-			fileEntry.getFileEntryId(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			_layout.getPlid(), new ServiceContext());
+			fileEntry.getFileEntryId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), _layout.getPlid(),
+			new ServiceContext());
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayResourceResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY,

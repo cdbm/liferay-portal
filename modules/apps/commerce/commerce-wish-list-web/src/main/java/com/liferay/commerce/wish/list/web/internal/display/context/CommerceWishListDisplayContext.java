@@ -11,18 +11,18 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.commerce.wish.list.constants.CommerceWishListPortletKeys;
+import com.liferay.commerce.wish.list.helper.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
-import com.liferay.commerce.wish.list.util.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.util.comparator.CommerceWishListNameComparator;
 import com.liferay.commerce.wish.list.web.internal.display.context.helper.CommerceWishListRequestHelper;
 import com.liferay.commerce.wish.list.web.internal.util.CommerceWishListPortletUtil;
@@ -45,14 +45,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.Iterator;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -273,7 +273,7 @@ public class CommerceWishListDisplayContext {
 
 		return _cpDefinitionHelper.getCPCatalogEntry(
 			commerceAccountId, commerceChannelGroupId, cpDefinitionId,
-			_commerceWishListRequestHelper.getLocale());
+			_commerceWishListRequestHelper.getLocale(), false);
 	}
 
 	public String getCPDefinitionURL(

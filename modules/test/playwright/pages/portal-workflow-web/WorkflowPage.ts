@@ -22,12 +22,24 @@ export class WorkflowPage {
 		);
 	}
 
+	async changeCalendarEventWorkflow(option: string) {
+		await this.page.getByRole('button', {name: 'Edit'}).nth(1).click();
+
+		await this.page
+			.locator(
+				'[id="_com_liferay_portal_workflow_web_internal_portlet_SiteAdministrationWorkflowPortlet_workflowDefinitionName-com-liferay-calendar-model-CalendarBooking"]'
+			)
+			.selectOption(option);
+
+		await this.page.getByRole('button', {name: 'Save'}).click();
+	}
+
 	async changeWorkflow(
 		asset: string,
 		value: string,
 		{disable} = {disable: false}
 	) {
-		const row = await this.page.getByRole('row').filter({hasText: asset});
+		const row = this.page.getByRole('row').filter({hasText: asset});
 
 		await clickAndExpectToBeVisible({
 			target: row.getByRole('button', {name: 'Save'}),

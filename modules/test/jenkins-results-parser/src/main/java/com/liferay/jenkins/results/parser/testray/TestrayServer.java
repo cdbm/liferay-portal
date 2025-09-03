@@ -10,7 +10,7 @@ import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.NotificationUtil;
 import com.liferay.jenkins.results.parser.TestrayResultsParserUtil;
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 
 import java.io.File;
 import java.io.IOException;
@@ -285,11 +285,11 @@ public class TestrayServer {
 		return _url;
 	}
 
-	public void importCaseResults(TopLevelBuild topLevelBuild) {
+	public void importCaseResults(TopLevelBuildReport topLevelBuildReport) {
 		TestrayResultsParserUtil.processTestrayResultFiles(getResultsDir());
 
-		if (TestrayS3Bucket.hasGoogleApplicationCredentials()) {
-			_importCaseResultsToGCP(topLevelBuild);
+		if (TestrayCloudBucket.hasGoogleApplicationCredentials()) {
+			_importCaseResultsToGCP(topLevelBuildReport);
 		}
 	}
 
@@ -519,25 +519,27 @@ public class TestrayServer {
 			false, entityName, entityFields, filter, sort, maxCount, pageSize);
 	}
 
-	private void _importCaseResultsToGCP(TopLevelBuild topLevelBuild) {
-		if (!TestrayS3Bucket.hasGoogleApplicationCredentials()) {
+	private void _importCaseResultsToGCP(
+		TopLevelBuildReport topLevelBuildReport) {
+
+		if (!TestrayCloudBucket.hasGoogleApplicationCredentials()) {
 			return;
 		}
 
 		StringBuilder sb = new StringBuilder();
 
-		JenkinsMaster jenkinsMaster = topLevelBuild.getJenkinsMaster();
+		JenkinsMaster jenkinsMaster = topLevelBuildReport.getJenkinsMaster();
 
 		sb.append(jenkinsMaster.getName());
 
 		sb.append("-");
 
-		String jobName = topLevelBuild.getJobName();
+		String jobName = topLevelBuildReport.getJobName();
 
 		sb.append(jobName.replaceAll("[\\(\\)]", "_"));
 
 		sb.append("-");
-		sb.append(topLevelBuild.getBuildNumber());
+		sb.append(topLevelBuildReport.getBuildNumber());
 		sb.append("-results.tar.gz");
 
 		File resultsDir = getResultsDir();
@@ -552,7 +554,8 @@ public class TestrayServer {
 			throw new RuntimeException(ioException);
 		}
 
-		TestrayS3Bucket testrayS3Bucket = TestrayS3Bucket.getInstance();
+		TestrayCloudBucket testrayCloudBucket =
+			TestrayCloudBucket.getInstance();
 
 		for (File gcpResultFile :
 				JenkinsResultsParserUtil.findFiles(gcpResultsDir, ".*.xml")) {
@@ -596,7 +599,7 @@ public class TestrayServer {
 					"$1/>");
 				gcpResultFileContent = gcpResultFileContent.replaceAll(
 					getURL() + "/?reports/production/logs",
-					testrayS3Bucket.getTestrayS3BaseURL());
+					testrayCloudBucket.getTestrayCloudBaseURL());
 
 				JenkinsResultsParserUtil.write(
 					gcpResultFile, gcpResultFileContent);
@@ -610,7 +613,7 @@ public class TestrayServer {
 
 		JenkinsResultsParserUtil.tarGzip(gcpResultsDir, resultsTarGzFile);
 
-		testrayS3Bucket.createTestrayS3Object(
+		testrayCloudBucket.createTestrayCloudObject(
 			"inbox/" + resultsTarGzFile.getName(), resultsTarGzFile);
 	}
 

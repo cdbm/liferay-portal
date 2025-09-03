@@ -6,6 +6,7 @@
 package com.liferay.commerce.product.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
@@ -16,7 +17,6 @@ import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -112,7 +112,7 @@ public class SpecificationOptionFacetsTest {
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				serviceContext);
+				true, serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
@@ -120,7 +120,7 @@ public class SpecificationOptionFacetsTest {
 				cpSpecificationOption.getCPSpecificationOptionId(),
 				cpOptionCategory.getCPOptionCategoryId(),
 				RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomLocaleStringMap(), serviceContext);
+				RandomTestUtil.randomLocaleStringMap(), true, serviceContext);
 
 		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
 			_commerceCatalog.getGroupId());
@@ -189,7 +189,7 @@ public class SpecificationOptionFacetsTest {
 				cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), false,
-				RandomTestUtil.randomString(), 0, serviceContext);
+				RandomTestUtil.randomString(), 0, true, serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
@@ -197,7 +197,7 @@ public class SpecificationOptionFacetsTest {
 				cpSpecificationOption.getCPSpecificationOptionId(),
 				cpOptionCategory.getCPOptionCategoryId(),
 				RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomLocaleStringMap(), serviceContext);
+				RandomTestUtil.randomLocaleStringMap(), true, serviceContext);
 
 		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
 			_commerceCatalog.getGroupId());

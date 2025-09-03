@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -31,7 +32,10 @@ import com.liferay.portal.search.web.internal.custom.facet.display.context.Custo
 import com.liferay.portal.search.web.internal.custom.facet.util.CustomFacetUtil;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.text.DateFormat;
 
@@ -42,8 +46,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Wade Cao
@@ -444,7 +446,7 @@ public class CustomFacetDisplayContextBuilder {
 
 	private String _getCustomDateRangeURL() {
 		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-			"yyyy-MM-dd");
+			"yyyy-MM-dd", LocaleUtil.US);
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(_timeZone);
 
@@ -505,14 +507,10 @@ public class CustomFacetDisplayContextBuilder {
 	}
 
 	private long _getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_customFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_customFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	private List<BucketDisplayContext> _getEmptyBucketDisplayContexts() {

@@ -1622,7 +1622,7 @@ export function mockRecommendationActivitiesReq(items, mockVariables = {}) {
 			variables: {
 				applicationId: 'Page',
 				eventContextPropertyFilters: [
-					{filter: '.*custom-assets', negate: false}
+					{filter: '.*documents', negate: false}
 				],
 				eventId: 'pageUnloaded',
 				rangeKey: '30',
@@ -1672,7 +1672,7 @@ export function mockRecommendationPageAssetsReq(items, mockVariables = {}) {
 		request: {
 			query: RecommendationPageAssetsQuery,
 			variables: {
-				propertyFilters: [{filter: '.*custom-assets', negate: false}],
+				propertyFilters: [{filter: '.*documents', negate: false}],
 				size: 5,
 				sort: {column: 'title', type: 'DESC'},
 				start: 0,
@@ -2280,6 +2280,8 @@ export const mockSessions = variables => ({
 						events: [
 							{
 								__typename: 'Event',
+								applicationId: 'Page',
+								assetTitle: 'Home - Liferay DXP',
 								canonicalUrl: 'http://localhost:8080',
 								createDate: 'Mon Dec 06 17:28:48 GMT 2021',
 								name: 'tabBlurred',

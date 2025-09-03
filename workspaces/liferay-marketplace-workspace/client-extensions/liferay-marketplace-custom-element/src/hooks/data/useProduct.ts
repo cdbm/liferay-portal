@@ -6,11 +6,11 @@
 import useSWR from 'swr';
 
 import {Liferay} from '../../liferay/liferay';
-import HeadlessCommerceDeliveryCatalogImpl from '../../services/rest/HeadlessCommerceDeliveryCatalog';
+import HeadlessCommerceDeliveryCatalog from '../../services/rest/HeadlessCommerceDeliveryCatalog';
 
 const useDeliveryProduct = (productId: string) => {
 	return useSWR(`/delivery-product/${productId}`, () =>
-		HeadlessCommerceDeliveryCatalogImpl.getProduct(
+		HeadlessCommerceDeliveryCatalog.getProduct(
 			Liferay.CommerceContext.commerceChannelId,
 			productId,
 			new URLSearchParams({
@@ -20,6 +20,8 @@ const useDeliveryProduct = (productId: string) => {
 				'nestedFields':
 					'attachments,categories,images,productSpecifications,skus',
 				'skus.accountId': '-1',
+				'skus.currencyCode':
+					Liferay.CommerceContext.currency.currencyCode,
 			})
 		)
 	);

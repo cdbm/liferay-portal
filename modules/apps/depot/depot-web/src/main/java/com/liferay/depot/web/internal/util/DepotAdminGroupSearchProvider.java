@@ -5,6 +5,7 @@
 
 package com.liferay.depot.web.internal.util;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
@@ -25,11 +26,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -80,14 +81,14 @@ public class DepotAdminGroupSearchProvider {
 			() -> {
 				List<DepotEntry> depotEntries =
 					_depotEntryService.getGroupConnectedDepotEntries(
-						themeDisplay.getScopeGroupId(), groupSearch.getStart(),
-						groupSearch.getEnd());
+						themeDisplay.getScopeGroupId(), DepotConstants.TYPE_ANY,
+						groupSearch.getStart(), groupSearch.getEnd());
 
 				return TransformUtil.transform(
 					depotEntries, depotEntry -> depotEntry.getGroup());
 			},
 			_depotEntryService.getGroupConnectedDepotEntriesCount(
-				themeDisplay.getScopeGroupId()));
+				themeDisplay.getScopeGroupId(), DepotConstants.TYPE_ANY));
 
 		return groupSearch;
 	}

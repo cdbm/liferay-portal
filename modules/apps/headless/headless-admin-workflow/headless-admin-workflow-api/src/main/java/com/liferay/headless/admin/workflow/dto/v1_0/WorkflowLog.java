@@ -19,6 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -30,12 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -968,9 +968,9 @@ public class WorkflowLog implements Serializable {
 	@GraphQLName("Type")
 	public static enum Type {
 
-		NODE_ENTRY("NodeEntry"), TASK_ASSIGN("TaskAssign"),
-		TASK_COMPLETION("TaskCompletion"), TASK_UPDATE("TaskUpdate"),
-		TRANSITION("Transition");
+		INSTANCE_FAIL("InstanceFail"), NODE_ENTRY("NodeEntry"),
+		TASK_ASSIGN("TaskAssign"), TASK_COMPLETION("TaskCompletion"),
+		TASK_UPDATE("TaskUpdate"), TRANSITION("Transition");
 
 		@JsonCreator
 		public static Type create(String value) {

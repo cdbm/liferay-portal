@@ -13,10 +13,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -38,6 +42,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -54,6 +59,16 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
@@ -73,16 +88,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +134,16 @@ public abstract class BaseTestEntityResourceTestCase {
 			testCompany.getCompanyId());
 
 		testEntityResource = TestEntityResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -213,13 +228,144 @@ public abstract class BaseTestEntityResourceTestCase {
 	}
 
 	@Test
-	public void testPostReservedWord() throws Exception {
-		Assert.assertTrue(false);
+	public void testDeleteTestEntity() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TestEntity testEntity = testDeleteTestEntity_addTestEntity();
+
+		assertHttpResponseStatusCode(
+			204,
+			testEntityResource.deleteTestEntityHttpResponse(
+				testEntity.getId(), null));
+
+		assertHttpResponseStatusCode(
+			404,
+			testEntityResource.getTestEntityHttpResponse(testEntity.getId()));
+		assertHttpResponseStatusCode(
+			404, testEntityResource.getTestEntityHttpResponse(0L));
+	}
+
+	protected TestEntity testDeleteTestEntity_addTestEntity() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteTestEntity() throws Exception {
+
+		// No namespace
+
+		TestEntity testEntity1 = testGraphQLDeleteTestEntity_addTestEntity();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTestEntity",
+						new HashMap<String, Object>() {
+							{
+								put("testEntityId", testEntity1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteTestEntity"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"testEntity",
+					new HashMap<String, Object>() {
+						{
+							put("testEntityId", testEntity1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace test_v1_0
+
+		TestEntity testEntity2 = testGraphQLDeleteTestEntity_addTestEntity();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"deleteTestEntity",
+							new HashMap<String, Object>() {
+								{
+									put("testEntityId", testEntity2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/test_v1_0",
+				"Object/deleteTestEntity"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"test_v1_0",
+					new GraphQLField(
+						"testEntity",
+						new HashMap<String, Object>() {
+							{
+								put("testEntityId", testEntity2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected TestEntity testGraphQLDeleteTestEntity_addTestEntity()
+		throws Exception {
+
+		return testGraphQLTestEntity_addTestEntity();
+	}
+
+	@Test
+	public void testDeleteTestEntityBatch() throws Exception {
+		TestEntity testEntity1 = testDeleteTestEntityBatch_addTestEntity();
+
+		testDeleteTestEntityBatch_deleteTestEntity(
+			202, null, testEntity1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			testEntityResource.getTestEntityHttpResponse(testEntity1.getId()));
+	}
+
+	protected TestEntity testDeleteTestEntityBatch_addTestEntity()
+		throws Exception {
+
+		return testDeleteTestEntity_addTestEntity();
+	}
+
+	protected void testDeleteTestEntityBatch_deleteTestEntity(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			testEntityResource.deleteTestEntityBatchHttpResponse(
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
 	public void testGetTestEntitiesPage() throws Exception {
-		Page<TestEntity> page = testEntityResource.getTestEntitiesPage();
+		Page<TestEntity> page = testEntityResource.getTestEntitiesPage(null);
 
 		long totalCount = page.getTotalCount();
 
@@ -229,13 +375,17 @@ public abstract class BaseTestEntityResourceTestCase {
 		TestEntity testEntity2 = testGetTestEntitiesPage_addTestEntity(
 			randomTestEntity());
 
-		page = testEntityResource.getTestEntitiesPage();
+		page = testEntityResource.getTestEntitiesPage(null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
 		assertContains(testEntity1, (List<TestEntity>)page.getItems());
 		assertContains(testEntity2, (List<TestEntity>)page.getItems());
 		assertValid(page, testGetTestEntitiesPage_getExpectedActions());
+
+		testEntityResource.deleteTestEntity(testEntity1.getId(), null);
+
+		testEntityResource.deleteTestEntity(testEntity2.getId(), null);
 	}
 
 	protected Map<String, Map<String, String>>
@@ -247,6 +397,87 @@ public abstract class BaseTestEntityResourceTestCase {
 		return expectedActions;
 	}
 
+	@Test
+	public void testGetTestEntitiesPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		TestEntity testEntity1 = randomTestEntity();
+
+		testEntity1 = testGetTestEntitiesPage_addTestEntity(testEntity1);
+
+		for (EntityField entityField : entityFields) {
+			Page<TestEntity> page = testEntityResource.getTestEntitiesPage(
+				getFilterString(entityField, "between", testEntity1));
+
+			assertEquals(
+				Collections.singletonList(testEntity1),
+				(List<TestEntity>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetTestEntitiesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetTestEntitiesPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetTestEntitiesPageWithFilterStringContains()
+		throws Exception {
+
+		testGetTestEntitiesPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetTestEntitiesPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetTestEntitiesPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetTestEntitiesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetTestEntitiesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetTestEntitiesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		TestEntity testEntity1 = testGetTestEntitiesPage_addTestEntity(
+			randomTestEntity());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TestEntity testEntity2 = testGetTestEntitiesPage_addTestEntity(
+			randomTestEntity());
+
+		for (EntityField entityField : entityFields) {
+			Page<TestEntity> page = testEntityResource.getTestEntitiesPage(
+				getFilterString(entityField, operator, testEntity1));
+
+			assertEquals(
+				Collections.singletonList(testEntity1),
+				(List<TestEntity>)page.getItems());
+		}
+	}
+
 	protected TestEntity testGetTestEntitiesPage_addTestEntity(
 			TestEntity testEntity)
 		throws Exception {
@@ -256,93 +487,71 @@ public abstract class BaseTestEntityResourceTestCase {
 	}
 
 	@Test
-	public void testPostTestEntity() throws Exception {
-		TestEntity randomTestEntity = randomTestEntity();
+	public void testGraphQLGetTestEntitiesPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"testEntities",
+			new HashMap<String, Object>() {
+				{
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
 
-		TestEntity postTestEntity = testPostTestEntity_addTestEntity(
-			randomTestEntity);
+		// No namespace
 
-		assertEquals(randomTestEntity, postTestEntity);
-		assertValid(postTestEntity);
+		JSONObject testEntitiesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/testEntities");
 
-		ChildTestEntity1 childTestEntity1 = new ChildTestEntity1() {
-			{
-				dateCreated = RandomTestUtil.nextDate();
-				dateModified = RandomTestUtil.nextDate();
-				description = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				documentId = RandomTestUtil.randomLong();
-				id = RandomTestUtil.randomLong();
-				jsonProperty = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				property1 = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+		long totalCount = testEntitiesJSONObject.getLong("totalCount");
 
-				type = Type.create("ChildTestEntity1");
-			}
-		};
+		TestEntity testEntity1 = testGraphQLGetTestEntitiesPage_addTestEntity();
+		TestEntity testEntity2 = testGraphQLGetTestEntitiesPage_addTestEntity();
 
-		assertEquals(
-			childTestEntity1,
-			testPostTestEntity_addTestEntity(childTestEntity1));
+		testEntitiesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/testEntities");
 
-		ChildTestEntity2 childTestEntity2 = new ChildTestEntity2() {
-			{
-				dateCreated = RandomTestUtil.nextDate();
-				dateModified = RandomTestUtil.nextDate();
-				description = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				documentId = RandomTestUtil.randomLong();
-				id = RandomTestUtil.randomLong();
-				jsonProperty = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				property2 = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+		Assert.assertEquals(
+			totalCount + 2, testEntitiesJSONObject.getLong("totalCount"));
 
-				type = Type.create("ChildTestEntity2");
-			}
-		};
+		assertContains(
+			testEntity1,
+			Arrays.asList(
+				TestEntitySerDes.toDTOs(
+					testEntitiesJSONObject.getString("items"))));
+		assertContains(
+			testEntity2,
+			Arrays.asList(
+				TestEntitySerDes.toDTOs(
+					testEntitiesJSONObject.getString("items"))));
 
-		assertEquals(
-			childTestEntity2,
-			testPostTestEntity_addTestEntity(childTestEntity2));
+		// Using the namespace test_v1_0
 
-		ChildTestEntity3 childTestEntity3 = new ChildTestEntity3() {
-			{
-				dateCreated = RandomTestUtil.nextDate();
-				dateModified = RandomTestUtil.nextDate();
-				description = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				documentId = RandomTestUtil.randomLong();
-				id = RandomTestUtil.randomLong();
-				jsonProperty = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
-				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
+		testEntitiesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(new GraphQLField("test_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/test_v1_0",
+			"JSONObject/testEntities");
 
-				type = Type.create("ChildTestEntity3");
-			}
-		};
+		Assert.assertEquals(
+			totalCount + 2, testEntitiesJSONObject.getLong("totalCount"));
 
-		assertEquals(
-			childTestEntity3,
-			testPostTestEntity_addTestEntity(childTestEntity3));
+		assertContains(
+			testEntity1,
+			Arrays.asList(
+				TestEntitySerDes.toDTOs(
+					testEntitiesJSONObject.getString("items"))));
+		assertContains(
+			testEntity2,
+			Arrays.asList(
+				TestEntitySerDes.toDTOs(
+					testEntitiesJSONObject.getString("items"))));
 	}
 
-	protected TestEntity testPostTestEntity_addTestEntity(TestEntity testEntity)
+	protected TestEntity testGraphQLGetTestEntitiesPage_addTestEntity()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetTestEntityCount() throws Exception {
-		Assert.assertTrue(false);
+		return testGraphQLTestEntity_addTestEntity();
 	}
 
 	@Test
@@ -550,6 +759,104 @@ public abstract class BaseTestEntityResourceTestCase {
 	}
 
 	@Test
+	public void testGraphQLGetTestEntity() throws Exception {
+		TestEntity testEntity = testGraphQLGetTestEntity_addTestEntity();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				testEntity,
+				TestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"testEntity",
+								new HashMap<String, Object>() {
+									{
+										put("testEntityId", testEntity.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/testEntity"))));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertTrue(
+			equals(
+				testEntity,
+				TestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"test_v1_0",
+								new GraphQLField(
+									"testEntity",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"testEntityId",
+												testEntity.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/test_v1_0",
+						"Object/testEntity"))));
+	}
+
+	@Test
+	public void testGraphQLGetTestEntityNotFound() throws Exception {
+		Long irrelevantTestEntityId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"testEntity",
+						new HashMap<String, Object>() {
+							{
+								put("testEntityId", irrelevantTestEntityId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"testEntity",
+							new HashMap<String, Object>() {
+								{
+									put("testEntityId", irrelevantTestEntityId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected TestEntity testGraphQLGetTestEntity_addTestEntity()
+		throws Exception {
+
+		return testGraphQLTestEntity_addTestEntity();
+	}
+
+	@Test
+	public void testGetTestEntityCount() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPatchTestEntity() throws Exception {
 		TestEntity postTestEntity = testPatchTestEntity_addTestEntity();
 
@@ -583,6 +890,101 @@ public abstract class BaseTestEntityResourceTestCase {
 	}
 
 	@Test
+	public void testPostReservedWord() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostTestEntity() throws Exception {
+		TestEntity randomTestEntity = randomTestEntity();
+
+		TestEntity postTestEntity = testPostTestEntity_addTestEntity(
+			randomTestEntity);
+
+		assertEquals(randomTestEntity, postTestEntity);
+		assertValid(postTestEntity);
+
+		ChildTestEntity1 childTestEntity1 = new ChildTestEntity1() {
+			{
+				dateCreated = RandomTestUtil.nextDate();
+				dateModified = RandomTestUtil.nextDate();
+				description = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				documentId = RandomTestUtil.randomLong();
+				id = RandomTestUtil.randomLong();
+				jsonProperty = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				property1 = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+
+				type = Type.create("ChildTestEntity1");
+			}
+		};
+
+		assertEquals(
+			childTestEntity1,
+			testPostTestEntity_addTestEntity(childTestEntity1));
+
+		ChildTestEntity2 childTestEntity2 = new ChildTestEntity2() {
+			{
+				dateCreated = RandomTestUtil.nextDate();
+				dateModified = RandomTestUtil.nextDate();
+				description = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				documentId = RandomTestUtil.randomLong();
+				id = RandomTestUtil.randomLong();
+				jsonProperty = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				property2 = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+
+				type = Type.create("ChildTestEntity2");
+			}
+		};
+
+		assertEquals(
+			childTestEntity2,
+			testPostTestEntity_addTestEntity(childTestEntity2));
+
+		ChildTestEntity3 childTestEntity3 = new ChildTestEntity3() {
+			{
+				dateCreated = RandomTestUtil.nextDate();
+				dateModified = RandomTestUtil.nextDate();
+				description = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				documentId = RandomTestUtil.randomLong();
+				id = RandomTestUtil.randomLong();
+				jsonProperty = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				self = StringUtil.toLowerCase(RandomTestUtil.randomString());
+
+				type = Type.create("ChildTestEntity3");
+			}
+		};
+
+		assertEquals(
+			childTestEntity3,
+			testPostTestEntity_addTestEntity(childTestEntity3));
+	}
+
+	protected TestEntity testPostTestEntity_addTestEntity(TestEntity testEntity)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostTestEntityMultipartBulk() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPutTestEntity() throws Exception {
 		TestEntity postTestEntity = testPutTestEntity_addTestEntity();
 
@@ -602,15 +1004,105 @@ public abstract class BaseTestEntityResourceTestCase {
 		assertValid(getTestEntity);
 	}
 
+	protected TestEntity testPutTestEntity_addTestEntity() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long testPutTestEntity_getOptionalParameter() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected TestEntity testPutTestEntity_addTestEntity() throws Exception {
+	@Test
+	public void testPutTestEntityStatus() throws Exception {
+		TestEntity postTestEntity = testPutTestEntityStatus_addTestEntity();
+
+		TestEntity randomTestEntity = randomTestEntity();
+
+		TestEntity putTestEntity = testEntityResource.putTestEntityStatus(
+			postTestEntity.getId(), randomTestEntity);
+
+		assertEquals(randomTestEntity, putTestEntity);
+		assertValid(putTestEntity);
+
+		TestEntity getTestEntity = testPutTestEntityStatus_getTestEntity(
+			putTestEntity.getId());
+
+		assertEquals(randomTestEntity, getTestEntity);
+		assertValid(getTestEntity);
+	}
+
+	protected TestEntity testPutTestEntityStatus_getTestEntity(
+		Long testEntityId) {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
+
+	protected TestEntity testPutTestEntityStatus_addTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		TestEntity testEntity1 =
+			testBatchEngineDeleteImportTask_addTestEntity();
+
+		testBatchEngineDeleteImportTask_deleteTestEntity(
+			200, null, testEntity1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			testEntityResource.getTestEntityHttpResponse(testEntity1.getId()));
+	}
+
+	protected TestEntity testBatchEngineDeleteImportTask_addTestEntity()
+		throws Exception {
+
+		return testDeleteTestEntity_addTestEntity();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteTestEntity(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.portal.tools.rest.builder.test.dto.v1_0.TestEntity",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected TestEntity testGraphQLTestEntity_addTestEntity()
 		throws Exception {
@@ -746,6 +1238,24 @@ public abstract class BaseTestEntityResourceTestCase {
 
 			if (Objects.equals("self", additionalAssertFieldName)) {
 				if (testEntity.getSelf() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"stringTestEntities", additionalAssertFieldName)) {
+
+				if (testEntity.getStringTestEntities() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("stringTestEntity", additionalAssertFieldName)) {
+				if (testEntity.getStringTestEntity() == null) {
 					valid = false;
 				}
 
@@ -998,6 +1508,30 @@ public abstract class BaseTestEntityResourceTestCase {
 			if (Objects.equals("self", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						testEntity1.getSelf(), testEntity2.getSelf())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"stringTestEntities", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						testEntity1.getStringTestEntities(),
+						testEntity2.getStringTestEntities())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("stringTestEntity", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						testEntity1.getStringTestEntity(),
+						testEntity2.getStringTestEntity())) {
 
 					return false;
 				}
@@ -1424,6 +1958,16 @@ public abstract class BaseTestEntityResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("stringTestEntities")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("stringTestEntity")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("testEntities")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1561,7 +2105,30 @@ public abstract class BaseTestEntityResourceTestCase {
 		return randomTestEntity();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected TestEntityResource testEntityResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

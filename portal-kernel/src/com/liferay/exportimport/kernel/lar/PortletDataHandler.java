@@ -8,7 +8,7 @@ package com.liferay.exportimport.kernel.lar;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Portlet;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 /**
  * A <code>PortletDataHandler</code> is a special class capable of exporting and
@@ -266,7 +266,7 @@ public interface PortletDataHandler {
 			PortletPreferences portletPreferences, String data)
 		throws PortletDataException;
 
-	public default boolean isCompany() {
+	public default boolean isBatch() {
 		return false;
 	}
 
@@ -286,11 +286,11 @@ public interface PortletDataHandler {
 
 	public boolean isDisplayPortlet();
 
+	public boolean isEmptyControlsAllowed();
+
 	public default boolean isEnabled(long companyId) {
 		return true;
 	}
-
-	public boolean isModelCountSupported();
 
 	/**
 	 * Returns whether the data exported by this handler should be included by

@@ -19,6 +19,9 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataRecordResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataRecordSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseDataRecordResourceTestCase {
 			testCompany.getCompanyId());
 
 		dataRecordResource = DataRecordResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -203,6 +216,142 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDataRecord() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataRecord dataRecord = testDeleteDataRecord_addDataRecord();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataRecordResource.deleteDataRecordHttpResponse(
+				dataRecord.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			dataRecordResource.getDataRecordHttpResponse(dataRecord.getId()));
+		assertHttpResponseStatusCode(
+			404, dataRecordResource.getDataRecordHttpResponse(0L));
+	}
+
+	protected DataRecord testDeleteDataRecord_addDataRecord() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDataRecord() throws Exception {
+
+		// No namespace
+
+		DataRecord dataRecord1 = testGraphQLDeleteDataRecord_addDataRecord();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDataRecord",
+						new HashMap<String, Object>() {
+							{
+								put("dataRecordId", dataRecord1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDataRecord"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataRecord",
+					new HashMap<String, Object>() {
+						{
+							put("dataRecordId", dataRecord1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace dataEngine_v2_0
+
+		DataRecord dataRecord2 = testGraphQLDeleteDataRecord_addDataRecord();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"deleteDataRecord",
+							new HashMap<String, Object>() {
+								{
+									put("dataRecordId", dataRecord2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/dataEngine_v2_0",
+				"Object/deleteDataRecord"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataEngine_v2_0",
+					new GraphQLField(
+						"dataRecord",
+						new HashMap<String, Object>() {
+							{
+								put("dataRecordId", dataRecord2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected DataRecord testGraphQLDeleteDataRecord_addDataRecord()
+		throws Exception {
+
+		return testGraphQLDataRecord_addDataRecord();
+	}
+
+	@Test
+	public void testDeleteDataRecordBatch() throws Exception {
+		DataRecord dataRecord1 = testDeleteDataRecordBatch_addDataRecord();
+
+		testDeleteDataRecordBatch_deleteDataRecord(
+			202, null, dataRecord1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataRecordResource.getDataRecordHttpResponse(dataRecord1.getId()));
+	}
+
+	protected DataRecord testDeleteDataRecordBatch_addDataRecord()
+		throws Exception {
+
+		return testDeleteDataRecord_addDataRecord();
+	}
+
+	protected void testDeleteDataRecordBatch_deleteDataRecord(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			dataRecordResource.deleteDataRecordBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetDataDefinitionDataRecordsPage() throws Exception {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataRecordsPage_getDataDefinitionId();
@@ -211,8 +360,7 @@ public abstract class BaseDataRecordResourceTestCase {
 
 		Page<DataRecord> page =
 			dataRecordResource.getDataDefinitionDataRecordsPage(
-				dataDefinitionId, null, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
+				dataDefinitionId, null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -287,11 +435,11 @@ public abstract class BaseDataRecordResourceTestCase {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataRecordsPage_getDataDefinitionId();
 
-		Page<DataRecord> dataRecordPage =
+		Page<DataRecord> dataRecordsPage =
 			dataRecordResource.getDataDefinitionDataRecordsPage(
 				dataDefinitionId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(dataRecordPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(dataRecordsPage.getTotalCount());
 
 		DataRecord dataRecord1 =
 			testGetDataDefinitionDataRecordsPage_addDataRecord(
@@ -541,495 +689,6 @@ public abstract class BaseDataRecordResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostDataDefinitionDataRecord() throws Exception {
-		DataRecord randomDataRecord = randomDataRecord();
-
-		DataRecord postDataRecord =
-			testPostDataDefinitionDataRecord_addDataRecord(randomDataRecord);
-
-		assertEquals(randomDataRecord, postDataRecord);
-		assertValid(postDataRecord);
-	}
-
-	protected DataRecord testPostDataDefinitionDataRecord_addDataRecord(
-			DataRecord dataRecord)
-		throws Exception {
-
-		return dataRecordResource.postDataDefinitionDataRecord(
-			testGetDataDefinitionDataRecordsPage_getDataDefinitionId(),
-			dataRecord);
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPage() throws Exception {
-		Long dataRecordCollectionId =
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
-		Long irrelevantDataRecordCollectionId =
-			testGetDataRecordCollectionDataRecordsPage_getIrrelevantDataRecordCollectionId();
-
-		Page<DataRecord> page =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantDataRecordCollectionId != null) {
-			DataRecord irrelevantDataRecord =
-				testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-					irrelevantDataRecordCollectionId,
-					randomIrrelevantDataRecord());
-
-			page = dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				irrelevantDataRecordCollectionId, null, null,
-				Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantDataRecord, (List<DataRecord>)page.getItems());
-			assertValid(
-				page,
-				testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
-					irrelevantDataRecordCollectionId));
-		}
-
-		DataRecord dataRecord1 =
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				dataRecordCollectionId, randomDataRecord());
-
-		DataRecord dataRecord2 =
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				dataRecordCollectionId, randomDataRecord());
-
-		page = dataRecordResource.getDataRecordCollectionDataRecordsPage(
-			dataRecordCollectionId, null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(dataRecord1, (List<DataRecord>)page.getItems());
-		assertContains(dataRecord2, (List<DataRecord>)page.getItems());
-		assertValid(
-			page,
-			testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
-				dataRecordCollectionId));
-
-		dataRecordResource.deleteDataRecord(dataRecord1.getId());
-
-		dataRecordResource.deleteDataRecord(dataRecord2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
-				Long dataRecordCollectionId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		Map createBatchAction = new HashMap<>();
-		createBatchAction.put("method", "POST");
-		createBatchAction.put(
-			"href",
-			"http://localhost:8080/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/batch".
-				replace(
-					"{dataRecordCollectionId}",
-					String.valueOf(dataRecordCollectionId)));
-
-		expectedActions.put("createBatch", createBatchAction);
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPageWithPagination()
-		throws Exception {
-
-		Long dataRecordCollectionId =
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
-
-		Page<DataRecord> dataRecordPage =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(dataRecordPage.getTotalCount());
-
-		DataRecord dataRecord1 =
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				dataRecordCollectionId, randomDataRecord());
-
-		DataRecord dataRecord2 =
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				dataRecordCollectionId, randomDataRecord());
-
-		DataRecord dataRecord3 =
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				dataRecordCollectionId, randomDataRecord());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<DataRecord> page1 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(dataRecord1, (List<DataRecord>)page1.getItems());
-
-			Page<DataRecord> page2 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			assertContains(dataRecord2, (List<DataRecord>)page2.getItems());
-
-			Page<DataRecord> page3 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
-		}
-		else {
-			Page<DataRecord> page1 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(1, totalCount + 2), null);
-
-			List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
-
-			Assert.assertEquals(
-				dataRecords1.toString(), totalCount + 2, dataRecords1.size());
-
-			Page<DataRecord> page2 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
-
-			Assert.assertEquals(
-				dataRecords2.toString(), 1, dataRecords2.size());
-
-			Page<DataRecord> page3 =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
-			assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
-			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPageWithSortDateTime()
-		throws Exception {
-
-		testGetDataRecordCollectionDataRecordsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, dataRecord1, dataRecord2) -> {
-				BeanTestUtil.setProperty(
-					dataRecord1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPageWithSortDouble()
-		throws Exception {
-
-		testGetDataRecordCollectionDataRecordsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, dataRecord1, dataRecord2) -> {
-				BeanTestUtil.setProperty(
-					dataRecord1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					dataRecord2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPageWithSortInteger()
-		throws Exception {
-
-		testGetDataRecordCollectionDataRecordsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, dataRecord1, dataRecord2) -> {
-				BeanTestUtil.setProperty(dataRecord1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(dataRecord2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordsPageWithSortString()
-		throws Exception {
-
-		testGetDataRecordCollectionDataRecordsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, dataRecord1, dataRecord2) -> {
-				Class<?> clazz = dataRecord1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						dataRecord1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						dataRecord2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						dataRecord1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						dataRecord2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						dataRecord1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						dataRecord2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetDataRecordCollectionDataRecordsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, DataRecord, DataRecord, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long dataRecordCollectionId =
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
-
-		DataRecord dataRecord1 = randomDataRecord();
-		DataRecord dataRecord2 = randomDataRecord();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, dataRecord1, dataRecord2);
-		}
-
-		dataRecord1 = testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-			dataRecordCollectionId, dataRecord1);
-
-		dataRecord2 = testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-			dataRecordCollectionId, dataRecord2);
-
-		Page<DataRecord> page =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<DataRecord> ascPage =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":asc");
-
-			assertContains(dataRecord1, (List<DataRecord>)ascPage.getItems());
-			assertContains(dataRecord2, (List<DataRecord>)ascPage.getItems());
-
-			Page<DataRecord> descPage =
-				dataRecordResource.getDataRecordCollectionDataRecordsPage(
-					dataRecordCollectionId, null, null,
-					Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":desc");
-
-			assertContains(dataRecord2, (List<DataRecord>)descPage.getItems());
-			assertContains(dataRecord1, (List<DataRecord>)descPage.getItems());
-		}
-	}
-
-	protected DataRecord
-			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-				Long dataRecordCollectionId, DataRecord dataRecord)
-		throws Exception {
-
-		return dataRecordResource.postDataRecordCollectionDataRecord(
-			dataRecordCollectionId, dataRecord);
-	}
-
-	protected Long
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long
-			testGetDataRecordCollectionDataRecordsPage_getIrrelevantDataRecordCollectionId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostDataRecordCollectionDataRecord() throws Exception {
-		DataRecord randomDataRecord = randomDataRecord();
-
-		DataRecord postDataRecord =
-			testPostDataRecordCollectionDataRecord_addDataRecord(
-				randomDataRecord);
-
-		assertEquals(randomDataRecord, postDataRecord);
-		assertValid(postDataRecord);
-	}
-
-	protected DataRecord testPostDataRecordCollectionDataRecord_addDataRecord(
-			DataRecord dataRecord)
-		throws Exception {
-
-		return dataRecordResource.postDataRecordCollectionDataRecord(
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
-			dataRecord);
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordExport() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testDeleteDataRecord() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataRecord dataRecord = testDeleteDataRecord_addDataRecord();
-
-		assertHttpResponseStatusCode(
-			204,
-			dataRecordResource.deleteDataRecordHttpResponse(
-				dataRecord.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			dataRecordResource.getDataRecordHttpResponse(dataRecord.getId()));
-
-		assertHttpResponseStatusCode(
-			404, dataRecordResource.getDataRecordHttpResponse(0L));
-	}
-
-	protected DataRecord testDeleteDataRecord_addDataRecord() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteDataRecord() throws Exception {
-
-		// No namespace
-
-		DataRecord dataRecord1 = testGraphQLDeleteDataRecord_addDataRecord();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDataRecord",
-						new HashMap<String, Object>() {
-							{
-								put("dataRecordId", dataRecord1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDataRecord"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataRecord",
-					new HashMap<String, Object>() {
-						{
-							put("dataRecordId", dataRecord1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace dataEngine_v2_0
-
-		DataRecord dataRecord2 = testGraphQLDeleteDataRecord_addDataRecord();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"deleteDataRecord",
-							new HashMap<String, Object>() {
-								{
-									put("dataRecordId", dataRecord2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/dataEngine_v2_0",
-				"Object/deleteDataRecord"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataEngine_v2_0",
-					new GraphQLField(
-						"dataRecord",
-						new HashMap<String, Object>() {
-							{
-								put("dataRecordId", dataRecord2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected DataRecord testGraphQLDeleteDataRecord_addDataRecord()
-		throws Exception {
-
-		return testGraphQLDataRecord_addDataRecord();
 	}
 
 	@Test
@@ -1329,6 +988,355 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
+	public void testGetDataRecordCollectionDataRecordExport() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPage() throws Exception {
+		Long dataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
+		Long irrelevantDataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getIrrelevantDataRecordCollectionId();
+
+		Page<DataRecord> page =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantDataRecordCollectionId != null) {
+			DataRecord irrelevantDataRecord =
+				testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+					irrelevantDataRecordCollectionId,
+					randomIrrelevantDataRecord());
+
+			page = dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				irrelevantDataRecordCollectionId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantDataRecord, (List<DataRecord>)page.getItems());
+			assertValid(
+				page,
+				testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
+					irrelevantDataRecordCollectionId));
+		}
+
+		DataRecord dataRecord1 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId, randomDataRecord());
+
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId, randomDataRecord());
+
+		page = dataRecordResource.getDataRecordCollectionDataRecordsPage(
+			dataRecordCollectionId, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(dataRecord1, (List<DataRecord>)page.getItems());
+		assertContains(dataRecord2, (List<DataRecord>)page.getItems());
+		assertValid(
+			page,
+			testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
+				dataRecordCollectionId));
+
+		dataRecordResource.deleteDataRecord(dataRecord1.getId());
+
+		dataRecordResource.deleteDataRecord(dataRecord2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataRecordCollectionDataRecordsPage_getExpectedActions(
+				Long dataRecordCollectionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/batch".
+				replace(
+					"{dataRecordCollectionId}",
+					String.valueOf(dataRecordCollectionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPageWithPagination()
+		throws Exception {
+
+		Long dataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
+
+		Page<DataRecord> dataRecordsPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(dataRecordsPage.getTotalCount());
+
+		DataRecord dataRecord1 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId, randomDataRecord());
+
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId, randomDataRecord());
+
+		DataRecord dataRecord3 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId, randomDataRecord());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(dataRecord1, (List<DataRecord>)page1.getItems());
+
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(dataRecord2, (List<DataRecord>)page2.getItems());
+
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
+		else {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
+
+			Assert.assertEquals(
+				dataRecords1.toString(), totalCount + 2, dataRecords1.size());
+
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
+
+			Assert.assertEquals(
+				dataRecords2.toString(), 1, dataRecords2.size());
+
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPageWithSortDateTime()
+		throws Exception {
+
+		testGetDataRecordCollectionDataRecordsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, dataRecord1, dataRecord2) -> {
+				BeanTestUtil.setProperty(
+					dataRecord1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPageWithSortDouble()
+		throws Exception {
+
+		testGetDataRecordCollectionDataRecordsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, dataRecord1, dataRecord2) -> {
+				BeanTestUtil.setProperty(
+					dataRecord1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					dataRecord2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPageWithSortInteger()
+		throws Exception {
+
+		testGetDataRecordCollectionDataRecordsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, dataRecord1, dataRecord2) -> {
+				BeanTestUtil.setProperty(dataRecord1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(dataRecord2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordsPageWithSortString()
+		throws Exception {
+
+		testGetDataRecordCollectionDataRecordsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, dataRecord1, dataRecord2) -> {
+				Class<?> clazz = dataRecord1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						dataRecord1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						dataRecord2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						dataRecord1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						dataRecord2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						dataRecord1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						dataRecord2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetDataRecordCollectionDataRecordsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, DataRecord, DataRecord, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long dataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
+
+		DataRecord dataRecord1 = randomDataRecord();
+		DataRecord dataRecord2 = randomDataRecord();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, dataRecord1, dataRecord2);
+		}
+
+		dataRecord1 = testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+			dataRecordCollectionId, dataRecord1);
+
+		dataRecord2 = testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+			dataRecordCollectionId, dataRecord2);
+
+		Page<DataRecord> page =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<DataRecord> ascPage =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(dataRecord1, (List<DataRecord>)ascPage.getItems());
+			assertContains(dataRecord2, (List<DataRecord>)ascPage.getItems());
+
+			Page<DataRecord> descPage =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(dataRecord2, (List<DataRecord>)descPage.getItems());
+			assertContains(dataRecord1, (List<DataRecord>)descPage.getItems());
+		}
+	}
+
+	protected DataRecord
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				Long dataRecordCollectionId, DataRecord dataRecord)
+		throws Exception {
+
+		return dataRecordResource.postDataRecordCollectionDataRecord(
+			dataRecordCollectionId, dataRecord);
+	}
+
+	protected Long
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGetDataRecordCollectionDataRecordsPage_getIrrelevantDataRecordCollectionId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testPatchDataRecord() throws Exception {
 		DataRecord postDataRecord = testPatchDataRecord_addDataRecord();
 
@@ -1356,6 +1364,47 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
+	public void testPostDataDefinitionDataRecord() throws Exception {
+		DataRecord randomDataRecord = randomDataRecord();
+
+		DataRecord postDataRecord =
+			testPostDataDefinitionDataRecord_addDataRecord(randomDataRecord);
+
+		assertEquals(randomDataRecord, postDataRecord);
+		assertValid(postDataRecord);
+	}
+
+	protected DataRecord testPostDataDefinitionDataRecord_addDataRecord(
+			DataRecord dataRecord)
+		throws Exception {
+
+		return dataRecordResource.postDataDefinitionDataRecord(
+			testGetDataDefinitionDataRecordsPage_getDataDefinitionId(),
+			dataRecord);
+	}
+
+	@Test
+	public void testPostDataRecordCollectionDataRecord() throws Exception {
+		DataRecord randomDataRecord = randomDataRecord();
+
+		DataRecord postDataRecord =
+			testPostDataRecordCollectionDataRecord_addDataRecord(
+				randomDataRecord);
+
+		assertEquals(randomDataRecord, postDataRecord);
+		assertValid(postDataRecord);
+	}
+
+	protected DataRecord testPostDataRecordCollectionDataRecord_addDataRecord(
+			DataRecord dataRecord)
+		throws Exception {
+
+		return dataRecordResource.postDataRecordCollectionDataRecord(
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+			dataRecord);
+	}
+
+	@Test
 	public void testPutDataRecord() throws Exception {
 		DataRecord postDataRecord = testPutDataRecord_addDataRecord();
 
@@ -1377,6 +1426,60 @@ public abstract class BaseDataRecordResourceTestCase {
 	protected DataRecord testPutDataRecord_addDataRecord() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DataRecord dataRecord1 =
+			testBatchEngineDeleteImportTask_addDataRecord();
+
+		testBatchEngineDeleteImportTask_deleteDataRecord(
+			200, null, dataRecord1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataRecordResource.getDataRecordHttpResponse(dataRecord1.getId()));
+	}
+
+	protected DataRecord testBatchEngineDeleteImportTask_addDataRecord()
+		throws Exception {
+
+		return testDeleteDataRecord_addDataRecord();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDataRecord(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.data.engine.rest.dto.v2_0.DataRecord", null, null,
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DataRecord testGraphQLDataRecord_addDataRecord()
@@ -1839,7 +1942,30 @@ public abstract class BaseDataRecordResourceTestCase {
 		return randomDataRecord();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DataRecordResource dataRecordResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

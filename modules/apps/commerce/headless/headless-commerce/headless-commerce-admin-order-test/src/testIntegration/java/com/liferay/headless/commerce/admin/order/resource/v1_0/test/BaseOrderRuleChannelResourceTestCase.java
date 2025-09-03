@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderRuleChannel;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			testCompany.getCompanyId());
 
 		orderRuleChannelResource = OrderRuleChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -187,12 +200,111 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 
 	@Test
 	public void testDeleteOrderRuleChannel() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderRuleChannel orderRuleChannel =
+			testDeleteOrderRuleChannel_addOrderRuleChannel();
+
+		assertHttpResponseStatusCode(
+			204,
+			orderRuleChannelResource.deleteOrderRuleChannelHttpResponse(
+				orderRuleChannel.getOrderRuleChannelId()));
+	}
+
+	protected OrderRuleChannel testDeleteOrderRuleChannel_addOrderRuleChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteOrderRuleChannel() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		OrderRuleChannel orderRuleChannel1 =
+			testGraphQLDeleteOrderRuleChannel_addOrderRuleChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteOrderRuleChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"orderRuleChannelId",
+									orderRuleChannel1.getOrderRuleChannelId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteOrderRuleChannel"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		OrderRuleChannel orderRuleChannel2 =
+			testGraphQLDeleteOrderRuleChannel_addOrderRuleChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteOrderRuleChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"orderRuleChannelId",
+										orderRuleChannel2.
+											getOrderRuleChannelId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteOrderRuleChannel"));
+	}
+
+	protected OrderRuleChannel
+			testGraphQLDeleteOrderRuleChannel_addOrderRuleChannel()
+		throws Exception {
+
+		return testGraphQLOrderRuleChannel_addOrderRuleChannel();
+	}
+
+	@Test
+	public void testDeleteOrderRuleChannelBatch() throws Exception {
+		OrderRuleChannel orderRuleChannel1 =
+			testDeleteOrderRuleChannelBatch_addOrderRuleChannel();
+
+		testDeleteOrderRuleChannelBatch_deleteOrderRuleChannel(
+			202, null, orderRuleChannel1.getOrderRuleChannelId());
+	}
+
+	protected OrderRuleChannel
+			testDeleteOrderRuleChannelBatch_addOrderRuleChannel()
+		throws Exception {
+
+		return testDeleteOrderRuleChannel_addOrderRuleChannel();
+	}
+
+	protected void testDeleteOrderRuleChannelBatch_deleteOrderRuleChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			orderRuleChannelResource.deleteOrderRuleChannelBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"orderRuleChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -257,6 +369,12 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			page,
 			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExpectedActions(
 				externalReferenceCode));
+
+		orderRuleChannelResource.deleteOrderRuleChannel(
+			orderRuleChannel1.getOrderRuleChannelId());
+
+		orderRuleChannelResource.deleteOrderRuleChannel(
+			orderRuleChannel2.getOrderRuleChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -276,13 +394,13 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExternalReferenceCode();
 
-		Page<OrderRuleChannel> orderRuleChannelPage =
+		Page<OrderRuleChannel> orderRuleChannelsPage =
 			orderRuleChannelResource.
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderRuleChannelPage.getTotalCount());
+			orderRuleChannelsPage.getTotalCount());
 
 		OrderRuleChannel orderRuleChannel1 =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_addOrderRuleChannel(
@@ -404,29 +522,6 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	}
 
 	@Test
-	public void testPostOrderRuleByExternalReferenceCodeOrderRuleChannel()
-		throws Exception {
-
-		OrderRuleChannel randomOrderRuleChannel = randomOrderRuleChannel();
-
-		OrderRuleChannel postOrderRuleChannel =
-			testPostOrderRuleByExternalReferenceCodeOrderRuleChannel_addOrderRuleChannel(
-				randomOrderRuleChannel);
-
-		assertEquals(randomOrderRuleChannel, postOrderRuleChannel);
-		assertValid(postOrderRuleChannel);
-	}
-
-	protected OrderRuleChannel
-			testPostOrderRuleByExternalReferenceCodeOrderRuleChannel_addOrderRuleChannel(
-				OrderRuleChannel orderRuleChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetOrderRuleIdOrderRuleChannelsPage() throws Exception {
 		Long id = testGetOrderRuleIdOrderRuleChannelsPage_getId();
 		Long irrelevantId =
@@ -478,6 +573,12 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		assertValid(
 			page,
 			testGetOrderRuleIdOrderRuleChannelsPage_getExpectedActions(id));
+
+		orderRuleChannelResource.deleteOrderRuleChannel(
+			orderRuleChannel1.getOrderRuleChannelId());
+
+		orderRuleChannelResource.deleteOrderRuleChannel(
+			orderRuleChannel2.getOrderRuleChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -593,12 +694,12 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 
 		Long id = testGetOrderRuleIdOrderRuleChannelsPage_getId();
 
-		Page<OrderRuleChannel> orderRuleChannelPage =
+		Page<OrderRuleChannel> orderRuleChannelsPage =
 			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderRuleChannelPage.getTotalCount());
+			orderRuleChannelsPage.getTotalCount());
 
 		OrderRuleChannel orderRuleChannel1 =
 			testGetOrderRuleIdOrderRuleChannelsPage_addOrderRuleChannel(
@@ -867,6 +968,29 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	}
 
 	@Test
+	public void testPostOrderRuleByExternalReferenceCodeOrderRuleChannel()
+		throws Exception {
+
+		OrderRuleChannel randomOrderRuleChannel = randomOrderRuleChannel();
+
+		OrderRuleChannel postOrderRuleChannel =
+			testPostOrderRuleByExternalReferenceCodeOrderRuleChannel_addOrderRuleChannel(
+				randomOrderRuleChannel);
+
+		assertEquals(randomOrderRuleChannel, postOrderRuleChannel);
+		assertValid(postOrderRuleChannel);
+	}
+
+	protected OrderRuleChannel
+			testPostOrderRuleByExternalReferenceCodeOrderRuleChannel_addOrderRuleChannel(
+				OrderRuleChannel orderRuleChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostOrderRuleIdOrderRuleChannel() throws Exception {
 		OrderRuleChannel randomOrderRuleChannel = randomOrderRuleChannel();
 
@@ -887,8 +1011,66 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OrderRuleChannel orderRuleChannel1 =
+			testBatchEngineDeleteImportTask_addOrderRuleChannel();
+
+		testBatchEngineDeleteImportTask_deleteOrderRuleChannel(
+			200, null, orderRuleChannel1.getOrderRuleChannelId());
+	}
+
+	protected OrderRuleChannel
+			testBatchEngineDeleteImportTask_addOrderRuleChannel()
+		throws Exception {
+
+		return testDeleteOrderRuleChannel_addOrderRuleChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOrderRuleChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"orderRuleChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected OrderRuleChannel testGraphQLOrderRuleChannel_addOrderRuleChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		OrderRuleChannel orderRuleChannel,
@@ -969,6 +1151,10 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (orderRuleChannel.getOrderRuleChannelId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1543,7 +1729,30 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		return randomOrderRuleChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OrderRuleChannelResource orderRuleChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

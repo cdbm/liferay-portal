@@ -6,8 +6,8 @@
 package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.constants.DepotRolesConstants;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -34,12 +34,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.WindowStateException;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.WindowStateException;
 
 /**
  * @author Cristina González

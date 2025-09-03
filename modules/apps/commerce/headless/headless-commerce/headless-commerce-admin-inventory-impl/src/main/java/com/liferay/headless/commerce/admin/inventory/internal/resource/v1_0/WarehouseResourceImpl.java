@@ -13,8 +13,8 @@ import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
 import com.liferay.headless.commerce.admin.inventory.internal.odata.entity.v1_0.WarehouseEntityModel;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -30,13 +30,13 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

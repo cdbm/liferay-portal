@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductConfigurationList;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -139,6 +142,16 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 			).locale(
 				LocaleUtil.getDefault()
 			).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 	}
 
 	@After
@@ -221,6 +234,693 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 		Assert.assertEquals(
 			regex, productConfigurationList.getExternalReferenceCode());
 		Assert.assertEquals(regex, productConfigurationList.getName());
+	}
+
+	@Test
+	public void testDeleteProductConfigurationList() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductConfigurationList productConfigurationList =
+			testDeleteProductConfigurationList_addProductConfigurationList();
+
+		assertHttpResponseStatusCode(
+			204,
+			productConfigurationListResource.
+				deleteProductConfigurationListHttpResponse(
+					productConfigurationList.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(0L));
+	}
+
+	protected ProductConfigurationList
+			testDeleteProductConfigurationList_addProductConfigurationList()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteProductConfigurationList() throws Exception {
+
+		// No namespace
+
+		ProductConfigurationList productConfigurationList1 =
+			testGraphQLDeleteProductConfigurationList_addProductConfigurationList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteProductConfigurationList",
+						new HashMap<String, Object>() {
+							{
+								put("id", productConfigurationList1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteProductConfigurationList"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"productConfigurationList",
+					new HashMap<String, Object>() {
+						{
+							put("id", productConfigurationList1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductConfigurationList productConfigurationList2 =
+			testGraphQLDeleteProductConfigurationList_addProductConfigurationList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductConfigurationList",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"id",
+										productConfigurationList2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductConfigurationList"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productConfigurationList",
+						new HashMap<String, Object>() {
+							{
+								put("id", productConfigurationList2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ProductConfigurationList
+			testGraphQLDeleteProductConfigurationList_addProductConfigurationList()
+		throws Exception {
+
+		return testGraphQLProductConfigurationList_addProductConfigurationList();
+	}
+
+	@Test
+	public void testDeleteProductConfigurationListBatch() throws Exception {
+		ProductConfigurationList productConfigurationList1 =
+			testDeleteProductConfigurationListBatch_addProductConfigurationList();
+
+		testDeleteProductConfigurationListBatch_deleteProductConfigurationList(
+			202, productConfigurationList1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
+
+		productConfigurationList1 =
+			testDeleteProductConfigurationListBatch_addProductConfigurationList();
+
+		testDeleteProductConfigurationListBatch_deleteProductConfigurationList(
+			202, null, productConfigurationList1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
+
+		productConfigurationList1 =
+			testDeleteProductConfigurationListBatch_addProductConfigurationList();
+		ProductConfigurationList productConfigurationList2 =
+			testDeleteProductConfigurationListBatch_addProductConfigurationList();
+
+		testDeleteProductConfigurationListBatch_deleteProductConfigurationList(
+			202, productConfigurationList2.getExternalReferenceCode(),
+			productConfigurationList1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList2.getId()));
+
+		testDeleteProductConfigurationListBatch_deleteProductConfigurationList(
+			202, productConfigurationList2.getExternalReferenceCode(),
+			productConfigurationList1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList2.getId()));
+	}
+
+	protected ProductConfigurationList
+			testDeleteProductConfigurationListBatch_addProductConfigurationList()
+		throws Exception {
+
+		return testDeleteProductConfigurationList_addProductConfigurationList();
+	}
+
+	protected void
+			testDeleteProductConfigurationListBatch_deleteProductConfigurationList(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productConfigurationListResource.
+				deleteProductConfigurationListBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteProductConfigurationListByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductConfigurationList productConfigurationList =
+			testDeleteProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
+
+		assertHttpResponseStatusCode(
+			204,
+			productConfigurationListResource.
+				deleteProductConfigurationListByExternalReferenceCodeHttpResponse(
+					productConfigurationList.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListByExternalReferenceCodeHttpResponse(
+					productConfigurationList.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListByExternalReferenceCodeHttpResponse(
+					"-"));
+	}
+
+	protected ProductConfigurationList
+			testDeleteProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetProductConfigurationList() throws Exception {
+		ProductConfigurationList postProductConfigurationList =
+			testGetProductConfigurationList_addProductConfigurationList();
+
+		ProductConfigurationList getProductConfigurationList =
+			productConfigurationListResource.getProductConfigurationList(
+				postProductConfigurationList.getId());
+
+		assertEquals(postProductConfigurationList, getProductConfigurationList);
+		assertValid(getProductConfigurationList);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		ProductConfigurationList postProductConfigurationList =
+			testGetProductConfigurationList_addProductConfigurationList();
+
+		ProductConfigurationList getProductConfigurationList =
+			productConfigurationListResource.getProductConfigurationList(
+				postProductConfigurationList.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationList"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postProductConfigurationList.getId());
+
+		assertEquals(
+			getProductConfigurationList,
+			ProductConfigurationListSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected ProductConfigurationList
+			testGetProductConfigurationList_addProductConfigurationList()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProductConfigurationList() throws Exception {
+		ProductConfigurationList productConfigurationList =
+			testGraphQLGetProductConfigurationList_addProductConfigurationList();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				productConfigurationList,
+				ProductConfigurationListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"productConfigurationList",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"id",
+											productConfigurationList.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/productConfigurationList"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productConfigurationList,
+				ProductConfigurationListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productConfigurationList",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productConfigurationList.
+													getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productConfigurationList"))));
+	}
+
+	@Test
+	public void testGraphQLGetProductConfigurationListNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"productConfigurationList",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productConfigurationList",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ProductConfigurationList
+			testGraphQLGetProductConfigurationList_addProductConfigurationList()
+		throws Exception {
+
+		return testGraphQLProductConfigurationList_addProductConfigurationList();
+	}
+
+	@Test
+	public void testGetProductConfigurationListByExternalReferenceCode()
+		throws Exception {
+
+		ProductConfigurationList postProductConfigurationList =
+			testGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
+
+		ProductConfigurationList getProductConfigurationList =
+			productConfigurationListResource.
+				getProductConfigurationListByExternalReferenceCode(
+					postProductConfigurationList.getExternalReferenceCode());
+
+		assertEquals(postProductConfigurationList, getProductConfigurationList);
+		assertValid(getProductConfigurationList);
+	}
+
+	protected ProductConfigurationList
+			testGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProductConfigurationListByExternalReferenceCode()
+		throws Exception {
+
+		ProductConfigurationList productConfigurationList =
+			testGraphQLGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				productConfigurationList,
+				ProductConfigurationListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"productConfigurationListByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												productConfigurationList.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/productConfigurationListByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productConfigurationList,
+				ProductConfigurationListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productConfigurationListByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													productConfigurationList.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productConfigurationListByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetProductConfigurationListByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"productConfigurationListByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productConfigurationListByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ProductConfigurationList
+			testGraphQLGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
+		throws Exception {
+
+		return testGraphQLProductConfigurationList_addProductConfigurationList();
 	}
 
 	@Test
@@ -373,12 +1073,12 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 	public void testGetProductConfigurationListsPageWithPagination()
 		throws Exception {
 
-		Page<ProductConfigurationList> productConfigurationListPage =
+		Page<ProductConfigurationList> productConfigurationListsPage =
 			productConfigurationListResource.getProductConfigurationListsPage(
 				null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productConfigurationListPage.getTotalCount());
+			productConfigurationListsPage.getTotalCount());
 
 		ProductConfigurationList productConfigurationList1 =
 			testGetProductConfigurationListsPage_addProductConfigurationList(
@@ -743,199 +1443,41 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductConfigurationList() throws Exception {
-		ProductConfigurationList randomProductConfigurationList =
-			randomProductConfigurationList();
-
+	public void testPatchProductConfigurationList() throws Exception {
 		ProductConfigurationList postProductConfigurationList =
-			testPostProductConfigurationList_addProductConfigurationList(
-				randomProductConfigurationList);
+			testPatchProductConfigurationList_addProductConfigurationList();
 
-		assertEquals(
-			randomProductConfigurationList, postProductConfigurationList);
-		assertValid(postProductConfigurationList);
-	}
-
-	protected ProductConfigurationList
-			testPostProductConfigurationList_addProductConfigurationList(
-				ProductConfigurationList productConfigurationList)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteProductConfigurationListByExternalReferenceCode()
-		throws Exception {
+		ProductConfigurationList randomPatchProductConfigurationList =
+			randomPatchProductConfigurationList();
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ProductConfigurationList productConfigurationList =
-			testDeleteProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
+		ProductConfigurationList patchProductConfigurationList =
+			productConfigurationListResource.patchProductConfigurationList(
+				postProductConfigurationList.getId(),
+				randomPatchProductConfigurationList);
 
-		assertHttpResponseStatusCode(
-			204,
-			productConfigurationListResource.
-				deleteProductConfigurationListByExternalReferenceCodeHttpResponse(
-					productConfigurationList.getExternalReferenceCode()));
+		ProductConfigurationList expectedPatchProductConfigurationList =
+			postProductConfigurationList.clone();
 
-		assertHttpResponseStatusCode(
-			404,
-			productConfigurationListResource.
-				getProductConfigurationListByExternalReferenceCodeHttpResponse(
-					productConfigurationList.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			productConfigurationListResource.
-				getProductConfigurationListByExternalReferenceCodeHttpResponse(
-					productConfigurationList.getExternalReferenceCode()));
-	}
-
-	protected ProductConfigurationList
-			testDeleteProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProductConfigurationListByExternalReferenceCode()
-		throws Exception {
-
-		ProductConfigurationList postProductConfigurationList =
-			testGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
+		BeanTestUtil.copyProperties(
+			randomPatchProductConfigurationList,
+			expectedPatchProductConfigurationList);
 
 		ProductConfigurationList getProductConfigurationList =
-			productConfigurationListResource.
-				getProductConfigurationListByExternalReferenceCode(
-					postProductConfigurationList.getExternalReferenceCode());
+			productConfigurationListResource.getProductConfigurationList(
+				patchProductConfigurationList.getId());
 
-		assertEquals(postProductConfigurationList, getProductConfigurationList);
+		assertEquals(
+			expectedPatchProductConfigurationList, getProductConfigurationList);
 		assertValid(getProductConfigurationList);
 	}
 
 	protected ProductConfigurationList
-			testGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
+			testPatchProductConfigurationList_addProductConfigurationList()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetProductConfigurationListByExternalReferenceCode()
-		throws Exception {
-
-		ProductConfigurationList productConfigurationList =
-			testGraphQLGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				productConfigurationList,
-				ProductConfigurationListSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"productConfigurationListByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												productConfigurationList.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/productConfigurationListByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				productConfigurationList,
-				ProductConfigurationListSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"productConfigurationListByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													productConfigurationList.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/productConfigurationListByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetProductConfigurationListByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"productConfigurationListByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"productConfigurationListByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ProductConfigurationList
-			testGraphQLGetProductConfigurationListByExternalReferenceCode_addProductConfigurationList()
-		throws Exception {
-
-		return testGraphQLProductConfigurationList_addProductConfigurationList();
 	}
 
 	@Test
@@ -981,32 +1523,22 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteProductConfigurationList() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ProductConfigurationList productConfigurationList =
-			testDeleteProductConfigurationList_addProductConfigurationList();
+	public void testPostProductConfigurationList() throws Exception {
+		ProductConfigurationList randomProductConfigurationList =
+			randomProductConfigurationList();
 
-		assertHttpResponseStatusCode(
-			204,
-			productConfigurationListResource.
-				deleteProductConfigurationListHttpResponse(
-					productConfigurationList.getId()));
+		ProductConfigurationList postProductConfigurationList =
+			testPostProductConfigurationList_addProductConfigurationList(
+				randomProductConfigurationList);
 
-		assertHttpResponseStatusCode(
-			404,
-			productConfigurationListResource.
-				getProductConfigurationListHttpResponse(
-					productConfigurationList.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			productConfigurationListResource.
-				getProductConfigurationListHttpResponse(
-					productConfigurationList.getId()));
+		assertEquals(
+			randomProductConfigurationList, postProductConfigurationList);
+		assertValid(postProductConfigurationList);
 	}
 
 	protected ProductConfigurationList
-			testDeleteProductConfigurationList_addProductConfigurationList()
+			testPostProductConfigurationList_addProductConfigurationList(
+				ProductConfigurationList productConfigurationList)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1014,438 +1546,103 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLDeleteProductConfigurationList() throws Exception {
-
-		// No namespace
-
+	public void testBatchEngineDeleteImportTask() throws Exception {
 		ProductConfigurationList productConfigurationList1 =
-			testGraphQLDeleteProductConfigurationList_addProductConfigurationList();
+			testBatchEngineDeleteImportTask_addProductConfigurationList();
 
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteProductConfigurationList",
-						new HashMap<String, Object>() {
-							{
-								put("id", productConfigurationList1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteProductConfigurationList"));
+		testBatchEngineDeleteImportTask_deleteProductConfigurationList(
+			200, productConfigurationList1.getExternalReferenceCode(), null);
 
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"productConfigurationList",
-					new HashMap<String, Object>() {
-						{
-							put("id", productConfigurationList1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
 
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
+		productConfigurationList1 =
+			testBatchEngineDeleteImportTask_addProductConfigurationList();
 
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
+		testBatchEngineDeleteImportTask_deleteProductConfigurationList(
+			200, null, productConfigurationList1.getId());
 
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
+
+		productConfigurationList1 =
+			testBatchEngineDeleteImportTask_addProductConfigurationList();
 		ProductConfigurationList productConfigurationList2 =
-			testGraphQLDeleteProductConfigurationList_addProductConfigurationList();
+			testBatchEngineDeleteImportTask_addProductConfigurationList();
 
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"deleteProductConfigurationList",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"id",
-										productConfigurationList2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminCatalog_v1_0",
-				"Object/deleteProductConfigurationList"));
+		testBatchEngineDeleteImportTask_deleteProductConfigurationList(
+			200, productConfigurationList2.getExternalReferenceCode(),
+			productConfigurationList1.getId());
 
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminCatalog_v1_0",
-					new GraphQLField(
-						"productConfigurationList",
-						new HashMap<String, Object>() {
-							{
-								put("id", productConfigurationList2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList2.getId()));
 
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
+		testBatchEngineDeleteImportTask_deleteProductConfigurationList(
+			200, productConfigurationList2.getExternalReferenceCode(),
+			productConfigurationList1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productConfigurationListResource.
+				getProductConfigurationListHttpResponse(
+					productConfigurationList2.getId()));
 	}
 
 	protected ProductConfigurationList
-			testGraphQLDeleteProductConfigurationList_addProductConfigurationList()
+			testBatchEngineDeleteImportTask_addProductConfigurationList()
 		throws Exception {
 
-		return testGraphQLProductConfigurationList_addProductConfigurationList();
+		return testDeleteProductConfigurationList_addProductConfigurationList();
 	}
 
-	@Test
-	public void testGetProductConfigurationList() throws Exception {
-		ProductConfigurationList postProductConfigurationList =
-			testGetProductConfigurationList_addProductConfigurationList();
-
-		ProductConfigurationList getProductConfigurationList =
-			productConfigurationListResource.getProductConfigurationList(
-				postProductConfigurationList.getId());
-
-		assertEquals(postProductConfigurationList, getProductConfigurationList);
-		assertValid(getProductConfigurationList);
-	}
-
-	@Test
-	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
-		ProductConfigurationList postProductConfigurationList =
-			testGetProductConfigurationList_addProductConfigurationList();
-
-		ProductConfigurationList getProductConfigurationList =
-			productConfigurationListResource.getProductConfigurationList(
-				postProductConfigurationList.getId());
-
-		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
-			_vulcanCRUDItemDelegateBuilderRegistry.builder(
-				testCompany,
-				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationList"
-			).acceptLanguage(
-				new AcceptLanguage() {
-
-					@Override
-					public List<Locale> getLocales() {
-						return Arrays.asList(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public String getPreferredLanguageId() {
-						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public Locale getPreferredLocale() {
-						return LocaleUtil.getDefault();
-					}
-
-				}
-			).groupLocalService(
-				_groupLocalService
-			).httpServletRequest(
-				testVulcanCRUDItemDelegate_getHttpServletRequest()
-			).httpServletResponse(
-				new MockHttpServletResponse()
-			).resourceActionLocalService(
-				_resourceActionLocalService
-			).resourcePermissionLocalService(
-				_resourcePermissionLocalService
-			).roleLocalService(
-				_roleLocalService
-			).scopeChecker(
-				_scopeChecker
-			).uriInfo(
-				testVulcanCRUDItemDelegate_getUriInfo()
-			).user(
-				testVulcanCRUDItemDelegate_getUser()
-			).build();
-
-		Object item = vulcanCRUDItemDelegate.getItem(
-			postProductConfigurationList.getId());
-
-		assertEquals(
-			getProductConfigurationList,
-			ProductConfigurationListSerDes.toDTO(item.toString()));
-	}
-
-	protected HttpServletRequest
-		testVulcanCRUDItemDelegate_getHttpServletRequest() {
-
-		return new MockHttpServletRequest() {
-
-			@Override
-			public StringBuffer getRequestURL() {
-				return new StringBuffer(
-					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
-						RandomTestUtil.randomString()));
-			}
-
-		};
-	}
-
-	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
-		String applicationPath = RandomTestUtil.randomString() + "/";
-		String resourcePath = RandomTestUtil.randomString();
-
-		return new UriInfo() {
-
-			@Override
-			public String getPath() {
-				return resourcePath;
-			}
-
-			@Override
-			public String getPath(boolean decode) {
-				return getPath();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments(boolean decode) {
-				return getPathSegments();
-			}
-
-			@Override
-			public URI getRequestUri() {
-				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
-			}
-
-			@Override
-			public UriBuilder getRequestUriBuilder() {
-				return UriBuilder.fromUri(getRequestUri());
-			}
-
-			@Override
-			public URI getAbsolutePath() {
-				return getRequestUri();
-			}
-
-			@Override
-			public UriBuilder getAbsolutePathBuilder() {
-				return getRequestUriBuilder();
-			}
-
-			@Override
-			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
-			}
-
-			@Override
-			public UriBuilder getBaseUriBuilder() {
-				return UriBuilder.fromUri(getBaseUri());
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters(
-				boolean decode) {
-
-				return getPathParameters();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters(
-				boolean decode) {
-
-				return getQueryParameters();
-			}
-
-			@Override
-			public List<String> getMatchedURIs() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<String> getMatchedURIs(boolean decode) {
-				return getMatchedURIs();
-			}
-
-			@Override
-			public List<Object> getMatchedResources() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public URI resolve(URI requestUri) {
-				return getBaseUri().resolve(requestUri);
-			}
-
-			@Override
-			public URI relativize(URI uri) {
-				return getBaseUri().relativize(uri);
-			}
-
-		};
-	}
-
-	protected com.liferay.portal.kernel.model.User
-		testVulcanCRUDItemDelegate_getUser() {
-
-		return _testCompanyAdminUser;
-	}
-
-	protected ProductConfigurationList
-			testGetProductConfigurationList_addProductConfigurationList()
+	protected void
+			testBatchEngineDeleteImportTask_deleteProductConfigurationList(
+				int expectedStatusCode, String externalReferenceCode, Long id,
+				String... parameters)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
 
-	@Test
-	public void testGraphQLGetProductConfigurationList() throws Exception {
-		ProductConfigurationList productConfigurationList =
-			testGraphQLGetProductConfigurationList_addProductConfigurationList();
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationList",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
 
-		// No namespace
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
 
-		Assert.assertTrue(
-			equals(
-				productConfigurationList,
-				ProductConfigurationListSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"productConfigurationList",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"id",
-											productConfigurationList.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/productConfigurationList"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				productConfigurationList,
-				ProductConfigurationListSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"productConfigurationList",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												productConfigurationList.
-													getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/productConfigurationList"))));
-	}
-
-	@Test
-	public void testGraphQLGetProductConfigurationListNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"productConfigurationList",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"productConfigurationList",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ProductConfigurationList
-			testGraphQLGetProductConfigurationList_addProductConfigurationList()
-		throws Exception {
-
-		return testGraphQLProductConfigurationList_addProductConfigurationList();
-	}
-
-	@Test
-	public void testPatchProductConfigurationList() throws Exception {
-		ProductConfigurationList postProductConfigurationList =
-			testPatchProductConfigurationList_addProductConfigurationList();
-
-		ProductConfigurationList randomPatchProductConfigurationList =
-			randomPatchProductConfigurationList();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ProductConfigurationList patchProductConfigurationList =
-			productConfigurationListResource.patchProductConfigurationList(
-				postProductConfigurationList.getId(),
-				randomPatchProductConfigurationList);
-
-		ProductConfigurationList expectedPatchProductConfigurationList =
-			postProductConfigurationList.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchProductConfigurationList,
-			expectedPatchProductConfigurationList);
-
-		ProductConfigurationList getProductConfigurationList =
-			productConfigurationListResource.getProductConfigurationList(
-				patchProductConfigurationList.getId());
-
-		assertEquals(
-			expectedPatchProductConfigurationList, getProductConfigurationList);
-		assertValid(getProductConfigurationList);
-	}
-
-	protected ProductConfigurationList
-			testPatchProductConfigurationList_addProductConfigurationList()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -1591,6 +1788,14 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 
 			if (Objects.equals("createDate", additionalAssertFieldName)) {
 				if (productConfigurationList.getCreateDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("customFields", additionalAssertFieldName)) {
+				if (productConfigurationList.getCustomFields() == null) {
 					valid = false;
 				}
 
@@ -1845,6 +2050,17 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 				if (!Objects.deepEquals(
 						productConfigurationList1.getCreateDate(),
 						productConfigurationList2.getCreateDate())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("customFields", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productConfigurationList1.getCustomFields(),
+						productConfigurationList2.getCustomFields())) {
 
 					return false;
 				}
@@ -2168,6 +2384,11 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("customFields")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("displayDate")) {
 			if (operator.equals("between")) {
 				Date date = productConfigurationList.getDisplayDate();
@@ -2433,7 +2654,30 @@ public abstract class BaseProductConfigurationListResourceTestCase {
 		return randomProductConfigurationList();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductConfigurationListResource productConfigurationListResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

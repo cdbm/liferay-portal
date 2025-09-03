@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderRuleAccountGroup;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		orderRuleAccountGroupResource = OrderRuleAccountGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -194,12 +207,116 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 
 	@Test
 	public void testDeleteOrderRuleAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderRuleAccountGroup orderRuleAccountGroup =
+			testDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			orderRuleAccountGroupResource.
+				deleteOrderRuleAccountGroupHttpResponse(
+					orderRuleAccountGroup.getOrderRuleAccountGroupId()));
+	}
+
+	protected OrderRuleAccountGroup
+			testDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteOrderRuleAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		OrderRuleAccountGroup orderRuleAccountGroup1 =
+			testGraphQLDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteOrderRuleAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"orderRuleAccountGroupId",
+									orderRuleAccountGroup1.
+										getOrderRuleAccountGroupId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteOrderRuleAccountGroup"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		OrderRuleAccountGroup orderRuleAccountGroup2 =
+			testGraphQLDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteOrderRuleAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"orderRuleAccountGroupId",
+										orderRuleAccountGroup2.
+											getOrderRuleAccountGroupId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteOrderRuleAccountGroup"));
+	}
+
+	protected OrderRuleAccountGroup
+			testGraphQLDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup()
+		throws Exception {
+
+		return testGraphQLOrderRuleAccountGroup_addOrderRuleAccountGroup();
+	}
+
+	@Test
+	public void testDeleteOrderRuleAccountGroupBatch() throws Exception {
+		OrderRuleAccountGroup orderRuleAccountGroup1 =
+			testDeleteOrderRuleAccountGroupBatch_addOrderRuleAccountGroup();
+
+		testDeleteOrderRuleAccountGroupBatch_deleteOrderRuleAccountGroup(
+			202, null, orderRuleAccountGroup1.getOrderRuleAccountGroupId());
+	}
+
+	protected OrderRuleAccountGroup
+			testDeleteOrderRuleAccountGroupBatch_addOrderRuleAccountGroup()
+		throws Exception {
+
+		return testDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup();
+	}
+
+	protected void
+			testDeleteOrderRuleAccountGroupBatch_deleteOrderRuleAccountGroup(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			orderRuleAccountGroupResource.
+				deleteOrderRuleAccountGroupBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"orderRuleAccountGroupId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -266,6 +383,12 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 			page,
 			testGetOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage_getExpectedActions(
 				externalReferenceCode));
+
+		orderRuleAccountGroupResource.deleteOrderRuleAccountGroup(
+			orderRuleAccountGroup1.getOrderRuleAccountGroupId());
+
+		orderRuleAccountGroupResource.deleteOrderRuleAccountGroup(
+			orderRuleAccountGroup2.getOrderRuleAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -285,13 +408,13 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage_getExternalReferenceCode();
 
-		Page<OrderRuleAccountGroup> orderRuleAccountGroupPage =
+		Page<OrderRuleAccountGroup> orderRuleAccountGroupsPage =
 			orderRuleAccountGroupResource.
 				getOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderRuleAccountGroupPage.getTotalCount());
+			orderRuleAccountGroupsPage.getTotalCount());
 
 		OrderRuleAccountGroup orderRuleAccountGroup1 =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage_addOrderRuleAccountGroup(
@@ -421,30 +544,6 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 	}
 
 	@Test
-	public void testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup()
-		throws Exception {
-
-		OrderRuleAccountGroup randomOrderRuleAccountGroup =
-			randomOrderRuleAccountGroup();
-
-		OrderRuleAccountGroup postOrderRuleAccountGroup =
-			testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup_addOrderRuleAccountGroup(
-				randomOrderRuleAccountGroup);
-
-		assertEquals(randomOrderRuleAccountGroup, postOrderRuleAccountGroup);
-		assertValid(postOrderRuleAccountGroup);
-	}
-
-	protected OrderRuleAccountGroup
-			testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup_addOrderRuleAccountGroup(
-				OrderRuleAccountGroup orderRuleAccountGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetOrderRuleIdOrderRuleAccountGroupsPage()
 		throws Exception {
 
@@ -506,6 +605,12 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 			page,
 			testGetOrderRuleIdOrderRuleAccountGroupsPage_getExpectedActions(
 				id));
+
+		orderRuleAccountGroupResource.deleteOrderRuleAccountGroup(
+			orderRuleAccountGroup1.getOrderRuleAccountGroupId());
+
+		orderRuleAccountGroupResource.deleteOrderRuleAccountGroup(
+			orderRuleAccountGroup2.getOrderRuleAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -627,13 +732,13 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 
 		Long id = testGetOrderRuleIdOrderRuleAccountGroupsPage_getId();
 
-		Page<OrderRuleAccountGroup> orderRuleAccountGroupPage =
+		Page<OrderRuleAccountGroup> orderRuleAccountGroupsPage =
 			orderRuleAccountGroupResource.
 				getOrderRuleIdOrderRuleAccountGroupsPage(
 					id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderRuleAccountGroupPage.getTotalCount());
+			orderRuleAccountGroupsPage.getTotalCount());
 
 		OrderRuleAccountGroup orderRuleAccountGroup1 =
 			testGetOrderRuleIdOrderRuleAccountGroupsPage_addOrderRuleAccountGroup(
@@ -925,6 +1030,30 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 	}
 
 	@Test
+	public void testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup()
+		throws Exception {
+
+		OrderRuleAccountGroup randomOrderRuleAccountGroup =
+			randomOrderRuleAccountGroup();
+
+		OrderRuleAccountGroup postOrderRuleAccountGroup =
+			testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup_addOrderRuleAccountGroup(
+				randomOrderRuleAccountGroup);
+
+		assertEquals(randomOrderRuleAccountGroup, postOrderRuleAccountGroup);
+		assertValid(postOrderRuleAccountGroup);
+	}
+
+	protected OrderRuleAccountGroup
+			testPostOrderRuleByExternalReferenceCodeOrderRuleAccountGroup_addOrderRuleAccountGroup(
+				OrderRuleAccountGroup orderRuleAccountGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostOrderRuleIdOrderRuleAccountGroup() throws Exception {
 		OrderRuleAccountGroup randomOrderRuleAccountGroup =
 			randomOrderRuleAccountGroup();
@@ -946,8 +1075,67 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OrderRuleAccountGroup orderRuleAccountGroup1 =
+			testBatchEngineDeleteImportTask_addOrderRuleAccountGroup();
+
+		testBatchEngineDeleteImportTask_deleteOrderRuleAccountGroup(
+			200, null, orderRuleAccountGroup1.getOrderRuleAccountGroupId());
+	}
+
+	protected OrderRuleAccountGroup
+			testBatchEngineDeleteImportTask_addOrderRuleAccountGroup()
+		throws Exception {
+
+		return testDeleteOrderRuleAccountGroup_addOrderRuleAccountGroup();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOrderRuleAccountGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleAccountGroup",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"orderRuleAccountGroupId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected OrderRuleAccountGroup
+			testGraphQLOrderRuleAccountGroup_addOrderRuleAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		OrderRuleAccountGroup orderRuleAccountGroup,
@@ -1037,6 +1225,10 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (orderRuleAccountGroup.getOrderRuleAccountGroupId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1621,7 +1813,30 @@ public abstract class BaseOrderRuleAccountGroupResourceTestCase {
 		return randomOrderRuleAccountGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OrderRuleAccountGroupResource orderRuleAccountGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

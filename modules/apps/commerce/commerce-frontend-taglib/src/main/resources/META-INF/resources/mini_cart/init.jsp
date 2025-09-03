@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
@@ -41,7 +41,9 @@ String productURLSeparator = (String)request.getAttribute("liferay-commerce:cart
 boolean requestCodeEnabled = (boolean)request.getAttribute("liferay-commerce:cart:requestQuoteEnabled");
 String signInURL = (String)request.getAttribute("liferay-commerce:cart:signInURL");
 String siteDefaultURL = (String)request.getAttribute("liferay-commerce:cart:siteDefaultURL");
+boolean slowConnectionOrderFlowEnabled = (boolean)request.getAttribute("liferay-commerce:cart:slowConnectionOrderFlowEnabled");
 boolean toggleable = (boolean)request.getAttribute("liferay-commerce:cart:toggleable");
+boolean undoCartItemDeletionDisabled = (boolean)request.getAttribute("liferay-commerce:cart:undoCartItemDeletionDisabled");
 
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib") + StringPool.UNDERLINE;
 

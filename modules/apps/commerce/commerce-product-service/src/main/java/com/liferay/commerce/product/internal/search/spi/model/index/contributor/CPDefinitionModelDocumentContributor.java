@@ -13,12 +13,9 @@ import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
-import com.liferay.commerce.product.constants.CPConfigurationEntrySettingConstants;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.links.CPDefinitionLinkTypeRegistry;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPConfigurationEntry;
-import com.liferay.commerce.product.model.CPConfigurationEntrySetting;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -35,6 +32,7 @@ import com.liferay.commerce.product.service.CPConfigurationEntrySettingLocalServ
 import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
@@ -42,7 +40,6 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -54,6 +51,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Localization;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
@@ -146,10 +144,6 @@ public class CPDefinitionModelDocumentContributor
 						return commerceChannel.getGroupId();
 					}));
 
-			document.addKeyword(
-				CPField.CP_CONFIGURATION_LIST_IDS,
-				_getCPConfigurationListIds(cpDefinition.getCPDefinitionId()));
-
 			long cpAttachmentFileEntryId = 0;
 
 			CPAttachmentFileEntry cpAttachmentFileEntry =
@@ -225,7 +219,8 @@ public class CPDefinitionModelDocumentContributor
 			document.addKeyword(
 				CPField.PRODUCT_ID, cpDefinition.getCProductId());
 			document.addKeyword(
-				CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName());
+				CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName(),
+				true);
 			document.addKeyword(CPField.PUBLISHED, cpDefinition.isPublished());
 			document.addText(
 				CPField.SHORT_DESCRIPTION,
@@ -235,8 +230,10 @@ public class CPDefinitionModelDocumentContributor
 			List<CPDefinitionSpecificationOptionValue>
 				cpDefinitionSpecificationOptionValues =
 					_getFilteredCPDefinitionSpecificationOptionValues(
-						cpDefinition.
-							getCPDefinitionSpecificationOptionValues());
+						_cpDefinitionSpecificationOptionValueLocalService.
+							getCPDefinitionSpecificationOptionValues(
+								cpDefinition.getCPDefinitionId(), null,
+								QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
 
 			document.addNumber(
 				CPField.SPECIFICATION_IDS,
@@ -254,13 +251,21 @@ public class CPDefinitionModelDocumentContributor
 							CPDefinitionSpecificationOptionValue.
 								getCPSpecificationOption()),
 					String.class));
-			document.addText(
+			document.addKeyword(
 				CPField.SPECIFICATION_VALUES_NAMES,
 				TransformUtil.transformToArray(
-					_getFilteredCPDefinitionSpecificationOptionValues(
-						cpDefinitionSpecificationOptionValues),
-					CPDefinitionSpecificationOptionValue ->
-						CPDefinitionSpecificationOptionValue.getValue(
+					cpDefinitionSpecificationOptionValues,
+					cpDefinitionSpecificationOptionValue ->
+						StringUtil.toLowerCase(
+							cpDefinitionSpecificationOptionValue.getValue(
+								cpDefinitionDefaultLanguageId)),
+					String.class));
+			document.addText(
+				CPField.SPECIFICATION_VALUES_NAMES + "_text",
+				TransformUtil.transformToArray(
+					cpDefinitionSpecificationOptionValues,
+					cpDefinitionSpecificationOptionValue ->
+						cpDefinitionSpecificationOptionValue.getValue(
 							cpDefinitionDefaultLanguageId),
 					String.class));
 
@@ -598,35 +603,6 @@ public class CPDefinitionModelDocumentContributor
 		return lowestPrice;
 	}
 
-	private String[] _getCPConfigurationListIds(long cpDefinitionId) {
-		List<String> cpConfigurationListIds = new ArrayList<>();
-
-		for (CPConfigurationEntry cpConfigurationEntry :
-				_cpConfigurationEntryLocalService.getCPConfigurationEntries(
-					_classNameLocalService.getClassNameId(CPDefinition.class),
-					cpDefinitionId, true)) {
-
-			cpConfigurationListIds.add(
-				String.valueOf(
-					cpConfigurationEntry.getCPConfigurationListId()));
-
-			CPConfigurationEntrySetting cpConfigurationEntrySetting =
-				_cpConfigurationEntrySettingLocalService.
-					fetchCPConfigurationEntrySetting(
-						cpConfigurationEntry.getCPConfigurationEntryId(),
-						CPConfigurationEntrySettingConstants.TYPE_INDEX_IDS);
-
-			if (cpConfigurationEntrySetting == null) {
-				continue;
-			}
-
-			cpConfigurationListIds.addAll(
-				StringUtil.split(cpConfigurationEntrySetting.getValue()));
-		}
-
-		return cpConfigurationListIds.toArray(new String[0]);
-	}
-
 	private List<CPOption> _getCPOptions(
 			List<CPDefinitionOptionRel> cpDefinitionOptionRels)
 		throws Exception {
@@ -661,7 +637,10 @@ public class CPDefinitionModelDocumentContributor
 					cpDefinitionSpecificationOptionValue.
 						getCPSpecificationOption();
 
-				if (!cpSpecificationOption.isFacetable()) {
+				if (!cpDefinitionSpecificationOptionValue.isVisible() ||
+					!cpSpecificationOption.isFacetable() ||
+					!cpSpecificationOption.isVisible()) {
+
 					return null;
 				}
 
@@ -738,6 +717,10 @@ public class CPDefinitionModelDocumentContributor
 
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@Reference
+	private CPDefinitionSpecificationOptionValueLocalService
+		_cpDefinitionSpecificationOptionValueLocalService;
 
 	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;

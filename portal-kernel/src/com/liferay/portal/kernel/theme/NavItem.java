@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -32,8 +34,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Represents a portal navigation item, providing access to layouts and metadata
@@ -303,9 +303,7 @@ public class NavItem implements Serializable {
 	 * @throws Exception if an exception occurred
 	 */
 	public boolean hasBrowsableChildren() throws Exception {
-		List<NavItem> browsableChildren = getBrowsableChildren();
-
-		return !browsableChildren.isEmpty();
+		return _hasBrowsableChildren(getChildren());
 	}
 
 	/**
@@ -430,6 +428,20 @@ public class NavItem implements Serializable {
 		}
 
 		return navItems;
+	}
+
+	private boolean _hasBrowsableChildren(List<NavItem> navItems)
+		throws Exception {
+
+		for (NavItem navItem : navItems) {
+			if (navItem.isBrowsable() ||
+				_hasBrowsableChildren(navItem.getChildren())) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private List<NavItem> _browsableChildren;

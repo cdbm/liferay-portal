@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.exception.LayoutPermissionException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
+import com.liferay.portal.kernel.frontend.spa.FrontendSPAUtil;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -70,7 +71,6 @@ import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ColorSchemeFactoryUtil;
-import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -84,6 +84,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SessionParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -95,9 +96,17 @@ import com.liferay.portal.theme.ThemeDisplayFactory;
 import com.liferay.portal.util.LayoutClone;
 import com.liferay.portal.util.LayoutCloneFactory;
 import com.liferay.portal.util.LayoutTypeAccessPolicyTracker;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.sites.kernel.util.SitesUtil;
+
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.File;
 import java.io.Serializable;
@@ -112,15 +121,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -911,14 +911,14 @@ public class ServicePreAction extends Action {
 
 		Long realUserId = (Long)httpSession.getAttribute(WebKeys.USER_ID);
 
-		if ((realUserId != null) &&
-			(user.getUserId() != realUserId.longValue())) {
-
-			realUser = UserLocalServiceUtil.getUserById(realUserId.longValue());
-		}
-
-		if (!user.isActive() && (realUserId == user.getUserId())) {
-			httpSession.invalidate();
+		if (realUserId != null) {
+			if (user.getUserId() != realUserId.longValue()) {
+				realUser = UserLocalServiceUtil.getUserById(
+					realUserId.longValue());
+			}
+			else if (!user.isActive()) {
+				httpSession.invalidate();
+			}
 		}
 
 		boolean signedIn = !user.isGuestUser();
@@ -1448,8 +1448,7 @@ public class ServicePreAction extends Action {
 		boolean themeJsBarebone = PropsValues.JAVASCRIPT_BAREBONE_ENABLED;
 
 		if (themeJsBarebone &&
-			(signedIn ||
-			 PropsValues.JAVASCRIPT_SINGLE_PAGE_APPLICATION_ENABLED)) {
+			(signedIn || FrontendSPAUtil.isEnabled(company.getCompanyId()))) {
 
 			themeJsBarebone = false;
 		}
@@ -1530,7 +1529,6 @@ public class ServicePreAction extends Action {
 		themeDisplay.setLocale(locale);
 		themeDisplay.setLookAndFeel(theme, colorScheme);
 		themeDisplay.setPathApplet(contextPath.concat("/applets"));
-		themeDisplay.setPathCms(contextPath.concat("/cms"));
 		themeDisplay.setPathContext(contextPath);
 		themeDisplay.setPathFriendlyURLPrivateGroup(
 			friendlyURLPrivateGroupPath);
@@ -2064,10 +2062,14 @@ public class ServicePreAction extends Action {
 		httpServletResponse.setHeader(
 			"X-Liferay-Request-User",
 			DigesterUtil.digestHex(
-				Digester.MD5, String.valueOf(user.getUserId())));
+				DigesterUtil.MD5, String.valueOf(user.getUserId())));
 	}
 
 	private void _updateUserLayouts(User user) throws Exception {
+		if (user.isLayoutsUpdated()) {
+			return;
+		}
+
 		Boolean hasPowerUserRole = null;
 
 		// Private layouts
@@ -2094,13 +2096,13 @@ public class ServicePreAction extends Action {
 			}
 		}
 
-		Boolean hasPrivateLayouts = null;
+		Integer privateLayoutsCount = null;
 
 		if (addDefaultUserPrivateLayouts) {
-			hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user.getGroup(), true, false);
+			privateLayoutsCount = LayoutLocalServiceUtil.getLayoutsCount(
+				user.getGroupId(), true);
 
-			if (!hasPrivateLayouts) {
+			if (privateLayoutsCount == 0) {
 				_addDefaultUserPrivateLayouts(user);
 			}
 		}
@@ -2124,12 +2126,12 @@ public class ServicePreAction extends Action {
 		}
 
 		if (deleteDefaultUserPrivateLayouts) {
-			if (hasPrivateLayouts == null) {
-				hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user.getGroup(), true, false);
+			if (privateLayoutsCount == null) {
+				privateLayoutsCount = LayoutLocalServiceUtil.getLayoutsCount(
+					user.getGroupId(), true);
 			}
 
-			if (hasPrivateLayouts) {
+			if (privateLayoutsCount > 0) {
 				_deleteDefaultUserPrivateLayouts(user);
 			}
 		}
@@ -2158,13 +2160,13 @@ public class ServicePreAction extends Action {
 			}
 		}
 
-		Boolean hasPublicLayouts = null;
+		Integer publicLayoutsCount = null;
 
 		if (addDefaultUserPublicLayouts) {
-			hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user.getGroup(), false, false);
+			publicLayoutsCount = LayoutLocalServiceUtil.getLayoutsCount(
+				user.getGroupId(), false);
 
-			if (!hasPublicLayouts) {
+			if (publicLayoutsCount == 0) {
 				_addDefaultUserPublicLayouts(user);
 			}
 		}
@@ -2188,15 +2190,17 @@ public class ServicePreAction extends Action {
 		}
 
 		if (deleteDefaultUserPublicLayouts) {
-			if (hasPublicLayouts == null) {
-				hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user.getGroup(), false, false);
+			if (publicLayoutsCount == null) {
+				publicLayoutsCount = LayoutLocalServiceUtil.getLayoutsCount(
+					user.getGroupId(), false);
 			}
 
-			if (hasPublicLayouts) {
+			if (publicLayoutsCount > 0) {
 				_deleteDefaultUserPublicLayouts(user);
 			}
 		}
+
+		user.setLayoutsUpdated(true);
 	}
 
 	private static final String _PATH_MAIN = PortalUtil.getPathMain();

@@ -5,9 +5,11 @@
 
 package com.liferay.batch.engine.internal.strategy;
 
+import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.action.ImportTaskPostAction;
 import com.liferay.batch.engine.action.ImportTaskPreAction;
 import com.liferay.batch.engine.context.ImportTaskContext;
+import com.liferay.batch.engine.exception.handler.BatchEngineImportTaskExceptionHandler;
 import com.liferay.batch.engine.internal.util.ErrorMessageUtil;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalServiceUtil;
@@ -29,23 +31,28 @@ public abstract class BaseBatchEngineImportStrategy
 
 	public BaseBatchEngineImportStrategy(
 		BatchEngineImportTask batchEngineImportTask,
+		List<BatchEngineImportTaskExceptionHandler>
+			batchEngineImportTaskExceptionHandlers,
 		List<ImportTaskPostAction> importTaskPostActions,
 		List<ImportTaskPreAction> importTaskPreActions) {
 
 		this.batchEngineImportTask = batchEngineImportTask;
+		this.batchEngineImportTaskExceptionHandlers =
+			batchEngineImportTaskExceptionHandlers;
 		this.importTaskPostActions = importTaskPostActions;
 		this.importTaskPreActions = importTaskPreActions;
 	}
 
 	@Override
 	public <T> void apply(
+			BatchEngineTaskItemDelegate<T> batchEngineTaskItemDelegate,
 			Collection<T> collection,
 			UnsafeFunction<T, T, Exception> unsafeFunction)
 		throws Exception {
 
 		for (T item : collection) {
 			importItem(
-				item,
+				batchEngineTaskItemDelegate, item,
 				element -> {
 					ImportTaskContext importTaskContext =
 						new ImportTaskContext();
@@ -54,7 +61,8 @@ public abstract class BaseBatchEngineImportStrategy
 							importTaskPreActions) {
 
 						importTaskPreAction.run(
-							batchEngineImportTask, importTaskContext, element);
+							batchEngineImportTask, batchEngineTaskItemDelegate,
+							importTaskContext, element);
 					}
 
 					T persistedItem = unsafeFunction.apply(element);
@@ -67,8 +75,8 @@ public abstract class BaseBatchEngineImportStrategy
 							importTaskPostActions) {
 
 						importTaskPostAction.run(
-							batchEngineImportTask, importTaskContext, element,
-							persistedItem);
+							batchEngineImportTask, batchEngineTaskItemDelegate,
+							importTaskContext, element, persistedItem);
 					}
 
 					return persistedItem;
@@ -76,8 +84,9 @@ public abstract class BaseBatchEngineImportStrategy
 		}
 	}
 
-	protected void addBatchEngineImportTaskError(
-		long companyId, long userId, long batchEngineImportTaskId, String item,
+	protected <T> void addBatchEngineImportTaskError(
+		BatchEngineImportTask batchEngineImportTask,
+		BatchEngineTaskItemDelegate<T> batchEngineTaskItemDelegate, T item,
 		int itemIndex, Exception exception) {
 
 		try {
@@ -86,10 +95,18 @@ public abstract class BaseBatchEngineImportStrategy
 				() -> {
 					BatchEngineImportTaskErrorLocalServiceUtil.
 						addBatchEngineImportTaskError(
-							companyId, userId, batchEngineImportTaskId, item,
-							itemIndex,
+							batchEngineImportTask.getCompanyId(),
+							batchEngineImportTask.getUserId(),
+							batchEngineImportTask.getBatchEngineImportTaskId(),
+							item.toString(), itemIndex,
 							ErrorMessageUtil.getErrorMessage(
-								exception, userId));
+								exception, batchEngineImportTask.getUserId()));
+
+					batchEngineImportTaskExceptionHandlers.forEach(
+						batchEngineImportTaskExceptionHandler ->
+							batchEngineImportTaskExceptionHandler.handle(
+								batchEngineImportTask,
+								batchEngineTaskItemDelegate, exception, item));
 
 					return null;
 				});
@@ -100,10 +117,13 @@ public abstract class BaseBatchEngineImportStrategy
 	}
 
 	protected abstract <T> T importItem(
-			T item, UnsafeFunction<T, T, Exception> unsafeFunction)
+			BatchEngineTaskItemDelegate<T> batchEngineTaskItemDelegate, T item,
+			UnsafeFunction<T, T, Exception> unsafeFunction)
 		throws Exception;
 
 	protected final BatchEngineImportTask batchEngineImportTask;
+	protected final List<BatchEngineImportTaskExceptionHandler>
+		batchEngineImportTaskExceptionHandlers;
 	protected final List<ImportTaskPostAction> importTaskPostActions;
 	protected final List<ImportTaskPreAction> importTaskPreActions;
 

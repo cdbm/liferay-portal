@@ -18,15 +18,14 @@ FDSSampleDisplayContext fdsSampleDisplayContext = (FDSSampleDisplayContext)reque
 		).build()
 	%>'
 	apiURL="<%= fdsSampleDisplayContext.getAPIURL() %>"
-	bulkActionDropdownItems="<%= fdsSampleDisplayContext.getBulkActionDropdownItems() %>"
 	customViewsEnabled="<%= true %>"
-	fdsActionDropdownItems="<%= fdsSampleDisplayContext.getFDSActionDropdownItems() %>"
-	fdsSortItemList="<%= fdsSampleDisplayContext.getFDSSortItemList() %>"
+	emptyState="<%= fdsSampleDisplayContext.getEmptyState() %>"
 	formId="fm"
 	id="<%= FDSSampleFDSNames.ADVANCED %>"
 	itemsPerPage="<%= 10 %>"
 	propsTransformer="{AdvancedPropsTransformer} from frontend-data-set-sample-web"
 	selectedItemsKey="id"
 	selectionType="multiple"
+	showSelectAll="<%= true %>"
 	style="fluid"
 />

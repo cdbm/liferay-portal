@@ -6,19 +6,22 @@
 package com.liferay.marketplace.settings.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.marketplace.constants.MarketplaceActionKeys;
+import com.liferay.marketplace.constants.MarketplacePortletKeys;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +31,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"jakarta.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"jakarta.portlet.name=com_liferay_commerce_channel_web_internal_portlet_CommerceChannelsPortlet",
+		"jakarta.portlet.name=com_liferay_fragment_web_portlet_FragmentPortlet",
+		"jakarta.portlet.name=com_liferay_layout_content_page_editor_web_internal_portlet_ContentPageEditorPortlet",
 		"mvc.command.name=/marketplace_settings/get_configuration"
 	},
 	service = MVCResourceCommand.class
@@ -42,6 +48,10 @@ public class GetConfigurationMVCResourceCommand extends BaseMVCResourceCommand {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+
+		PortletPermissionUtil.check(
+			themeDisplay.getPermissionChecker(), MarketplacePortletKeys.GENERAL,
+			MarketplaceActionKeys.GET_AUTHORIZATION);
 
 		boolean authorized = Validator.isNotNull(
 			PrefsPropsUtil.getString(

@@ -10,6 +10,7 @@ import com.liferay.petra.io.Deserializer;
 import com.liferay.petra.io.Serializer;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.exception.ResourceActionsException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -119,13 +120,17 @@ public class StartupHelperUtil {
 	}
 
 	public static void setUpgrading(boolean upgrading) {
-		if (upgrading != _upgrading) {
-			_dbWarmedSCLSingleton.destroy(null);
-
-			_upgrading = upgrading;
+		if (upgrading == _upgrading) {
+			return;
 		}
 
+		_dbWarmedSCLSingleton.destroy(null);
+
+		_upgrading = upgrading;
+
 		if (upgrading) {
+			ThreadLocalCacheManager.disable();
+
 			if (PropsValues.UPGRADE_LOG_CONTEXT_ENABLED) {
 				BundleContext bundleContext =
 					SystemBundleUtil.getBundleContext();
@@ -146,6 +151,8 @@ public class StartupHelperUtil {
 
 				_serviceRegistration = null;
 			}
+
+			ThreadLocalCacheManager.enable();
 		}
 	}
 

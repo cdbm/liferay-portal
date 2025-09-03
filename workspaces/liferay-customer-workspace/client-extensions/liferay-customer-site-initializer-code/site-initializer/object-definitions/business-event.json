@@ -6,133 +6,33 @@
 		"en_US": "Business Event"
 	},
 	"name": "BusinessEvent",
+	"objectActions": [
+		{
+			"active": true,
+			"externalReferenceCode": "BUSINESS-EVENT-ADD",
+			"label": {
+				"en_US": "Business Event Add"
+			},
+			"name": "businessEventAdd",
+			"objectActionExecutorKey": "function#liferay-customer-etc-spring-boot-object-action-business-event",
+			"objectActionTriggerKey": "onAfterAdd",
+			"parameters": {
+			}
+		},
+		{
+			"active": true,
+			"externalReferenceCode": "BUSINESS-EVENT-UPDATE",
+			"label": {
+				"en_US": "Business Event Update"
+			},
+			"name": "businessEventUpdate",
+			"objectActionExecutorKey": "function#liferay-customer-etc-spring-boot-object-action-business-event",
+			"objectActionTriggerKey": "onAfterUpdate",
+			"parameters": {
+			}
+		}
+	],
 	"objectFields": [
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": false,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "Author"
-			},
-			"localized": false,
-			"name": "creator",
-			"objectFieldSettings": [
-			],
-			"readOnly": "true",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "Date",
-			"businessType": "Date",
-			"indexed": false,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "Create Date"
-			},
-			"localized": false,
-			"name": "createDate",
-			"objectFieldSettings": [
-			],
-			"readOnly": "true",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "Date",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": false,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "External Reference Code"
-			},
-			"localized": false,
-			"name": "externalReferenceCode",
-			"objectFieldSettings": [
-			],
-			"readOnly": "false",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "Long",
-			"businessType": "LongInteger",
-			"indexed": true,
-			"indexedAsKeyword": true,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "ID"
-			},
-			"localized": false,
-			"name": "id",
-			"objectFieldSettings": [
-			],
-			"readOnly": "true",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "Long",
-			"unique": false
-		},
-		{
-			"DBType": "Date",
-			"businessType": "Date",
-			"indexed": false,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "Modified Date"
-			},
-			"localized": false,
-			"name": "modifiedDate",
-			"objectFieldSettings": [
-			],
-			"readOnly": "true",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "Date",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": false,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "",
-			"label": {
-				"en_US": "Status"
-			},
-			"localized": false,
-			"name": "status",
-			"objectFieldSettings": [
-			],
-			"readOnly": "true",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": true,
-			"type": "String",
-			"unique": false
-		},
 		{
 			"DBType": "DateTime",
 			"businessType": "DateTime",
@@ -169,8 +69,6 @@
 			},
 			"localized": false,
 			"name": "associatedTickets",
-			"objectFieldSettings": [
-			],
 			"readOnly": "false",
 			"readOnlyConditionExpression": "",
 			"required": false,
@@ -188,11 +86,9 @@
 			"label": {
 				"en_US": "Current Liferay Version"
 			},
-			"listTypeDefinitionExternalReferenceCode": "VERSION-OF-LIFERAY-SOFTWARE",
+			"listTypeDefinitionExternalReferenceCode": "DXP-MINOR-VERSION-AND-PORTAL-MAJOR-VERSION",
 			"localized": false,
 			"name": "currentLiferayVersion",
-			"objectFieldSettings": [
-			],
 			"readOnly": "false",
 			"readOnlyConditionExpression": "",
 			"required": false,
@@ -212,72 +108,6 @@
 			},
 			"localized": false,
 			"name": "description",
-			"objectFieldSettings": [
-			],
-			"readOnly": "false",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": false,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "en_US",
-			"label": {
-				"en_US": "Feedback"
-			},
-			"localized": false,
-			"name": "feedback",
-			"objectFieldSettings": [
-			],
-			"readOnly": "false",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": false,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Text",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "en_US",
-			"label": {
-				"en_US": "Name"
-			},
-			"localized": false,
-			"name": "name",
-			"objectFieldSettings": [
-			],
-			"readOnly": "false",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": false,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Picklist",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "en_US",
-			"label": {
-				"en_US": "New Liferay Version"
-			},
-			"listTypeDefinitionExternalReferenceCode": "VERSION-OF-LIFERAY-SOFTWARE",
-			"localized": false,
-			"name": "newLiferayVersion",
-			"objectFieldSettings": [
-			],
 			"readOnly": "false",
 			"readOnlyConditionExpression": "",
 			"required": false,
@@ -304,6 +134,86 @@
 					"value": "inputAsValue"
 				}
 			],
+			"readOnly": "false",
+			"readOnlyConditionExpression": "",
+			"required": false,
+			"state": false,
+			"system": false,
+			"type": "String",
+			"unique": false
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "Event Type"
+			},
+			"listTypeDefinitionExternalReferenceCode": "C_BUSINESS_EVENT_TYPES",
+			"localized": false,
+			"name": "eventType",
+			"readOnly": "false",
+			"readOnlyConditionExpression": "",
+			"required": false,
+			"state": false,
+			"system": false,
+			"type": "String",
+			"unique": false
+		},
+		{
+			"DBType": "String",
+			"businessType": "Text",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "Last Comment"
+			},
+			"localized": false,
+			"name": "lastComment",
+			"objectFieldSettings": [
+			],
+			"readOnly": "false",
+			"readOnlyConditionExpression": "",
+			"required": false,
+			"state": false,
+			"system": false,
+			"type": "String",
+			"unique": false
+		},
+		{
+			"DBType": "String",
+			"businessType": "Text",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "Name"
+			},
+			"localized": false,
+			"name": "name",
+			"readOnly": "false",
+			"readOnlyConditionExpression": "",
+			"required": false,
+			"state": false,
+			"system": false,
+			"type": "String",
+			"unique": false
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "New Liferay Version"
+			},
+			"listTypeDefinitionExternalReferenceCode": "DXP-MINOR-VERSION-AND-PORTAL-MAJOR-VERSION",
+			"localized": false,
+			"name": "newLiferayVersion",
 			"readOnly": "false",
 			"readOnlyConditionExpression": "",
 			"required": false,
@@ -344,35 +254,11 @@
 			"indexedAsKeyword": false,
 			"indexedLanguageId": "en_US",
 			"label": {
-				"en_US": "Event Type"
-			},
-			"listTypeDefinitionExternalReferenceCode": "C_BUSINESS_EVENT_TYPES",
-			"localized": false,
-			"name": "eventType",
-			"objectFieldSettings": [
-			],
-			"readOnly": "false",
-			"readOnlyConditionExpression": "",
-			"required": false,
-			"state": false,
-			"system": false,
-			"type": "String",
-			"unique": false
-		},
-		{
-			"DBType": "String",
-			"businessType": "Picklist",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"indexedLanguageId": "en_US",
-			"label": {
 				"en_US": "Time Zone"
 			},
-			"listTypeDefinitionExternalReferenceCode": "GMT-TIME-ZONES",
+			"listTypeDefinitionExternalReferenceCode": "UTC-TIME-ZONES",
 			"localized": false,
 			"name": "timeZone",
-			"objectFieldSettings": [
-			],
 			"readOnly": "false",
 			"readOnlyConditionExpression": "",
 			"required": false,

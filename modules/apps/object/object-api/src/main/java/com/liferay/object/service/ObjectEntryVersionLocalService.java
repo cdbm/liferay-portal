@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -72,6 +73,8 @@ public interface ObjectEntryVersionLocalService
 	public ObjectEntryVersion addObjectEntryVersion(
 		ObjectEntryVersion objectEntryVersion);
 
+	public void checkObjectEntryVersions(long companyId) throws PortalException;
+
 	/**
 	 * Creates a new object entry version with the primary key. Does not add the object entry version to the database.
 	 *
@@ -104,6 +107,10 @@ public interface ObjectEntryVersionLocalService
 			long objectEntryVersionId)
 		throws PortalException;
 
+	public ObjectEntryVersion deleteObjectEntryVersion(
+			long objectEntryId, int version)
+		throws PortalException;
+
 	/**
 	 * Deletes the object entry version from the database. Also notifies the appropriate model listeners.
 	 *
@@ -117,6 +124,11 @@ public interface ObjectEntryVersionLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public ObjectEntryVersion deleteObjectEntryVersion(
 		ObjectEntryVersion objectEntryVersion);
+
+	public void deleteObjectEntryVersionByObjectDefinitionId(
+		Long objectDefinitionId);
+
+	public void deleteObjectEntryVersions(long objectEntryId);
 
 	/**
 	 * @throws PortalException
@@ -197,9 +209,26 @@ public interface ObjectEntryVersionLocalService
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
 
+	public ObjectEntryVersion expireObjectEntryVersion(
+			long userId, ObjectEntry objectEntry, int version,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public ObjectEntryVersion expireObjectEntryVersion(
+			long userId, ObjectEntryVersion objectEntryVersion)
+		throws PortalException;
+
+	public void expireObjectEntryVersions(
+			long userId, ObjectEntry objectEntry, ServiceContext serviceContext)
+		throws Exception;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntryVersion fetchObjectEntryVersion(
 		long objectEntryVersionId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryVersion fetchObjectEntryVersion(
+		long objectEntryId, int version);
 
 	/**
 	 * Returns the object entry version with the matching UUID and company.
@@ -233,6 +262,11 @@ public interface ObjectEntryVersionLocalService
 	public ObjectEntryVersion getObjectEntryVersion(long objectEntryVersionId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryVersion getObjectEntryVersion(
+			long objectEntryId, int version)
+		throws PortalException;
+
 	/**
 	 * Returns the object entry version with the matching UUID and company.
 	 *
@@ -263,6 +297,10 @@ public interface ObjectEntryVersionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ObjectEntryVersion> getObjectEntryVersions(long objectEntryId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectEntryVersion> getObjectEntryVersions(
+		long objectEntryId, int start, int end);
+
 	/**
 	 * Returns the number of object entry versions.
 	 *
@@ -270,6 +308,9 @@ public interface ObjectEntryVersionLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectEntryVersionsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getObjectEntryVersionsCount(long objectEntryId);
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -284,6 +325,10 @@ public interface ObjectEntryVersionLocalService
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public boolean isLatestObjectEntryVersion(long objectEntryId, int version)
 		throws PortalException;
 
 	public ObjectEntryVersion updateLatestObjectEntryVersion(

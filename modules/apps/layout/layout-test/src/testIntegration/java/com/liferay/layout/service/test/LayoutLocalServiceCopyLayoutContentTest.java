@@ -112,6 +112,9 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletPreferences;
+
 import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayOutputStream;
@@ -126,9 +129,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-
-import javax.portlet.Portlet;
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -235,8 +235,9 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				sourceLayout.getGroupId(), sourceLayout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), sourceLayout.getGroupId(),
+				sourceLayout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		Layout targetLayout = LayoutTestUtil.addTypeContentLayout(_group);
 
@@ -415,8 +416,9 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				sourceLayout.getGroupId(), sourceLayout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), sourceLayout.getGroupId(),
+				sourceLayout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
 
@@ -471,8 +473,9 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				sourceLayout.getGroupId(), sourceLayout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), sourceLayout.getGroupId(),
+				sourceLayout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
 
@@ -520,10 +523,10 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(_group);
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(), RandomTestUtil.randomLong(),
-			RandomTestUtil.randomLong(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			sourceLayout.getPlid(), new ServiceContext());
+			_group.getGroupId(), StringPool.BLANK, RandomTestUtil.randomLong(),
+			RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), sourceLayout.getPlid(),
+			new ServiceContext());
 
 		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(_group);
 
@@ -540,10 +543,10 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 		sourceLayout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(), RandomTestUtil.randomLong(),
-			RandomTestUtil.randomLong(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			sourceLayout.getPlid(), new ServiceContext());
+			_group.getGroupId(), StringPool.BLANK, RandomTestUtil.randomLong(),
+			RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), sourceLayout.getPlid(),
+			new ServiceContext());
 
 		targetLayout = LayoutTestUtil.addTypeContentLayout(_group);
 
@@ -1070,8 +1073,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 			String content = _getLayoutContent(layout, locale);
 
 			for (String text : list) {
-				Assert.assertTrue(
-					StringUtil.contains(content, text, StringPool.BLANK));
+				Assert.assertTrue(content.contains(text));
 			}
 
 			map.put(layout.getPlid(), content);
@@ -1152,7 +1154,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), null, html, null, false, null, null,
-			0, false, FragmentConstants.TYPE_COMPONENT, null,
+			0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1467,7 +1469,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 	private Portal _portal;
 
 	@Inject(
-		filter = "javax.portlet.name=" + LayoutPortletKeys.LAYOUT_TEST_PORTLET
+		filter = "jakarta.portlet.name=" + LayoutPortletKeys.LAYOUT_TEST_PORTLET
 	)
 	private final Portlet _portlet = null;
 

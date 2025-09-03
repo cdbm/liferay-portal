@@ -161,11 +161,46 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 	}
 
 	@Override
+	public AssetVocabulary deleteVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyLocalService.
+				getAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		AssetVocabularyPermission.check(
+			getPermissionChecker(), vocabulary.getVocabularyId(),
+			ActionKeys.DELETE);
+
+		return assetVocabularyLocalService.deleteVocabulary(vocabulary);
+	}
+
+	@Override
 	public AssetVocabulary fetchVocabulary(long vocabularyId)
 		throws PortalException {
 
 		AssetVocabulary vocabulary =
 			assetVocabularyLocalService.fetchAssetVocabulary(vocabularyId);
+
+		if (vocabulary != null) {
+			AssetVocabularyPermission.check(
+				getPermissionChecker(), vocabulary, ActionKeys.VIEW);
+		}
+
+		return vocabulary;
+	}
+
+	@Override
+	public AssetVocabulary fetchVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, groupId);
 
 		if (vocabulary != null) {
 			AssetVocabularyPermission.check(
@@ -371,6 +406,25 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 
 		return getGroupVocabulariesDisplay(
 			groupId, name, start, end, false, orderByComparator);
+	}
+
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyService.fetchVocabularyByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		if (vocabulary != null) {
+			return vocabulary;
+		}
+
+		AssetCategoriesPermission.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_VOCABULARY);
+
+		return assetVocabularyLocalService.getOrAddEmptyVocabulary(
+			externalReferenceCode, getUserId(), groupId);
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import '@testing-library/jest-dom/extend-expect';
 import FieldBase, {
 	normalizeInputValue,
 	updateFieldNameLocale,
-} from '../../../src/main/resources/META-INF/resources/FieldBase/ReactFieldBase.es';
+} from '../../../src/main/resources/META-INF/resources/js/api/FieldBase/ReactFieldBase';
 
 const spritemap = 'icons.svg';
 
@@ -181,6 +181,7 @@ describe('ReactFieldBase', () => {
 	it('does not render the add button when repeatable is true and the maximum limit of repetions is reached', () => {
 		const {container} = render(
 			<FieldBaseWithProvider
+				id="id"
 				label="Text"
 				overMaximumRepetitionsLimit={true}
 				repeatable={true}
@@ -273,7 +274,7 @@ describe('ReactFieldBase', () => {
 			getByTitle('this-field-cannot-be-localized')
 		).toBeInTheDocument();
 
-		expect(getByLabelText('my-label')).toHaveClass('text-muted');
+		expect(getByLabelText('my-label')).toHaveClass('text-secondary');
 	});
 
 	describe('Hide Field', () => {

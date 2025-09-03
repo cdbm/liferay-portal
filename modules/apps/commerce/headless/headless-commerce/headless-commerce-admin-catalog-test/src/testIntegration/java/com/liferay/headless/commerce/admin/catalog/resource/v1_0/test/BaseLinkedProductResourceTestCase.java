@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -245,11 +245,11 @@ public abstract class BaseLinkedProductResourceTestCase {
 
 		Long id = testGetProductIdLinkedProductsPage_getId();
 
-		Page<LinkedProduct> linkedProductPage =
+		Page<LinkedProduct> linkedProductsPage =
 			linkedProductResource.getProductIdLinkedProductsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			linkedProductPage.getTotalCount());
+			linkedProductsPage.getTotalCount());
 
 		LinkedProduct linkedProduct1 =
 			testGetProductIdLinkedProductsPage_addLinkedProduct(
@@ -354,6 +354,11 @@ public abstract class BaseLinkedProductResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

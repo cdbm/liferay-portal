@@ -4,5 +4,8 @@
  */
 
 module.exports = {
-	main: './src/main/resources/META-INF/resources/index.ts',
+	main: './src/main/resources/META-INF/resources/main/index.ts',
+	submodules: {
+		react: './src/main/resources/META-INF/resources/react/index.ts',
+	},
 };

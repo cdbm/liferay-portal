@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayActionRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
@@ -35,25 +36,35 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.ActionRequestFactory;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import java.net.URLDecoder;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,13 +87,16 @@ public class LoginMVCActionCommandTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Test
-	public void testResetPasswordValueDoesNotChangeWhenItIsTrue()
-		throws Exception {
-
+	@Before
+	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
 		_company = _companyLocalService.getCompany(_group.getCompanyId());
+	}
+
+	@Test
+	public void testProcessActionKeepsResetPasswordValueWhenItIsTrue()
+		throws Exception {
 
 		User user1 = UserTestUtil.addUser(_company);
 
@@ -117,7 +131,12 @@ public class LoginMVCActionCommandTest {
 					"companyId", _company.getCompanyId()));
 
 			MockLiferayPortletActionRequest mockLiferayPortletActionRequest1 =
-				_getMockLiferayPortletActionRequest(user1, password);
+				_getMockLiferayPortletActionRequest(
+					HashMapBuilder.put(
+						"login", user1.getEmailAddress()
+					).put(
+						"password", password
+					).build());
 
 			_mvcActionCommand.processAction(
 				mockLiferayPortletActionRequest1,
@@ -149,9 +168,13 @@ public class LoginMVCActionCommandTest {
 
 			MockLiferayPortletActionRequest mockLiferayPortletActionRequest2 =
 				_getMockLiferayPortletActionRequest(
-					_getState(
-						(String)mockLiferayPortletActionRequest1.getAttribute(
-							"REDIRECT")));
+					HashMapBuilder.put(
+						"state",
+						_getState(
+							(String)
+								mockLiferayPortletActionRequest1.getAttribute(
+									"REDIRECT"))
+					).build());
 
 			HttpServletRequest httpServletRequest2 =
 				_portal.getOriginalServletRequest(
@@ -186,6 +209,53 @@ public class LoginMVCActionCommandTest {
 		}
 	}
 
+	@Test
+	public void testProcessActionWhenQueryStringContainsPassword()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				configurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						_company.getCompanyId(),
+						"com.liferay.multi.factor.authentication.email.otp." +
+							"configuration.MFAEmailOTPConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"enabled", true
+						).build());
+			LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				AuthenticatedSessionManagerUtil.class.getName(),
+				LoggerTestUtil.WARN)) {
+
+			MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+				_getMockLiferayPortletActionRequest(Collections.emptyMap());
+
+			MockHttpServletRequest mockHttpServletRequest =
+				(MockHttpServletRequest)
+					mockLiferayPortletActionRequest.getHttpServletRequest();
+
+			mockHttpServletRequest.setQueryString(
+				_portal.getPortletNamespace(LoginPortletKeys.LOGIN) +
+					"password=test");
+
+			_mvcActionCommand.processAction(
+				mockLiferayPortletActionRequest,
+				new MockLiferayPortletActionResponse());
+
+			List<LogEntry> logEntries = logCapture.getLogEntries();
+
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+			LogEntry logEntry = logEntries.get(0);
+
+			String logEntryMessage = logEntry.getMessage();
+
+			Assert.assertTrue(
+				logEntryMessage.contains(
+					"Ignoring login attempt because the password parameter " +
+						"was found for the request with the referer header:"));
+		}
+	}
+
 	private void _addCookieSupportCookie(
 		MockHttpServletRequest mockHttpServletRequest) {
 
@@ -202,49 +272,45 @@ public class LoginMVCActionCommandTest {
 	}
 
 	private MockLiferayPortletActionRequest _getMockLiferayPortletActionRequest(
-			String state)
+			Map<String, String> parameters)
 		throws Exception {
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
-			new MockLiferayPortletActionRequest();
+			new MockLiferayPortletActionRequest() {
+
+				@Override
+				public Portlet getPortlet() {
+					return _portletLocalService.getPortletById(
+						LoginPortletKeys.LOGIN);
+				}
+
+				@Override
+				public String getPortletName() {
+					return LoginPortletKeys.LOGIN;
+				}
+
+				{
+					Portlet portlet = getPortlet();
+
+					PortletApp portletApp = portlet.getPortletApp();
+
+					portletApp.setSpecMajorVersion(2);
+				}
+			};
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, _getLiferayPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, _getLiferayPortletConfig());
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.COMPANY_ID, _company.getCompanyId());
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay());
-		mockLiferayPortletActionRequest.setParameter("state", state);
 
-		_addCookieSupportCookie(
-			(MockHttpServletRequest)
-				mockLiferayPortletActionRequest.getHttpServletRequest());
-
-		return mockLiferayPortletActionRequest;
-	}
-
-	private MockLiferayPortletActionRequest _getMockLiferayPortletActionRequest(
-			User user, String password)
-		throws Exception {
-
-		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
-			new MockLiferayPortletActionRequest();
-
-		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, _getLiferayPortletConfig());
-		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
-			new MockLiferayPortletActionResponse());
-		mockLiferayPortletActionRequest.setAttribute(
-			WebKeys.COMPANY_ID, _company.getCompanyId());
-		mockLiferayPortletActionRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay());
-		mockLiferayPortletActionRequest.setParameter(
-			"login", user.getEmailAddress());
-		mockLiferayPortletActionRequest.setParameter("password", password);
+		parameters.forEach(
+			(key, value) -> mockLiferayPortletActionRequest.setParameter(
+				key, value));
 
 		_addCookieSupportCookie(
 			(MockHttpServletRequest)
@@ -281,6 +347,7 @@ public class LoginMVCActionCommandTest {
 
 		LayoutSet layoutSet = _group.getPublicLayoutSet();
 
+		themeDisplay.setLayoutSet(layoutSet);
 		themeDisplay.setLookAndFeel(layoutSet.getTheme(), null);
 
 		themeDisplay.setPermissionChecker(

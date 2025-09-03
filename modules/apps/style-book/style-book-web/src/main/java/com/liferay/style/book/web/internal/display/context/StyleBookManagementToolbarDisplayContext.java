@@ -28,18 +28,18 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.web.internal.security.permissions.resource.StyleBookPermission;
-import com.liferay.style.book.web.internal.util.StyleBookUtil;
+
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -202,15 +202,10 @@ public class StyleBookManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		if (StyleBookPermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				_themeDisplay.getScopeGroupId(),
-				StyleBookActionKeys.MANAGE_STYLE_BOOK_ENTRIES)) {
-
-			return true;
-		}
-
-		return false;
+		return StyleBookPermission.contains(
+			_themeDisplay.getPermissionChecker(),
+			_themeDisplay.getScopeGroupId(),
+			StyleBookActionKeys.MANAGE_STYLE_BOOK_ENTRIES);
 	}
 
 	@Override
@@ -248,7 +243,7 @@ public class StyleBookManagementToolbarDisplayContext
 				HashMapBuilder.<String, Object>put(
 					"name",
 					StyleBookUtil.getThemeName(
-						_themeDisplay.getCompanyId(), httpServletRequest,
+						_themeDisplay.getCompanyId(), _themeDisplay.getLocale(),
 						frontendTokenDefinition.getThemeId())
 				).put(
 					"themeId", frontendTokenDefinition.getThemeId()

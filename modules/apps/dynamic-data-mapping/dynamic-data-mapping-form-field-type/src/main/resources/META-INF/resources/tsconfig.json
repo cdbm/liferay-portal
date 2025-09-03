@@ -1,15 +1,14 @@
 {
-	"@generated": "ac27ed3e3a1ca94f1d26c9f53db1ea77955873bf",
+	"@generated": "e8afccf37ab638eb16502fecbc2f876e38473355",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/frontend-js-react-web": [
@@ -27,6 +26,9 @@
 			"data-engine-js-components-web": [
 				"../../../../../../../data-engine/data-engine-js-components-web/src/main/resources/META-INF/resources/js/index.d.ts"
 			],
+			"dynamic-data-mapping-form-field-type/api": [
+				"./js/api/api.ts"
+			],
 			"frontend-editor-ckeditor-web": [
 				"../../../../../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
@@ -34,7 +36,10 @@
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",

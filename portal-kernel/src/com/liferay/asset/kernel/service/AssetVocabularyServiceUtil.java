@@ -100,10 +100,26 @@ public class AssetVocabularyServiceUtil {
 		getService().deleteVocabulary(vocabularyId);
 	}
 
+	public static AssetVocabulary deleteVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteVocabularyByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static AssetVocabulary fetchVocabulary(long vocabularyId)
 		throws PortalException {
 
 		return getService().fetchVocabulary(vocabularyId);
+	}
+
+	public static AssetVocabulary fetchVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchVocabularyByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static AssetVocabulary getAssetVocabularyByExternalReferenceCode(
@@ -217,6 +233,14 @@ public class AssetVocabularyServiceUtil {
 
 		return getService().getGroupVocabulariesDisplay(
 			groupId, name, start, end, orderByComparator);
+	}
+
+	public static AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getOrAddEmptyVocabulary(
+			externalReferenceCode, groupId);
 	}
 
 	/**

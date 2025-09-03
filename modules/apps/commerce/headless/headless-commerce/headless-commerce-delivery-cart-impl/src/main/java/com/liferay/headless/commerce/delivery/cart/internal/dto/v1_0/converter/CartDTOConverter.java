@@ -471,6 +471,11 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		Summary summary = new Summary() {
 			{
 				setCurrency(() -> commerceCurrency.getName(locale));
+				setItemsCount(
+					() ->
+						_commerceOrderItemService.
+							getParentCommerceOrderItemsCount(
+								commerceOrder.getCommerceOrderId(), 0));
 				setItemsQuantity(
 					() -> BigDecimalUtil.stripTrailingZeros(
 						_commerceOrderItemService.getCommerceOrderItemsQuantity(
@@ -780,6 +785,7 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 				setStreet1(commerceAddress::getStreet1);
 				setStreet2(commerceAddress::getStreet2);
 				setStreet3(commerceAddress::getStreet3);
+				setSubtype(commerceAddress::getSubtype);
 				setZip(commerceAddress::getZip);
 			}
 		};

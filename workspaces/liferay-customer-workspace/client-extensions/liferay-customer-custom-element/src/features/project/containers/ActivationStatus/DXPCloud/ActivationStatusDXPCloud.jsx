@@ -21,7 +21,7 @@ import {
 } from '~/services/liferay/graphql/queries';
 import getActivationStatusDateRange from '~/utils/getActivationStatusDateRange';
 import {ALERT_UPDATE_DXP_CLOUD_STATUS} from '~/features/project/containers/ActivationKeysTable/utils/constants';
-import {useCustomerPortal} from '~/features/project/context';
+import {useAppContext} from '~/features/project/context';
 import {actionTypes} from '~/features/project/context/reducer';
 import {
 	AUTO_CLOSE_ALERT_TIME,
@@ -33,7 +33,7 @@ import ModalDXPCActivationStatus from '../../ModalDXPCActivationStatus';
 import AlreadySubmittedModal from '../AlreadySubmittedModal';
 import ActivationStatusLayout from '../Layout';
 import PopoverIcon from './components/PopoverIcon';
-import ActivationCardLink from '../index';
+import ActivationCardLink from '../ActivationCardLink'; 
 
 const submittedModalTexts = {
 	paragraph: i18n.translate(
@@ -91,7 +91,7 @@ const ActivationStatusDXPCloud = ({
 		subscriptionGroupActivationStatus,
 		setSubscriptionGroupActivationStatus,
 	] = useState(subscriptionGroupDXPCloud?.activationStatus);
-	const [, dispatch] = useCustomerPortal();
+	const [, dispatch] = useAppContext();
 	const {client} = useAppPropertiesContext();
 	const [hasFinishedUpdate, setHasFinishedUpdate] = useState(false);
 	const [activationStatusDate, setActivationStatusDate] = useState('');
@@ -159,15 +159,17 @@ const ActivationStatusDXPCloud = ({
 			title: i18n.translate('activation-status'),
 		},
 		[STATUS_TAG_TYPE_NAMES.inProgress]: {
-			dropdownIcon: (userAccount.isStaff ||
+			dropdownIcon: (userAccount.isStaff &&
 				userAccount.isProvisioning) && (
 				<ButtonDropDown
 					align={Align.BottomRight}
 					customDropDownButton={
 						<ButtonWithIcon
 							aria-label={i18n.translate('set-to-active')}
-							displayType="null"
+							className="text-secondary"
+    						displayType="unstyled"
 							small
+							spritemap={Liferay.Icons.spritemap}
 							symbol="caret-bottom"
 						/>
 					}

@@ -843,7 +843,7 @@ public class AccountRoleResourceTest extends BaseAccountRoleResourceTestCase {
 		throws Exception {
 
 		UserAccount userAccount = _userAccountResource.postUserAccount(
-			_randomUserAccount());
+			null, null, _randomUserAccount());
 
 		return userAccount.getEmailAddress();
 	}
@@ -893,14 +893,6 @@ public class AccountRoleResourceTest extends BaseAccountRoleResourceTestCase {
 				RandomTestUtil.randomString(), _randomUserAccount());
 
 		return userAccount.getExternalReferenceCode();
-	}
-
-	@Override
-	protected AccountRole testGraphQLAccountRole_addAccountRole()
-		throws Exception {
-
-		return accountRoleResource.postAccountAccountRole(
-			_account.getId(), randomAccountRole());
 	}
 
 	@Override

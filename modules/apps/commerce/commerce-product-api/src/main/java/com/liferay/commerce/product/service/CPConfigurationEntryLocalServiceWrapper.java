@@ -64,8 +64,8 @@ public class CPConfigurationEntryLocalServiceWrapper
 			java.math.BigDecimal minStockQuantity,
 			java.math.BigDecimal multipleOrderQuantity, boolean purchasable,
 			boolean shippable, double shippingExtraPrice,
-			boolean shipSeparately, boolean taxExempt, boolean visible,
-			double weight, double width)
+			boolean shipSeparately, boolean taxExempt, double weight,
+			double width)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpConfigurationEntryLocalService.addCPConfigurationEntry(
@@ -76,7 +76,7 @@ public class CPConfigurationEntryLocalServiceWrapper
 			displayStockQuantity, freeShipping, height, lowStockActivity,
 			maxOrderQuantity, minOrderQuantity, minStockQuantity,
 			multipleOrderQuantity, purchasable, shippable, shippingExtraPrice,
-			shipSeparately, taxExempt, visible, weight, width);
+			shipSeparately, taxExempt, weight, width);
 	}
 
 	/**
@@ -114,11 +114,12 @@ public class CPConfigurationEntryLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteCPConfigurationEntries(long classNameId, long classPK)
+	public void deleteCPConfigurationEntries(
+			long classNameId, long classPK, boolean force)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_cpConfigurationEntryLocalService.deleteCPConfigurationEntries(
-			classNameId, classPK);
+			classNameId, classPK, force);
 	}
 
 	/**
@@ -141,6 +142,15 @@ public class CPConfigurationEntryLocalServiceWrapper
 			cpConfigurationEntry);
 	}
 
+	@Override
+	public CPConfigurationEntry deleteCPConfigurationEntry(
+			CPConfigurationEntry cpConfigurationEntry, boolean force)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
+			cpConfigurationEntry, force);
+	}
+
 	/**
 	 * Deletes the cp configuration entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -159,6 +169,15 @@ public class CPConfigurationEntryLocalServiceWrapper
 
 		return _cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
 			CPConfigurationEntryId);
+	}
+
+	@Override
+	public CPConfigurationEntry deleteCPConfigurationEntry(
+			long cpConfigurationEntryId, boolean force)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
+			cpConfigurationEntryId, force);
 	}
 
 	/**
@@ -319,14 +338,6 @@ public class CPConfigurationEntryLocalServiceWrapper
 	}
 
 	@Override
-	public CPConfigurationEntry forceDeleteCPConfigurationEntry(
-		CPConfigurationEntry cpConfigurationEntry) {
-
-		return _cpConfigurationEntryLocalService.
-			forceDeleteCPConfigurationEntry(cpConfigurationEntry);
-	}
-
-	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -366,14 +377,6 @@ public class CPConfigurationEntryLocalServiceWrapper
 
 		return _cpConfigurationEntryLocalService.getCPConfigurationEntries(
 			classNameId, classPK);
-	}
-
-	@Override
-	public java.util.List<CPConfigurationEntry> getCPConfigurationEntries(
-		long classNameId, long classPK, boolean visible) {
-
-		return _cpConfigurationEntryLocalService.getCPConfigurationEntries(
-			classNameId, classPK, visible);
 	}
 
 	/**
@@ -548,8 +551,8 @@ public class CPConfigurationEntryLocalServiceWrapper
 			java.math.BigDecimal minStockQuantity,
 			java.math.BigDecimal multipleOrderQuantity, boolean purchasable,
 			boolean shippable, double shippingExtraPrice,
-			boolean shipSeparately, boolean taxExempt, boolean visible,
-			double weight, double width)
+			boolean shipSeparately, boolean taxExempt, double weight,
+			double width)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpConfigurationEntryLocalService.updateCPConfigurationEntry(
@@ -559,7 +562,7 @@ public class CPConfigurationEntryLocalServiceWrapper
 			displayStockQuantity, freeShipping, height, lowStockActivity,
 			maxOrderQuantity, minOrderQuantity, minStockQuantity,
 			multipleOrderQuantity, purchasable, shippable, shippingExtraPrice,
-			shipSeparately, taxExempt, visible, weight, width);
+			shipSeparately, taxExempt, weight, width);
 	}
 
 	@Override

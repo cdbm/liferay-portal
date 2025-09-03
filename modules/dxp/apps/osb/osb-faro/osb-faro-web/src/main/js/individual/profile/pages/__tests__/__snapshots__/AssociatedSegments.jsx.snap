@@ -73,11 +73,11 @@ exports[`IndividualAssociatedSegments should render 1`] = `
                   href="/?field=name&page=1&sortOrder=DESC"
                 >
                   <svg
-                    class="lexicon-icon lexicon-icon-order-arrow-ascending icon-root"
+                    class="lexicon-icon lexicon-icon-order_arrow_ascending icon-root"
                     role="presentation"
                   >
                     <use
-                      href="#order-arrow-ascending"
+                      href="#order_arrow_ascending"
                     />
                   </svg>
                 </a>
@@ -187,22 +187,6 @@ exports[`IndividualAssociatedSegments should render 1`] = `
                 <div
                   class="content-container"
                 >
-                  <div
-                    class="icon-container"
-                  >
-                    <div
-                      class="sticker sticker-root sticker-static segment-sticker-root sticker-rounded sticker-dark"
-                    >
-                      <svg
-                        class="lexicon-icon lexicon-icon-individual-dynamic-segment icon-root"
-                        role="presentation"
-                      >
-                        <use
-                          href="#individual-dynamic-segment"
-                        />
-                      </svg>
-                    </div>
-                  </div>
                   <div
                     class="text-truncate"
                   >

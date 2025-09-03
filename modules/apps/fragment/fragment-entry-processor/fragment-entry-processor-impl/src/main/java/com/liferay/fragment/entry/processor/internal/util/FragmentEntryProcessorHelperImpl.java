@@ -60,6 +60,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -79,9 +82,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -185,12 +185,13 @@ public class FragmentEntryProcessorHelperImpl
 			return 0;
 		}
 
+		String className = _portal.fetchClassName(classNameId);
 		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
 			classPK);
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, _portal.getClassName(classNameId),
+				InfoItemObjectProvider.class, className,
 				infoItemIdentifier.getInfoItemServiceFilter());
 
 		if (infoItemObjectProvider == null) {
@@ -203,8 +204,7 @@ public class FragmentEntryProcessorHelperImpl
 			return 0;
 		}
 
-		return _getFileEntryId(
-			_portal.getClassName(classNameId), object, fieldName, locale);
+		return _getFileEntryId(className, object, fieldName, locale);
 	}
 
 	@Override
@@ -260,23 +260,13 @@ public class FragmentEntryProcessorHelperImpl
 
 		if (isMapped(editableValueJSONObject)) {
 			String className = _infoSearchClassMapperRegistry.getClassName(
-				_portal.getClassName(
+				_portal.fetchClassName(
 					editableValueJSONObject.getLong("classNameId")));
-			String externalReferenceCode = editableValueJSONObject.getString(
-				"externalReferenceCode");
 
 			fieldName = editableValueJSONObject.getString("fieldId");
 
 			InfoItemIdentifier infoItemIdentifier = null;
-
-			if (Validator.isNotNull(externalReferenceCode)) {
-				infoItemIdentifier = new ERCInfoItemIdentifier(
-					externalReferenceCode);
-			}
-			else {
-				infoItemIdentifier = new ClassPKInfoItemIdentifier(
-					editableValueJSONObject.getLong("classPK"));
-			}
+			InfoItemObjectProvider<Object> infoItemObjectProvider = null;
 
 			if ((fragmentEntryProcessorContext.getPreviewClassPK() > 0) &&
 				(fragmentEntryProcessorContext.getPreviewClassPK() ==
@@ -291,12 +281,54 @@ public class FragmentEntryProcessorHelperImpl
 					infoItemIdentifier.setVersion(
 						fragmentEntryProcessorContext.getPreviewVersion());
 				}
+
+				infoItemObjectProvider =
+					_infoItemServiceRegistry.getFirstInfoItemService(
+						InfoItemObjectProvider.class, className,
+						ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+			}
+			else {
+				long classPK = editableValueJSONObject.getLong("classPK");
+
+				if (classPK > 0) {
+					infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
+					infoItemObjectProvider =
+						_infoItemServiceRegistry.getFirstInfoItemService(
+							InfoItemObjectProvider.class, className,
+							ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+				}
+
+				String externalReferenceCode =
+					editableValueJSONObject.getString("externalReferenceCode");
+
+				if ((infoItemObjectProvider == null) &&
+					Validator.isNotNull(externalReferenceCode)) {
+
+					infoItemIdentifier = new ERCInfoItemIdentifier(
+						externalReferenceCode,
+						editableValueJSONObject.getString(
+							"scopeExternalReferenceCode", null));
+					infoItemObjectProvider =
+						_infoItemServiceRegistry.getFirstInfoItemService(
+							InfoItemObjectProvider.class, className,
+							ERCInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+				}
 			}
 
 			infoItemReference = new InfoItemReference(
 				className, infoItemIdentifier);
 
-			object = _getInfoItem(infoItemReference);
+			if (infoItemObjectProvider != null) {
+				try {
+					object = infoItemObjectProvider.getInfoItem(
+						infoItemIdentifier);
+				}
+				catch (NoSuchInfoItemException noSuchInfoItemException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(noSuchInfoItemException);
+					}
+				}
+			}
 		}
 		else if (isMappedCollection(editableValueJSONObject)) {
 			infoItemReference =
@@ -330,16 +362,27 @@ public class FragmentEntryProcessorHelperImpl
 
 			InfoItemIdentifier infoItemIdentifier = null;
 
-			if (Validator.isNotNull(
-					layoutDisplayPageObjectProvider.
-						getExternalReferenceCode())) {
-
-				infoItemIdentifier = new ERCInfoItemIdentifier(
-					layoutDisplayPageObjectProvider.getExternalReferenceCode());
-			}
-			else {
+			if (layoutDisplayPageObjectProvider.getClassPK() > 0) {
 				infoItemIdentifier = new ClassPKInfoItemIdentifier(
 					layoutDisplayPageObjectProvider.getClassPK());
+			}
+			else {
+				String scopeExternalReferenceCode = null;
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				if (themeDisplay != null) {
+					scopeExternalReferenceCode =
+						layoutDisplayPageObjectProvider.
+							getScopeExternalReferenceCode(
+								themeDisplay.getScopeGroupId());
+				}
+
+				infoItemIdentifier = new ERCInfoItemIdentifier(
+					layoutDisplayPageObjectProvider.getExternalReferenceCode(),
+					scopeExternalReferenceCode);
 			}
 
 			infoItemReference = new InfoItemReference(
@@ -605,7 +648,16 @@ public class FragmentEntryProcessorHelperImpl
 		JSONObject editableValueJSONObject,
 		FragmentEntryProcessorContext fragmentEntryProcessorContext) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-19955")) {
+		HttpServletRequest httpServletRequest =
+			fragmentEntryProcessorContext.getHttpServletRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-19955")) {
+
 			return true;
 		}
 
@@ -883,13 +935,15 @@ public class FragmentEntryProcessorHelperImpl
 		HttpServletRequest httpServletRequest,
 		InfoItemReference infoItemReference) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-19955")) {
-			return true;
-		}
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-19955")) {
+
+			return true;
+		}
 
 		try {
 			InfoItemPermissionProvider infoItemPermissionProvider =

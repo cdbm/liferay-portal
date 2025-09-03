@@ -16,21 +16,20 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.web.internal.security.permissions.resource.StyleBookPermission;
 import com.liferay.style.book.web.internal.servlet.taglib.util.StyleBookEntryActionDropdownItemsProvider;
-import com.liferay.style.book.web.internal.util.StyleBookUtil;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eudaldo Alonso
@@ -185,8 +184,7 @@ public class StyleBookVerticalCard
 			return LanguageUtil.format(
 				_themeDisplay.getLocale(), "marked-as-default-for-x",
 				StyleBookUtil.getThemeName(
-					_themeDisplay.getCompanyId(),
-					PortalUtil.getHttpServletRequest(_renderRequest),
+					_themeDisplay.getCompanyId(), _themeDisplay.getLocale(),
 					_styleBookEntry.getThemeId()));
 		}
 
@@ -201,8 +199,7 @@ public class StyleBookVerticalCard
 			return LanguageUtil.format(
 				_themeDisplay.getLocale(), "based-on-x",
 				StyleBookUtil.getThemeName(
-					_themeDisplay.getCompanyId(),
-					PortalUtil.getHttpServletRequest(_renderRequest),
+					_themeDisplay.getCompanyId(), _themeDisplay.getLocale(),
 					_styleBookEntry.getThemeId()));
 		}
 

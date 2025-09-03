@@ -19,6 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -26,12 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -218,7 +218,7 @@ public class Scope implements Serializable {
 	@GraphQLName("Type")
 	public static enum Type {
 
-		ASSET_LIBRARY("AssetLibrary"), SITE("Site");
+		ASSET_LIBRARY("AssetLibrary"), CMS("CMS"), SITE("Site");
 
 		@JsonCreator
 		public static Type create(String value) {

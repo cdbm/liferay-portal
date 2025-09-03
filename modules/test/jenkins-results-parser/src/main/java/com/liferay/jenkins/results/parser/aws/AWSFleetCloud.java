@@ -6,6 +6,11 @@
 package com.liferay.jenkins.results.parser.aws;
 
 import com.liferay.jenkins.results.parser.JenkinsMaster;
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.JenkinsSlave;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONObject;
 
@@ -92,6 +97,42 @@ public class AWSFleetCloud {
 
 	public JenkinsMaster getJenkinsMaster() {
 		return _jenkinsMaster;
+	}
+
+	public List<JenkinsSlave> getJenkinsSlaves() {
+		List<JenkinsSlave> jenkinsSlaves = new ArrayList<>();
+
+		for (JenkinsSlave jenkinsSlave : _jenkinsMaster.getJenkinsSlaves()) {
+			if (!jenkinsSlave.isEC2FleetNodeComputer()) {
+				continue;
+			}
+
+			String jenkinsSlaveName = jenkinsSlave.getName();
+
+			if (!jenkinsSlaveName.contains(getName())) {
+				continue;
+			}
+
+			jenkinsSlaves.add(jenkinsSlave);
+		}
+
+		return jenkinsSlaves;
+	}
+
+	public List<String> getLabels() {
+		List<String> labels = new ArrayList<>();
+
+		String labelString = getLabelString();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(labelString)) {
+			return labels;
+		}
+
+		for (String label : labelString.split(" ")) {
+			labels.add(label.trim());
+		}
+
+		return labels;
 	}
 
 	public String getLabelString() {

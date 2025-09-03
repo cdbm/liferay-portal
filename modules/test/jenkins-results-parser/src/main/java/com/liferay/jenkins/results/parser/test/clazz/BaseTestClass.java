@@ -9,7 +9,9 @@ import com.liferay.jenkins.results.parser.BatchHistory;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.TestHistory;
+import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.SegmentTestClassGroup;
 
 import java.io.File;
 
@@ -49,11 +51,7 @@ public abstract class BaseTestClass implements TestClass {
 			return false;
 		}
 
-		if (Objects.equals(hashCode(), object.hashCode())) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(hashCode(), object.hashCode());
 	}
 
 	@Override
@@ -99,6 +97,16 @@ public abstract class BaseTestClass implements TestClass {
 	}
 
 	@Override
+	public AxisTestClassGroup getAxisTestClassGroup() {
+		return _axisTestClassGroup;
+	}
+
+	@Override
+	public BatchTestClassGroup getBatchTestClassGroup() {
+		return _batchTestClassGroup;
+	}
+
+	@Override
 	public JSONObject getJSONObject() {
 		JSONObject jsonObject = new JSONObject();
 
@@ -138,6 +146,26 @@ public abstract class BaseTestClass implements TestClass {
 	}
 
 	@Override
+	public long getOverheadWeight() {
+		return getAverageOverheadDuration();
+	}
+
+	@Override
+	public SegmentTestClassGroup getSegmentTestClassGroup() {
+		return _segmentTestClassGroup;
+	}
+
+	@Override
+	public long getSharedWeight() {
+		return 0L;
+	}
+
+	@Override
+	public String getSharedWeightName() {
+		return null;
+	}
+
+	@Override
 	public File getTestClassFile() {
 		return _testClassFile;
 	}
@@ -145,6 +173,11 @@ public abstract class BaseTestClass implements TestClass {
 	@Override
 	public List<TestClassMethod> getTestClassMethods() {
 		return _testClassMethods;
+	}
+
+	@Override
+	public String getTestClassName() {
+		return getName();
 	}
 
 	@Override
@@ -174,6 +207,11 @@ public abstract class BaseTestClass implements TestClass {
 	}
 
 	@Override
+	public long getWeight() {
+		return getAverageDuration();
+	}
+
+	@Override
 	public int hashCode() {
 		JSONObject jsonObject = getJSONObject();
 
@@ -192,8 +230,34 @@ public abstract class BaseTestClass implements TestClass {
 	}
 
 	@Override
+	public boolean isBuildCachingEnabled() {
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		return batchTestClassGroup.isBuildCachingEnabled();
+	}
+
+	@Override
 	public boolean isIgnored() {
 		return false;
+	}
+
+	@Override
+	public void setAxisTestClassGroup(AxisTestClassGroup axisTestClassGroup) {
+		_axisTestClassGroup = axisTestClassGroup;
+	}
+
+	@Override
+	public void setBatchTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup) {
+
+		_batchTestClassGroup = batchTestClassGroup;
+	}
+
+	@Override
+	public void setSegmentTestClassGroup(
+		SegmentTestClassGroup segmentTestClassGroup) {
+
+		_segmentTestClassGroup = segmentTestClassGroup;
 	}
 
 	protected BaseTestClass(
@@ -235,12 +299,16 @@ public abstract class BaseTestClass implements TestClass {
 				methodIgnored, methodName, this));
 	}
 
-	protected void addTestClassMethod(String methodName) {
-		addTestClassMethod(false, methodName);
+	protected void addTestClassMethod(
+		boolean methodIgnored, String methodName, String issues) {
+
+		addTestClassMethod(
+			TestClassFactory.newTestClassMethod(
+				methodIgnored, methodName, issues, this));
 	}
 
-	protected BatchTestClassGroup getBatchTestClassGroup() {
-		return _batchTestClassGroup;
+	protected void addTestClassMethod(String methodName) {
+		addTestClassMethod(false, methodName);
 	}
 
 	protected PortalGitWorkingDirectory getPortalGitWorkingDirectory() {
@@ -287,7 +355,9 @@ public abstract class BaseTestClass implements TestClass {
 	private Long _averageDuration;
 	private Long _averageOverheadDuration;
 	private Long _averageTestTaskDuration;
-	private final BatchTestClassGroup _batchTestClassGroup;
+	private AxisTestClassGroup _axisTestClassGroup;
+	private BatchTestClassGroup _batchTestClassGroup;
+	private SegmentTestClassGroup _segmentTestClassGroup;
 	private final File _testClassFile;
 	private final List<TestClassMethod> _testClassMethods = new ArrayList<>();
 	private TestHistory _testHistory;

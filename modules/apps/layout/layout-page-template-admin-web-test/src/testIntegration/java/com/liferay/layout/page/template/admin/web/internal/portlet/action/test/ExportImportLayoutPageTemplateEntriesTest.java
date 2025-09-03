@@ -85,11 +85,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,8 +106,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -556,6 +555,20 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			"form/success_message_url/expected", null, null);
 		File inputFile = _generateZipFile(
 			"form/success_message_url/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormRelationship()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"form/relationship/expected", null, null);
+		File inputFile = _generateZipFile(
+			"form/relationship/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -1176,7 +1189,6 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		_validateImportExport(expectedFile, inputFile);
 	}
 
-	@FeatureFlags("LPD-37927")
 	@Test
 	public void testImportExportLayoutPageTemplateEntryLocalizationConfig()
 		throws Exception {
@@ -1390,7 +1402,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			null, TestPropsValues.getUserId(), groupId,
 			fragmentCollection.getFragmentCollectionId(), key, name,
 			StringPool.BLANK, html, StringPool.BLANK, false, StringPool.BLANK,
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1441,7 +1453,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, false,
-				false,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
@@ -1476,7 +1488,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			objectDefinition.getObjectDefinitionId());
 
 		return _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group1.getGroupId(),
+			_group1.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -1596,7 +1608,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		httpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(httpServletRequest));

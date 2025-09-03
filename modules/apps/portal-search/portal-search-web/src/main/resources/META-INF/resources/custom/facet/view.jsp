@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -88,6 +88,10 @@ String aggregationType = customFacetDisplayContext.getAggregationType();
 								onClick="Liferay.Search.FacetUtil.clearSelections(event);"
 							>
 								<strong><liferay-ui:message key="clear" /></strong>
+
+								<span class="sr-only">
+									<liferay-ui:message arguments="custom-facet-portlet-instance-configuration-name" key="x-filter" />
+								</span>
 							</clay:button>
 						</c:if>
 
@@ -208,7 +212,7 @@ String aggregationType = customFacetDisplayContext.getAggregationType();
 											id='<%= liferayPortletResponse.getNamespace() + "customRangeFrom" %>'
 											md="6"
 										>
-											<aui:field-wrapper label="from">
+											<aui:field-wrapper label="from" name="fromInput">
 												<liferay-ui:input-date
 													cssClass="custom-range-input-date-from"
 													dayParam="fromDay"
@@ -228,7 +232,7 @@ String aggregationType = customFacetDisplayContext.getAggregationType();
 											id='<%= liferayPortletResponse.getNamespace() + "customRangeTo" %>'
 											md="6"
 										>
-											<aui:field-wrapper label="to">
+											<aui:field-wrapper label="to[date-time]" name="toInput">
 												<liferay-ui:input-date
 													cssClass="custom-range-input-date-to"
 													dayParam="toDay"
@@ -266,7 +270,7 @@ String aggregationType = customFacetDisplayContext.getAggregationType();
 
 										<div class="col-md-6" id="<portlet:namespace />customRangeTo">
 											<aui:field-wrapper>
-												<aui:input id="toInput" label="to" name="toInput" type="number" value="<%= customFacetDisplayContext.getToParameterValue() %>" />
+												<aui:input id="toInput" label="to[date-time]" name="toInput" type="number" value="<%= customFacetDisplayContext.getToParameterValue() %>" />
 											</aui:field-wrapper>
 										</div>
 

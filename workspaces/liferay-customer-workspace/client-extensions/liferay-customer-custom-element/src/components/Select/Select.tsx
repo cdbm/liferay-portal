@@ -9,7 +9,7 @@ import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import {useField} from 'formik';
 import {
-	required as requiredVaidation,
+	required as requiredValidation,
 	validate,
 } from '~/utils/validations.form';
 
@@ -19,6 +19,11 @@ import PopoverIconButton from '~/features/project/components/PopoverIconButton';
 import i18n from '~/utils/I18n';
 import {IOption} from '~/utils/types';
 
+interface ISelectOption {
+	key: string;
+	name: string;
+}
+
 interface IProps {
 	badgeClassName?: string;
 	className?: string;
@@ -27,8 +32,8 @@ interface IProps {
 	id?: string;
 	label: string;
 	link?: string;
-	linkText?: string;
 	name: string;
+	objectValue?: ISelectOption;
 	onBlur?: () => void;
 	onChange?: (value: string) => void;
 	options: IOption[];
@@ -46,8 +51,8 @@ const Select: React.FC<IProps> = ({
 	id,
 	label,
 	link,
-	linkText,
 	name,
+	objectValue,
 	onChange,
 	onBlur,
 	options,
@@ -58,8 +63,8 @@ const Select: React.FC<IProps> = ({
 }) => {
 	if (required) {
 		validations = validations
-			? [...validations, (value: string) => requiredVaidation(value)]
-			: [(value: string) => requiredVaidation(value)];
+			? [...validations, (value: string) => requiredValidation(value)]
+			: [(value: string) => requiredValidation(value)];
 	}
 
 	const [field, meta, helpers] = useField({
@@ -89,10 +94,25 @@ const Select: React.FC<IProps> = ({
 	const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = event.target.value;
 
-		helpers.setValue(value);
+		if (objectValue) {
+			const selectedOption = options.find(
+				(option) => option.value === value
+			);
 
-		if (onChange) {
-			onChange(value);
+			if (selectedOption) {
+				helpers.setValue(String(selectedOption.value));
+			}
+
+			if (onChange && selectedOption) {
+				onChange(String(selectedOption.value));
+			}
+		}
+		else {
+			helpers.setValue(value);
+
+			if (onChange) {
+				onChange(value);
+			}
 		}
 	};
 
@@ -110,18 +130,17 @@ const Select: React.FC<IProps> = ({
 				)}
 
 				{showPopover && (
-					<PopoverIconButton
-						alignPosition="top"
-						formatedHTML={i18n.sub(text || '', [
-							'<a href="' +
-								link +
-								'" target="_blank">' +
-								i18n.translate(linkText || '') +
+					<span className="reference-mark">
+						<PopoverIconButton
+							alignPosition="top"
+							formatedHTML={i18n.sub(text || '', [
+								`<a href=${link} target="_blank">`,
 								'</a>',
-						])}
-						iconSize="xs"
-						isSubscriptionCard
-					/>
+							])}
+							iconSize="xs"
+							symbol="question-circle-full"
+						/>
+					</span>
 				)}
 
 				<div className="position-relative">
@@ -133,7 +152,13 @@ const Select: React.FC<IProps> = ({
 						name={name}
 						onBlur={handleBlur}
 						onChange={handleChange}
-						value={field.value}
+						value={
+							objectValue
+								? field.value
+									? field.value.key
+									: ''
+								: field.value
+						}
 					>
 						{options.map(({disabled, label, value}, index) => (
 							<ClaySelect.Option

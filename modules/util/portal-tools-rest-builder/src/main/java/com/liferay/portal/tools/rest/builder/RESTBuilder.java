@@ -122,7 +122,7 @@ public class RESTBuilder {
 	public RESTBuilder(
 			File copyrightFile, File configDir,
 			Boolean forceClientVersionDescription,
-			Boolean forcePredictableOperationId)
+			Boolean forcePredictableOperationId, String javaEEPackage)
 		throws Exception {
 
 		_copyrightFile = copyrightFile;
@@ -143,6 +143,10 @@ public class RESTBuilder {
 				_configYAML.setForcePredictableOperationId(
 					forcePredictableOperationId);
 			}
+
+			if (javaEEPackage != null) {
+				_configYAML.setJavaEEPackage(javaEEPackage);
+			}
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(
@@ -156,7 +160,8 @@ public class RESTBuilder {
 			restBuilderArgs.getCopyrightFile(),
 			restBuilderArgs.getRESTConfigDir(),
 			restBuilderArgs.isForceClientVersionDescription(),
-			restBuilderArgs.isForcePredictableOperationId());
+			restBuilderArgs.isForcePredictableOperationId(),
+			restBuilderArgs.getJavaEEPackage());
 	}
 
 	public void build() throws Exception {
@@ -190,12 +195,12 @@ public class RESTBuilder {
 			_createClientUnsafeSupplierFile(context);
 		}
 
+		boolean createClientCustomFieldFiles = true;
 		List<String> validationErrorMessages = new ArrayList<>();
 
-		File[] openAPIYAMLFiles = FileUtil.getFiles(
-			_configDir, "rest-openapi", ".yaml");
+		for (File openAPIYAMLFile :
+				FileUtil.getFiles(_configDir, "rest-openapi", ".yaml")) {
 
-		for (File openAPIYAMLFile : openAPIYAMLFiles) {
 			try {
 				_checkOpenAPIYAMLFile(freeMarkerTool, openAPIYAMLFile);
 			}
@@ -235,7 +240,7 @@ public class RESTBuilder {
 			context.put("escapedVersion", escapedVersion);
 
 			Map<String, Schema> globalEnumSchemas =
-				OpenAPIUtil.getGlobalEnumSchemas(_configYAML, allSchemas);
+				OpenAPIUtil.getGlobalEnumSchemas(_configYAML, openAPIYAML);
 
 			context.put("globalEnumSchemas", globalEnumSchemas);
 
@@ -341,6 +346,14 @@ public class RESTBuilder {
 				_createResourceImplFile(context, escapedVersion, schemaName);
 
 				if (Validator.isNotNull(_configYAML.getClientDir())) {
+					if (createClientCustomFieldFiles &&
+						_containsVulcanCustomField(schema)) {
+
+						_createClientCustomFieldFiles(context);
+
+						createClientCustomFieldFiles = false;
+					}
+
 					_createClientResourceFile(
 						context, escapedVersion, schemaName);
 				}
@@ -490,6 +503,31 @@ public class RESTBuilder {
 		FileUtil.write(file, yamlString);
 	}
 
+	private boolean _containsVulcanCustomField(Schema schema) {
+		Map<String, Schema> propertySchemas = schema.getPropertySchemas();
+
+		if (MapUtil.isEmpty(propertySchemas)) {
+			return false;
+		}
+
+		for (Schema propertySchema : propertySchemas.values()) {
+			if (Objects.equals(propertySchema.getType(), "array")) {
+				Items items = propertySchema.getItems();
+
+				if ((items != null) &&
+					Objects.equals(items.getType(), "customField")) {
+
+					return true;
+				}
+			}
+			else if (Objects.equals(propertySchema.getType(), "customField")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private void _createApplicationFile(Map<String, Object> context)
 		throws Exception {
 
@@ -584,37 +622,25 @@ public class RESTBuilder {
 	private void _createClientAggregationFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/aggregation/Aggregation.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_aggregation", context));
+		_createClientFile(
+			context, "", "aggregation", "Aggregation", "client_aggregation");
 	}
 
 	private void _createClientBaseJSONParserFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/json/BaseJSONParser.java"));
+		_createClientFile(
+			context, "", "json", "BaseJSONParser", "client_base_json_parser");
+	}
 
-		_files.add(file);
+	private void _createClientCustomFieldFiles(Map<String, Object> context)
+		throws Exception {
 
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_base_json_parser", context));
+		_createClientFile(
+			context, "", "custom/field", "CustomField", "client_custom_field");
+		_createClientFile(
+			context, "", "custom/field", "CustomValue", "client_custom_value");
+		_createClientFile(context, "", "custom/field", "Geo", "client_geo");
 	}
 
 	private void _createClientDTOFile(
@@ -622,19 +648,8 @@ public class RESTBuilder {
 			String schemaName)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/dto/", escapedVersion, "/", schemaName, ".java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file), "client_dto",
-				context));
+		_createClientFile(
+			context, escapedVersion, "dto", schemaName, "client_dto");
 	}
 
 	private void _createClientEnumFile(
@@ -642,127 +657,68 @@ public class RESTBuilder {
 			String schemaName)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/constant/", escapedVersion, "/", schemaName, ".java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file), "client_enum",
-				context));
+		_createClientFile(
+			context, escapedVersion, "constant", schemaName, "client_enum");
 	}
 
 	private void _createClientFacetFile(Map<String, Object> context)
+		throws Exception {
+
+		_createClientFile(context, "", "aggregation", "Facet", "client_facet");
+	}
+
+	private void _createClientFile(
+			Map<String, Object> context, String escapedVersion,
+			String javaDirName, String javaFileName, String templateName)
 		throws Exception {
 
 		File file = new File(
 			StringBundler.concat(
 				_configYAML.getClientDir(), "/",
 				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/aggregation/Facet.java"));
+				"/client/", javaDirName, "/", escapedVersion, "/", javaFileName,
+				".java"));
 
 		_files.add(file);
 
 		FileUtil.write(
 			file,
 			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file), "client_facet",
+				_copyrightFile, FileUtil.getCopyrightYear(file), templateName,
 				context));
 	}
 
 	private void _createClientHttpInvokerFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/http/HttpInvoker.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_http_invoker", context));
+		_createClientFile(
+			context, "", "http", "HttpInvoker", "client_http_invoker");
 	}
 
 	private void _createClientPageFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/pagination/Page.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file), "client_page",
-				context));
+		_createClientFile(context, "", "pagination", "Page", "client_page");
 	}
 
 	private void _createClientPaginationFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/pagination/Pagination.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_pagination", context));
+		_createClientFile(
+			context, "", "pagination", "Pagination", "client_pagination");
 	}
 
 	private void _createClientPermissionFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/permission/Permission.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_permission", context));
+		_createClientFile(
+			context, "", "permission", "Permission", "client_permission");
 	}
 
 	private void _createClientProblemFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/problem/Problem.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_problem", context));
+		_createClientFile(context, "", "problem", "Problem", "client_problem");
 	}
 
 	private void _createClientResourceFile(
@@ -770,20 +726,9 @@ public class RESTBuilder {
 			String schemaName)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/resource/", escapedVersion, "/", schemaName,
-				"Resource.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_resource", context));
+		_createClientFile(
+			context, escapedVersion, "resource", schemaName + "Resource",
+			"client_resource");
 	}
 
 	private void _createClientSerDesFile(
@@ -791,38 +736,17 @@ public class RESTBuilder {
 			String schemaName)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/serdes/", escapedVersion, "/", schemaName,
-				"SerDes.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_serdes", context));
+		_createClientFile(
+			context, escapedVersion, "serdes", schemaName + "SerDes",
+			"client_serdes");
 	}
 
 	private void _createClientUnsafeSupplierFile(Map<String, Object> context)
 		throws Exception {
 
-		File file = new File(
-			StringBundler.concat(
-				_configYAML.getClientDir(), "/",
-				StringUtil.replace(_configYAML.getApiPackagePath(), '.', '/'),
-				"/client/function/UnsafeSupplier.java"));
-
-		_files.add(file);
-
-		FileUtil.write(
-			file,
-			FreeMarkerUtil.processTemplate(
-				_copyrightFile, FileUtil.getCopyrightYear(file),
-				"client_unsafe_supplier", context));
+		_createClientFile(
+			context, "", "function", "UnsafeSupplier",
+			"client_unsafe_supplier");
 	}
 
 	private void _createDTOActionMetadataProviderFile(
@@ -1371,7 +1295,7 @@ public class RESTBuilder {
 		MapUtil.merge(allExternalSchemas, schemas);
 
 		for (String schemaName : schemas.keySet()) {
-			Set<String> methodNames = new HashSet<>();
+			Set<String> operationIds = new HashSet<>();
 
 			List<JavaMethodSignature> javaMethodSignatures =
 				freeMarkerTool.getResourceJavaMethodSignatures(
@@ -1380,15 +1304,21 @@ public class RESTBuilder {
 			for (JavaMethodSignature javaMethodSignature :
 					javaMethodSignatures) {
 
-				String methodName = javaMethodSignature.getMethodName();
+				Operation operation = javaMethodSignature.getOperation();
 
-				if (methodNames.contains(methodName) ||
-					methodName.endsWith("Batch")) {
+				String operationId = operation.getOperationId();
+
+				if (operationId == null) {
+					operationId = javaMethodSignature.getMethodName();
+				}
+
+				if (operationIds.contains(operationId) ||
+					operationId.endsWith("Batch")) {
 
 					continue;
 				}
 
-				methodNames.add(methodName);
+				operationIds.add(operationId);
 
 				int x = yamlString.indexOf(
 					StringUtil.quote(javaMethodSignature.getPath(), '"') + ":");
@@ -1441,7 +1371,7 @@ public class RESTBuilder {
 
 				yamlString = StringBundler.concat(
 					yamlString.substring(0, z + 1), leadingWhiteSpace,
-					"operationId: ", methodName, "\n",
+					"operationId: ", operationId, "\n",
 					yamlString.substring(z + 1));
 			}
 		}

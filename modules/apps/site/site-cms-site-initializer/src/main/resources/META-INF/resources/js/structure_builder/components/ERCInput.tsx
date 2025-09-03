@@ -10,9 +10,15 @@ import {FieldFeedback, useId} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
 export default function ERCInput({
+	disabled,
 	onValueChange,
 	value: initialValue,
+	helpText = Liferay.Language.get(
+		'unique-key-for-referencing-the-object-definition'
+	),
 }: {
+	disabled?: boolean;
+	helpText?: string;
 	onValueChange: (value: string) => void;
 	value: string;
 }) {
@@ -31,18 +37,19 @@ export default function ERCInput({
 					role="presentation"
 					symbol="asterisk"
 				/>
-
-				<ClayIcon
-					className="lfr-portal-tooltip ml-1 text-secondary"
-					data-title={Liferay.Language.get(
-						'unique-key-for-referencing-the-object-definition'
-					)}
-					focusable="false"
-					symbol="question-circle"
-				/>
 			</label>
 
+			<ClayIcon
+				className="lfr-portal-tooltip ml-1 text-secondary"
+				data-title={helpText}
+				focusable="false"
+				role="dialog"
+				symbol="question-circle"
+				tabIndex={0}
+			/>
+
 			<ClayInput
+				disabled={disabled}
 				id={id}
 				onBlur={() => onValueChange(value)}
 				onChange={(event) => setValue(event.target.value)}

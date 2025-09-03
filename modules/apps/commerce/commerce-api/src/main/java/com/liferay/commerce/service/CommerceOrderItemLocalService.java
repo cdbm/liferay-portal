@@ -422,6 +422,15 @@ public interface CommerceOrderItemLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceOrderItem> getParentCommerceOrderItems(
+		long commerceOrderId, long parentCommerceOrderItemId, int start,
+		int end, OrderByComparator<CommerceOrderItem> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getParentCommerceOrderItemsCount(
+		long commerceOrderId, long parentCommerceOrderItemId);
+
 	/**
 	 * @throws PortalException
 	 */
@@ -448,7 +457,7 @@ public interface CommerceOrderItemLocalService
 	public CommerceOrderItem importCommerceOrderItem(
 			long userId, String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, BigDecimal quantity,
+			String cpMeasurementUnitKey, String json, BigDecimal quantity,
 			BigDecimal shippedQuantity,
 			BigDecimal unitOfMeasureIncrementalOrderQuantity,
 			String unitOfMeasureKey, ServiceContext serviceContext)

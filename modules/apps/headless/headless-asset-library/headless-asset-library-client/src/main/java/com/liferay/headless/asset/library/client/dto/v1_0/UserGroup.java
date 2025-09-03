@@ -8,12 +8,12 @@ package com.liferay.headless.asset.library.client.dto.v1_0;
 import com.liferay.headless.asset.library.client.function.UnsafeSupplier;
 import com.liferay.headless.asset.library.client.serdes.v1_0.UserGroupSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Roberto Díaz
@@ -106,6 +106,27 @@ public class UserGroup implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> name_i18n;
+
+	public Integer getNumberOfUserAccounts() {
+		return numberOfUserAccounts;
+	}
+
+	public void setNumberOfUserAccounts(Integer numberOfUserAccounts) {
+		this.numberOfUserAccounts = numberOfUserAccounts;
+	}
+
+	public void setNumberOfUserAccounts(
+		UnsafeSupplier<Integer, Exception> numberOfUserAccountsUnsafeSupplier) {
+
+		try {
+			numberOfUserAccounts = numberOfUserAccountsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfUserAccounts;
 
 	public Role[] getRoles() {
 		return roles;

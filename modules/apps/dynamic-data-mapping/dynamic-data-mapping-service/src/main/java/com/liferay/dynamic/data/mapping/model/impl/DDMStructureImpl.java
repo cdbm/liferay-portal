@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  * @author Brian Wing Shun Chan
@@ -101,7 +102,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 	@Override
 	public String[] getAvailableLanguageIds() {
-		DDMForm ddmForm = _getDDMForm();
+		DDMForm ddmForm = _getDDMForm(ddmFormUpdateEntityCacheBiConsumer);
 
 		Set<Locale> availableLocales = ddmForm.getAvailableLocales();
 
@@ -122,6 +123,8 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 	public String getClassName() {
 		if (_className == null) {
 			_className = PortalUtil.getClassName(getClassNameId());
+
+			classNameUpdateEntityCacheBiConsumer.accept(this, _className);
 		}
 
 		return _className;
@@ -129,7 +132,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 	@Override
 	public DDMForm getDDMForm() {
-		return new DDMForm(_getDDMForm());
+		return new DDMForm(_getDDMForm(ddmFormUpdateEntityCacheBiConsumer));
 	}
 
 	@Override
@@ -165,9 +168,12 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 	@Override
 	public Map<String, DDMFormField> getDDMFormFieldsMap() {
 		if (_ddmFormFieldsMap == null) {
-			DDMForm ddmForm = _getDDMForm();
+			DDMForm ddmForm = _getDDMForm(ddmFormUpdateEntityCacheBiConsumer);
 
 			_ddmFormFieldsMap = ddmForm.getDDMFormFieldsMap(true);
+
+			ddmFormFieldsMapUpdateEntityCacheBiConsumer.accept(
+				this, _ddmFormFieldsMap);
 		}
 
 		return _ddmFormFieldsMap;
@@ -198,7 +204,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 	@Override
 	public String getDefaultLanguageId() {
-		DDMForm ddmForm = _getDDMForm();
+		DDMForm ddmForm = _getDDMForm(ddmFormUpdateEntityCacheBiConsumer);
 
 		return LocaleUtil.toLanguageId(ddmForm.getDefaultLocale());
 	}
@@ -449,7 +455,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 	@Override
 	public boolean hasFieldByFieldReference(String fieldReference) {
-		DDMForm ddmForm = _getDDMForm();
+		DDMForm ddmForm = _getDDMForm(ddmFormUpdateEntityCacheBiConsumer);
 
 		DDMFormField ddmFormField = _fetchDDMFormFieldByFieldReference(
 			ddmForm.getDDMFormFields(), fieldReference);
@@ -597,7 +603,9 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 		return null;
 	}
 
-	private DDMForm _getDDMForm() {
+	private DDMForm _getDDMForm(
+		BiConsumer<DDMStructure, DDMForm> ddmFormUpdateEntityCacheBiConsumer) {
+
 		if (_ddmForm == null) {
 			DDMFormDeserializerDeserializeRequest.Builder builder =
 				DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
@@ -619,6 +627,8 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 					_setNestedDDMFormFields(ddmFormField);
 				}
 			}
+
+			ddmFormUpdateEntityCacheBiConsumer.accept(this, _ddmForm);
 		}
 
 		return _ddmForm;
@@ -652,7 +662,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 	private DDMFormField _getDDMFormFieldByFieldReference(String fieldReference)
 		throws PortalException {
 
-		DDMForm ddmForm = _getDDMForm();
+		DDMForm ddmForm = _getDDMForm(ddmFormUpdateEntityCacheBiConsumer);
 
 		DDMFormField ddmFormField = _fetchDDMFormFieldByFieldReference(
 			ddmForm.getDDMFormFields(), fieldReference);

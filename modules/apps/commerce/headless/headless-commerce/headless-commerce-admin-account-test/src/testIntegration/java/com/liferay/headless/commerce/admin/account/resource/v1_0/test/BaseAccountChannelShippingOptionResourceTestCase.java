@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.account.client.dto.v1_0.AccountChannelShippingOption;
 import com.liferay.headless.commerce.admin.account.client.dto.v1_0.User;
 import com.liferay.headless.commerce.admin.account.client.http.HttpInvoker;
@@ -55,6 +58,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -72,16 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -137,6 +140,16 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 			).locale(
 				LocaleUtil.getDefault()
 			).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 	}
 
 	@After
@@ -246,12 +259,10 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 			accountChannelShippingOptionResource.
 				getAccountChannelShippingOptionHttpResponse(
 					accountChannelShippingOption.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelShippingOptionResource.
-				getAccountChannelShippingOptionHttpResponse(
-					accountChannelShippingOption.getId()));
+				getAccountChannelShippingOptionHttpResponse(0L));
 	}
 
 	protected AccountChannelShippingOption
@@ -347,6 +358,276 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 		throws Exception {
 
 		return testGraphQLAccountChannelShippingOption_addAccountChannelShippingOption();
+	}
+
+	@Test
+	public void testDeleteAccountChannelShippingOptionBatch() throws Exception {
+		AccountChannelShippingOption accountChannelShippingOption1 =
+			testDeleteAccountChannelShippingOptionBatch_addAccountChannelShippingOption();
+
+		testDeleteAccountChannelShippingOptionBatch_deleteAccountChannelShippingOption(
+			202, null, accountChannelShippingOption1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			accountChannelShippingOptionResource.
+				getAccountChannelShippingOptionHttpResponse(
+					accountChannelShippingOption1.getId()));
+	}
+
+	protected AccountChannelShippingOption
+			testDeleteAccountChannelShippingOptionBatch_addAccountChannelShippingOption()
+		throws Exception {
+
+		return testDeleteAccountChannelShippingOption_addAccountChannelShippingOption();
+	}
+
+	protected void
+			testDeleteAccountChannelShippingOptionBatch_deleteAccountChannelShippingOption(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			accountChannelShippingOptionResource.
+				deleteAccountChannelShippingOptionBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getIrrelevantExternalReferenceCode();
+
+		Page<AccountChannelShippingOption> page =
+			accountChannelShippingOptionResource.
+				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			AccountChannelShippingOption
+				irrelevantAccountChannelShippingOption =
+					testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+						irrelevantExternalReferenceCode,
+						randomIrrelevantAccountChannelShippingOption());
+
+			page =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantAccountChannelShippingOption,
+				(List<AccountChannelShippingOption>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		AccountChannelShippingOption accountChannelShippingOption1 =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				externalReferenceCode, randomAccountChannelShippingOption());
+
+		AccountChannelShippingOption accountChannelShippingOption2 =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				externalReferenceCode, randomAccountChannelShippingOption());
+
+		page =
+			accountChannelShippingOptionResource.
+				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(
+			accountChannelShippingOption1,
+			(List<AccountChannelShippingOption>)page.getItems());
+		assertContains(
+			accountChannelShippingOption2,
+			(List<AccountChannelShippingOption>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
+				externalReferenceCode));
+
+		accountChannelShippingOptionResource.deleteAccountChannelShippingOption(
+			accountChannelShippingOption1.getId());
+
+		accountChannelShippingOptionResource.deleteAccountChannelShippingOption(
+			accountChannelShippingOption2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode();
+
+		Page<AccountChannelShippingOption> accountChannelShippingOptionsPage =
+			accountChannelShippingOptionResource.
+				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelShippingOptionsPage.getTotalCount());
+
+		AccountChannelShippingOption accountChannelShippingOption1 =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				externalReferenceCode, randomAccountChannelShippingOption());
+
+		AccountChannelShippingOption accountChannelShippingOption2 =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				externalReferenceCode, randomAccountChannelShippingOption());
+
+		AccountChannelShippingOption accountChannelShippingOption3 =
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				externalReferenceCode, randomAccountChannelShippingOption());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<AccountChannelShippingOption> page1 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				accountChannelShippingOption1,
+				(List<AccountChannelShippingOption>)page1.getItems());
+
+			Page<AccountChannelShippingOption> page2 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				accountChannelShippingOption2,
+				(List<AccountChannelShippingOption>)page2.getItems());
+
+			Page<AccountChannelShippingOption> page3 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				accountChannelShippingOption3,
+				(List<AccountChannelShippingOption>)page3.getItems());
+		}
+		else {
+			Page<AccountChannelShippingOption> page1 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<AccountChannelShippingOption> accountChannelShippingOptions1 =
+				(List<AccountChannelShippingOption>)page1.getItems();
+
+			Assert.assertEquals(
+				accountChannelShippingOptions1.toString(), totalCount + 2,
+				accountChannelShippingOptions1.size());
+
+			Page<AccountChannelShippingOption> page2 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<AccountChannelShippingOption> accountChannelShippingOptions2 =
+				(List<AccountChannelShippingOption>)page2.getItems();
+
+			Assert.assertEquals(
+				accountChannelShippingOptions2.toString(), 1,
+				accountChannelShippingOptions2.size());
+
+			Page<AccountChannelShippingOption> page3 =
+				accountChannelShippingOptionResource.
+					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				accountChannelShippingOption1,
+				(List<AccountChannelShippingOption>)page3.getItems());
+			assertContains(
+				accountChannelShippingOption2,
+				(List<AccountChannelShippingOption>)page3.getItems());
+			assertContains(
+				accountChannelShippingOption3,
+				(List<AccountChannelShippingOption>)page3.getItems());
+		}
+	}
+
+	protected AccountChannelShippingOption
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
+				String externalReferenceCode,
+				AccountChannelShippingOption accountChannelShippingOption)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -670,298 +951,6 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 	}
 
 	@Test
-	public void testPatchAccountChannelShippingOption() throws Exception {
-		AccountChannelShippingOption postAccountChannelShippingOption =
-			testPatchAccountChannelShippingOption_addAccountChannelShippingOption();
-
-		AccountChannelShippingOption randomPatchAccountChannelShippingOption =
-			randomPatchAccountChannelShippingOption();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelShippingOption patchAccountChannelShippingOption =
-			accountChannelShippingOptionResource.
-				patchAccountChannelShippingOption(
-					postAccountChannelShippingOption.getId(),
-					randomPatchAccountChannelShippingOption);
-
-		AccountChannelShippingOption expectedPatchAccountChannelShippingOption =
-			postAccountChannelShippingOption.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelShippingOption,
-			expectedPatchAccountChannelShippingOption);
-
-		AccountChannelShippingOption getAccountChannelShippingOption =
-			accountChannelShippingOptionResource.
-				getAccountChannelShippingOption(
-					patchAccountChannelShippingOption.getId());
-
-		assertEquals(
-			expectedPatchAccountChannelShippingOption,
-			getAccountChannelShippingOption);
-		assertValid(getAccountChannelShippingOption);
-	}
-
-	protected AccountChannelShippingOption
-			testPatchAccountChannelShippingOption_addAccountChannelShippingOption()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getIrrelevantExternalReferenceCode();
-
-		Page<AccountChannelShippingOption> page =
-			accountChannelShippingOptionResource.
-				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-					externalReferenceCode, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			AccountChannelShippingOption
-				irrelevantAccountChannelShippingOption =
-					testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-						irrelevantExternalReferenceCode,
-						randomIrrelevantAccountChannelShippingOption());
-
-			page =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						irrelevantExternalReferenceCode,
-						Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantAccountChannelShippingOption,
-				(List<AccountChannelShippingOption>)page.getItems());
-			assertValid(
-				page,
-				testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		AccountChannelShippingOption accountChannelShippingOption1 =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				externalReferenceCode, randomAccountChannelShippingOption());
-
-		AccountChannelShippingOption accountChannelShippingOption2 =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				externalReferenceCode, randomAccountChannelShippingOption());
-
-		page =
-			accountChannelShippingOptionResource.
-				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-					externalReferenceCode, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(
-			accountChannelShippingOption1,
-			(List<AccountChannelShippingOption>)page.getItems());
-		assertContains(
-			accountChannelShippingOption2,
-			(List<AccountChannelShippingOption>)page.getItems());
-		assertValid(
-			page,
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
-				externalReferenceCode));
-
-		accountChannelShippingOptionResource.deleteAccountChannelShippingOption(
-			accountChannelShippingOption1.getId());
-
-		accountChannelShippingOptionResource.deleteAccountChannelShippingOption(
-			accountChannelShippingOption2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode();
-
-		Page<AccountChannelShippingOption> accountChannelShippingOptionPage =
-			accountChannelShippingOptionResource.
-				getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-					externalReferenceCode, null);
-
-		int totalCount = GetterUtil.getInteger(
-			accountChannelShippingOptionPage.getTotalCount());
-
-		AccountChannelShippingOption accountChannelShippingOption1 =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				externalReferenceCode, randomAccountChannelShippingOption());
-
-		AccountChannelShippingOption accountChannelShippingOption2 =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				externalReferenceCode, randomAccountChannelShippingOption());
-
-		AccountChannelShippingOption accountChannelShippingOption3 =
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				externalReferenceCode, randomAccountChannelShippingOption());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<AccountChannelShippingOption> page1 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(
-				accountChannelShippingOption1,
-				(List<AccountChannelShippingOption>)page1.getItems());
-
-			Page<AccountChannelShippingOption> page2 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			assertContains(
-				accountChannelShippingOption2,
-				(List<AccountChannelShippingOption>)page2.getItems());
-
-			Page<AccountChannelShippingOption> page3 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			assertContains(
-				accountChannelShippingOption3,
-				(List<AccountChannelShippingOption>)page3.getItems());
-		}
-		else {
-			Page<AccountChannelShippingOption> page1 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(1, totalCount + 2));
-
-			List<AccountChannelShippingOption> accountChannelShippingOptions1 =
-				(List<AccountChannelShippingOption>)page1.getItems();
-
-			Assert.assertEquals(
-				accountChannelShippingOptions1.toString(), totalCount + 2,
-				accountChannelShippingOptions1.size());
-
-			Page<AccountChannelShippingOption> page2 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<AccountChannelShippingOption> accountChannelShippingOptions2 =
-				(List<AccountChannelShippingOption>)page2.getItems();
-
-			Assert.assertEquals(
-				accountChannelShippingOptions2.toString(), 1,
-				accountChannelShippingOptions2.size());
-
-			Page<AccountChannelShippingOption> page3 =
-				accountChannelShippingOptionResource.
-					getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-						externalReferenceCode,
-						Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(
-				accountChannelShippingOption1,
-				(List<AccountChannelShippingOption>)page3.getItems());
-			assertContains(
-				accountChannelShippingOption2,
-				(List<AccountChannelShippingOption>)page3.getItems());
-			assertContains(
-				accountChannelShippingOption3,
-				(List<AccountChannelShippingOption>)page3.getItems());
-		}
-	}
-
-	protected AccountChannelShippingOption
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_addAccountChannelShippingOption(
-				String externalReferenceCode,
-				AccountChannelShippingOption accountChannelShippingOption)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeAccountChannelShippingOptionPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelShippingOption()
-		throws Exception {
-
-		AccountChannelShippingOption randomAccountChannelShippingOption =
-			randomAccountChannelShippingOption();
-
-		AccountChannelShippingOption postAccountChannelShippingOption =
-			testPostAccountByExternalReferenceCodeAccountChannelShippingOption_addAccountChannelShippingOption(
-				randomAccountChannelShippingOption);
-
-		assertEquals(
-			randomAccountChannelShippingOption,
-			postAccountChannelShippingOption);
-		assertValid(postAccountChannelShippingOption);
-	}
-
-	protected AccountChannelShippingOption
-			testPostAccountByExternalReferenceCodeAccountChannelShippingOption_addAccountChannelShippingOption(
-				AccountChannelShippingOption accountChannelShippingOption)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelShippingOptionPage()
 		throws Exception {
 
@@ -1048,12 +1037,12 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelShippingOptionPage_getId();
 
-		Page<AccountChannelShippingOption> accountChannelShippingOptionPage =
+		Page<AccountChannelShippingOption> accountChannelShippingOptionsPage =
 			accountChannelShippingOptionResource.
 				getAccountIdAccountChannelShippingOptionPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelShippingOptionPage.getTotalCount());
+			accountChannelShippingOptionsPage.getTotalCount());
 
 		AccountChannelShippingOption accountChannelShippingOption1 =
 			testGetAccountIdAccountChannelShippingOptionPage_addAccountChannelShippingOption(
@@ -1179,6 +1168,73 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 	}
 
 	@Test
+	public void testPatchAccountChannelShippingOption() throws Exception {
+		AccountChannelShippingOption postAccountChannelShippingOption =
+			testPatchAccountChannelShippingOption_addAccountChannelShippingOption();
+
+		AccountChannelShippingOption randomPatchAccountChannelShippingOption =
+			randomPatchAccountChannelShippingOption();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelShippingOption patchAccountChannelShippingOption =
+			accountChannelShippingOptionResource.
+				patchAccountChannelShippingOption(
+					postAccountChannelShippingOption.getId(),
+					randomPatchAccountChannelShippingOption);
+
+		AccountChannelShippingOption expectedPatchAccountChannelShippingOption =
+			postAccountChannelShippingOption.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelShippingOption,
+			expectedPatchAccountChannelShippingOption);
+
+		AccountChannelShippingOption getAccountChannelShippingOption =
+			accountChannelShippingOptionResource.
+				getAccountChannelShippingOption(
+					patchAccountChannelShippingOption.getId());
+
+		assertEquals(
+			expectedPatchAccountChannelShippingOption,
+			getAccountChannelShippingOption);
+		assertValid(getAccountChannelShippingOption);
+	}
+
+	protected AccountChannelShippingOption
+			testPatchAccountChannelShippingOption_addAccountChannelShippingOption()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelShippingOption()
+		throws Exception {
+
+		AccountChannelShippingOption randomAccountChannelShippingOption =
+			randomAccountChannelShippingOption();
+
+		AccountChannelShippingOption postAccountChannelShippingOption =
+			testPostAccountByExternalReferenceCodeAccountChannelShippingOption_addAccountChannelShippingOption(
+				randomAccountChannelShippingOption);
+
+		assertEquals(
+			randomAccountChannelShippingOption,
+			postAccountChannelShippingOption);
+		assertValid(postAccountChannelShippingOption);
+	}
+
+	protected AccountChannelShippingOption
+			testPostAccountByExternalReferenceCodeAccountChannelShippingOption_addAccountChannelShippingOption(
+				AccountChannelShippingOption accountChannelShippingOption)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountIdAccountChannelShippingOption()
 		throws Exception {
 
@@ -1202,6 +1258,64 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		AccountChannelShippingOption accountChannelShippingOption1 =
+			testBatchEngineDeleteImportTask_addAccountChannelShippingOption();
+
+		testBatchEngineDeleteImportTask_deleteAccountChannelShippingOption(
+			200, null, accountChannelShippingOption1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			accountChannelShippingOptionResource.
+				getAccountChannelShippingOptionHttpResponse(
+					accountChannelShippingOption1.getId()));
+	}
+
+	protected AccountChannelShippingOption
+			testBatchEngineDeleteImportTask_addAccountChannelShippingOption()
+		throws Exception {
+
+		return testDeleteAccountChannelShippingOption_addAccountChannelShippingOption();
+	}
+
+	protected void
+			testBatchEngineDeleteImportTask_deleteAccountChannelShippingOption(
+				int expectedStatusCode, String externalReferenceCode, Long id,
+				String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.account.dto.v1_0.AccountChannelShippingOption",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected AccountChannelShippingOption
@@ -2065,8 +2179,31 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 		return randomAccountChannelShippingOption();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AccountChannelShippingOptionResource
 		accountChannelShippingOptionResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

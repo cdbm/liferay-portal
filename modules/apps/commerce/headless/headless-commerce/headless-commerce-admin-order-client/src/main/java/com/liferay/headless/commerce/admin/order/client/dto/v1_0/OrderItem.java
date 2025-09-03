@@ -8,6 +8,8 @@ package com.liferay.headless.commerce.admin.order.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.order.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderItemSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -15,8 +17,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Alessio Antonio Rendina
@@ -50,16 +50,25 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected Long bookedQuantityId;
 
-	public CustomField[] getCustomFields() {
+	public
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.commerce.admin.order.client.custom.field.
+				CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -69,7 +78,9 @@ public class OrderItem implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] customFields;
 
 	public BigDecimal getDecimalQuantity() {
 		return decimalQuantity;

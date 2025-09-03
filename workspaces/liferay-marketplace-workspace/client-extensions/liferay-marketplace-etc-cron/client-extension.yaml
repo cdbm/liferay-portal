@@ -1,9 +1,11 @@
 assemble:
-    - fromTask: bootJar
+    -   fromTask: bootJar
 liferay-marketplace-etc-cron-oauth-application-headless-server:
     .serviceAddress: localhost:8080
     .serviceScheme: http
     name: Liferay Marketplace Etc Cron OAuth Application Headless Server
     scopes:
-        - Liferay.Headless.Commerce.Admin.Order.everything
+        -   Liferay.Headless.Admin.User.everything
+        -   Liferay.Headless.Commerce.Admin.Order.everything
+        -   c_report.everything
     type: oAuthApplicationHeadlessServer

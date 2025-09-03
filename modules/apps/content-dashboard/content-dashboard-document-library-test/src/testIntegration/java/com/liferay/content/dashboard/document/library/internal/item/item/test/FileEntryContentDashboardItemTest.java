@@ -61,14 +61,14 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.net.URL;
 import java.net.URLEncoder;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -187,13 +187,13 @@ public class FileEntryContentDashboardItemTest {
 			versionableContentDashboardItem =
 				_getVersionableContentDashboardItem(2);
 
-		List<AssetCategory> assetCategoryList =
+		List<AssetCategory> assetCategories =
 			versionableContentDashboardItem.getAssetCategories();
 
 		Assert.assertEquals(
-			assetCategoryList.toString(), 1, assetCategoryList.size());
+			assetCategories.toString(), 1, assetCategories.size());
 
-		AssetCategory assetCategory2 = assetCategoryList.get(0);
+		AssetCategory assetCategory2 = assetCategories.get(0);
 
 		Assert.assertEquals(
 			assetCategory1.getTitle(), assetCategory2.getTitle());
@@ -258,12 +258,12 @@ public class FileEntryContentDashboardItemTest {
 					_contentDashboardItemFactory.create(
 						fileEntry.getFileEntryId());
 
-		List<AssetTag> assetTagList =
+		List<AssetTag> assetTags =
 			versionableContentDashboardItem.getAssetTags();
 
-		Assert.assertEquals(assetTagList.toString(), 3, assetTagList.size());
+		Assert.assertEquals(assetTags.toString(), 3, assetTags.size());
 
-		AssetTag assetTag = assetTagList.get(0);
+		AssetTag assetTag = assetTags.get(0);
 
 		Assert.assertEquals("tag1", assetTag.getName());
 	}
@@ -645,40 +645,39 @@ public class FileEntryContentDashboardItemTest {
 		VersionableContentDashboardItem<FileEntry>
 			versionableContentDashboardItem) {
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				versionableContentDashboardItem.getSpecificInformationList(
-					LocaleUtil.getDefault());
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			versionableContentDashboardItem.getSpecificInformationList(
+				LocaleUtil.getDefault());
 
 		ContentDashboardItem.SpecificInformation<?>
 			aspectRatioSpecificInformation = _getSpecificInformation(
-				"content-dashboard-aspect-ratio", specificInformationList);
+				"content-dashboard-aspect-ratio", specificInformations);
 
 		Assert.assertEquals(
 			expectedAspectRatio, aspectRatioSpecificInformation.getValue());
 
 		ContentDashboardItem.SpecificInformation<?>
 			extensionSpecificInformation = _getSpecificInformation(
-				"extension", specificInformationList);
+				"extension", specificInformations);
 
 		Assert.assertEquals(
 			expectedExtension, extensionSpecificInformation.getValue());
 
 		ContentDashboardItem.SpecificInformation<?>
 			resolutionSpecificInformation = _getSpecificInformation(
-				"resolution", specificInformationList);
+				"resolution", specificInformations);
 
 		Assert.assertEquals(
 			expectedResolution, resolutionSpecificInformation.getValue());
 
 		ContentDashboardItem.SpecificInformation<?> sizeSpecificInformation =
-			_getSpecificInformation("size", specificInformationList);
+			_getSpecificInformation("size", specificInformations);
 
 		Assert.assertEquals(expectedSize, sizeSpecificInformation.getValue());
 
 		Assert.assertTrue(
 			ListUtil.exists(
-				specificInformationList,
+				specificInformations,
 				specificInformation -> Objects.equals(
 					specificInformation.getKey(), "file-name")));
 
@@ -686,7 +685,7 @@ public class FileEntryContentDashboardItemTest {
 			webDAVSpecificInformation =
 				(ContentDashboardItem.SpecificInformation<URL>)
 					_getSpecificInformation(
-						"web-dav-url", specificInformationList);
+						"web-dav-url", specificInformations);
 
 		String url = String.valueOf(webDAVSpecificInformation.getValue());
 
@@ -763,11 +762,11 @@ public class FileEntryContentDashboardItemTest {
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			mockLiferayPortletRenderRequest);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
@@ -778,10 +777,10 @@ public class FileEntryContentDashboardItemTest {
 	private ContentDashboardItem.SpecificInformation<?> _getSpecificInformation(
 		String key,
 		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList) {
+			specificInformations) {
 
 		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			if (Objects.equals(specificInformation.getKey(), key)) {
 				return specificInformation;

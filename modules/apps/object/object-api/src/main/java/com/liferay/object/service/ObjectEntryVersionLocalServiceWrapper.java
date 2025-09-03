@@ -56,6 +56,13 @@ public class ObjectEntryVersionLocalServiceWrapper
 			objectEntryVersion);
 	}
 
+	@Override
+	public void checkObjectEntryVersions(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectEntryVersionLocalService.checkObjectEntryVersions(companyId);
+	}
+
 	/**
 	 * Creates a new object entry version with the primary key. Does not add the object entry version to the database.
 	 *
@@ -102,6 +109,15 @@ public class ObjectEntryVersionLocalServiceWrapper
 			objectEntryVersionId);
 	}
 
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion deleteObjectEntryVersion(
+			long objectEntryId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionLocalService.deleteObjectEntryVersion(
+			objectEntryId, version);
+	}
+
 	/**
 	 * Deletes the object entry version from the database. Also notifies the appropriate model listeners.
 	 *
@@ -118,6 +134,20 @@ public class ObjectEntryVersionLocalServiceWrapper
 
 		return _objectEntryVersionLocalService.deleteObjectEntryVersion(
 			objectEntryVersion);
+	}
+
+	@Override
+	public void deleteObjectEntryVersionByObjectDefinitionId(
+		Long objectDefinitionId) {
+
+		_objectEntryVersionLocalService.
+			deleteObjectEntryVersionByObjectDefinitionId(objectDefinitionId);
+	}
+
+	@Override
+	public void deleteObjectEntryVersions(long objectEntryId) {
+		_objectEntryVersionLocalService.deleteObjectEntryVersions(
+			objectEntryId);
 	}
 
 	/**
@@ -236,11 +266,50 @@ public class ObjectEntryVersionLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.object.model.ObjectEntryVersion expireObjectEntryVersion(
+			long userId, com.liferay.object.model.ObjectEntry objectEntry,
+			int version,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionLocalService.expireObjectEntryVersion(
+			userId, objectEntry, version, serviceContext);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion expireObjectEntryVersion(
+			long userId,
+			com.liferay.object.model.ObjectEntryVersion objectEntryVersion)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionLocalService.expireObjectEntryVersion(
+			userId, objectEntryVersion);
+	}
+
+	@Override
+	public void expireObjectEntryVersions(
+			long userId, com.liferay.object.model.ObjectEntry objectEntry,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws Exception {
+
+		_objectEntryVersionLocalService.expireObjectEntryVersions(
+			userId, objectEntry, serviceContext);
+	}
+
+	@Override
 	public com.liferay.object.model.ObjectEntryVersion fetchObjectEntryVersion(
 		long objectEntryVersionId) {
 
 		return _objectEntryVersionLocalService.fetchObjectEntryVersion(
 			objectEntryVersionId);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion fetchObjectEntryVersion(
+		long objectEntryId, int version) {
+
+		return _objectEntryVersionLocalService.fetchObjectEntryVersion(
+			objectEntryId, version);
 	}
 
 	/**
@@ -299,6 +368,15 @@ public class ObjectEntryVersionLocalServiceWrapper
 			objectEntryVersionId);
 	}
 
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion getObjectEntryVersion(
+			long objectEntryId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionLocalService.getObjectEntryVersion(
+			objectEntryId, version);
+	}
+
 	/**
 	 * Returns the object entry version with the matching UUID and company.
 	 *
@@ -343,6 +421,14 @@ public class ObjectEntryVersionLocalServiceWrapper
 			objectEntryId);
 	}
 
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectEntryVersion>
+		getObjectEntryVersions(long objectEntryId, int start, int end) {
+
+		return _objectEntryVersionLocalService.getObjectEntryVersions(
+			objectEntryId, start, end);
+	}
+
 	/**
 	 * Returns the number of object entry versions.
 	 *
@@ -351,6 +437,12 @@ public class ObjectEntryVersionLocalServiceWrapper
 	@Override
 	public int getObjectEntryVersionsCount() {
 		return _objectEntryVersionLocalService.getObjectEntryVersionsCount();
+	}
+
+	@Override
+	public int getObjectEntryVersionsCount(long objectEntryId) {
+		return _objectEntryVersionLocalService.getObjectEntryVersionsCount(
+			objectEntryId);
 	}
 
 	/**
@@ -372,6 +464,14 @@ public class ObjectEntryVersionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryVersionLocalService.getPersistedModel(primaryKeyObj);
+	}
+
+	@Override
+	public boolean isLatestObjectEntryVersion(long objectEntryId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionLocalService.isLatestObjectEntryVersion(
+			objectEntryId, version);
 	}
 
 	@Override

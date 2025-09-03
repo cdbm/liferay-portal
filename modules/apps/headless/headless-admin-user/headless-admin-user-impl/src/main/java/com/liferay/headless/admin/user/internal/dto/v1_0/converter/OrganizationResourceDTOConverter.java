@@ -23,26 +23,28 @@ import com.liferay.headless.admin.user.dto.v1_0.Service;
 import com.liferay.headless.admin.user.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountBrief;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.AccountBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CreatorUtil;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.EmailAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PermissionUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PhoneUtil;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.RoleBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.TaxonomyCategoryBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.UserAccountBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.WebUrlUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.EmailAddressService;
+import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.service.OrgLaborService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.OrganizationService;
@@ -54,12 +56,16 @@ import com.liferay.portal.kernel.service.RoleService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.service.WebsiteService;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
@@ -167,6 +173,23 @@ public class OrganizationResourceDTOConverter
 
 						return organization.getLogoURL();
 					});
+				setImageBase64(
+					() -> NestedFieldsSupplier.supply(
+						"imageBase64",
+						nestedFieldNames -> {
+							if (organization.getLogoId() == 0) {
+								return null;
+							}
+
+							Image image = _imageLocalService.fetchImage(
+								organization.getLogoId());
+
+							if (image == null) {
+								return null;
+							}
+
+							return Base64.encode(image.getTextObj());
+						}));
 				setImageId(organization::getLogoId);
 				setKeywords(
 					() -> ListUtil.toArray(
@@ -252,13 +275,15 @@ public class OrganizationResourceDTOConverter
 							setPostalAddresses(
 								() -> TransformUtil.transformToArray(
 									organization.getAddresses(),
-									address ->
-										PostalAddressUtil.toPostalAddress(
+									address -> _postalAddressDTOConverter.toDTO(
+										new DefaultDTOConverterContext(
 											dtoConverterContext.
 												isAcceptAllLanguages(),
-											address,
-											organization.getCompanyId(),
-											dtoConverterContext.getLocale()),
+											null, _dtoConverterRegistry,
+											address.getAddressId(),
+											dtoConverterContext.getLocale(),
+											dtoConverterContext.getUriInfo(),
+											dtoConverterContext.getUser())),
 									PostalAddress.class));
 							setTelephones(
 								() -> TransformUtil.transformToArray(
@@ -412,7 +437,13 @@ public class OrganizationResourceDTOConverter
 	private CountryService _countryService;
 
 	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
 	private EmailAddressService _emailAddressService;
+
+	@Reference
+	private ImageLocalService _imageLocalService;
 
 	@Reference
 	private Language _language;
@@ -434,6 +465,9 @@ public class OrganizationResourceDTOConverter
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(target = DTOConverterConstants.POSTAL_ADDRESS_DTO_CONVERTER)
+	private DTOConverter<Address, PostalAddress> _postalAddressDTOConverter;
 
 	@Reference
 	private RegionService _regionService;

@@ -92,7 +92,7 @@ function appendXMLActions(
 				);
 			}
 
-			if (isValidValue(status, index)) {
+			if (isValidValue(status, index) && status[index]) {
 				buffer.push(
 					createTagWithEscapedContent('status', status[index])
 				);
@@ -568,7 +568,7 @@ function appendXMLTransitions(buffer, transitions) {
 
 			buffer.push(xmlLabels.close);
 
-			buffer.push(createTagWithEscapedContent('name', item.id));
+			buffer.push(createTagWithEscapedContent('name', item.data.name));
 
 			buffer.push(
 				createTagWithEscapedContent('target', item.target),

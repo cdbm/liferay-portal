@@ -56,9 +56,9 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -326,6 +326,50 @@ public class LayoutPermissionTest {
 		finally {
 			_tearDownLayoutWorkflow();
 		}
+	}
+
+	@Test
+	@TestInfo("LPD-52364")
+	public void testContainsWithParentLayoutWithUpdateLayoutBasicPermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.SITE_MEMBER);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), Layout.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(layout.getPlid()), role.getRoleId(),
+			new String[] {ActionKeys.UPDATE});
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			role, UserTestUtil.addUser());
+
+		Assert.assertTrue(
+			_layoutPermission.contains(
+				permissionChecker, layout, ActionKeys.UPDATE));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutRestrictedUpdatePermission(
+				permissionChecker, layout));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutUpdatePermission(
+				permissionChecker, layout));
+
+		Layout childLayout = LayoutTestUtil.addTypeContentLayout(
+			_group, layout.getPlid());
+
+		Assert.assertEquals(layout.getPlid(), childLayout.getParentPlid());
+		Assert.assertFalse(
+			_layoutPermission.contains(
+				permissionChecker, childLayout, ActionKeys.UPDATE));
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutRestrictedUpdatePermission(
+				permissionChecker, childLayout));
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutUpdatePermission(
+				permissionChecker, childLayout));
 	}
 
 	@Test
@@ -618,7 +662,7 @@ public class LayoutPermissionTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		Company company = _companyLocalService.getCompany(

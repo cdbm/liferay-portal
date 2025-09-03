@@ -35,6 +35,9 @@ public class ObjectDefinitionServiceUtil {
 			long objectFolderId, String className, boolean enableComments,
 			boolean enableFriendlyURLCustomization, boolean enableIndexSearch,
 			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
 			Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey,
 			Map<java.util.Locale, String> pluralLabelMap, boolean portlet,
@@ -47,7 +50,9 @@ public class ObjectDefinitionServiceUtil {
 		return getService().addCustomObjectDefinition(
 			objectFolderId, className, enableComments,
 			enableFriendlyURLCustomization, enableIndexSearch,
-			enableLocalization, enableObjectEntryDraft, labelMap, name,
+			enableLocalization, enableObjectEntryDraft,
+			enableObjectEntrySchedule, enableObjectEntrySubscription,
+			enableObjectEntryVersioning, friendlyURLSeparator, labelMap, name,
 			panelAppOrder, panelCategoryKey, pluralLabelMap, portlet, scope,
 			storageType, objectDefinitionSettings, objectFields);
 	}
@@ -63,9 +68,12 @@ public class ObjectDefinitionServiceUtil {
 
 	public static ObjectDefinition addSystemObjectDefinition(
 			String externalReferenceCode, long userId, long objectFolderId,
-			boolean enableComments, boolean enableFriendlyURLCustomization,
-			boolean enableIndexSearch, boolean enableLocalization,
-			boolean enableObjectEntryDraft,
+			String className, boolean enableComments,
+			boolean enableFriendlyURLCustomization, boolean enableIndexSearch,
+			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
 			Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey,
 			Map<java.util.Locale, String> pluralLabelMap, boolean portlet,
@@ -76,9 +84,11 @@ public class ObjectDefinitionServiceUtil {
 		throws PortalException {
 
 		return getService().addSystemObjectDefinition(
-			externalReferenceCode, userId, objectFolderId, enableComments,
-			enableFriendlyURLCustomization, enableIndexSearch,
-			enableLocalization, enableObjectEntryDraft, labelMap, name,
+			externalReferenceCode, userId, objectFolderId, className,
+			enableComments, enableFriendlyURLCustomization, enableIndexSearch,
+			enableLocalization, enableObjectEntryDraft,
+			enableObjectEntrySchedule, enableObjectEntrySubscription,
+			enableObjectEntryVersioning, friendlyURLSeparator, labelMap, name,
 			panelAppOrder, panelCategoryKey, pluralLabelMap, portlet, scope,
 			objectDefinitionSettings, objectFields);
 	}
@@ -173,6 +183,9 @@ public class ObjectDefinitionServiceUtil {
 			boolean enableComments, boolean enableFriendlyURLCustomization,
 			boolean enableIndexSearch, boolean enableLocalization,
 			boolean enableObjectEntryDraft, boolean enableObjectEntryHistory,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
 			Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey, boolean portlet,
 			Map<java.util.Locale, String> pluralLabelMap, String scope,
@@ -188,7 +201,9 @@ public class ObjectDefinitionServiceUtil {
 			className, enableCategorization, enableComments,
 			enableFriendlyURLCustomization, enableIndexSearch,
 			enableLocalization, enableObjectEntryDraft,
-			enableObjectEntryHistory, labelMap, name, panelAppOrder,
+			enableObjectEntryHistory, enableObjectEntrySchedule,
+			enableObjectEntrySubscription, enableObjectEntryVersioning,
+			friendlyURLSeparator, labelMap, name, panelAppOrder,
 			panelCategoryKey, portlet, pluralLabelMap, scope, status,
 			objectDefinitionSettings);
 	}
@@ -199,14 +214,6 @@ public class ObjectDefinitionServiceUtil {
 
 		return getService().updateExternalReferenceCode(
 			objectDefinitionId, externalReferenceCode);
-	}
-
-	public static ObjectDefinition updateRootObjectDefinitionId(
-			long objectDefinitionId, long rootObjectDefinitionId)
-		throws PortalException {
-
-		return getService().updateRootObjectDefinitionId(
-			objectDefinitionId, rootObjectDefinitionId);
 	}
 
 	public static ObjectDefinition updateSystemObjectDefinition(

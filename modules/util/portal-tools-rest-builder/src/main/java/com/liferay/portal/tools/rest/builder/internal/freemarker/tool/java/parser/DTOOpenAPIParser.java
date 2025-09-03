@@ -128,11 +128,7 @@ public class DTOOpenAPIParser {
 			String propertySchemaName = entry.getKey();
 
 			if (propertySchemaName.equals(propertyName)) {
-				if (_isSchema(entry.getValue())) {
-					return true;
-				}
-
-				return false;
+				return _isSchema(entry.getValue());
 			}
 		}
 
@@ -268,6 +264,9 @@ public class DTOOpenAPIParser {
 
 			if ((name.lastIndexOf('.') != -1) &&
 				!StringUtil.equals(
+					name,
+					"com.liferay.portal.vulcan.custom.field.CustomField") &&
+				!StringUtil.equals(
 					name, "com.liferay.portal.vulcan.permission.Permission")) {
 
 				name = name.substring(name.lastIndexOf(".") + 1);
@@ -292,6 +291,9 @@ public class DTOOpenAPIParser {
 		String propertyType = javaDataType;
 
 		if ((propertyType.lastIndexOf('.') != -1) &&
+			!StringUtil.equals(
+				propertyType,
+				"com.liferay.portal.vulcan.custom.field.CustomField") &&
 			!StringUtil.equals(
 				propertyType,
 				"com.liferay.portal.vulcan.permission.Permission")) {

@@ -79,6 +79,23 @@ import com.liferay.portlet.portletconfiguration.util.PublicRenderParameterConfig
 import com.liferay.roles.admin.constants.RolesAdminWebKeys;
 import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 
+import jakarta.portlet.ActionParameters;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.EventRequest;
+import jakarta.portlet.EventResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -91,23 +108,6 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.function.Predicate;
-
-import javax.portlet.ActionParameters;
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.EventRequest;
-import javax.portlet.EventResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -127,15 +127,15 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.system=true",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Portlet Configuration",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/edit_configuration.jsp",
-		"javax.portlet.name=" + PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Portlet Configuration",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/edit_configuration.jsp",
+		"jakarta.portlet.name=" + PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.version=4.0"
 	},
-	service = javax.portlet.Portlet.class
+	service = jakarta.portlet.Portlet.class
 )
 public class PortletConfigurationPortlet extends MVCPortlet {
 
@@ -190,7 +190,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		}
 
 		PortletConfig portletConfig = (PortletConfig)actionRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		configurationAction.processAction(
 			portletConfig, actionRequest, actionResponse);
@@ -391,7 +391,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		_portletRequestThreadLocal.set(actionRequest);
 
 		actionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, getPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, getPortletConfig());
 
 		super.processAction(actionRequest, actionResponse);
 	}
@@ -404,7 +404,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		_portletRequestThreadLocal.set(eventRequest);
 
 		eventRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, getPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, getPortletConfig());
 
 		super.processEvent(eventRequest, eventResponse);
 	}
@@ -417,7 +417,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		_portletRequestThreadLocal.set(renderRequest);
 
 		renderRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, getPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, getPortletConfig());
 
 		super.render(renderRequest, renderResponse);
 	}
@@ -469,7 +469,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		_portletRequestThreadLocal.set(resourceRequest);
 
 		resourceRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, getPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, getPortletConfig());
 
 		super.serveResource(resourceRequest, resourceResponse);
 	}

@@ -148,6 +148,10 @@
 			<category name="Bug Prevention" />
 			<description name="Checks that `CODEOWNERS` files are located in `.github` directory." />
 		</check>
+		<check name="CodeownersOrderCheck">
+			<category name="Styling" />
+			<description name="Sorts code owners in `CODEOWNERS` files." />
+		</check>
 		<check name="CodeownersWhitespaceCheck">
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary whitespace in `CODEOWNERS` files." />
@@ -405,6 +409,52 @@
 			<description name="Performs several checks on tag attributes." />
 		</check>
 	</source-processor>
+	<source-processor name="JakartaTransformSourceProcessor">
+		<check name="JakartaTransformBNDCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformFTLCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformGradleCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformHTMLCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformJavaCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformJSCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformJSPCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformPropertiesCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformTLDCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformTSCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+		<check name="JakartaTransformXMLCheck">
+			<category name="JakartaTransform" />
+			<description name="Performs replacements for use of Jakarta." />
+		</check>
+	</source-processor>
 	<source-processor name="JavaSourceProcessor">
 		<check name="ArrayCheck">
 			<category name="Performance" />
@@ -471,10 +521,6 @@
 			<category name="Bug Prevention" />
 			<description name="Checks for correct use of `location == ?` when calling `org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration`." />
 		</check>
-		<check name="JavaConfigurationCategoryCheck">
-			<category name="Bug Prevention" />
-			<description name="Checks that the value of `category` in `@ExtendedObjectClassDefinition` matches the `categoryKey` of the corresponding class in `configuration-admin-web`." />
-		</check>
 		<check name="JavaConstructorParametersCheck">
 			<category name="Styling" />
 			<description name="Checks that the order of variable assignments matches the order of the parameters in the constructor signature." />
@@ -507,9 +553,9 @@
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary empty lines." />
 		</check>
-		<check name="JavaEntityModelToEntityFieldsMapCallCheck">
+		<check name="JavaEntityFieldsMapOrderCheck">
 			<category name="Styling" />
-			<description name="Sorts parameters in EntityModel.toEntityFieldsMap call." />
+			<description name="Sorts entity fields when calling `EntityFieldsMapFactory.create` and `EntityModel.toEntityFieldsMap`." />
 		</check>
 		<check name="JavaExceptionCheck">
 			<category name="Naming Conventions" />
@@ -722,6 +768,10 @@
 			<property name="checkSelfRegistration" value="false" />
 			<property name="checkUsesInternalService" value="false" />
 		</check>
+		<check name="JavaConstantsFileCheck">
+			<category name="Naming Conventions" />
+			<description name="Checks if constants names follow naming conventions." />
+		</check>
 		<check name="JavaDeprecatedJavadocCheck">
 			<category name="Javadoc" />
 			<description name="Checks if the `@deprecated` javadoc is pointing to the correct version." />
@@ -767,6 +817,11 @@
 		<check name="JavaInternalPackageCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on class in `internal` package." />
+		</check>
+		<check name="JavaJSImportMapsContributorCheck">
+			<category name="Bug Prevention" />
+			<description name="Performs several checks on `*JSImportMapsContributor` class." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaJSPDynamicIncludeCheck">
 			<category name="Bug Prevention" />
@@ -824,6 +879,10 @@
 		<check name="JavaSignatureParametersCheck">
 			<category name="Styling" />
 			<description name="Checks the order of parameters." />
+		</check>
+		<check name="JavaSnapshotClassNameCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks the name of the class that is passed to `Snapshot` constructor." />
 		</check>
 		<check name="JavaSourceFormatterDocumentationCheck">
 			<category name="Documentation" />
@@ -968,6 +1027,10 @@
 
 		<!-- Module Source Checks -->
 
+		<check name="JavaConfigurationCategoryCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that the value of `category` in `@ExtendedObjectClassDefinition` matches the `categoryKey` of the corresponding class that implements `ConfigurationCategory`." />
+		</check>
 		<check name="JavaLocalServiceImplErcUsageCheck">
 			<category name="Productivity" />
 			<description name="Automatically generates and ensures that `externalReferenceCode` is properly used in local `*ServiceImpl` add method." />
@@ -1061,6 +1124,10 @@
 		<check name="JSONBatchEngineDataFileCheck">
 			<category name="Styling" />
 			<description name="Remove elements in `*.batch-engine-data.json` files." />
+		</check>
+		<check name="JSONCommerceCatalogFileCheck">
+			<category name="Styling" />
+			<description name="Sorts `*.options.json`, `*.products.json`, and `*.products.specifications.json` files." />
 		</check>
 		<check name="JSONDeprecatedPackagesCheck">
 			<category name="Bug Prevention" />
@@ -1410,7 +1477,7 @@
 	<source-processor name="MarkdownSourceProcessor">
 		<check name="MarkdownBreakingChangesAmendmentsFileCheck">
 			<category name="Styling" />
-			<description name="Checks that breaking changes amendments should contain the schematized breaking changes in `BREAKING_CHANGES_AMENDMENTS.markdown` file." />
+			<description name="Checks that breaking changes amendments should contain the schematized breaking changes in `BREAKING_CHANGES_AMENDMENTS.md` file." />
 			<property name="enabled" value="false" />
 		</check>
 		<check name="MarkdownEmptyLinesCheck">
@@ -1419,7 +1486,7 @@
 		</check>
 		<check name="MarkdownFileExtensionCheck">
 			<category name="Styling" />
-			<description name="Finds `markdown` files with `.md` extension (use `.markdown`)." />
+			<description name="Finds `markdown` files with `.markdown` extension (use `.md`)." />
 		</check>
 		<check name="MarkdownSourceFormatterDocumentationCheck">
 			<category name="Documentation" />
@@ -1435,7 +1502,7 @@
 		</check>
 		<check name="MarkdownWhitespaceCheck">
 			<category name="Styling" />
-			<description name="Finds missing and unnecessary whitespace in `.markdown` files." />
+			<description name="Finds missing and unnecessary whitespace." />
 			<property name="allowLeadingSpaces" value="true" />
 			<property name="allowTrailingDoubleSpace" value="true" />
 		</check>
@@ -1734,7 +1801,17 @@
 
 		<check name="TSConfigFileCheck">
 			<category name="Bug Prevention" />
-			<description name="Finds missing `test.properties` files." />
+			<description name="Performs several checks on `ts.config` file." />
+			<property name="enabled" value="false" />
+		</check>
+		<check name="TSSpecFileLocationCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that `*.spec.ts` file should be inside a folder that contains a `config.ts`." />
+			<property name="enabled" value="false" />
+		</check>
+		<check name="TSSpecFileStylingCheck">
+			<category name="Styling" />
+			<description name="Applies rules to enforce consistency in code style." />
 		</check>
 	</source-processor>
 	<source-processor name="TXTSourceProcessor">
@@ -2186,10 +2263,19 @@
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary empty lines." />
 		</check>
+		<check name="YMLIndentationCheck">
+			<category name="Styling" />
+			<description name="Finds incorrect indentation in YAML files." />
+		</check>
 		<check name="YMLLongLinesCheck">
 			<category name="Styling" />
 			<description name="Finds lines that are longer than the specified maximum line length." />
 			<property name="maxLineLength" value="120" />
+		</check>
+		<check name="YMLRESTConfigFileBreakingChangeCommitMessageCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that commit message should contain the schematized breaking changes." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="YMLStylingCheck">
 			<category name="Styling" />

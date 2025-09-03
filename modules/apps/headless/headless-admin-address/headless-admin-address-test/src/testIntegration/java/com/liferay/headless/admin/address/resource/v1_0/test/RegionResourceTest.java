@@ -31,12 +31,12 @@ import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -107,8 +107,8 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 
 		long totalCount = regionsJSONObject.getLong("totalCount");
 
-		Region region1 = testGraphQLGetRegionsPage_addRegion();
-		Region region2 = testGraphQLGetRegionsPage_addRegion();
+		Region region1 = testGraphQLRegion_addRegion();
+		Region region2 = testGraphQLRegion_addRegion();
 
 		regionsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -241,6 +241,13 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 	}
 
 	@Override
+	protected Long testGetCountryRegionByRegionCode_getCountryId(Region region)
+		throws Exception {
+
+		return region.getCountryId();
+	}
+
+	@Override
 	protected Long testGetCountryRegionsPage_getCountryId() throws Exception {
 		return _country.getCountryId();
 	}
@@ -327,6 +334,14 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 				Arrays.asList(region2, region1),
 				(List<Region>)descPage.getItems());
 		}
+	}
+
+	@Override
+	protected Long testGraphQLGetCountryRegionByRegionCode_getCountryId(
+			Region region)
+		throws Exception {
+
+		return region.getCountryId();
 	}
 
 	@Override

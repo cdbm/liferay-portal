@@ -203,8 +203,9 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), draftLayout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				draftLayout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		mockHttpServletRequest.setParameter(
 			"formItemId", formStyledLayoutStructureItem.getItemId());
@@ -339,11 +340,11 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 			"null-" + WebKeys.CURRENT_PORTLET_URL, new MockLiferayPortletURL());
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			mockLiferayPortletRenderRequest);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));

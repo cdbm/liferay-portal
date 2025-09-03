@@ -7,6 +7,7 @@ package com.liferay.portal.search.web.internal.facet.display.context;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -73,6 +74,18 @@ public class UserSearchFacetDisplayContextTest
 	}
 
 	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		UserSearchFacetDisplayContextBuilder
+			userSearchFacetDisplayContextBuilder =
+				new UserSearchFacetDisplayContextBuilder(
+					getRenderRequest(group));
+
+		return userSearchFacetDisplayContextBuilder.build();
+	}
+
+	@Override
 	protected String getFilterValue(String term) {
 		return String.valueOf(_userId);
 	}
@@ -82,6 +95,29 @@ public class UserSearchFacetDisplayContextTest
 		_userId = RandomTestUtil.randomLong();
 
 		_addUser(_userId, term);
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		UserFacetPortletInstanceConfiguration
+			userFacetPortletInstanceConfiguration = Mockito.mock(
+				UserFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			userFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			userFacetPortletInstanceConfiguration
+		);
 	}
 
 	@Override

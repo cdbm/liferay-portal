@@ -22,7 +22,7 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutPageTemplateAdminWebConfiguration;
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -48,13 +48,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.security.PermissionsURLTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -135,7 +135,8 @@ public class DisplayPageActionDropdownItemsProvider {
 					).add(
 						() ->
 							_layoutPageTemplateEntry.isApproved() &&
-							(_layoutPageTemplateEntry.getClassNameId() > 0) &&
+							Validator.isNotNull(
+								_layoutPageTemplateEntry.getClassName()) &&
 							hasUpdatePermission,
 						_getMarkAsDefaultDisplayPageActionUnsafeConsumer()
 					).add(

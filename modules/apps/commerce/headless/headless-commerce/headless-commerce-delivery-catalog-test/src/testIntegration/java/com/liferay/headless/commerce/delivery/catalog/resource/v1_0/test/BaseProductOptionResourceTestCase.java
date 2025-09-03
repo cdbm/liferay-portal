@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -281,14 +281,14 @@ public abstract class BaseProductOptionResourceTestCase {
 		String productExternalReferenceCode =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getProductExternalReferenceCode();
 
-		Page<ProductOption> productOptionPage =
+		Page<ProductOption> productOptionsPage =
 			productOptionResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
 					null);
 
 		int totalCount = GetterUtil.getInteger(
-			productOptionPage.getTotalCount());
+			productOptionsPage.getTotalCount());
 
 		ProductOption productOption1 =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
@@ -508,12 +508,12 @@ public abstract class BaseProductOptionResourceTestCase {
 		Long channelId = testGetChannelProductProductOptionsPage_getChannelId();
 		Long productId = testGetChannelProductProductOptionsPage_getProductId();
 
-		Page<ProductOption> productOptionPage =
+		Page<ProductOption> productOptionsPage =
 			productOptionResource.getChannelProductProductOptionsPage(
 				channelId, productId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productOptionPage.getTotalCount());
+			productOptionsPage.getTotalCount());
 
 		ProductOption productOption1 =
 			testGetChannelProductProductOptionsPage_addProductOption(
@@ -639,11 +639,9 @@ public abstract class BaseProductOptionResourceTestCase {
 		return null;
 	}
 
-	protected ProductOption testGraphQLProductOption_addProductOption()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

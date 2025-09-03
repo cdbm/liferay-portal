@@ -251,6 +251,14 @@ public class ObjectDefinitionSettingLocalServiceWrapper
 			fetchObjectDefinitionSetting(objectDefinitionSettingId);
 	}
 
+	@Override
+	public com.liferay.object.model.ObjectDefinitionSetting
+		fetchObjectDefinitionSetting(long objectDefinitionId, String name) {
+
+		return _objectDefinitionSettingLocalService.
+			fetchObjectDefinitionSetting(objectDefinitionId, name);
+	}
+
 	/**
 	 * Returns the object definition setting with the matching UUID and company.
 	 *
@@ -308,6 +316,15 @@ public class ObjectDefinitionSettingLocalServiceWrapper
 			objectDefinitionSettingId);
 	}
 
+	@Override
+	public com.liferay.object.model.ObjectDefinitionSetting
+			getObjectDefinitionSetting(long objectDefinitionId, String name)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectDefinitionSettingLocalService.getObjectDefinitionSetting(
+			objectDefinitionId, name);
+	}
+
 	/**
 	 * Returns the object definition setting with the matching UUID and company.
 	 *
@@ -362,6 +379,14 @@ public class ObjectDefinitionSettingLocalServiceWrapper
 	public int getObjectDefinitionSettingsCount() {
 		return _objectDefinitionSettingLocalService.
 			getObjectDefinitionSettingsCount();
+	}
+
+	@Override
+	public java.util.Map<Long, com.liferay.object.model.ObjectDefinitionSetting>
+		getObjectDefinitionSettingsMap(long companyId, String name) {
+
+		return _objectDefinitionSettingLocalService.
+			getObjectDefinitionSettingsMap(companyId, name);
 	}
 
 	/**

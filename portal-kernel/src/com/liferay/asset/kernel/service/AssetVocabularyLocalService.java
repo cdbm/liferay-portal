@@ -416,6 +416,11 @@ public interface AssetVocabularyLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long userId, long groupId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

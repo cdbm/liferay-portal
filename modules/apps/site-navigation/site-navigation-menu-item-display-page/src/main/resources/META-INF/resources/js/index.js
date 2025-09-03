@@ -76,17 +76,17 @@ function DisplayPageItemContextualSidebar({
 
 					let value;
 
-					if (typeof selectedItem.value === 'string') {
+					if (typeof selectedItems.value === 'string') {
 						try {
-							value = JSON.parse(selectedItem.value);
+							value = JSON.parse(selectedItems.value);
 						}
 						catch (error) {}
 					}
 					else if (
-						selectedItem.value &&
-						typeof selectedItem.value === 'object'
+						selectedItems.value &&
+						typeof selectedItems.value === 'object'
 					) {
-						value = selectedItem.value;
+						value = selectedItems.value;
 					}
 
 					if (value) {
@@ -324,6 +324,12 @@ function FormValues({localizedNames, namespace, selectedItem, useCustomName}) {
 				readOnly
 				type="hidden"
 				value={selectedItem.classTypeId || ''}
+			/>
+			<input
+				name={getFieldName(namespace, 'externalReferenceCode')}
+				readOnly
+				type="hidden"
+				value={selectedItem.externalReferenceCode || ''}
 			/>
 			<input
 				name={getFieldName(namespace, 'title')}

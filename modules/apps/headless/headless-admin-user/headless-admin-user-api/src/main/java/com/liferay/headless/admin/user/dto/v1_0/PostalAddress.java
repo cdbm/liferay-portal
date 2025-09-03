@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -226,6 +226,49 @@ public class PostalAddress implements Serializable {
 	private Supplier<String> _addressRegionSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The address's subtype."
+	)
+	public String getAddressSubtype() {
+		if (_addressSubtypeSupplier != null) {
+			addressSubtype = _addressSubtypeSupplier.get();
+
+			_addressSubtypeSupplier = null;
+		}
+
+		return addressSubtype;
+	}
+
+	public void setAddressSubtype(String addressSubtype) {
+		this.addressSubtype = addressSubtype;
+
+		_addressSubtypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAddressSubtype(
+		UnsafeSupplier<String, Exception> addressSubtypeUnsafeSupplier) {
+
+		_addressSubtypeSupplier = () -> {
+			try {
+				return addressSubtypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The address's subtype.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String addressSubtype;
+
+	@JsonIgnore
+	private Supplier<String> _addressSubtypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The address's type."
 	)
 	public String getAddressType() {
@@ -346,7 +389,7 @@ public class PostalAddress implements Serializable {
 	}
 
 	@GraphQLField(description = "The address's ID.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
 	@JsonIgnore
@@ -738,6 +781,22 @@ public class PostalAddress implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(addressRegion));
+
+			sb.append("\"");
+		}
+
+		String addressSubtype = getAddressSubtype();
+
+		if (addressSubtype != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"addressSubtype\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(addressSubtype));
 
 			sb.append("\"");
 		}

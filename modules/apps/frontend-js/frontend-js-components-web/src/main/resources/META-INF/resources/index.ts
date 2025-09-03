@@ -12,6 +12,7 @@ export {default as CodeMirrorKeyboardMessage} from './code_mirror_keyboard_messa
 export {default as FeatureIndicator} from './feature_indicator/FeatureIndicator';
 
 export {default as FieldBase} from './forms/common/FieldBase';
+export {RequiredMask} from './forms/common/FieldBase';
 export {default as FieldFeedback} from './forms/common/FieldFeedback';
 
 export {default as InputLocalized} from './forms/input/InputLocalized';
@@ -44,8 +45,12 @@ export {default as openTagSelectionModal} from './modal/commands/openTagSelectio
 export {ModalStatus} from './modal/components/Modal';
 
 export {default as openToast} from './toast/openToast';
+export type {OpenToastProps} from './toast/openToast';
 
-export {Locale} from './translation_manager/TranslationAdminContent';
+export {
+	Locale,
+	Translations,
+} from './translation_manager/TranslationAdminContent';
 export {default as TranslationAdminItem} from './translation_manager/TranslationAdminItem';
 export {default as TranslationAdminModal} from './translation_manager/TranslationAdminModal';
 

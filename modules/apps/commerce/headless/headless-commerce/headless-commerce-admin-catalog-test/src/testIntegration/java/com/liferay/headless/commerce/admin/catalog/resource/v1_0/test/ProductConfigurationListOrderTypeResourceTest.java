@@ -66,11 +66,12 @@ public class ProductConfigurationListOrderTypeResourceTest
 
 		_cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				RandomTestUtil.randomString(), _commerceCatalog.getGroupId(),
-				_user.getUserId(), 0, false, RandomTestUtil.randomString(), 0D,
-				dateConfig.getMonth(), dateConfig.getDay(),
-				dateConfig.getYear(), dateConfig.getHour(),
-				dateConfig.getMinute(), 0, 0, 0, 0, 0, true);
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_commerceCatalog.getGroupId(), 0, false,
+				RandomTestUtil.randomString(), 0D, dateConfig.getMonth(),
+				dateConfig.getDay(), dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 	}
 
 	@After
@@ -89,6 +90,13 @@ public class ProductConfigurationListOrderTypeResourceTest
 			_cpConfigurationListRelLocalService.deleteCPConfigurationListRel(
 				productConfigurationListOrderTypeId);
 		}
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
 	}
 
 	@Override
@@ -164,24 +172,26 @@ public class ProductConfigurationListOrderTypeResourceTest
 
 	@Override
 	protected ProductConfigurationListOrderType
+			testDeleteProductConfigurationListOrderTypeBatch_addProductConfigurationListOrderType()
+		throws Exception {
+
+		return productConfigurationListOrderTypeResource.
+			postProductConfigurationListIdProductConfigurationListOrderType(
+				_cpConfigurationList.getCPConfigurationListId(),
+				randomProductConfigurationListOrderType());
+	}
+
+	@Override
+	protected ProductConfigurationListOrderType
 			testGetProductConfigurationListByExternalReferenceCodeProductConfigurationListOrderTypesPage_addProductConfigurationListOrderType(
 				String externalReferenceCode,
 				ProductConfigurationListOrderType
 					productConfigurationListOrderType)
 		throws Exception {
 
-		ProductConfigurationListOrderType
-			postProductConfigurationListOrderType =
-				productConfigurationListOrderTypeResource.
-					postProductConfigurationListByExternalReferenceCodeProductConfigurationListOrderType(
-						externalReferenceCode,
-						productConfigurationListOrderType);
-
-		_productConfigurationListOrderTypeIds.add(
-			postProductConfigurationListOrderType.
-				getProductConfigurationListOrderTypeId());
-
-		return postProductConfigurationListOrderType;
+		return productConfigurationListOrderTypeResource.
+			postProductConfigurationListByExternalReferenceCodeProductConfigurationListOrderType(
+				externalReferenceCode, productConfigurationListOrderType);
 	}
 
 	@Override
@@ -200,17 +210,9 @@ public class ProductConfigurationListOrderTypeResourceTest
 					productConfigurationListOrderType)
 		throws Exception {
 
-		ProductConfigurationListOrderType
-			postProductConfigurationListOrderType =
-				productConfigurationListOrderTypeResource.
-					postProductConfigurationListIdProductConfigurationListOrderType(
-						id, productConfigurationListOrderType);
-
-		_productConfigurationListOrderTypeIds.add(
-			postProductConfigurationListOrderType.
-				getProductConfigurationListOrderTypeId());
-
-		return postProductConfigurationListOrderType;
+		return productConfigurationListOrderTypeResource.
+			postProductConfigurationListIdProductConfigurationListOrderType(
+				id, productConfigurationListOrderType);
 	}
 
 	@Override

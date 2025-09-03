@@ -5,7 +5,7 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0.util;
 
-import com.liferay.headless.admin.site.dto.v1_0.PageElement;
+import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.CollectionItemLayoutStructureItemImporter;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.CollectionLayoutStructureItemImporter;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.ColumnLayoutStructureItemImporter;
@@ -27,47 +27,53 @@ import java.util.EnumMap;
 public class LayoutStructureItemImporterUtil {
 
 	public static LayoutStructureItemImporter getLayoutStructureItemImporter(
-		PageElement.Type type) {
+		PageElementDefinition pageElementDefinition) {
 
-		return _layoutStructureItemImporters.get(type);
+		return _layoutStructureItemImporters.get(
+			pageElementDefinition.getType());
 	}
 
-	private static final EnumMap<PageElement.Type, LayoutStructureItemImporter>
-		_layoutStructureItemImporters;
+	private static final EnumMap
+		<PageElementDefinition.Type, LayoutStructureItemImporter>
+			_layoutStructureItemImporters;
 
 	static {
-		_layoutStructureItemImporters = new EnumMap<>(PageElement.Type.class);
+		_layoutStructureItemImporters = new EnumMap<>(
+			PageElementDefinition.Type.class);
 
 		_layoutStructureItemImporters.put(
-			PageElement.Type.COLLECTION,
+			PageElementDefinition.Type.COLLECTION,
 			new CollectionLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.COLLECTION_ITEM,
+			PageElementDefinition.Type.COLLECTION_ITEM,
 			new CollectionItemLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.COLUMN, new ColumnLayoutStructureItemImporter());
+			PageElementDefinition.Type.COLUMN,
+			new ColumnLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.CONTAINER,
+			PageElementDefinition.Type.CONTAINER,
 			new ContainerLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.DROP_ZONE,
+			PageElementDefinition.Type.DROP_ZONE,
 			new DropZoneLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.FORM, new FormLayoutStructureItemImporter());
+			PageElementDefinition.Type.FORM,
+			new FormLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.FORM_STEP,
+			PageElementDefinition.Type.FORM_STEP,
 			new FormStepItemLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.FORM_STEP_CONTAINER,
+			PageElementDefinition.Type.FORM_STEP_CONTAINER,
 			new FormStepContainerLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.FRAGMENT_DROP_ZONE,
-			new FragmentDropZoneLayoutStructureItemImporter());
-		_layoutStructureItemImporters.put(
-			PageElement.Type.FRAGMENT,
+			PageElementDefinition.Type.FRAGMENT,
 			new FragmentLayoutStructureItemImporter());
 		_layoutStructureItemImporters.put(
-			PageElement.Type.ROW, new RowLayoutStructureItemImporter());
+			PageElementDefinition.Type.FRAGMENT_DROP_ZONE,
+			new FragmentDropZoneLayoutStructureItemImporter());
+		_layoutStructureItemImporters.put(
+			PageElementDefinition.Type.ROW,
+			new RowLayoutStructureItemImporter());
 	}
 
 }

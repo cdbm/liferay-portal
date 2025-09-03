@@ -26,6 +26,7 @@
 		<column name="fragmentCollectionKey" type="String" />
 		<column name="name" type="String" />
 		<column name="description" type="String" />
+		<column name="marketplace" type="boolean" />
 		<column name="lastPublishDate" type="Date" />
 
 		<!-- Order -->
@@ -46,6 +47,15 @@
 		<finder name="G_LikeN" return-type="Collection">
 			<finder-column arrayable-operator="OR" name="groupId" />
 			<finder-column comparator="LIKE" name="name" />
+		</finder>
+		<finder name="G_M" return-type="Collection">
+			<finder-column arrayable-operator="OR" name="groupId" />
+			<finder-column name="marketplace" />
+		</finder>
+		<finder name="G_LikeN_M" return-type="Collection">
+			<finder-column arrayable-operator="OR" name="groupId" />
+			<finder-column comparator="LIKE" name="name" />
+			<finder-column name="marketplace" />
 		</finder>
 	</entity>
 	<entity external-reference-code="group" local-service="true" name="FragmentComposition" remote-service="true" uuid="true">

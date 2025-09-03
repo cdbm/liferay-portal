@@ -39,12 +39,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.menu.item.display.page.internal.type.DisplayPageTypeContext;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Map;
-
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Lourdes Fernández Besada
@@ -63,7 +63,7 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
 			portletResponse);
@@ -194,6 +194,8 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 			).put(
 				"data", _getDataJSONArray()
 			).put(
+				"externalReferenceCode", getExternalReferenceCode()
+			).put(
 				"title", getTitle()
 			).put(
 				"type", getType()
@@ -244,6 +246,22 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 					typeSettingsUnicodeProperties.get("useCustomName"));
 			}
 		).build();
+	}
+
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode != null) {
+			return _externalReferenceCode;
+		}
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			UnicodePropertiesBuilder.fastLoad(
+				_siteNavigationMenuItem.getTypeSettings()
+			).build();
+
+		_externalReferenceCode = typeSettingsUnicodeProperties.get(
+			"externalReferenceCode");
+
+		return _externalReferenceCode;
 	}
 
 	public String getItemDetailsURL() {
@@ -390,6 +408,7 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 	private Long _classPK;
 	private Long _classTypeId;
 	private final DisplayPageTypeContext _displayPageTypeContext;
+	private String _externalReferenceCode;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
 	private LayoutDisplayPageObjectProvider<?> _layoutDisplayPageObjectProvider;

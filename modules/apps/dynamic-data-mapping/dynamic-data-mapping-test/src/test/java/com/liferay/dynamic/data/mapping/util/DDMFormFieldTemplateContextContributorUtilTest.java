@@ -8,7 +8,6 @@ package com.liferay.dynamic.data.mapping.util;
 import com.liferay.dynamic.data.mapping.form.field.type.internal.checkbox.CheckboxDDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.test.util.BaseDDMFormFieldTemplateContextContributorTestCase;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
@@ -39,7 +38,7 @@ public class DDMFormFieldTemplateContextContributorUtilTest
 	}
 
 	@Test
-	public void testGetLocaleMap() {
+	public void testGetLocalizationParameters() {
 		CheckboxDDMFormFieldTemplateContextContributor
 			checkboxDDMFormFieldTemplateContextContributor =
 				new CheckboxDDMFormFieldTemplateContextContributor();
@@ -47,24 +46,24 @@ public class DDMFormFieldTemplateContextContributorUtilTest
 		DDMFormField ddmFormField = new DDMFormField("field", "checkbox");
 
 		ddmFormField.setDDMForm(getDDMForm());
+		ddmFormField.setProperty("editOnlyInDefaultLanguage", true);
+		ddmFormField.setProperty("isLocalizationSupported", true);
 
 		Map<String, Object> parameters =
 			checkboxDDMFormFieldTemplateContextContributor.getParameters(
 				ddmFormField, createDDMFormFieldRenderingContext());
 
-		JSONArray availableLocalesJSONArray = (JSONArray)parameters.get(
-			"availableLocales");
 		JSONObject defaultLocaleJSONObject = (JSONObject)parameters.get(
 			"defaultLocale");
 		JSONObject editingLocaleJSONObject = (JSONObject)parameters.get(
 			"editingLocale");
 
 		Assert.assertEquals(
-			availableLocales.size(), availableLocalesJSONArray.length());
-		Assert.assertEquals(
 			LocaleUtil.US.toString(), defaultLocaleJSONObject.get("localeId"));
 		Assert.assertEquals(
 			LocaleUtil.US.toString(), editingLocaleJSONObject.get("localeId"));
+		Assert.assertTrue((boolean)parameters.get("editOnlyInDefaultLanguage"));
+		Assert.assertTrue((boolean)parameters.get("isLocalizationSupported"));
 	}
 
 }

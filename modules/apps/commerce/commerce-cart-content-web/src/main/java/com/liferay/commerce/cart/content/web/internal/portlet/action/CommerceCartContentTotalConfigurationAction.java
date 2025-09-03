@@ -12,9 +12,9 @@ import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.constants.CPConstants;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.log.Log;
@@ -27,10 +27,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.portlet.PortletConfig;
+import jakarta.portlet.PortletConfig;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "javax.portlet.name=" + CommercePortletKeys.COMMERCE_CART_CONTENT_TOTAL,
+	property = "jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_CART_CONTENT_TOTAL,
 	service = ConfigurationAction.class
 )
 public class CommerceCartContentTotalConfigurationAction

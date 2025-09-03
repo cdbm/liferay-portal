@@ -29,10 +29,11 @@ type ObjectDefinitionNodeActionsProps = {
 	hasObjectDefinitionDeleteResourcePermission: boolean;
 	hasObjectDefinitionManagePermissionsResourcePermission: boolean;
 	hasObjectDefinitionUpdateResourcePermission: boolean;
+	isTreeStructure: boolean;
 	objectDefinitionId: number;
 	objectDefinitionName: string;
 	objectDefinitionPermissionsURL: string;
-	objectFoldersLenght: number;
+	objectFoldersLength: number;
 	status: {
 		code: number;
 		label: string;
@@ -185,10 +186,11 @@ export function getObjectDefinitionNodeActions({
 	hasObjectDefinitionDeleteResourcePermission,
 	hasObjectDefinitionManagePermissionsResourcePermission,
 	hasObjectDefinitionUpdateResourcePermission,
+	isTreeStructure,
 	objectDefinitionId,
 	objectDefinitionName,
 	objectDefinitionPermissionsURL,
-	objectFoldersLenght,
+	objectFoldersLength,
 }: ObjectDefinitionNodeActionsProps) {
 	const PermissionUrl = formatActionURL(
 		objectDefinitionPermissionsURL,
@@ -228,7 +230,7 @@ export function getObjectDefinitionNodeActions({
 					type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
 				});
 			},
-			symbolLeft: 'info-panel-closed',
+			symbolLeft: 'info-circle',
 		},
 		{type: 'divider'},
 		{
@@ -253,7 +255,7 @@ export function getObjectDefinitionNodeActions({
 	] as DropDownItems[];
 
 	if (
-		objectFoldersLenght > 1 &&
+		objectFoldersLength > 1 &&
 		hasObjectDefinitionUpdateResourcePermission
 	) {
 		kebabOptions.push(
@@ -307,27 +309,41 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('object')
 			),
 			onClick: async () => {
-				const deletedObjectDefinition = await deleteObjectDefinition({
-					baseResourceURL,
-					objectDefinitionId,
-					objectDefinitionName,
-				});
-
-				if (deletedObjectDefinition) {
-					dispatch({
-						payload: {
-							deletedObjectDefinition,
-						},
-						type: TYPES.SET_DELETE_OBJECT_DEFINITION,
-					});
+				if (isTreeStructure) {
 					dispatch({
 						payload: {
 							updatedModelBuilderModals: {
-								deleteObjectDefinition: true,
+								objectDefinitionOnRootModelDeletionNotAllowed:
+									true,
 							},
 						},
 						type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
 					});
+				}
+				else {
+					const deletedObjectDefinition =
+						await deleteObjectDefinition({
+							baseResourceURL,
+							objectDefinitionId,
+							objectDefinitionName,
+						});
+
+					if (deletedObjectDefinition) {
+						dispatch({
+							payload: {
+								deletedObjectDefinition,
+							},
+							type: TYPES.SET_DELETE_OBJECT_DEFINITION,
+						});
+						dispatch({
+							payload: {
+								updatedModelBuilderModals: {
+									deleteObjectDefinition: true,
+								},
+							},
+							type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+						});
+					}
 				}
 			},
 			symbolLeft: 'trash',
@@ -477,9 +493,9 @@ export async function getUpdatedModelBuilderStructurePayload(
 						[];
 
 					const objectDefinitionsFilteredByObjectFolder =
-						await API.getObjectDefinitions(
-							`filter=objectFolderExternalReferenceCode eq '${objectFolder.externalReferenceCode}'`
-						);
+						await API.getObjectDefinitions({
+							filter: `objectFolderExternalReferenceCode eq '${objectFolder.externalReferenceCode}'`,
+						});
 
 					const linkedObjectDefinitions: ObjectDefinition[] = [];
 

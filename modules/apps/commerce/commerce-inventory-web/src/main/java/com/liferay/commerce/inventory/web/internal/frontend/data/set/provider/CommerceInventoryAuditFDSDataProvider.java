@@ -10,6 +10,7 @@ import com.liferay.commerce.inventory.service.CommerceInventoryAuditService;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditType;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
 import com.liferay.commerce.inventory.web.internal.constants.CommerceInventoryFDSNames;
+import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -23,6 +24,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
@@ -30,8 +33,6 @@ import java.text.Format;
 
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -88,7 +89,11 @@ public class CommerceInventoryAuditFDSDataProvider
 							locale));
 
 					BigDecimal commerceInventoryWarehouseItemQuantity =
-						commerceInventoryAudit.getQuantity();
+						_commerceQuantityFormatter.format(
+							commerceInventoryAudit.getCompanyId(),
+							commerceInventoryAudit.getQuantity(),
+							commerceInventoryAudit.getSku(),
+							commerceInventoryAudit.getUnitOfMeasureKey());
 
 					return new TimelineModel(
 						commerceInventoryAudit.getCommerceInventoryAuditId(),
@@ -124,6 +129,9 @@ public class CommerceInventoryAuditFDSDataProvider
 	@Reference
 	private CommerceInventoryAuditTypeRegistry
 		_commerceInventoryAuditTypeRegistry;
+
+	@Reference
+	private CommerceQuantityFormatter _commerceQuantityFormatter;
 
 	@Reference
 	private Portal _portal;

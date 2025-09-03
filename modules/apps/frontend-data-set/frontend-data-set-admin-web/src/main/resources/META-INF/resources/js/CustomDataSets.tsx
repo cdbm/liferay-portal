@@ -6,7 +6,10 @@
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayForm, {ClayInput} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
+import ClayLink from '@clayui/link';
 import ClayModal from '@clayui/modal';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
 import {openModal} from 'frontend-js-components-web';
@@ -22,10 +25,11 @@ import RESTEndpointDropdownMenu from './components/rest/RESTEndpointDropdownMenu
 import RESTSchemaDropdownMenu from './components/rest/RESTSchemaDropdownMenu';
 import {
 	ALLOWED_ENDPOINTS_PARAMETERS,
-	API_URL,
 	DEFAULT_FETCH_HEADERS,
 	FDS_DEFAULT_PROPS,
 } from './utils/constants';
+import getAPIExplorerURL from './utils/getAPIExplorerURL';
+import getDataSetResourceURL from './utils/getDataSetResourceURL';
 import openDefaultFailureToast from './utils/openDefaultFailureToast';
 import openDefaultSuccessToast from './utils/openDefaultSuccessToast';
 import {IDataSet, ISystemDataSet} from './utils/types';
@@ -126,7 +130,7 @@ const NewDataSetModalContent = ({
 			restSchema: selectedRESTSchema,
 		};
 
-		const response = await fetch(API_URL.DATA_SETS, {
+		const response = await fetch(getDataSetResourceURL({}), {
 			body: JSON.stringify(body),
 			headers: DEFAULT_FETCH_HEADERS,
 			method: 'POST',
@@ -531,15 +535,21 @@ const CustomDataSets = ({
 	systemDataSets: Array<ISystemDataSet>;
 }) => {
 	const getAPIURL = () => {
-		if (!systemDataSets.length) {
-			return API_URL.DATA_SETS;
+		let params;
+
+		if (systemDataSets.length) {
+			const systemDataSetNames: string = systemDataSets
+				.map((systemDataSet) => `'${systemDataSet.name}'`)
+				.join(',');
+
+			params = {
+				filter: `not (externalReferenceCode in (${systemDataSetNames}))`,
+			};
 		}
 
-		const systemDataSetNames: string = systemDataSets
-			.map((systemDataSet) => `'${systemDataSet.name}'`)
-			.join(',');
-
-		return `${API_URL.DATA_SETS}?filter=not (externalReferenceCode in (${systemDataSetNames}))`;
+		return getDataSetResourceURL({
+			params,
+		});
 	};
 
 	const getEditURL = (itemData: IDataSet) => {
@@ -596,6 +606,37 @@ const CustomDataSets = ({
 		});
 	};
 
+	const restApplicationRenderer = function ({
+		itemData,
+	}: {
+		itemData: IDataSet;
+	}) {
+		const apiExplorerURL = getAPIExplorerURL(itemData.restApplication);
+
+		return (
+			<ClayTooltipProvider>
+				<ClayLink
+					data-tooltip-align="top"
+					decoration="underline"
+					displayType="tertiary"
+					href={apiExplorerURL}
+					rel="noopener noreferrer"
+					target="_blank"
+					title={apiExplorerURL}
+				>
+					<span className="inline-item inline-item-before">
+						<ClayIcon
+							className="mr-1 text-2 text-secondary"
+							symbol="shortcut"
+						/>
+					</span>
+
+					{itemData.restApplication}
+				</ClayLink>
+			</ClayTooltipProvider>
+		);
+	};
+
 	const creationMenu = {
 		primaryItems: [
 			{
@@ -635,6 +676,7 @@ const CustomDataSets = ({
 						sortable: true,
 					},
 					{
+						contentRenderer: 'restApplicationRenderer',
 						fieldName: 'restApplication',
 						label: Liferay.Language.get('rest-application'),
 						sortable: true,
@@ -670,6 +712,7 @@ const CustomDataSets = ({
 						? creationMenu
 						: undefined
 				}
+				customDataRenderers={{restApplicationRenderer}}
 				emptyState={{
 					description: Liferay.Language.get(
 						'start-creating-one-to-show-your-data'

@@ -11,6 +11,7 @@ import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.commerce.exception.CPDefinitionInventoryAllowedOrderQuantitiesException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMaxOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMinOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMultipleOrderQuantityException;
@@ -20,6 +21,7 @@ import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.CPConfigurationEntryAllowedOrderQuantitiesException;
 import com.liferay.commerce.product.exception.CPConfigurationEntryQuantityException;
 import com.liferay.commerce.product.exception.CPDefinitionExpirationDateException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaDescriptionException;
@@ -62,7 +64,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -80,6 +82,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.math.BigDecimal;
 
 import java.net.URL;
@@ -93,9 +98,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -104,7 +106,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
 		"mvc.command.name=/cp_definitions/edit_cp_definition"
 	},
 	service = MVCActionCommand.class
@@ -232,8 +234,12 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			else if (throwable instanceof AssetCategoryException ||
 					 throwable instanceof AssetTagException ||
 					 throwable instanceof
+						 CPConfigurationEntryAllowedOrderQuantitiesException ||
+					 throwable instanceof
 						 CPConfigurationEntryQuantityException ||
 					 throwable instanceof CPDefinitionExpirationDateException ||
+					 throwable instanceof
+						 CPDefinitionInventoryAllowedOrderQuantitiesException ||
 					 throwable instanceof
 						 CPDefinitionInventoryMaxOrderQuantityException ||
 					 throwable instanceof
@@ -362,7 +368,8 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			CProductVersionConfiguration cProductVersionConfiguration =
 				_configurationProvider.getConfiguration(
 					CProductVersionConfiguration.class,
-					new SystemSettingsLocator(
+					new CompanyServiceSettingsLocator(
+						cpDefinition.getCompanyId(),
 						CProductVersionConfiguration.class.getName()));
 
 			if (cProductVersionConfiguration.enabled()) {
@@ -768,8 +775,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				depth, displayAvailability, displayStockQuantity, freeShipping,
 				height, lowStockActivity, maxOrderQuantity, minOrderQuantity,
 				minStockQuantity, multipleOrderQuantity, purchasable, shippable,
-				shippingExtraPrice, shipSeparately, taxExempt, true, weight,
-				width);
+				shippingExtraPrice, shipSeparately, taxExempt, weight, width);
 		}
 		else {
 			_cpConfigurationEntryService.updateCPConfigurationEntry(
@@ -780,8 +786,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				depth, displayAvailability, displayStockQuantity, freeShipping,
 				height, lowStockActivity, maxOrderQuantity, minOrderQuantity,
 				minStockQuantity, multipleOrderQuantity, purchasable, shippable,
-				shippingExtraPrice, shipSeparately, taxExempt,
-				cpConfigurationEntry.isVisible(), weight, width);
+				shippingExtraPrice, shipSeparately, taxExempt, weight, width);
 		}
 
 		if (FeatureFlagManagerUtil.isEnabled(

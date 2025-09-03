@@ -18,7 +18,7 @@ import com.liferay.layout.page.template.admin.web.internal.security.permission.r
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplatePermission;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.string.StringBundler;
@@ -36,10 +36,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso

@@ -43,6 +43,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -237,10 +237,10 @@ public abstract class BaseSegmentResourceTestCase {
 	public void testGetSiteSegmentsPageWithPagination() throws Exception {
 		Long siteId = testGetSiteSegmentsPage_getSiteId();
 
-		Page<Segment> segmentPage = segmentResource.getSiteSegmentsPage(
+		Page<Segment> segmentsPage = segmentResource.getSiteSegmentsPage(
 			siteId, null);
 
-		int totalCount = GetterUtil.getInteger(segmentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(segmentsPage.getTotalCount());
 
 		Segment segment1 = testGetSiteSegmentsPage_addSegment(
 			siteId, randomSegment());
@@ -492,6 +492,11 @@ public abstract class BaseSegmentResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Segment testGraphQLSegment_addSegment() throws Exception {

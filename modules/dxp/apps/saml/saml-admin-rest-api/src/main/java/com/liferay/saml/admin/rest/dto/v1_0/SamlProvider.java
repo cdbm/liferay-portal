@@ -19,6 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -26,12 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Stian Sigvartsen
@@ -545,7 +545,7 @@ public class SamlProvider implements Serializable {
 	@GraphQLName("Role")
 	public static enum Role {
 
-		IDP("idp"), SP("sp");
+		IB("ib"), IDP("idp"), SP("sp");
 
 		@JsonCreator
 		public static Role create(String value) {

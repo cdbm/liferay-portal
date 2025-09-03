@@ -11,9 +11,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.templateparser.BaseTransformerListener;
 import com.liferay.portal.kernel.templateparser.TransformerListener;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Brian Wing Shun Chan
  */
 @Component(
-	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+	property = "jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = TransformerListener.class
 )
 public class RegexTransformerListener extends BaseTransformerListener {

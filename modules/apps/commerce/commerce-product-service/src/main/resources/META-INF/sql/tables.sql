@@ -84,7 +84,6 @@ create table CPConfigurationEntry (
 	shippingExtraPrice DOUBLE,
 	shipSeparately BOOLEAN,
 	taxExempt BOOLEAN,
-	visible BOOLEAN,
 	weight DOUBLE,
 	width DOUBLE,
 	primary key (CPConfigurationEntryId, ctCollectionId)
@@ -166,6 +165,7 @@ create table CPDSpecificationOptionValue (
 	key_ VARCHAR(75) null,
 	priority DOUBLE,
 	value STRING null,
+	visible BOOLEAN,
 	lastPublishDate DATE null,
 	primary key (CPDSpecificationOptionValueId, ctCollectionId)
 );
@@ -254,6 +254,7 @@ create table CPDefinitionLocalization (
 	companyId LONG,
 	CPDefinitionId LONG,
 	languageId VARCHAR(75) null,
+	CProductId LONG,
 	name STRING null,
 	shortDescription STRING null,
 	description TEXT null,
@@ -535,6 +536,7 @@ create table CPSpecificationOption (
 	facetable BOOLEAN,
 	key_ VARCHAR(75) null,
 	priority DOUBLE,
+	visible BOOLEAN,
 	lastPublishDate DATE null,
 	primary key (CPSpecificationOptionId, ctCollectionId)
 );

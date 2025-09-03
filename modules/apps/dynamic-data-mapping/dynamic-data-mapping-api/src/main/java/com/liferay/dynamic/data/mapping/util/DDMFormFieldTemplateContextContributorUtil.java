@@ -6,18 +6,19 @@
 package com.liferay.dynamic.data.mapping.util;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -26,12 +27,85 @@ import java.util.Map;
  */
 public class DDMFormFieldTemplateContextContributorUtil {
 
-	public static Map<Locale, String> getListTypeEntryNameMap(
-		DDMFormField ddmFormField, String key,
+	public static Map<String, Object> getLocalizationParameters(
+		DDMFormField ddmFormField, Locale defaultLocale) {
+
+		JSONObject localeJSONObject = _getLocaleJSONObject(defaultLocale);
+
+		return HashMapBuilder.<String, Object>put(
+			"defaultLocale", localeJSONObject
+		).put(
+			"editingLocale", localeJSONObject
+		).put(
+			"editOnlyInDefaultLanguage",
+			() -> {
+				if (!ddmFormField.hasProperty("editOnlyInDefaultLanguage")) {
+					return null;
+				}
+
+				return GetterUtil.getBoolean(
+					ddmFormField.getProperty("editOnlyInDefaultLanguage"));
+			}
+		).put(
+			"isLocalizationSupported",
+			() -> {
+				if (!ddmFormField.hasProperty("isLocalizationSupported")) {
+					return null;
+				}
+
+				return GetterUtil.getBoolean(
+					ddmFormField.getProperty("isLocalizationSupported"));
+			}
+		).build();
+	}
+
+	public static List<Map<String, Object>> getOptions(
+		DDMFormFieldOptions ddmFormFieldOptions, Long listTypeDefinitionId,
 		ListTypeEntryLocalService listTypeEntryLocalService) {
 
-		long listTypeDefinitionId = GetterUtil.getLong(
-			ddmFormField.getProperty("listTypeDefinitionId"));
+		List<Map<String, Object>> options = new ArrayList<>();
+
+		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
+			if (optionValue == null) {
+				continue;
+			}
+
+			LocalizedValue localizedValue = ddmFormFieldOptions.getOptionLabels(
+				optionValue);
+
+			options.add(
+				HashMapBuilder.<String, Object>put(
+					"label",
+					GetterUtil.getString(
+						localizedValue.getString(
+							localizedValue.getDefaultLocale()))
+				).put(
+					"labelMap",
+					() -> {
+						Map<Locale, String> labeMap = _getListTypeEntryNameMap(
+							optionValue, listTypeDefinitionId,
+							listTypeEntryLocalService);
+
+						if (labeMap != null) {
+							return labeMap;
+						}
+
+						return localizedValue.getValues();
+					}
+				).put(
+					"reference",
+					ddmFormFieldOptions.getOptionReference(optionValue)
+				).put(
+					"value", optionValue
+				).build());
+		}
+
+		return options;
+	}
+
+	private static Map<Locale, String> _getListTypeEntryNameMap(
+		String key, long listTypeDefinitionId,
+		ListTypeEntryLocalService listTypeEntryLocalService) {
 
 		if (listTypeDefinitionId == 0) {
 			return null;
@@ -48,21 +122,6 @@ public class DDMFormFieldTemplateContextContributorUtil {
 		return listTypeEntry.getNameMap();
 	}
 
-	public static Map<String, Object> getLocaleMap(Locale defaultLocale) {
-		JSONObject localeJSONObject = _getLocaleJSONObject(defaultLocale);
-
-		return HashMapBuilder.<String, Object>put(
-			"availableLocales",
-			JSONUtil.toJSONArray(
-				LanguageUtil.getAvailableLocales(),
-				locale -> _getLocaleJSONObject(locale), _log)
-		).put(
-			"defaultLocale", localeJSONObject
-		).put(
-			"editingLocale", localeJSONObject
-		).build();
-	}
-
 	private static JSONObject _getLocaleJSONObject(Locale locale) {
 		String languageId = LocaleUtil.toLanguageId(locale);
 
@@ -75,8 +134,5 @@ public class DDMFormFieldTemplateContextContributorUtil {
 			"localeId", languageId
 		);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DDMFormFieldTemplateContextContributorUtil.class);
 
 }

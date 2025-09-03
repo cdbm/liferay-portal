@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -88,6 +88,8 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 			<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" label="scope-parameter-name" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SCOPE_PARAMETER_NAME) %>" value="<%= searchBarPortletPreferences.getScopeParameterName() %>" />
 
 			<aui:input helpMessage="destination-page-help" label="destination-page" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION) %>" value="<%= searchBarPortletPreferences.getDestination() %>" />
+
+			<aui:input label="placeholder-text" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_INPUT_PLACEHOLDER) %>" value="<%= searchBarPortletPreferences.getInputPlaceholder() %>" />
 		</liferay-frontend:fieldset>
 
 		<c:if test="<%= searchBarPortletDisplayContext.isSuggestionsEndpointEnabled() %>">

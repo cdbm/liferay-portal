@@ -15,9 +15,14 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.util.GroupUtil;
+
+import jakarta.ws.rs.core.UriInfo;
 
 import java.io.Serializable;
 
@@ -30,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Preston Crary
  */
@@ -41,6 +44,9 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 	public VulcanBatchEngineTaskItemDelegateAdaptor(
 		DepotEntryLocalService depotEntryLocalService,
 		GroupLocalService groupLocalService,
+		ResourceActionLocalService resourceActionLocalService,
+		ResourcePermissionLocalService resourcePermissionLocalService,
+		RoleLocalService roleLocalService,
 		VulcanBatchEngineTaskItemDelegate<T>
 			vulcanBatchEngineTaskItemDelegate) {
 
@@ -50,6 +56,11 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 
 		vulcanBatchEngineTaskItemDelegate.setGroupLocalService(
 			groupLocalService);
+		vulcanBatchEngineTaskItemDelegate.setResourceActionLocalService(
+			resourceActionLocalService);
+		vulcanBatchEngineTaskItemDelegate.setResourcePermissionLocalService(
+			resourcePermissionLocalService);
+		vulcanBatchEngineTaskItemDelegate.setRoleLocalService(roleLocalService);
 	}
 
 	@Override
@@ -145,7 +156,8 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 		BatchEngineImportStrategy batchEngineImportStrategy) {
 
 		_vulcanBatchEngineTaskItemDelegate.setContextBatchUnsafeBiConsumer(
-			batchEngineImportStrategy::apply);
+			(collection, unsafeFunction) -> batchEngineImportStrategy.apply(
+				this, collection, unsafeFunction));
 	}
 
 	@Override

@@ -14,6 +14,8 @@ public class FriendlyURLResolverConstants {
 
 	public static final String URL_SEPARATOR_ASSET_CATEGORY = "/v/";
 
+	public static final String URL_SEPARATOR_ASSET_LIBRARY = "/asset-library/";
+
 	public static final String URL_SEPARATOR_BLOGS_ENTRY = "/b/";
 
 	public static final String URL_SEPARATOR_CALENDAR_BOOKING = "/h/";
@@ -29,6 +31,8 @@ public class FriendlyURLResolverConstants {
 	public static final String URL_SEPARATOR_KNOWLEDGE_BASE_ARTICLE = "/k/";
 
 	public static final String URL_SEPARATOR_OBJECT_ENTRY = "/l/";
+
+	public static final String URL_SEPARATOR_OBJECT_ENTRY_FOLDER = "/f/";
 
 	public static final String URL_SEPARATOR_PORTAL_RESERVED =
 		Portal.PATH_MODULE + "/";

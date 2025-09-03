@@ -8,8 +8,10 @@ package com.liferay.portal.model.impl;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -26,6 +28,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -331,7 +335,7 @@ public class UserModelImpl extends BaseModelImpl<User> implements UserModel {
 	public static final boolean FINDER_CACHE_ENABLED_USERS_USERGROUPS = true;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.portal.util.PropsUtil.get(
+		com.liferay.portal.kernel.util.PropsUtil.get(
 			"lock.expiration.time.com.liferay.portal.kernel.model.User"));
 
 	public UserModelImpl() {
@@ -1546,6 +1550,20 @@ public class UserModelImpl extends BaseModelImpl<User> implements UserModel {
 	public void setGroupId(long groupId) {
 	}
 
+	public boolean getLayoutsUpdated() {
+		return false;
+	}
+
+	public void setLayoutsUpdated(boolean layoutsUpdated) {
+	}
+
+	public long[] getUserGroupIds() {
+		return null;
+	}
+
+	public void setUserGroupIds(long[] userGroupIds) {
+	}
+
 	@Override
 	public StagedModelType getStagedModelType() {
 		return new StagedModelType(
@@ -2071,7 +2089,20 @@ public class UserModelImpl extends BaseModelImpl<User> implements UserModel {
 
 		userCacheModel.status = getStatus();
 
-		userCacheModel._groupId = getGroupId();
+		try {
+			userCacheModel.groupId = (long)_groupIdMethodHandle.invokeExact(
+				(UserImpl)this);
+
+			userCacheModel.layoutsUpdated =
+				(boolean)_layoutsUpdatedMethodHandle.invokeExact(
+					(UserImpl)this);
+
+			userCacheModel.userGroupIds =
+				(long[])_userGroupIdsMethodHandle.invokeExact((UserImpl)this);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return userCacheModel;
 	}
@@ -2375,6 +2406,67 @@ public class UserModelImpl extends BaseModelImpl<User> implements UserModel {
 	}
 
 	private long _columnBitmask;
+
+	protected static final BiConsumer<User, Long>
+		groupIdUpdateEntityCacheBiConsumer = (user, groupId) -> {
+			UserCacheModel userCacheModel = EntityCacheUtil.fetchCacheModel(
+				UserImpl.class, user.getPrimaryKey(), UserCacheModel.class);
+
+			if ((userCacheModel != null) &&
+				(userCacheModel.getMvccVersion() == user.getMvccVersion())) {
+
+				userCacheModel.groupId = groupId;
+			}
+		};
+
+	private static final MethodHandle _groupIdMethodHandle;
+
+	protected static final BiConsumer<User, Boolean>
+		layoutsUpdatedUpdateEntityCacheBiConsumer = (user, layoutsUpdated) -> {
+			UserCacheModel userCacheModel = EntityCacheUtil.fetchCacheModel(
+				UserImpl.class, user.getPrimaryKey(), UserCacheModel.class);
+
+			if ((userCacheModel != null) &&
+				(userCacheModel.getMvccVersion() == user.getMvccVersion())) {
+
+				userCacheModel.layoutsUpdated = layoutsUpdated;
+			}
+		};
+
+	private static final MethodHandle _layoutsUpdatedMethodHandle;
+
+	protected static final BiConsumer<User, long[]>
+		userGroupIdsUpdateEntityCacheBiConsumer = (user, userGroupIds) -> {
+			UserCacheModel userCacheModel = EntityCacheUtil.fetchCacheModel(
+				UserImpl.class, user.getPrimaryKey(), UserCacheModel.class);
+
+			if ((userCacheModel != null) &&
+				(userCacheModel.getMvccVersion() == user.getMvccVersion())) {
+
+				userCacheModel.userGroupIds = userGroupIds;
+			}
+		};
+
+	private static final MethodHandle _userGroupIdsMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_groupIdMethodHandle = lookup.findGetter(
+				UserImpl.class, "_groupId", long.class);
+
+			_layoutsUpdatedMethodHandle = lookup.findGetter(
+				UserImpl.class, "_layoutsUpdated", boolean.class);
+
+			_userGroupIdsMethodHandle = lookup.findGetter(
+				UserImpl.class, "_userGroupIds", long[].class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
+
 	private User _escapedModel;
 
 }

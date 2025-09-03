@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -41,6 +39,17 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.NotSupportedException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -50,27 +59,91 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Andrea Sbarra
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseCartItemResourceImpl
 	implements CartItemResource, EntityModelResource,
 			   VulcanBatchEngineTaskItemDelegate<CartItem>,
 			   VulcanCRUDItemDelegate<CartItem> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes an Cart Item by ID."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "cartItemId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/cart-items/{cartItemId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteCartItem(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartItemId")
+			Long cartItemId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/cart-items/batch")
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteCartItemBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				CartItem.class.getName(), callbackURL, object)
+		).build();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -91,18 +164,109 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path(
 		"/cart-items/by-externalReferenceCode/{externalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public void deleteCartItemByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode)
 		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieve cart items of a Cart."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "skuId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/carts/by-externalReferenceCode/{externalReferenceCode}/items"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("search")
+			String search,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("skuId")
+			Long skuId,
+			@jakarta.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieve information of the given Cart"
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "cartItemId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/cart-items/{cartItemId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public CartItem getCartItem(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartItemId")
+			Long cartItemId)
+		throws Exception {
+
+		return new CartItem();
 	}
 
 	/**
@@ -124,20 +288,172 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
 		"/cart-items/by-externalReferenceCode/{externalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public CartItem getCartItemByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode)
 		throws Exception {
 
 		return new CartItem();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieve cart items of a Cart."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "cartId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "skuId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/carts/{cartId}/items")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<CartItem> getCartItemsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartId")
+			Long cartId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("search")
+			String search,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("skuId")
+			Long skuId,
+			@jakarta.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieve information of the given Cart."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "cartItemId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/cart-items/{cartItemId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public CartItem patchCartItem(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartItemId")
+			Long cartItemId,
+			CartItem cartItem)
+		throws Exception {
+
+		CartItem existingCartItem = getCartItem(cartItemId);
+
+		if (cartItem.getCustomFields() != null) {
+			existingCartItem.setCustomFields(cartItem.getCustomFields());
+		}
+
+		if (cartItem.getDeliveryGroup() != null) {
+			existingCartItem.setDeliveryGroup(cartItem.getDeliveryGroup());
+		}
+
+		if (cartItem.getDeliveryGroupName() != null) {
+			existingCartItem.setDeliveryGroupName(
+				cartItem.getDeliveryGroupName());
+		}
+
+		if (cartItem.getErrorMessages() != null) {
+			existingCartItem.setErrorMessages(cartItem.getErrorMessages());
+		}
+
+		if (cartItem.getOptions() != null) {
+			existingCartItem.setOptions(cartItem.getOptions());
+		}
+
+		if (cartItem.getProductId() != null) {
+			existingCartItem.setProductId(cartItem.getProductId());
+		}
+
+		if (cartItem.getQuantity() != null) {
+			existingCartItem.setQuantity(cartItem.getQuantity());
+		}
+
+		if (cartItem.getReplacedSkuExternalReferenceCode() != null) {
+			existingCartItem.setReplacedSkuExternalReferenceCode(
+				cartItem.getReplacedSkuExternalReferenceCode());
+		}
+
+		if (cartItem.getReplacedSkuId() != null) {
+			existingCartItem.setReplacedSkuId(cartItem.getReplacedSkuId());
+		}
+
+		if (cartItem.getRequestedDeliveryDate() != null) {
+			existingCartItem.setRequestedDeliveryDate(
+				cartItem.getRequestedDeliveryDate());
+		}
+
+		if (cartItem.getShippingAddressExternalReferenceCode() != null) {
+			existingCartItem.setShippingAddressExternalReferenceCode(
+				cartItem.getShippingAddressExternalReferenceCode());
+		}
+
+		if (cartItem.getShippingAddressId() != null) {
+			existingCartItem.setShippingAddressId(
+				cartItem.getShippingAddressId());
+		}
+
+		if (cartItem.getSkuId() != null) {
+			existingCartItem.setSkuId(cartItem.getSkuId());
+		}
+
+		preparePatch(cartItem, existingCartItem);
+
+		return putCartItem(cartItemId, existingCartItem);
 	}
 
 	/**
@@ -159,17 +475,17 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path(
 		"/cart-items/by-externalReferenceCode/{externalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public CartItem patchCartItemByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode,
 			CartItem cartItem)
 		throws Exception {
@@ -243,10 +559,10 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Update the provided Cart Item by external reference code."
+		description = "Add new Item to a Cart, return the whole Cart updated."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -259,17 +575,17 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/cart-items/by-externalReferenceCode/{externalReferenceCode}"
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
+		"/carts/by-externalReferenceCode/{externalReferenceCode}/items"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public CartItem putCartItemByExternalReferenceCode(
+	public CartItem postCartByExternalReferenceCodeItem(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode,
 			CartItem cartItem)
 		throws Exception {
@@ -280,205 +596,36 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes an Cart Item by ID."
+		description = "Add new Items to a Cart, return the whole Cart updated."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "cartItemId"
+				name = "cartId"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/cart-items/{cartItemId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/carts/{cartId}/items")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public void deleteCartItem(
+	public CartItem postCartItem(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartItemId")
-			Long cartItemId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/cart-items/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteCartItemBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				CartItem.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Cart"
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "cartItemId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/cart-items/{cartItemId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public CartItem getCartItem(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartItemId")
-			Long cartItemId)
-		throws Exception {
-
-		return new CartItem();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Cart."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "cartItemId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/cart-items/{cartItemId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public CartItem patchCartItem(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartItemId")
-			Long cartItemId,
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartId")
+			Long cartId,
 			CartItem cartItem)
 		throws Exception {
 
-		CartItem existingCartItem = getCartItem(cartItemId);
-
-		if (cartItem.getCustomFields() != null) {
-			existingCartItem.setCustomFields(cartItem.getCustomFields());
-		}
-
-		if (cartItem.getDeliveryGroup() != null) {
-			existingCartItem.setDeliveryGroup(cartItem.getDeliveryGroup());
-		}
-
-		if (cartItem.getDeliveryGroupName() != null) {
-			existingCartItem.setDeliveryGroupName(
-				cartItem.getDeliveryGroupName());
-		}
-
-		if (cartItem.getErrorMessages() != null) {
-			existingCartItem.setErrorMessages(cartItem.getErrorMessages());
-		}
-
-		if (cartItem.getOptions() != null) {
-			existingCartItem.setOptions(cartItem.getOptions());
-		}
-
-		if (cartItem.getProductId() != null) {
-			existingCartItem.setProductId(cartItem.getProductId());
-		}
-
-		if (cartItem.getQuantity() != null) {
-			existingCartItem.setQuantity(cartItem.getQuantity());
-		}
-
-		if (cartItem.getReplacedSkuExternalReferenceCode() != null) {
-			existingCartItem.setReplacedSkuExternalReferenceCode(
-				cartItem.getReplacedSkuExternalReferenceCode());
-		}
-
-		if (cartItem.getReplacedSkuId() != null) {
-			existingCartItem.setReplacedSkuId(cartItem.getReplacedSkuId());
-		}
-
-		if (cartItem.getRequestedDeliveryDate() != null) {
-			existingCartItem.setRequestedDeliveryDate(
-				cartItem.getRequestedDeliveryDate());
-		}
-
-		if (cartItem.getShippingAddressExternalReferenceCode() != null) {
-			existingCartItem.setShippingAddressExternalReferenceCode(
-				cartItem.getShippingAddressExternalReferenceCode());
-		}
-
-		if (cartItem.getShippingAddressId() != null) {
-			existingCartItem.setShippingAddressId(
-				cartItem.getShippingAddressId());
-		}
-
-		if (cartItem.getSkuId() != null) {
-			existingCartItem.setSkuId(cartItem.getSkuId());
-		}
-
-		preparePatch(cartItem, existingCartItem);
-
-		return putCartItem(cartItemId, existingCartItem);
+		return new CartItem();
 	}
 
 	/**
@@ -500,15 +647,15 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/cart-items/{cartItemId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/cart-items/{cartItemId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
 	public CartItem putCartItem(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartItemId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("cartItemId")
 			Long cartItemId,
 			CartItem cartItem)
 		throws Exception {
@@ -532,14 +679,14 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/cart-items/batch")
-	@javax.ws.rs.Produces("application/json")
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/cart-items/batch")
+	@jakarta.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.PUT
 	@Override
 	public Response putCartItemBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			Object object)
 		throws Exception {
@@ -563,68 +710,10 @@ public abstract class BaseCartItemResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items'  -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve cart items of a Cart."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "skuId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/carts/by-externalReferenceCode/{externalReferenceCode}/items"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("skuId")
-			Long skuId,
-			@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Add new Item to a Cart, return the whole Cart updated."
+		description = "Update the provided Cart Item by external reference code."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -637,109 +726,18 @@ public abstract class BaseCartItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/carts/by-externalReferenceCode/{externalReferenceCode}/items"
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
+		"/cart-items/by-externalReferenceCode/{externalReferenceCode}"
 	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
-	public CartItem postCartByExternalReferenceCodeItem(
+	public CartItem putCartItemByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode,
-			CartItem cartItem)
-		throws Exception {
-
-		return new CartItem();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve cart items of a Cart."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "cartId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "skuId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/carts/{cartId}/items")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<CartItem> getCartItemsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartId")
-			Long cartId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("skuId")
-			Long skuId,
-			@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Add new Items to a Cart, return the whole Cart updated."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "cartId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CartItem")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/carts/{cartId}/items")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public CartItem postCartItem(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("cartId")
-			Long cartId,
 			CartItem cartItem)
 		throws Exception {
 
@@ -764,9 +762,14 @@ public abstract class BaseCartItemResourceImpl
 				"updateStrategy", "UPDATE");
 
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				cartItemUnsafeFunction =
-					cartItem -> putCartItemByExternalReferenceCode(
+				cartItemUnsafeFunction = cartItem -> {
+					CartItem persistedCartItem = null;
+
+					persistedCartItem = putCartItemByExternalReferenceCode(
 						cartItem.getExternalReferenceCode(), cartItem);
+
+					return persistedCartItem;
+				};
 			}
 		}
 
@@ -799,9 +802,30 @@ public abstract class BaseCartItemResourceImpl
 
 		UnsafeFunction<CartItem, CartItem, Exception> cartItemUnsafeFunction =
 			cartItem -> {
-				deleteCartItem(cartItem.getId());
+				if (cartItem.getId() != null) {
+					try {
+						deleteCartItem(cartItem.getId());
 
-				return cartItem;
+						return cartItem;
+					}
+					catch (Exception exception) {
+						if (cartItem.getExternalReferenceCode() != null) {
+							deleteCartItemByExternalReferenceCode(
+								cartItem.getExternalReferenceCode());
+
+							return cartItem;
+						}
+					}
+				}
+				else if (cartItem.getExternalReferenceCode() != null) {
+					deleteCartItemByExternalReferenceCode(
+						cartItem.getExternalReferenceCode());
+
+					return cartItem;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
 			};
 
 		if (contextBatchUnsafeBiConsumer != null) {
@@ -835,13 +859,6 @@ public abstract class BaseCartItemResourceImpl
 			new MultivaluedHashMap<String, Object>(multivaluedMap));
 	}
 
-	@Override
-	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
-		throws Exception {
-
-		return null;
-	}
-
 	public String getResourceName() {
 		return "CartItem";
 	}
@@ -852,7 +869,9 @@ public abstract class BaseCartItemResourceImpl
 
 	@Override
 	public Page<CartItem> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -896,16 +915,12 @@ public abstract class BaseCartItemResourceImpl
 
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 			cartItemUnsafeFunction = cartItem -> patchCartItem(
-				cartItem.getId() != null ? cartItem.getId() :
-					_parseLong((String)parameters.get("cartItemId")),
-				cartItem);
+				cartItem.getId(), cartItem);
 		}
 
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
 			cartItemUnsafeFunction = cartItem -> putCartItem(
-				cartItem.getId() != null ? cartItem.getId() :
-					_parseLong((String)parameters.get("cartItemId")),
-				cartItem);
+				cartItem.getId(), cartItem);
 		}
 
 		if (cartItemUnsafeFunction == null) {
@@ -929,10 +944,9 @@ public abstract class BaseCartItemResourceImpl
 		}
 	}
 
-	private Long _parseLong(String value) {
-		if (value != null) {
-			return Long.parseLong(value);
-		}
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
 
 		return null;
 	}
@@ -993,7 +1007,8 @@ public abstract class BaseCartItemResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1049,7 +1064,7 @@ public abstract class BaseCartItemResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1074,7 +1089,7 @@ public abstract class BaseCartItemResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1092,13 +1107,13 @@ public abstract class BaseCartItemResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1109,7 +1124,7 @@ public abstract class BaseCartItemResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1158,6 +1173,20 @@ public abstract class BaseCartItemResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -1173,6 +1202,80 @@ public abstract class BaseCartItemResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -1185,11 +1288,45 @@ public abstract class BaseCartItemResourceImpl
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -1209,6 +1346,104 @@ public abstract class BaseCartItemResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1224,6 +1459,29 @@ public abstract class BaseCartItemResourceImpl
 			collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
 	protected UnsafeBiConsumer
 		<Collection<CartItem>, UnsafeFunction<CartItem, CartItem, Exception>,
@@ -1237,7 +1495,8 @@ public abstract class BaseCartItemResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -35,7 +36,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.recorder.UpgradeRecorder;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
@@ -150,7 +150,7 @@ public class UpgradeReport {
 	}
 
 	private List<MessagesPrinter> _getMessagesPrinters(
-		Map<String, Map<String, Integer>> map1) {
+		boolean includeOccurrences, Map<String, Map<String, Integer>> map1) {
 
 		List<MessagesPrinter> messagesPrinters = new ArrayList<>();
 
@@ -174,7 +174,8 @@ public class UpgradeReport {
 
 			for (Map.Entry<String, Integer> entry2 : map2.entrySet()) {
 				messagesPrinter.addMessagePrinter(
-					entry2.getKey(), entry2.getValue());
+					entry2.getKey(),
+					includeOccurrences ? entry2.getValue() : null);
 			}
 		}
 
@@ -224,6 +225,10 @@ public class UpgradeReport {
 				ReleaseManager releaseManager = _releaseManagerSnapshot.get();
 
 				if (releaseManager == null) {
+					if (upgradeRecorder.isPreupgradeVerifyFailure()) {
+						return "No changes have been made to the system";
+					}
+
 					return "Upgrade failed to complete";
 				}
 
@@ -548,7 +553,12 @@ public class UpgradeReport {
 		).put(
 			"execution.time", _executionTimeString
 		).put(
-			"errors", _getMessagesPrinters(upgradeRecorder.getErrorMessages())
+			"data.clean.up",
+			_getMessagesPrinters(
+				false, upgradeRecorder.getDataCleanUpMessages())
+		).put(
+			"errors",
+			_getMessagesPrinters(true, upgradeRecorder.getErrorMessages())
 		).put(
 			"failed.sqls", UpgradeSQLRecorder.getFailedSQLs()
 		).put(
@@ -567,33 +577,25 @@ public class UpgradeReport {
 				Map<String, Long> upgradeProcessDurations = new HashMap<>();
 
 				for (String message : messages) {
-					int startIndex = message.indexOf("com.");
+					String[] parts = StringUtil.split(
+						message, StringPool.SPACE);
 
-					int endIndex = message.indexOf(
-						StringPool.SPACE, startIndex);
+					String upgradeProcessClassName = parts[3];
 
-					String className = message.substring(startIndex, endIndex);
-
-					if (className.equals(
+					if (upgradeProcessClassName.equals(
 							PortalUpgradeProcess.class.getName())) {
 
 						continue;
 					}
 
-					startIndex = message.indexOf(
-						StringPool.SPACE, endIndex + 1);
-
-					endIndex = message.indexOf(
-						StringPool.SPACE, startIndex + 1);
-
-					long duration = GetterUtil.getLong(
-						message.substring(startIndex, endIndex));
+					long duration = GetterUtil.getLong(parts[parts.length - 2]);
 
 					if (duration >=
 							PropsValues.
 								UPGRADE_REPORT_UPGRADE_PROCESS_THRESHOLD) {
 
-						upgradeProcessDurations.put(className, duration);
+						upgradeProcessDurations.put(
+							upgradeProcessClassName, duration);
 					}
 				}
 
@@ -637,7 +639,7 @@ public class UpgradeReport {
 			}
 		).put(
 			"warnings",
-			_getMessagesPrinters(upgradeRecorder.getWarningMessages())
+			_getMessagesPrinters(true, upgradeRecorder.getWarningMessages())
 		).build();
 	}
 
@@ -1026,7 +1028,7 @@ public class UpgradeReport {
 			_className = className;
 		}
 
-		public void addMessagePrinter(String message, int occurrences) {
+		public void addMessagePrinter(String message, Integer occurrences) {
 			_messagePrinters.add(new MessagePrinter(message, occurrences));
 		}
 
@@ -1057,24 +1059,28 @@ public class UpgradeReport {
 
 		private class MessagePrinter {
 
-			public MessagePrinter(String message, int occurrences) {
+			public MessagePrinter(String message, Integer occurrences) {
 				_message = message;
 				_occurrences = occurrences;
 			}
 
 			@Override
 			public String toString() {
-				if (_logContext) {
-					return _occurrences + StringPool.COLON + _message;
+				if (_occurrences != null) {
+					if (_logContext) {
+						return _occurrences + StringPool.COLON + _message;
+					}
+
+					return StringBundler.concat(
+						_occurrences, " occurrences of the following event: ",
+						_message);
 				}
 
-				return StringBundler.concat(
-					_occurrences, " occurrences of the following event: ",
-					_message);
+				return _message;
 			}
 
 			private final String _message;
-			private final int _occurrences;
+			private final Integer _occurrences;
 
 		}
 

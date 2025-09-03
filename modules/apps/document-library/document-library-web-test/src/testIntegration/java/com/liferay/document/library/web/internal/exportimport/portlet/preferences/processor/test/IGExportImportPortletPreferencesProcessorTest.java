@@ -6,6 +6,7 @@
 package com.liferay.document.library.web.internal.exportimport.portlet.preferences.processor.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.constants.DLPortletKeys;
@@ -56,6 +57,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.ratings.kernel.model.RatingsEntry;
 import com.liferay.ratings.test.util.RatingsTestUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -63,8 +66,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -526,6 +527,7 @@ public class IGExportImportPortletPreferencesProcessorTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
 			).build(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
 		_depotEntries.add(depotEntry);
@@ -783,7 +785,7 @@ public class IGExportImportPortletPreferencesProcessorTest {
 	private DLAppLocalService _dlAppLocalService;
 
 	@Inject(
-		filter = "javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY
+		filter = "jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY
 	)
 	private ExportImportPortletPreferencesProcessor
 		_exportImportPortletPreferencesProcessor;

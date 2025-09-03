@@ -8,25 +8,25 @@ package com.liferay.commerce.payment.method.paypal.internal.servlet;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.payment.engine.CommerceSubscriptionEngine;
+import com.liferay.commerce.payment.helper.CommercePaymentHttpHelper;
 import com.liferay.commerce.payment.method.paypal.internal.PayPalCommercePaymentMethod;
 import com.liferay.commerce.payment.method.paypal.internal.constants.PayPalCommercePaymentMethodConstants;
-import com.liferay.commerce.payment.util.CommercePaymentHttpHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 import java.net.URL;
 
 import java.util.Objects;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

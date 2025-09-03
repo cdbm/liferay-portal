@@ -59,6 +59,7 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -157,8 +158,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		actionableDynamicQuery.setPrimaryKeyPropertyName("entryId");
 
 		try (SafeCloseable safeCloseable1 =
-				_removeFunctionThreadLocal.setWithSafeCloseable(
-					Function.identity())) {
+				_removeFunction.setWithSafeCloseable(Function.identity())) {
 
 			actionableDynamicQuery.performActions();
 		}
@@ -194,7 +194,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public AssetEntry deleteEntry(AssetEntry entry) throws PortalException {
-		return _deleteEntry(entry, _removeFunctionThreadLocal.get());
+		return _deleteEntry(entry, _removeFunction.get());
 	}
 
 	@Override
@@ -787,8 +787,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		// Tags
 
 		if ((tagNames != null) && ((entry != null) || (tagNames.length > 0))) {
-			Group siteGroup = _groupPersistence.findByPrimaryKey(
-				PortalUtil.getSiteGroupId(groupId));
+			Group siteGroup = _getAssetTagSiteGroup(groupId, serviceContext);
 
 			List<AssetTag> tags = _assetTagLocalService.checkTags(
 				userId, siteGroup, tagNames);
@@ -1425,6 +1424,21 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		return assetEntryValidators;
 	}
 
+	private Group _getAssetTagSiteGroup(
+			long groupId, ServiceContext serviceContext)
+		throws PortalException {
+
+		long scopeGroupId = groupId;
+
+		if (serviceContext != null) {
+			scopeGroupId = GetterUtil.getLong(
+				serviceContext.getAttribute("assetTagScopeGroupId"), groupId);
+		}
+
+		return _groupPersistence.findByPrimaryKey(
+			PortalUtil.getSiteGroupId(scopeGroupId));
+	}
+
 	private boolean _hasScoreSort(SearchContext searchContext) {
 		for (Sort sort : searchContext.getSorts()) {
 			if ((sort != null) && (sort.getType() == Sort.SCORE_TYPE)) {
@@ -1473,10 +1487,10 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	private static final CentralizedThreadLocal
-		<Function<AssetEntry, AssetEntry>> _removeFunctionThreadLocal =
+		<Function<AssetEntry, AssetEntry>> _removeFunction =
 			new CentralizedThreadLocal<>(
 				AssetEntryLocalServiceImpl.class.getName() +
-					"._removeFunctionThreadLocal");
+					"._removeFunction");
 
 	@BeanReference(type = AssetCategoryLocalService.class)
 	private AssetCategoryLocalService _assetCategoryLocalService;

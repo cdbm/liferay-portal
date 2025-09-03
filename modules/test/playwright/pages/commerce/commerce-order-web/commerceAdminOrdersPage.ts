@@ -34,6 +34,11 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 	readonly itemsTableRows: () => Promise<Locator[]>;
 	readonly itemsTableRowAction: (sku: string) => Promise<Locator>;
 	readonly keyOrderStatus: (orderStatus: string) => Locator;
+	readonly managementBarActionsButton: Locator;
+	readonly managementBarCheckbox: Locator;
+	readonly managementBarDeleteMenuItem: Locator;
+	readonly menuActionButton: (accountName: string) => Locator;
+	readonly menuItemAction: (action: string) => Locator;
 	readonly orderActionsButton: Locator;
 	readonly orderStatusLink: (orderStatus: string) => Locator;
 	readonly page: Page;
@@ -43,7 +48,6 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 			page,
 			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_fm .fds table'
 		);
-
 		this.editCommerceOrderTable = page.locator(
 			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_editOrderContainer .fds table'
 		);
@@ -85,9 +89,8 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 
 			throw new Error(`Cannot locate row with rowValue: ${rowValue}`);
 		};
-
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
-		this.backLink = page.getByRole('link', {exact: true, name: 'Back'});
+		this.backLink = page.locator('span[title="Back"]');
 		this.deleteItemMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Delete',
@@ -108,6 +111,18 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 		};
 		this.keyOrderStatus = (orderStatus: string) =>
 			page.locator('.fds table').getByText(orderStatus);
+		this.managementBarActionsButton = page.getByLabel('Actions', {
+			exact: true,
+		});
+		this.managementBarCheckbox = page.getByRole('checkbox').first();
+		this.managementBarDeleteMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'delete',
+		});
+		this.menuActionButton = (accountName) =>
+			page.getByRole('row', {name: accountName}).getByRole('button');
+		this.menuItemAction = (action) =>
+			page.getByRole('menuitem', {exact: true, name: action});
 		this.orderActionsButton = page.getByRole('button', {
 			name: 'Actions',
 		});

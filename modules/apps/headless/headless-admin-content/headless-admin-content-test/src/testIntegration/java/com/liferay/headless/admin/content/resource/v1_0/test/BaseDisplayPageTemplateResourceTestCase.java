@@ -44,6 +44,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -187,6 +187,23 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 	}
 
 	@Test
+	public void testGetSiteDisplayPageTemplate() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetSiteDisplayPageTemplate() throws Exception {
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetSiteDisplayPageTemplateNotFound()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
 	public void testGetSiteDisplayPageTemplatesPage() throws Exception {
 		Long siteId = testGetSiteDisplayPageTemplatesPage_getSiteId();
 		Long irrelevantSiteId =
@@ -254,12 +271,12 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 
 		Long siteId = testGetSiteDisplayPageTemplatesPage_getSiteId();
 
-		Page<DisplayPageTemplate> displayPageTemplatePage =
+		Page<DisplayPageTemplate> displayPageTemplatesPage =
 			displayPageTemplateResource.getSiteDisplayPageTemplatesPage(
 				siteId, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			displayPageTemplatePage.getTotalCount());
+			displayPageTemplatesPage.getTotalCount());
 
 		DisplayPageTemplate displayPageTemplate1 =
 			testGetSiteDisplayPageTemplatesPage_addDisplayPageTemplate(
@@ -537,23 +554,6 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 	@Test
 	public void testGraphQLGetSiteDisplayPageTemplatesPage() throws Exception {
 		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetSiteDisplayPageTemplate() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetSiteDisplayPageTemplate() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetSiteDisplayPageTemplateNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

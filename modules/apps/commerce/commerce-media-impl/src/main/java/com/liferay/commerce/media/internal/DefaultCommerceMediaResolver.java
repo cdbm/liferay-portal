@@ -34,7 +34,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -126,6 +126,16 @@ public class DefaultCommerceMediaResolver implements CommerceMediaResolver {
 		throws PortalException {
 
 		return getURL(commerceAccountId, cpAttachmentFileEntryId, false, true);
+	}
+
+	@Override
+	public String getThumbnailURL(
+			long commerceAccountId, long cpAttachmentFileEntryId,
+			boolean secure)
+		throws PortalException {
+
+		return getURL(
+			commerceAccountId, cpAttachmentFileEntryId, false, false, secure);
 	}
 
 	@Override

@@ -6,15 +6,18 @@
 package com.liferay.object.internal.model.listener.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectDefinitionSettingConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.exception.NoSuchObjectDefinitionSettingException;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectDefinitionSetting;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
@@ -25,6 +28,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.test.util.ObjectRelationshipTestUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -34,9 +38,9 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -44,6 +48,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import java.io.Serializable;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -64,7 +69,6 @@ public class GroupModelListenerTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@FeatureFlags("LPD-31149")
 	@Test
 	public void testOnBeforeRemove() throws Exception {
 
@@ -73,6 +77,7 @@ public class GroupModelListenerTest {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
 		_testOnBeforeRemove(depotEntry.getGroup());
@@ -104,13 +109,22 @@ public class GroupModelListenerTest {
 			_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
 				objectDefinition1.getUserId(),
 				objectDefinition1.getObjectDefinitionId(),
-				ObjectDefinitionSettingConstants.NAME_ACCEPT_ALL_GROUPS,
-				StringPool.TRUE);
+				ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+				String.valueOf(group.getGroupId()));
+
+			DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(),
+				DepotConstants.TYPE_ASSET_LIBRARY,
+				ServiceContextTestUtil.getServiceContext());
+
 			_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
 				objectDefinition2.getUserId(),
 				objectDefinition2.getObjectDefinitionId(),
-				ObjectDefinitionSettingConstants.NAME_ACCEPT_ALL_GROUPS,
-				StringPool.TRUE);
+				ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+				StringBundler.concat(
+					group.getGroupId(), StringPool.COMMA,
+					depotEntry.getGroupId()));
 		}
 
 		ObjectRelationship objectRelationship =
@@ -120,7 +134,7 @@ public class GroupModelListenerTest {
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT);
 
 		ObjectEntry objectEntry1 = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition1.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -134,7 +148,7 @@ public class GroupModelListenerTest {
 				objectRelationship.getObjectFieldId2());
 
 		ObjectEntry objectEntry2 = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition2.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -162,6 +176,36 @@ public class GroupModelListenerTest {
 		Assert.assertNull(
 			_objectEntryLocalService.fetchObjectEntry(
 				objectEntry2.getObjectEntryId()));
+
+		if (scope.equals(ObjectDefinitionConstants.SCOPE_DEPOT)) {
+			AssertUtils.assertFailure(
+				NoSuchObjectDefinitionSettingException.class,
+				StringBundler.concat(
+					"No ObjectDefinitionSetting exists with the key ",
+					"{objectDefinitionId=",
+					objectDefinition1.getObjectDefinitionId(), ", name=",
+					ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+					"}"),
+				() ->
+					_objectDefinitionSettingLocalService.
+						getObjectDefinitionSetting(
+							objectDefinition1.getObjectDefinitionId(),
+							ObjectDefinitionSettingConstants.
+								NAME_ACCEPTED_GROUP_IDS));
+
+			ObjectDefinitionSetting objectDefinitionSetting =
+				_objectDefinitionSettingLocalService.getObjectDefinitionSetting(
+					objectDefinition2.getObjectDefinitionId(),
+					ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS);
+
+			String acceptedGroupIds = objectDefinitionSetting.getValue();
+
+			List<Long> acceptedGroupIdsList = TransformUtil.transformToList(
+				acceptedGroupIds.split("\\s*,\\s*"), GetterUtil::getLong);
+
+			Assert.assertFalse(
+				acceptedGroupIdsList.contains(group.getGroupId()));
+		}
 
 		_objectRelationshipLocalService.deleteObjectRelationship(
 			objectRelationship);

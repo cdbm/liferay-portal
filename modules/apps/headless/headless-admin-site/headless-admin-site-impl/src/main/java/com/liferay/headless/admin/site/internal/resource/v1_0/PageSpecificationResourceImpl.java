@@ -5,13 +5,13 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0;
 
+import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate;
 import com.liferay.headless.admin.site.dto.v1_0.MasterPage;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.PageTemplate;
-import com.liferay.headless.admin.site.dto.v1_0.Settings;
 import com.liferay.headless.admin.site.dto.v1_0.SitePage;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPage;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.GroupUtil;
@@ -67,11 +67,10 @@ public class PageSpecificationResourceImpl
 			throw new UnsupportedOperationException();
 		}
 
-		Layout layout = _layoutService.getLayoutByExternalReferenceCode(
-			pageSpecificationExternalReferenceCode,
+		Layout layout = _getLayout(
 			GroupUtil.getGroupId(
-				true, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+				true, contextCompany.getCompanyId(), siteExternalReferenceCode),
+			pageSpecificationExternalReferenceCode);
 
 		if (!layout.isDraftLayout() ||
 			(layout.isApproved() &&
@@ -166,11 +165,11 @@ public class PageSpecificationResourceImpl
 			throw new UnsupportedOperationException();
 		}
 
-		Layout layout = _layoutService.getLayoutByExternalReferenceCode(
-			pageSpecificationExternalReferenceCode,
+		Layout layout = _getLayout(
 			GroupUtil.getGroupId(
 				true, true, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+				siteExternalReferenceCode),
+			pageSpecificationExternalReferenceCode);
 
 		if (!layout.isTypeAssetDisplay() && !layout.isTypeContent() &&
 			!layout.isTypePortlet()) {
@@ -293,14 +292,15 @@ public class PageSpecificationResourceImpl
 			throw new UnsupportedOperationException();
 		}
 
-		Layout layout = _layoutService.getLayoutByExternalReferenceCode(
-			pageSpecificationExternalReferenceCode,
-			GroupUtil.getGroupId(
-				true, true, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+		long groupId = GroupUtil.getGroupId(
+			true, true, contextCompany.getCompanyId(),
+			siteExternalReferenceCode);
+
+		Layout layout = _getLayout(
+			groupId, pageSpecificationExternalReferenceCode);
 
 		ServiceContext serviceContext = ServiceContextBuilder.create(
-			layout.getGroupId(), contextHttpServletRequest, null
+			groupId, contextHttpServletRequest, null
 		).build();
 
 		serviceContext.setUserId(contextUser.getUserId());
@@ -318,7 +318,10 @@ public class PageSpecificationResourceImpl
 
 			return _pageSpecificationDTOConverter.toDTO(
 				LayoutUtil.updateLayout(
-					layout, pageSpecification.getSettings(), serviceContext));
+					_cetManager, layout, layout.getNameMap(),
+					layout.getTitleMap(), layout.getDescriptionMap(),
+					layout.getRobotsMap(), layout.getFriendlyURLMap(),
+					pageSpecification, serviceContext));
 		}
 
 		if (!Objects.equals(
@@ -334,7 +337,10 @@ public class PageSpecificationResourceImpl
 
 		return _pageSpecificationDTOConverter.toDTO(
 			LayoutUtil.updateLayout(
-				(ContentPageSpecification)pageSpecification, layout,
+				_cetManager, (ContentPageSpecification)pageSpecification,
+				layout, layout.getNameMap(), layout.getTitleMap(),
+				layout.getDescriptionMap(), layout.getRobotsMap(),
+				layout.getFriendlyURLMap(), WorkflowConstants.STATUS_DRAFT,
 				serviceContext));
 	}
 
@@ -343,65 +349,9 @@ public class PageSpecificationResourceImpl
 		PageSpecification pageSpecification,
 		PageSpecification existingPageSpecification) {
 
-		Settings settings = pageSpecification.getSettings();
-
-		if (settings != null) {
-			Settings existingSettings = existingPageSpecification.getSettings();
-
-			if (settings.getColorSchemeName() != null) {
-				existingSettings.setColorSchemeName(
-					settings::getColorSchemeName);
-			}
-
-			if (settings.getCss() != null) {
-				existingSettings.setCss(settings::getCss);
-			}
-
-			if (settings.getFavIcon() != null) {
-				existingSettings.setFavIcon(settings::getFavIcon);
-			}
-
-			if (settings.getGlobalCSSClientExtensions() != null) {
-				existingSettings.setGlobalCSSClientExtensions(
-					settings::getGlobalCSSClientExtensions);
-			}
-
-			if (settings.getGlobalJSClientExtensions() != null) {
-				existingSettings.setGlobalJSClientExtensions(
-					settings::getGlobalJSClientExtensions);
-			}
-
-			if (settings.getJavascript() != null) {
-				existingSettings.setJavascript(settings::getJavascript);
-			}
-
-			if (settings.getMasterPageItemExternalReference() != null) {
-				existingSettings.setMasterPageItemExternalReference(
-					settings::getMasterPageItemExternalReference);
-			}
-
-			if (settings.getStyleBookItemExternalReference() != null) {
-				existingSettings.setStyleBookItemExternalReference(
-					settings::getStyleBookItemExternalReference);
-			}
-
-			if (settings.getThemeCSSClientExtension() != null) {
-				existingSettings.setThemeCSSClientExtension(
-					settings::getThemeCSSClientExtension);
-			}
-
-			if (settings.getThemeName() != null) {
-				existingSettings.setThemeName(settings::getThemeName);
-			}
-
-			if (settings.getThemeSettings() != null) {
-				existingSettings.setThemeSettings(settings::getThemeSettings);
-			}
-
-			if (settings.getThemeSpritemapClientExtension() != null) {
-				existingSettings.setThemeSpritemapClientExtension(
-					settings::getThemeSpritemapClientExtension);
-			}
+		if (pageSpecification.getSettings() != null) {
+			existingPageSpecification.setSettings(
+				pageSpecification::getSettings);
 		}
 
 		if (!Objects.equals(
@@ -444,6 +394,27 @@ public class PageSpecificationResourceImpl
 				throw new UnsupportedOperationException();
 			}
 		}
+	}
+
+	private Layout _getLayout(
+			long groupId, String pageSpecificationExternalReferenceCode)
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					pageSpecificationExternalReferenceCode, groupId);
+
+		if ((layoutPageTemplateEntry != null) &&
+			(layoutPageTemplateEntry.getType() ==
+				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE)) {
+
+			return _layoutLocalService.getLayout(
+				layoutPageTemplateEntry.getPlid());
+		}
+
+		return _layoutService.getLayoutByExternalReferenceCode(
+			pageSpecificationExternalReferenceCode, groupId);
 	}
 
 	private PageExperience _getPageExperience(
@@ -504,6 +475,9 @@ public class PageSpecificationResourceImpl
 			_pageSpecificationDTOConverter.toDTO(layout),
 			_pageSpecificationDTOConverter.toDTO(draftLayout));
 	}
+
+	@Reference
+	private CETManager _cetManager;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

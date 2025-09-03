@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -69,7 +70,9 @@ public class ProductConfigurationDTOConverter
 
 		ProductConfiguration productConfiguration = new ProductConfiguration();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10889")) {
+		if (FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-10889")) {
+
 			CPConfigurationEntry cpConfigurationEntry;
 
 			if (dtoConverterContext.getId() != null) {
@@ -177,7 +180,6 @@ public class ProductConfigurationDTOConverter
 				});
 			productConfiguration.setPurchasable(
 				cpConfigurationEntry::getPurchasable);
-			productConfiguration.setVisible(cpConfigurationEntry::getVisible);
 		}
 		else {
 			CPDAvailabilityEstimate cpdAvailabilityEstimate =
@@ -415,12 +417,6 @@ public class ProductConfigurationDTOConverter
 					cpConfigurationEntry.isTaxExempt()) {
 
 				differences.add("taxExempt");
-			}
-
-			if (jsonObject.getBoolean("visible", true) !=
-					cpConfigurationEntry.isVisible()) {
-
-				differences.add("visible");
 			}
 
 			if (jsonObject.getDouble("weight") !=

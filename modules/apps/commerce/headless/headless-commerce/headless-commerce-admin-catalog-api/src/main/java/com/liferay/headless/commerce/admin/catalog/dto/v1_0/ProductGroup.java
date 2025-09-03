@@ -16,6 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,13 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Zoltán Takács
@@ -92,7 +92,7 @@ public class ProductGroup implements Serializable {
 	private Supplier<Map<String, ?>> _customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		example = "{hu_HU=Description HU, hr_HR=Description HR, en_US=Description}"
+		example = "{en_US=Description, hr_HR=Description HR, hu_HU=Description HU}"
 	)
 	@Valid
 	public Map<String, String> getDescription() {

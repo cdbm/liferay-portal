@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductGroupProduct;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -42,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +104,16 @@ public abstract class BaseProductGroupProductResourceTestCase {
 			testCompany.getCompanyId());
 
 		productGroupProductResource = ProductGroupProductResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -257,6 +270,44 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProductGroupProductBatch() throws Exception {
+		ProductGroupProduct productGroupProduct1 =
+			testDeleteProductGroupProductBatch_addProductGroupProduct();
+
+		testDeleteProductGroupProductBatch_deleteProductGroupProduct(
+			202, null, productGroupProduct1.getId());
+	}
+
+	protected ProductGroupProduct
+			testDeleteProductGroupProductBatch_addProductGroupProduct()
+		throws Exception {
+
+		return testDeleteProductGroupProduct_addProductGroupProduct();
+	}
+
+	protected void testDeleteProductGroupProductBatch_deleteProductGroupProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productGroupProductResource.
+				deleteProductGroupProductBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetProductGroupByExternalReferenceCodeProductGroupProductsPage()
 		throws Exception {
 
@@ -343,13 +394,13 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		String externalReferenceCode =
 			testGetProductGroupByExternalReferenceCodeProductGroupProductsPage_getExternalReferenceCode();
 
-		Page<ProductGroupProduct> productGroupProductPage =
+		Page<ProductGroupProduct> productGroupProductsPage =
 			productGroupProductResource.
 				getProductGroupByExternalReferenceCodeProductGroupProductsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productGroupProductPage.getTotalCount());
+			productGroupProductsPage.getTotalCount());
 
 		ProductGroupProduct productGroupProduct1 =
 			testGetProductGroupByExternalReferenceCodeProductGroupProductsPage_addProductGroupProduct(
@@ -479,30 +530,6 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductGroupByExternalReferenceCodeProductGroupProduct()
-		throws Exception {
-
-		ProductGroupProduct randomProductGroupProduct =
-			randomProductGroupProduct();
-
-		ProductGroupProduct postProductGroupProduct =
-			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
-				randomProductGroupProduct);
-
-		assertEquals(randomProductGroupProduct, postProductGroupProduct);
-		assertValid(postProductGroupProduct);
-	}
-
-	protected ProductGroupProduct
-			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
-				ProductGroupProduct productGroupProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductGroupIdProductGroupProductsPage()
 		throws Exception {
 
@@ -585,12 +612,12 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 		Long id = testGetProductGroupIdProductGroupProductsPage_getId();
 
-		Page<ProductGroupProduct> productGroupProductPage =
+		Page<ProductGroupProduct> productGroupProductsPage =
 			productGroupProductResource.
 				getProductGroupIdProductGroupProductsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productGroupProductPage.getTotalCount());
+			productGroupProductsPage.getTotalCount());
 
 		ProductGroupProduct productGroupProduct1 =
 			testGetProductGroupIdProductGroupProductsPage_addProductGroupProduct(
@@ -715,6 +742,30 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	}
 
 	@Test
+	public void testPostProductGroupByExternalReferenceCodeProductGroupProduct()
+		throws Exception {
+
+		ProductGroupProduct randomProductGroupProduct =
+			randomProductGroupProduct();
+
+		ProductGroupProduct postProductGroupProduct =
+			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
+				randomProductGroupProduct);
+
+		assertEquals(randomProductGroupProduct, postProductGroupProduct);
+		assertValid(postProductGroupProduct);
+	}
+
+	protected ProductGroupProduct
+			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
+				ProductGroupProduct productGroupProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostProductGroupIdProductGroupProduct() throws Exception {
 		ProductGroupProduct randomProductGroupProduct =
 			randomProductGroupProduct();
@@ -734,6 +785,57 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ProductGroupProduct productGroupProduct1 =
+			testBatchEngineDeleteImportTask_addProductGroupProduct();
+
+		testBatchEngineDeleteImportTask_deleteProductGroupProduct(
+			200, null, productGroupProduct1.getId());
+	}
+
+	protected ProductGroupProduct
+			testBatchEngineDeleteImportTask_addProductGroupProduct()
+		throws Exception {
+
+		return testDeleteProductGroupProduct_addProductGroupProduct();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteProductGroupProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroupProduct",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ProductGroupProduct
@@ -1484,7 +1586,30 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		return randomProductGroupProduct();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductGroupProductResource productGroupProductResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

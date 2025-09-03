@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {getObjectValueFromPath} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -13,24 +14,35 @@ import ActiveFiltersBar from './controls/filters/ActiveFiltersBar';
 function ManagementBar({
 	bulkActions,
 	creationMenu,
+	dataLoading,
 	deselectItems,
 	fluid,
 	items,
 	onBulkActionsClear,
+	onSelectAll,
 	selectItems,
 	selectedItems,
 	selectedItemsKey,
 	selectedItemsValue,
 	selectionType,
 	showSearch,
+	showSelectAll,
 	total,
 }) {
 	const pageSelectedItemsValue = selectedItemsValue.filter((id) =>
-		items.some((item) => item.id === id)
+		items.some(
+			(item) =>
+				getObjectValueFromPath({
+					object: item,
+					path: selectedItemsKey,
+				}) === id
+		)
 	);
 
 	function handleCheckboxClick() {
-		const itemKeys = items.map((item) => item[selectedItemsKey]);
+		const itemKeys = items.map((item) =>
+			getObjectValueFromPath({object: item, path: selectedItemsKey})
+		);
 
 		if (pageSelectedItemsValue.length === items.length) {
 			return deselectItems(itemKeys);
@@ -44,8 +56,10 @@ function ManagementBar({
 			{selectionType === 'multiple' && (
 				<BulkActions
 					bulkActions={bulkActions}
+					deselectItems={deselectItems}
 					fluid={fluid}
 					handleCheckboxClick={handleCheckboxClick}
+					handleSelectAll={(value) => onSelectAll(value)}
 					items={items}
 					onClear={onBulkActionsClear}
 					pageSelectedItemsValue={pageSelectedItemsValue}
@@ -53,6 +67,7 @@ function ManagementBar({
 					selectedItems={selectedItems}
 					selectedItemsKey={selectedItemsKey}
 					selectedItemsValue={selectedItemsValue}
+					showSelectAll={showSelectAll}
 					total={total}
 				/>
 			)}
@@ -66,7 +81,11 @@ function ManagementBar({
 				/>
 			)}
 
-			<ActiveFiltersBar disabled={!!selectedItemsValue.length} />
+			<ActiveFiltersBar
+				dataLoading={dataLoading}
+				disabled={!!selectedItemsValue.length}
+				total={total}
+			/>
 		</>
 	);
 }
@@ -89,12 +108,15 @@ ManagementBar.propTypes = {
 	fluid: PropTypes.bool,
 	items: PropTypes.array.isRequired,
 	onBulkActionsClear: PropTypes.func.isRequired,
+	onSelectAll: PropTypes.func.isRequired,
+	pageSelectedItemsValue: PropTypes.array,
 	selectItems: PropTypes.func.isRequired,
 	selectedItems: PropTypes.array,
 	selectedItemsKey: PropTypes.string,
 	selectedItemsValue: PropTypes.array,
 	selectionType: PropTypes.oneOf(['single', 'multiple']),
 	showSearch: PropTypes.bool,
+	showSelectAll: PropTypes.bool,
 	total: PropTypes.number,
 };
 

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceModifier;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BasePriceModifierResourceTestCase {
 			testCompany.getCompanyId());
 
 		priceModifierResource = PriceModifierResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -217,6 +230,220 @@ public abstract class BasePriceModifierResourceTestCase {
 	}
 
 	@Test
+	public void testDeletePriceModifier() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PriceModifier priceModifier =
+			testDeletePriceModifier_addPriceModifier();
+
+		assertHttpResponseStatusCode(
+			204,
+			priceModifierResource.deletePriceModifierHttpResponse(
+				priceModifier.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier.getId()));
+		assertHttpResponseStatusCode(
+			404, priceModifierResource.getPriceModifierHttpResponse(0L));
+	}
+
+	protected PriceModifier testDeletePriceModifier_addPriceModifier()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeletePriceModifier() throws Exception {
+
+		// No namespace
+
+		PriceModifier priceModifier1 =
+			testGraphQLDeletePriceModifier_addPriceModifier();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deletePriceModifier",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceModifier1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deletePriceModifier"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"priceModifier",
+					new HashMap<String, Object>() {
+						{
+							put("id", priceModifier1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		PriceModifier priceModifier2 =
+			testGraphQLDeletePriceModifier_addPriceModifier();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deletePriceModifier",
+							new HashMap<String, Object>() {
+								{
+									put("id", priceModifier2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deletePriceModifier"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0",
+					new GraphQLField(
+						"priceModifier",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceModifier2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected PriceModifier testGraphQLDeletePriceModifier_addPriceModifier()
+		throws Exception {
+
+		return testGraphQLPriceModifier_addPriceModifier();
+	}
+
+	@Test
+	public void testDeletePriceModifierBatch() throws Exception {
+		PriceModifier priceModifier1 =
+			testDeletePriceModifierBatch_addPriceModifier();
+
+		testDeletePriceModifierBatch_deletePriceModifier(
+			202, priceModifier1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+
+		priceModifier1 = testDeletePriceModifierBatch_addPriceModifier();
+
+		testDeletePriceModifierBatch_deletePriceModifier(
+			202, null, priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+
+		priceModifier1 = testDeletePriceModifierBatch_addPriceModifier();
+		PriceModifier priceModifier2 =
+			testDeletePriceModifierBatch_addPriceModifier();
+
+		testDeletePriceModifierBatch_deletePriceModifier(
+			202, priceModifier2.getExternalReferenceCode(),
+			priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier2.getId()));
+
+		testDeletePriceModifierBatch_deletePriceModifier(
+			202, priceModifier2.getExternalReferenceCode(),
+			priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier2.getId()));
+	}
+
+	protected PriceModifier testDeletePriceModifierBatch_addPriceModifier()
+		throws Exception {
+
+		return testDeletePriceModifier_addPriceModifier();
+	}
+
+	protected void testDeletePriceModifierBatch_deletePriceModifier(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			priceModifierResource.deletePriceModifierBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeletePriceModifierByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PriceModifier priceModifier =
+			testDeletePriceModifierByExternalReferenceCode_addPriceModifier();
+
+		assertHttpResponseStatusCode(
+			204,
+			priceModifierResource.
+				deletePriceModifierByExternalReferenceCodeHttpResponse(
+					priceModifier.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.
+				getPriceModifierByExternalReferenceCodeHttpResponse(
+					priceModifier.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.
+				getPriceModifierByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected PriceModifier
+			testDeletePriceModifierByExternalReferenceCode_addPriceModifier()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetPriceListByExternalReferenceCodePriceModifiersPage()
 		throws Exception {
 
@@ -298,13 +525,13 @@ public abstract class BasePriceModifierResourceTestCase {
 		String externalReferenceCode =
 			testGetPriceListByExternalReferenceCodePriceModifiersPage_getExternalReferenceCode();
 
-		Page<PriceModifier> priceModifierPage =
+		Page<PriceModifier> priceModifiersPage =
 			priceModifierResource.
 				getPriceListByExternalReferenceCodePriceModifiersPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceModifierPage.getTotalCount());
+			priceModifiersPage.getTotalCount());
 
 		PriceModifier priceModifier1 =
 			testGetPriceListByExternalReferenceCodePriceModifiersPage_addPriceModifier(
@@ -423,29 +650,6 @@ public abstract class BasePriceModifierResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostPriceListByExternalReferenceCodePriceModifier()
-		throws Exception {
-
-		PriceModifier randomPriceModifier = randomPriceModifier();
-
-		PriceModifier postPriceModifier =
-			testPostPriceListByExternalReferenceCodePriceModifier_addPriceModifier(
-				randomPriceModifier);
-
-		assertEquals(randomPriceModifier, postPriceModifier);
-		assertValid(postPriceModifier);
-	}
-
-	protected PriceModifier
-			testPostPriceListByExternalReferenceCodePriceModifier_addPriceModifier(
-				PriceModifier priceModifier)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -614,12 +818,12 @@ public abstract class BasePriceModifierResourceTestCase {
 
 		Long id = testGetPriceListIdPriceModifiersPage_getId();
 
-		Page<PriceModifier> priceModifierPage =
+		Page<PriceModifier> priceModifiersPage =
 			priceModifierResource.getPriceListIdPriceModifiersPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceModifierPage.getTotalCount());
+			priceModifiersPage.getTotalCount());
 
 		PriceModifier priceModifier1 =
 			testGetPriceListIdPriceModifiersPage_addPriceModifier(
@@ -883,310 +1087,6 @@ public abstract class BasePriceModifierResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostPriceListIdPriceModifier() throws Exception {
-		PriceModifier randomPriceModifier = randomPriceModifier();
-
-		PriceModifier postPriceModifier =
-			testPostPriceListIdPriceModifier_addPriceModifier(
-				randomPriceModifier);
-
-		assertEquals(randomPriceModifier, postPriceModifier);
-		assertValid(postPriceModifier);
-	}
-
-	protected PriceModifier testPostPriceListIdPriceModifier_addPriceModifier(
-			PriceModifier priceModifier)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeletePriceModifierByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PriceModifier priceModifier =
-			testDeletePriceModifierByExternalReferenceCode_addPriceModifier();
-
-		assertHttpResponseStatusCode(
-			204,
-			priceModifierResource.
-				deletePriceModifierByExternalReferenceCodeHttpResponse(
-					priceModifier.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			priceModifierResource.
-				getPriceModifierByExternalReferenceCodeHttpResponse(
-					priceModifier.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			priceModifierResource.
-				getPriceModifierByExternalReferenceCodeHttpResponse(
-					priceModifier.getExternalReferenceCode()));
-	}
-
-	protected PriceModifier
-			testDeletePriceModifierByExternalReferenceCode_addPriceModifier()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetPriceModifierByExternalReferenceCode() throws Exception {
-		PriceModifier postPriceModifier =
-			testGetPriceModifierByExternalReferenceCode_addPriceModifier();
-
-		PriceModifier getPriceModifier =
-			priceModifierResource.getPriceModifierByExternalReferenceCode(
-				postPriceModifier.getExternalReferenceCode());
-
-		assertEquals(postPriceModifier, getPriceModifier);
-		assertValid(getPriceModifier);
-	}
-
-	protected PriceModifier
-			testGetPriceModifierByExternalReferenceCode_addPriceModifier()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetPriceModifierByExternalReferenceCode()
-		throws Exception {
-
-		PriceModifier priceModifier =
-			testGraphQLGetPriceModifierByExternalReferenceCode_addPriceModifier();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				priceModifier,
-				PriceModifierSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"priceModifierByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												priceModifier.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/priceModifierByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Assert.assertTrue(
-			equals(
-				priceModifier,
-				PriceModifierSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminPricing_v2_0",
-								new GraphQLField(
-									"priceModifierByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													priceModifier.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminPricing_v2_0",
-						"Object/priceModifierByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetPriceModifierByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"priceModifierByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminPricing_v2_0",
-						new GraphQLField(
-							"priceModifierByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected PriceModifier
-			testGraphQLGetPriceModifierByExternalReferenceCode_addPriceModifier()
-		throws Exception {
-
-		return testGraphQLPriceModifier_addPriceModifier();
-	}
-
-	@Test
-	public void testPatchPriceModifierByExternalReferenceCode()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testDeletePriceModifier() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PriceModifier priceModifier =
-			testDeletePriceModifier_addPriceModifier();
-
-		assertHttpResponseStatusCode(
-			204,
-			priceModifierResource.deletePriceModifierHttpResponse(
-				priceModifier.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			priceModifierResource.getPriceModifierHttpResponse(
-				priceModifier.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			priceModifierResource.getPriceModifierHttpResponse(
-				priceModifier.getId()));
-	}
-
-	protected PriceModifier testDeletePriceModifier_addPriceModifier()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeletePriceModifier() throws Exception {
-
-		// No namespace
-
-		PriceModifier priceModifier1 =
-			testGraphQLDeletePriceModifier_addPriceModifier();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deletePriceModifier",
-						new HashMap<String, Object>() {
-							{
-								put("id", priceModifier1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deletePriceModifier"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"priceModifier",
-					new HashMap<String, Object>() {
-						{
-							put("id", priceModifier1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		PriceModifier priceModifier2 =
-			testGraphQLDeletePriceModifier_addPriceModifier();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminPricing_v2_0",
-						new GraphQLField(
-							"deletePriceModifier",
-							new HashMap<String, Object>() {
-								{
-									put("id", priceModifier2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminPricing_v2_0",
-				"Object/deletePriceModifier"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminPricing_v2_0",
-					new GraphQLField(
-						"priceModifier",
-						new HashMap<String, Object>() {
-							{
-								put("id", priceModifier2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected PriceModifier testGraphQLDeletePriceModifier_addPriceModifier()
-		throws Exception {
-
-		return testGraphQLPriceModifier_addPriceModifier();
 	}
 
 	@Test
@@ -1492,8 +1392,284 @@ public abstract class BasePriceModifierResourceTestCase {
 	}
 
 	@Test
+	public void testGetPriceModifierByExternalReferenceCode() throws Exception {
+		PriceModifier postPriceModifier =
+			testGetPriceModifierByExternalReferenceCode_addPriceModifier();
+
+		PriceModifier getPriceModifier =
+			priceModifierResource.getPriceModifierByExternalReferenceCode(
+				postPriceModifier.getExternalReferenceCode());
+
+		assertEquals(postPriceModifier, getPriceModifier);
+		assertValid(getPriceModifier);
+	}
+
+	protected PriceModifier
+			testGetPriceModifierByExternalReferenceCode_addPriceModifier()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetPriceModifierByExternalReferenceCode()
+		throws Exception {
+
+		PriceModifier priceModifier =
+			testGraphQLGetPriceModifierByExternalReferenceCode_addPriceModifier();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				priceModifier,
+				PriceModifierSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"priceModifierByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												priceModifier.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/priceModifierByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				priceModifier,
+				PriceModifierSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceModifierByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													priceModifier.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceModifierByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetPriceModifierByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"priceModifierByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceModifierByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected PriceModifier
+			testGraphQLGetPriceModifierByExternalReferenceCode_addPriceModifier()
+		throws Exception {
+
+		return testGraphQLPriceModifier_addPriceModifier();
+	}
+
+	@Test
 	public void testPatchPriceModifier() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchPriceModifierByExternalReferenceCode()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostPriceListByExternalReferenceCodePriceModifier()
+		throws Exception {
+
+		PriceModifier randomPriceModifier = randomPriceModifier();
+
+		PriceModifier postPriceModifier =
+			testPostPriceListByExternalReferenceCodePriceModifier_addPriceModifier(
+				randomPriceModifier);
+
+		assertEquals(randomPriceModifier, postPriceModifier);
+		assertValid(postPriceModifier);
+	}
+
+	protected PriceModifier
+			testPostPriceListByExternalReferenceCodePriceModifier_addPriceModifier(
+				PriceModifier priceModifier)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostPriceListIdPriceModifier() throws Exception {
+		PriceModifier randomPriceModifier = randomPriceModifier();
+
+		PriceModifier postPriceModifier =
+			testPostPriceListIdPriceModifier_addPriceModifier(
+				randomPriceModifier);
+
+		assertEquals(randomPriceModifier, postPriceModifier);
+		assertValid(postPriceModifier);
+	}
+
+	protected PriceModifier testPostPriceListIdPriceModifier_addPriceModifier(
+			PriceModifier priceModifier)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		PriceModifier priceModifier1 =
+			testBatchEngineDeleteImportTask_addPriceModifier();
+
+		testBatchEngineDeleteImportTask_deletePriceModifier(
+			200, priceModifier1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+
+		priceModifier1 = testBatchEngineDeleteImportTask_addPriceModifier();
+
+		testBatchEngineDeleteImportTask_deletePriceModifier(
+			200, null, priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+
+		priceModifier1 = testBatchEngineDeleteImportTask_addPriceModifier();
+		PriceModifier priceModifier2 =
+			testBatchEngineDeleteImportTask_addPriceModifier();
+
+		testBatchEngineDeleteImportTask_deletePriceModifier(
+			200, priceModifier2.getExternalReferenceCode(),
+			priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier2.getId()));
+
+		testBatchEngineDeleteImportTask_deletePriceModifier(
+			200, priceModifier2.getExternalReferenceCode(),
+			priceModifier1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			priceModifierResource.getPriceModifierHttpResponse(
+				priceModifier2.getId()));
+	}
+
+	protected PriceModifier testBatchEngineDeleteImportTask_addPriceModifier()
+		throws Exception {
+
+		return testDeletePriceModifier_addPriceModifier();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePriceModifier(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifier",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2560,7 +2736,30 @@ public abstract class BasePriceModifierResourceTestCase {
 		return randomPriceModifier();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PriceModifierResource priceModifierResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

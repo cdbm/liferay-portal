@@ -53,6 +53,9 @@
 		"CPConfigurationListIds": {
 			"type": "keyword"
 		},
+		"accountName": {
+			"type": "keyword"
+		},
 		"advanceStatus": {
 			"type": "keyword"
 		},
@@ -66,6 +69,9 @@
 			"type": "integer"
 		},
 		"commerceAccountId": {
+			"type": "keyword"
+		},
+		"commerceOrderTypeExternalReferenceCode": {
 			"type": "keyword"
 		},
 		"couponCode": {
@@ -86,6 +92,9 @@
 		"entryModelClassName": {
 			"type": "keyword"
 		},
+		"externalReferenceCode": {
+			"type": "keyword"
+		},
 		"gtin": {
 			"type": "keyword"
 		},
@@ -96,6 +105,9 @@
 			"type": "keyword"
 		},
 		"orderCreatorEmailAddress": {
+			"type": "keyword"
+		},
+		"orderCreatorUserId": {
 			"type": "keyword"
 		},
 		"orderOrganizationId": {
@@ -110,11 +122,18 @@
 		"productTypeName": {
 			"type": "keyword"
 		},
+		"purchaseOrderNumber": {
+			"type": "keyword"
+		},
 		"replacementCPInstanceUuid": {
 			"type": "keyword"
 		},
 		"replacementCProductId": {
 			"type": "keyword"
+		},
+		"requestedDeliveryDate": {
+			"format": "yyyyMMddHHmmss",
+			"type": "date"
 		},
 		"shippable": {
 			"type": "keyword"
@@ -159,8 +178,14 @@
 		"specificationOptionsNames": {
 			"type": "keyword"
 		},
+		"specificationOptionsValuesNames": {
+			"type": "keyword"
+		},
 		"targetType": {
 			"type": "keyword"
+		},
+		"totalAmount": {
+			"type": "double"
 		}
 	}
 }

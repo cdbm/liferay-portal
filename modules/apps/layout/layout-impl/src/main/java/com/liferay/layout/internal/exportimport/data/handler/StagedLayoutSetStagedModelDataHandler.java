@@ -293,7 +293,7 @@ public class StagedLayoutSetStagedModelDataHandler
 					portletDataContext.getGroupId(),
 					portletDataContext.isPrivateLayout())) {
 
-			if (Validator.isNull(layout.getSourcePrototypeLayoutUuid())) {
+			if (Validator.isNull(layout.getLayoutSetPrototypeLayoutERC())) {
 				continue;
 			}
 
@@ -303,9 +303,10 @@ public class StagedLayoutSetStagedModelDataHandler
 				continue;
 			}
 
-			Layout sourcePrototypeLayout = _layoutLocalService.fetchLayout(
-				layout.getSourcePrototypeLayoutUuid(),
-				layoutSetPrototype.getGroupId(), true);
+			Layout sourcePrototypeLayout =
+				_layoutLocalService.fetchLayoutByExternalReferenceCode(
+					layout.getLayoutSetPrototypeLayoutERC(),
+					layoutSetPrototype.getGroupId());
 
 			if ((sourcePrototypeLayout == null) &&
 				_layoutLocalService.hasLayout(
@@ -443,6 +444,10 @@ public class StagedLayoutSetStagedModelDataHandler
 			PortletDataContext portletDataContext,
 			StagedLayoutSet stagedLayoutSet, Element stagedLayoutSetElement)
 		throws Exception {
+
+		if (!_isFaviconExportImportEnabled(portletDataContext)) {
+			return;
+		}
 
 		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
 
@@ -734,6 +739,10 @@ public class StagedLayoutSetStagedModelDataHandler
 			StagedLayoutSet stagedLayoutSet, Element stagedLayoutSetElement)
 		throws Exception {
 
+		if (!_isFaviconExportImportEnabled(portletDataContext)) {
+			return;
+		}
+
 		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
 
 		StagedModelDataHandlerUtil.importReferenceStagedModel(
@@ -844,6 +853,19 @@ public class StagedLayoutSetStagedModelDataHandler
 					exception);
 			}
 		}
+	}
+
+	private boolean _isFaviconExportImportEnabled(
+		PortletDataContext portletDataContext) {
+
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
+
+		if (!parameterMap.containsKey(PortletDataHandlerKeys.FAVICON)) {
+			return true;
+		}
+
+		return MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.FAVICON);
 	}
 
 	private StagedLayoutSet _unwrapLayoutSetStagingHandler(
@@ -1007,9 +1029,10 @@ public class StagedLayoutSetStagedModelDataHandler
 					layoutElement.attributeValue("layout-priority"));
 
 				layoutPriority = _layoutLocalServiceHelper.getNextPriority(
-					layout.getGroupId(), layout.isPrivateLayout(),
-					layout.getParentLayoutId(),
-					layout.getSourcePrototypeLayoutUuid(), layoutPriority);
+					layout.getGroupId(),
+					layout.getLayoutSetPrototypeLayoutERC(),
+					layout.isPrivateLayout(), layout.getParentLayoutId(),
+					layoutPriority);
 
 				layoutPriorities.put(layout.getPlid(), layoutPriority);
 			}

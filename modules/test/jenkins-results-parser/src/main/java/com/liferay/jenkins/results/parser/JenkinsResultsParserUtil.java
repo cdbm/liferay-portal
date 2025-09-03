@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -94,18 +93,14 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -203,7 +198,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static void appendToCacheFile(String key, String content) {
-		File cacheFile = _getCacheFile(key);
+		File cacheFile = getCacheFile(key);
 
 		boolean cacheFileCreated = false;
 
@@ -630,7 +625,7 @@ public class JenkinsResultsParserUtil {
 
 		processBuilder.directory(baseDir.getAbsoluteFile());
 
-		Process process = new BufferedProcess(2000000, processBuilder.start());
+		Process process = new BufferedProcess(processBuilder.start());
 
 		Thread currentThread = Thread.currentThread();
 		long duration = 0;
@@ -1266,10 +1261,6 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static String getBuildDirPath() {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("/opt/dev/projects/github/liferay-jenkins-ee/tmp/jenkins/");
-
 		String topLevelBuildURL = System.getenv("TOP_LEVEL_BUILD_URL");
 
 		if (topLevelBuildURL != null) {
@@ -1302,9 +1293,18 @@ public class JenkinsResultsParserUtil {
 	public static String getBuildDirPath(
 		String buildNumber, String jobName, String masterHostname) {
 
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = getBuildProperties();
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("/opt/dev/projects/github/liferay-jenkins-ee/tmp/jenkins/");
+		sb.append(buildProperties.getProperty("jenkins.tmp.dir"));
 
 		if (!isCINode() || isNullOrEmpty(buildNumber) ||
 			isNullOrEmpty(jobName) || isNullOrEmpty(masterHostname)) {
@@ -1457,17 +1457,18 @@ public class JenkinsResultsParserUtil {
 
 			for (String url : _buildPropertiesURLs) {
 				if (url.startsWith("file://")) {
-					properties.putAll(
-						getProperties(new File(url.replace("file://", ""))));
+					properties.putAll(new EnvironmentBuildProperties(url));
 
 					continue;
 				}
 
-				properties.load(
-					new StringReader(
-						toString(
-							getLocalURL(url), false, 3, null, null, 30,
-							_MILLIS_TIMEOUT_DEFAULT, null, true)));
+				properties.putAll(
+					new EnvironmentBuildProperties(getLocalURL(url)));
+			}
+
+			if (!properties.containsKey("user.home")) {
+				properties.setProperty(
+					"user.home", getCanonicalPath(_userHomeDir));
 			}
 
 			_buildProperties.clear();
@@ -1604,7 +1605,9 @@ public class JenkinsResultsParserUtil {
 
 		Matcher matcher = _jenkinsReportURLPattern.matcher(jenkinsReportURL);
 
-		matcher.find();
+		if (!matcher.find()) {
+			return jenkinsReportURL;
+		}
 
 		StringBuilder sb = new StringBuilder();
 
@@ -1618,7 +1621,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static BufferedReader getCachedFileBufferedReader(String key) {
-		File cachedTextFile = _getCacheFile(key);
+		File cachedTextFile = getCacheFile(key);
 
 		if (!cachedTextFile.exists()) {
 			return null;
@@ -1636,7 +1639,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static String getCachedText(String key) {
-		File cachedTextFile = _getCacheFile(key);
+		File cachedTextFile = getCacheFile(key);
 
 		if (!cachedTextFile.exists()) {
 			return null;
@@ -1650,8 +1653,16 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static File getCacheFile(String key) {
+		String fileName = combine(
+			System.getProperty("java.io.tmpdir"), "/jenkins-cached-files/",
+			String.valueOf(key.hashCode()), ".txt");
+
+		return new File(fileName);
+	}
+
 	public static long getCacheFileSize(String key) {
-		File cacheFile = _getCacheFile(key);
+		File cacheFile = getCacheFile(key);
 
 		if ((cacheFile == null) || !cacheFile.exists()) {
 			return 0;
@@ -1957,11 +1968,21 @@ public class JenkinsResultsParserUtil {
 
 			if (!isNullOrEmpty(output)) {
 				for (String line : output.split("\n")) {
-					return new File(baseDir, line);
+					if (isNullOrEmpty(line)) {
+						continue;
+					}
+
+					File file = new File(baseDir, line);
+
+					if (!file.exists()) {
+						continue;
+					}
+
+					return file;
 				}
 			}
 		}
-		catch (IOException | TimeoutException exception) {
+		catch (Exception exception) {
 			System.out.println(exception.getMessage());
 		}
 
@@ -1980,7 +2001,10 @@ public class JenkinsResultsParserUtil {
 
 						String filePathString = filePath.toString();
 
-						if (filePathString.contains(pathSnippet)) {
+						if (filePathString.contains(pathSnippet) ||
+							filePathString.contains(
+								pathSnippet.replaceAll("\\.", "/"))) {
+
 							matchingFiles.add(filePath.toFile());
 						}
 
@@ -2052,6 +2076,10 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static List<String> getGitHubCacheHostnames() {
+		if (isCloudCINode()) {
+			return Collections.emptyList();
+		}
+
 		try {
 			Properties buildProperties = getBuildProperties();
 
@@ -2446,6 +2474,16 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return _URL_LOAD_BALANCER_DEFAULT;
+	}
+
+	public static JenkinsMaster getJenkinsMaster(URL buildURL) {
+		Matcher matcher = _buildURLPattern.matcher(String.valueOf(buildURL));
+
+		if (!matcher.find()) {
+			throw new RuntimeException("Invalid Build URL");
+		}
+
+		return JenkinsMaster.getInstance(matcher.group("masterHostname"));
 	}
 
 	public static String getJenkinsMasterName(String jenkinsSlaveName) {
@@ -2918,6 +2956,16 @@ public class JenkinsResultsParserUtil {
 		String baseInvocationURL, String blacklist, int invokedBatchSize,
 		String jobName, int minimumRAM, int maximumSlavesPerHost) {
 
+		return getMostAvailableMasterURL(
+			baseInvocationURL, blacklist, invokedBatchSize, jobName, null,
+			minimumRAM, maximumSlavesPerHost);
+	}
+
+	public static String getMostAvailableMasterURL(
+		String baseInvocationURL, String blacklist, int invokedBatchSize,
+		String jobName, String labelExpression, int minimumRAM,
+		int maximumSlavesPerHost) {
+
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(getJenkinsLoadBalancerURL());
@@ -2937,6 +2985,11 @@ public class JenkinsResultsParserUtil {
 		if (!isNullOrEmpty(jobName)) {
 			sb.append("&jobName=");
 			sb.append(fixURL(jobName));
+		}
+
+		if (!isNullOrEmpty(labelExpression)) {
+			sb.append("&labelExpression=");
+			sb.append(fixURL(labelExpression));
 		}
 
 		if (minimumRAM > 0) {
@@ -3190,6 +3243,10 @@ public class JenkinsResultsParserUtil {
 
 	public static String getRandomGitHubDevNodeHostname(
 		List<String> excludedHostnames) {
+
+		if (isCloudCINode()) {
+			return "";
+		}
 
 		List<String> gitHubDevNodeHostnames = getGitHubCacheHostnames();
 
@@ -3472,6 +3529,20 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return sb.toString();
+	}
+
+	public static String getSHA(File file) {
+		try {
+			Process process = executeBashCommands(
+				combine(
+					"sha512sum '", getCanonicalPath(file),
+					"' | awk '{print $1}'"));
+
+			return readInputStream(process.getInputStream());
+		}
+		catch (IOException | TimeoutException exception) {
+			throw new RuntimeException("Unable to read SHA file", exception);
+		}
 	}
 
 	public static List<String> getSlaves(
@@ -3799,11 +3870,7 @@ public class JenkinsResultsParserUtil {
 		String directoryCanonicalPath = getCanonicalPath(directory) + "/";
 		String fileCanonicalPath = getCanonicalPath(file);
 
-		if (fileCanonicalPath.startsWith(directoryCanonicalPath)) {
-			return true;
-		}
-
-		return false;
+		return fileCanonicalPath.startsWith(directoryCanonicalPath);
 	}
 
 	public static boolean isInteger(String string) {
@@ -3836,11 +3903,7 @@ public class JenkinsResultsParserUtil {
 					"/master.network.name)");
 
 			if (!isNullOrEmpty(jenkinsMasterNetworkName)) {
-				if (jenkinsMasterNetworkName.equals(networkName)) {
-					return true;
-				}
-
-				return false;
+				return jenkinsMasterNetworkName.equals(networkName);
 			}
 		}
 		catch (IOException ioException) {
@@ -3935,6 +3998,23 @@ public class JenkinsResultsParserUtil {
 		return true;
 	}
 
+	public static boolean isMatchingSHAFile(File file, File shaFile) {
+		if (!file.exists() || !shaFile.exists()) {
+			return false;
+		}
+
+		try {
+			if (Objects.equals(read(shaFile), getSHA(file))) {
+				return true;
+			}
+		}
+		catch (IOException ioException) {
+			System.out.println("WARNING: Unable to check SHA");
+		}
+
+		return false;
+	}
+
 	public static boolean isNullOrEmpty(String string) {
 		if (string == null) {
 			return true;
@@ -3942,11 +4022,7 @@ public class JenkinsResultsParserUtil {
 
 		String trimmedString = string.trim();
 
-		if (trimmedString.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return trimmedString.isEmpty();
 	}
 
 	public static boolean isOSX() {
@@ -3957,11 +4033,7 @@ public class JenkinsResultsParserUtil {
 		Matcher poshiFileNamePatternMatcher = _poshiFileNamePattern.matcher(
 			file.getName());
 
-		if (poshiFileNamePatternMatcher.matches()) {
-			return true;
-		}
-
-		return false;
+		return poshiFileNamePatternMatcher.matches();
 	}
 
 	public static boolean isReachable(String hostname) {
@@ -4181,11 +4253,7 @@ public class JenkinsResultsParserUtil {
 			public boolean accept(File dir, String name) {
 				Matcher matcher = pattern.matcher(name);
 
-				if (matcher.matches()) {
-					return true;
-				}
-
-				return false;
+				return matcher.matches();
 			}
 
 		};
@@ -4583,7 +4651,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static void saveToCacheFile(String key, String text) {
-		File cacheFile = _getCacheFile(key);
+		File cacheFile = getCacheFile(key);
 
 		if (isNullOrEmpty(text)) {
 			if (cacheFile.exists()) {
@@ -4885,7 +4953,7 @@ public class JenkinsResultsParserUtil {
 					System.out.println("Loading " + url);
 				}
 
-				File cachedFile = _getCacheFile(
+				File cachedFile = getCacheFile(
 					_generateToStringCacheKey(url, postContent));
 
 				if ((cachedFile != null) && cachedFile.exists()) {
@@ -5323,17 +5391,44 @@ public class JenkinsResultsParserUtil {
 			int retryPeriod, int timeout, HTTPAuthorization httpAuthorization)
 		throws IOException {
 
-		String response = toString(
-			url, checkCache, maxRetries, httpRequestMethod, postContent,
-			retryPeriod, timeout, httpAuthorization, true);
+		Retryable<JSONObject> retryable = new Retryable<JSONObject>(
+			true, maxRetries, retryPeriod, true) {
 
-		if ((response == null) ||
-			response.endsWith("was truncated due to its size.")) {
+			@Override
+			public JSONObject execute() {
+				try {
+					String response = JenkinsResultsParserUtil.toString(
+						url, checkCache, 0, httpRequestMethod, postContent,
+						retryPeriod, timeout, httpAuthorization, true);
 
-			return null;
+					if ((response == null) ||
+						response.endsWith("was truncated due to its size.")) {
+
+						return null;
+					}
+
+					return createJSONObject(response);
+				}
+				catch (IOException ioException) {
+					throw new RuntimeException(ioException);
+				}
+			}
+
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return combine(
+					"Unable to create JSONObject: ",
+					super.getRetryMessage(retryCount));
+			}
+
+		};
+
+		try {
+			return retryable.executeWithRetries();
 		}
-
-		return createJSONObject(response);
+		catch (Exception exception) {
+			throw new RuntimeException("Unable to create JSON object");
+		}
 	}
 
 	public static JSONObject toJSONObject(
@@ -5416,6 +5511,12 @@ public class JenkinsResultsParserUtil {
 			url, false, _RETRIES_SIZE_MAX_DEFAULT, null, postContent,
 			_SECONDS_RETRY_PERIOD_DEFAULT, _MILLIS_TIMEOUT_DEFAULT,
 			httpAuthorization);
+	}
+
+	public static PathMatcher toPathMatcher(String prefix, String glob) {
+		FileSystem fileSystem = FileSystems.getDefault();
+
+		return fileSystem.getPathMatcher(combine("glob:", prefix, glob));
 	}
 
 	public static List<PathMatcher> toPathMatchers(
@@ -5668,81 +5769,29 @@ public class JenkinsResultsParserUtil {
 	public static void unTarGzip(File sourceTarGzipFile, File targetDir) {
 		targetDir.mkdirs();
 
-		try (FileInputStream fileInputStream = new FileInputStream(
-				sourceTarGzipFile);
-			GzipCompressorInputStream gzipCompressorInputStream =
-				new GzipCompressorInputStream(fileInputStream);
-			TarArchiveInputStream tarArchiveInputStream =
-				new TarArchiveInputStream(gzipCompressorInputStream)) {
-
-			ArchiveEntry archiveEntry = tarArchiveInputStream.getNextEntry();
-
-			while (archiveEntry != null) {
-				TarArchiveEntry tarArchiveEntry = (TarArchiveEntry)archiveEntry;
-
-				if (tarArchiveEntry.isDirectory()) {
-					File dir = new File(targetDir, tarArchiveEntry.getName());
-
-					dir.mkdirs();
-				}
-				else {
-					File file = new File(targetDir, tarArchiveEntry.getName());
-
-					write(file, "");
-
-					try (FileOutputStream fileOutputStream =
-							new FileOutputStream(file, false);
-						BufferedOutputStream bufferedOutputStream =
-							new BufferedOutputStream(fileOutputStream)) {
-
-						int b = tarArchiveInputStream.read();
-
-						while (b != -1) {
-							bufferedOutputStream.write(b);
-
-							b = tarArchiveInputStream.read();
-						}
-					}
-				}
-
-				archiveEntry = tarArchiveInputStream.getNextEntry();
-			}
+		try {
+			executeBashCommands(
+				combine(
+					"tar  --directory=", getCanonicalPath(targetDir),
+					" --extract --file=", getCanonicalPath(sourceTarGzipFile),
+					" --gzip"));
 		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
+		catch (IOException | TimeoutException exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
 	public static void unzip(File zipFile, File destDir) {
-		try (FileInputStream fileInputStream = new FileInputStream(zipFile);
-			ZipInputStream zipInputStream = new ZipInputStream(
-				fileInputStream)) {
+		destDir.mkdirs();
 
-			ZipEntry zipEntry = zipInputStream.getNextEntry();
-
-			while (zipEntry != null) {
-				String zipEntryName = zipEntry.getName();
-
-				File destFile = new File(destDir, zipEntryName);
-
-				if (zipEntryName.endsWith(File.separator)) {
-					Files.createDirectories(destFile.toPath());
-				}
-				else {
-					destFile.mkdirs();
-
-					Files.copy(
-						zipInputStream, destFile.toPath(),
-						StandardCopyOption.REPLACE_EXISTING);
-				}
-
-				zipEntry = zipInputStream.getNextEntry();
-			}
-
-			zipInputStream.closeEntry();
+		try {
+			executeBashCommands(
+				combine(
+					"unzip -o -q ", getCanonicalPath(zipFile), " -d ",
+					getCanonicalPath(destDir)));
 		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
+		catch (IOException | TimeoutException exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -5918,6 +5967,24 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static void writeSHAFile(File file, File shaFile) {
+		try {
+			if (shaFile.exists()) {
+				delete(shaFile);
+			}
+
+			write(shaFile, getSHA(file));
+
+			if (!isMatchingSHAFile(file, shaFile)) {
+				throw new RuntimeException("Unable to create SHA file");
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to create SHA file", ioException);
+		}
+	}
+
 	public static void zip(final File sourceDir, File zipFile) {
 		try (FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
 			final ZipOutputStream zipOutputStream = new ZipOutputStream(
@@ -6022,7 +6089,7 @@ public class JenkinsResultsParserUtil {
 			}
 
 			System.out.println(
-				JenkinsResultsParserUtil.combine(
+				combine(
 					"Configuring client credentials:\n* Client ID: ",
 					_getMaskedString(clientId), "\n* Client secret: ",
 					_getMaskedString(clientSecret), "\n* Token URL: ",
@@ -6403,14 +6470,6 @@ public class JenkinsResultsParserUtil {
 		return key;
 	}
 
-	private static File _getCacheFile(String key) {
-		String fileName = combine(
-			System.getProperty("java.io.tmpdir"), "/jenkins-cached-files/",
-			String.valueOf(key.hashCode()), ".txt");
-
-		return new File(fileName);
-	}
-
 	private static String _getCanonicalPath(File canonicalFile) {
 		File parentCanonicalFile = canonicalFile.getParentFile();
 
@@ -6742,7 +6801,11 @@ public class JenkinsResultsParserUtil {
 			Properties temporaryProperties = new Properties();
 
 			try {
-				temporaryProperties.load(new FileInputStream(propertiesFile));
+				String urlString = EnvironmentBuildProperties.toURLString(
+					propertiesFile);
+
+				temporaryProperties.putAll(
+					new EnvironmentBuildProperties(urlString));
 			}
 			catch (IOException ioException) {
 				throw new RuntimeException(

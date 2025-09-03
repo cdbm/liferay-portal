@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ProductConfigurationListSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -115,6 +115,36 @@ public class ProductConfigurationList implements Cloneable, Serializable {
 	}
 
 	protected Date createDate;
+
+	public com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] getCustomFields() {
+
+		return customFields;
+	}
+
+	public void setCustomFields(
+		com.liferay.headless.commerce.admin.catalog.client.custom.field.
+			CustomField[] customFields) {
+
+		this.customFields = customFields;
+	}
+
+	public void setCustomFields(
+		UnsafeSupplier
+			<com.liferay.headless.commerce.admin.catalog.client.custom.field.
+				CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] customFields;
 
 	public Date getDisplayDate() {
 		return displayDate;

@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -236,7 +236,7 @@ public class ObjectEntryInfoItemObjectProviderTest {
 
 		_assertGetInfoItemNoSuchInfoItemException(
 			infoItemIdentifier,
-			"Unsupported info item identifier type " + infoItemIdentifier);
+			"Unsupported info item identifier " + infoItemIdentifier);
 
 		Mockito.verifyNoInteractions(_objectEntryLocalService);
 		Mockito.verifyNoInteractions(_objectEntryManagerRegistry);

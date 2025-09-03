@@ -8,12 +8,12 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.WidgetPageWidgetInstanceSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -158,18 +158,18 @@ public class WidgetPageWidgetInstance implements Cloneable, Serializable {
 
 	protected String widgetInstanceId;
 
-	public WidgetLookAndFeelConfig[] getWidgetLookAndFeelConfig() {
+	public WidgetLookAndFeelConfig getWidgetLookAndFeelConfig() {
 		return widgetLookAndFeelConfig;
 	}
 
 	public void setWidgetLookAndFeelConfig(
-		WidgetLookAndFeelConfig[] widgetLookAndFeelConfig) {
+		WidgetLookAndFeelConfig widgetLookAndFeelConfig) {
 
 		this.widgetLookAndFeelConfig = widgetLookAndFeelConfig;
 	}
 
 	public void setWidgetLookAndFeelConfig(
-		UnsafeSupplier<WidgetLookAndFeelConfig[], Exception>
+		UnsafeSupplier<WidgetLookAndFeelConfig, Exception>
 			widgetLookAndFeelConfigUnsafeSupplier) {
 
 		try {
@@ -181,7 +181,7 @@ public class WidgetPageWidgetInstance implements Cloneable, Serializable {
 		}
 	}
 
-	protected WidgetLookAndFeelConfig[] widgetLookAndFeelConfig;
+	protected WidgetLookAndFeelConfig widgetLookAndFeelConfig;
 
 	public String getWidgetName() {
 		return widgetName;

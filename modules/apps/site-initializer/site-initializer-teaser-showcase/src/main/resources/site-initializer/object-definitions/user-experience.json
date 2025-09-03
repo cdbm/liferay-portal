@@ -19,12 +19,12 @@
 			"conditionExpression": "",
 			"description": "",
 			"errorMessage": {
-				"en_US": "Sorry, it seems that something happened"
+				"en_US": "Acceptance failed. Please try again later or contact support."
 			},
 			"label": {
-				"en_US": "Standalone User Confirmation"
+				"en_US": "User Accepted the Answer"
 			},
-			"name": "standaloneUserConfirmation",
+			"name": "standaloneUserAcceptance",
 			"objectActionExecutorKey": "update-object-entry",
 			"objectActionTriggerKey": "standalone",
 			"parameters": {
@@ -38,6 +38,40 @@
 						},
 						"name": "answered",
 						"value": "true"
+					}
+				]
+			},
+			"status": {
+				"code": 1,
+				"label": "success",
+				"label_i18n": "Success"
+			},
+			"system": false
+		},
+		{
+			"active": true,
+			"conditionExpression": "",
+			"description": "",
+			"errorMessage": {
+				"en_US": "Rejection failed. Please try again later or contact support."
+			},
+			"label": {
+				"en_US": "User Rejected the Answer"
+			},
+			"name": "standaloneUserRejection",
+			"objectActionExecutorKey": "update-object-entry",
+			"objectActionTriggerKey": "standalone",
+			"parameters": {
+				"objectDefinitionExternalReferenceCode": "USER-EXPERIENCE",
+				"predefinedValues": [
+					{
+						"businessType": "Boolean",
+						"inputAsValue": false,
+						"label": {
+							"en_US": "Answer Confirmed by the User"
+						},
+						"name": "answered",
+						"value": "false"
 					}
 				]
 			},

@@ -56,7 +56,7 @@ public class CETItemSelectorViewDescriptorTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			new MockLiferayResourceRequest());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, Mockito.mock(ThemeDisplay.class));
@@ -149,11 +149,11 @@ public class CETItemSelectorViewDescriptorTest {
 		SearchContainer<CET> searchContainer =
 			_cetItemSelectorViewDescriptor.getSearchContainer();
 
-		List<CET> results = searchContainer.getResults();
+		List<CET> cets = searchContainer.getResults();
 
-		Assert.assertEquals(results.toString(), 1, results.size());
+		Assert.assertEquals(cets.toString(), 1, cets.size());
 
-		CET cet3 = results.get(0);
+		CET cet3 = cets.get(0);
 
 		Assert.assertEquals(
 			"", ReflectionTestUtil.invoke(cet3, "getScope", null));

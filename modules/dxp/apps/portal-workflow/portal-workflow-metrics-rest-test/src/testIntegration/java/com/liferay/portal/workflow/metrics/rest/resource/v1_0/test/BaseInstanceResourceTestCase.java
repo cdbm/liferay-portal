@@ -44,6 +44,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Pagination;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.InstanceResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.InstanceSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -187,6 +187,174 @@ public abstract class BaseInstanceResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProcessInstance() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Instance instance = testDeleteProcessInstance_addInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			instanceResource.deleteProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance),
+				instance.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.getProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance),
+				instance.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.getProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance), 0L));
+	}
+
+	protected Instance testDeleteProcessInstance_addInstance()
+		throws Exception {
+
+		return testPostProcessInstance_addInstance(randomInstance());
+	}
+
+	protected Long testDeleteProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetProcessInstance() throws Exception {
+		Instance postInstance = testGetProcessInstance_addInstance();
+
+		Instance getInstance = instanceResource.getProcessInstance(
+			testGetProcessInstance_getProcessId(postInstance),
+			postInstance.getId());
+
+		assertEquals(postInstance, getInstance);
+		assertValid(getInstance);
+	}
+
+	protected Instance testGetProcessInstance_addInstance() throws Exception {
+		return testPostProcessInstance_addInstance(randomInstance());
+	}
+
+	protected Long testGetProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProcessInstance() throws Exception {
+		Instance instance = testGraphQLGetProcessInstance_addInstance();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				instance,
+				InstanceSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"processInstance",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"processId",
+											testGraphQLGetProcessInstance_getProcessId(
+												instance));
+										put("instanceId", instance.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/processInstance"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				instance,
+				InstanceSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processInstance",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessInstance_getProcessId(
+													instance));
+											put("instanceId", instance.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processInstance"))));
+	}
+
+	protected Long testGraphQLGetProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProcessInstanceNotFound() throws Exception {
+		Long irrelevantProcessId = RandomTestUtil.randomLong();
+		Long irrelevantInstanceId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"processInstance",
+						new HashMap<String, Object>() {
+							{
+								put("processId", irrelevantProcessId);
+								put("instanceId", irrelevantInstanceId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processInstance",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+									put("instanceId", irrelevantInstanceId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Instance testGraphQLGetProcessInstance_addInstance()
+		throws Exception {
+
+		return testGraphQLInstance_addInstance();
+	}
+
+	@Test
 	public void testGetProcessInstancesPage() throws Exception {
 		Long processId = testGetProcessInstancesPage_getProcessId();
 		Long irrelevantProcessId =
@@ -257,10 +425,10 @@ public abstract class BaseInstanceResourceTestCase {
 	public void testGetProcessInstancesPageWithPagination() throws Exception {
 		Long processId = testGetProcessInstancesPage_getProcessId();
 
-		Page<Instance> instancePage = instanceResource.getProcessInstancesPage(
+		Page<Instance> instancesPage = instanceResource.getProcessInstancesPage(
 			processId, null, null, null, null, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(instancePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(instancesPage.getTotalCount());
 
 		Instance instance1 = testGetProcessInstancesPage_addInstance(
 			processId, randomInstance());
@@ -485,6 +653,66 @@ public abstract class BaseInstanceResourceTestCase {
 	}
 
 	@Test
+	public void testPatchProcessInstance() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Instance instance = testPatchProcessInstance_addInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			instanceResource.patchProcessInstanceHttpResponse(
+				testPatchProcessInstance_getProcessId(instance),
+				instance.getId(), instance));
+
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.patchProcessInstanceHttpResponse(
+				testPatchProcessInstance_getProcessId(instance), 0L, instance));
+	}
+
+	protected Long testPatchProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Instance testPatchProcessInstance_addInstance() throws Exception {
+		return testPostProcessInstance_addInstance(randomInstance());
+	}
+
+	@Test
+	public void testPatchProcessInstanceComplete() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Instance instance = testPatchProcessInstanceComplete_addInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			instanceResource.patchProcessInstanceCompleteHttpResponse(
+				testPatchProcessInstanceComplete_getProcessId(instance),
+				instance.getId(), instance));
+
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.patchProcessInstanceCompleteHttpResponse(
+				testPatchProcessInstanceComplete_getProcessId(instance), 0L,
+				instance));
+	}
+
+	protected Long testPatchProcessInstanceComplete_getProcessId(
+			Instance instance)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Instance testPatchProcessInstanceComplete_addInstance()
+		throws Exception {
+
+		return testPostProcessInstance_addInstance(randomInstance());
+	}
+
+	@Test
 	public void testPostProcessInstance() throws Exception {
 		Instance randomInstance = randomInstance();
 
@@ -503,217 +731,8 @@ public abstract class BaseInstanceResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteProcessInstance() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Instance instance = testDeleteProcessInstance_addInstance();
-
-		assertHttpResponseStatusCode(
-			204,
-			instanceResource.deleteProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance),
-				instance.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.getProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance),
-				instance.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.getProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance), 0L));
-	}
-
-	protected Long testDeleteProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	protected Instance testDeleteProcessInstance_addInstance()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProcessInstance() throws Exception {
-		Instance postInstance = testGetProcessInstance_addInstance();
-
-		Instance getInstance = instanceResource.getProcessInstance(
-			testGetProcessInstance_getProcessId(postInstance),
-			postInstance.getId());
-
-		assertEquals(postInstance, getInstance);
-		assertValid(getInstance);
-	}
-
-	protected Long testGetProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	protected Instance testGetProcessInstance_addInstance() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetProcessInstance() throws Exception {
-		Instance instance = testGraphQLGetProcessInstance_addInstance();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				instance,
-				InstanceSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"processInstance",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"processId",
-											testGraphQLGetProcessInstance_getProcessId(
-												instance));
-
-										put("instanceId", instance.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/processInstance"))));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertTrue(
-			equals(
-				instance,
-				InstanceSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"portalWorkflowMetrics_v1_0",
-								new GraphQLField(
-									"processInstance",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"processId",
-												testGraphQLGetProcessInstance_getProcessId(
-													instance));
-
-											put("instanceId", instance.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/portalWorkflowMetrics_v1_0",
-						"Object/processInstance"))));
-	}
-
-	protected Long testGraphQLGetProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	@Test
-	public void testGraphQLGetProcessInstanceNotFound() throws Exception {
-		Long irrelevantProcessId = RandomTestUtil.randomLong();
-		Long irrelevantInstanceId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"processInstance",
-						new HashMap<String, Object>() {
-							{
-								put("processId", irrelevantProcessId);
-								put("instanceId", irrelevantInstanceId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"portalWorkflowMetrics_v1_0",
-						new GraphQLField(
-							"processInstance",
-							new HashMap<String, Object>() {
-								{
-									put("processId", irrelevantProcessId);
-									put("instanceId", irrelevantInstanceId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Instance testGraphQLGetProcessInstance_addInstance()
-		throws Exception {
-
-		return testGraphQLInstance_addInstance();
-	}
-
-	@Test
-	public void testPatchProcessInstance() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Instance instance = testPatchProcessInstance_addInstance();
-
-		assertHttpResponseStatusCode(
-			204,
-			instanceResource.patchProcessInstanceHttpResponse(
-				instance.getProcessId(), instance.getId(), instance));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.patchProcessInstanceHttpResponse(
-				instance.getProcessId(), 0L, instance));
-	}
-
-	protected Instance testPatchProcessInstance_addInstance() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPatchProcessInstanceComplete() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Instance instance = testPatchProcessInstanceComplete_addInstance();
-
-		assertHttpResponseStatusCode(
-			204,
-			instanceResource.patchProcessInstanceCompleteHttpResponse(
-				instance.getProcessId(), instance.getId(), instance));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.patchProcessInstanceCompleteHttpResponse(
-				instance.getProcessId(), 0L, instance));
-	}
-
-	protected Instance testPatchProcessInstanceComplete_addInstance()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Instance testGraphQLInstance_addInstance() throws Exception {

@@ -17,15 +17,17 @@ import com.liferay.dynamic.data.mapping.util.DDMFormFieldTemplateContextContribu
 import com.liferay.dynamic.data.mapping.util.DDMFormFieldValueUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,14 +79,18 @@ public class RichTextDDMFormFieldTemplateContextContributor
 					ddmFormFieldRenderingContext, "value");
 			}
 		).putAll(
-			DDMFormFieldTemplateContextContributorUtil.getLocaleMap(
-				ddmForm.getDefaultLocale())
+			DDMFormFieldTemplateContextContributorUtil.
+				getLocalizationParameters(
+					ddmFormField, ddmForm.getDefaultLocale())
 		).putAll(
-			_getData(ddmFormFieldRenderingContext, ddmFormField.getType())
+			getData(
+				ddmFormField, ddmFormFieldRenderingContext,
+				ddmFormField.getType())
 		).build();
 	}
 
-	private Map<String, Object> _getData(
+	protected Map<String, Object> getData(
+		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext,
 		String ddmFormFieldType) {
 
@@ -97,7 +103,9 @@ public class RichTextDDMFormFieldTemplateContextContributor
 
 		EditorConfiguration editorConfiguration =
 			EditorConfigurationFactoryUtil.getEditorConfiguration(
-				themeDisplay.getPpid(), ddmFormFieldType, "ckeditor_classic",
+				themeDisplay.getPpid(), ddmFormFieldType,
+				FeatureFlagManagerUtil.isEnabled("LPD-11235") ?
+					"ckeditor5_classic" : "ckeditor_classic",
 				HashMapBuilder.<String, Object>put(
 					"liferay-ui:input-editor:allowBrowseDocuments", true
 				).put(
@@ -113,7 +121,22 @@ public class RichTextDDMFormFieldTemplateContextContributor
 				themeDisplay,
 				RequestBackedPortletURLFactoryUtil.create(httpServletRequest));
 
-		return editorConfiguration.getData();
+		Map<String, Object> ddmFormFieldProperties =
+			ddmFormField.getProperties();
+
+		if (MapUtil.isEmpty(ddmFormFieldProperties)) {
+			return editorConfiguration.getData();
+		}
+
+		Map<String, Object> data = editorConfiguration.getData();
+
+		for (String key : data.keySet()) {
+			if (ddmFormFieldProperties.containsKey(key)) {
+				data.put(key, ddmFormFieldProperties.get(key));
+			}
+		}
+
+		return data;
 	}
 
 	private String _getPredefinedValue(

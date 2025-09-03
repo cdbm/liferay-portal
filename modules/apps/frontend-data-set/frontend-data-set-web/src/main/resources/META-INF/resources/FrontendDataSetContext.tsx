@@ -5,10 +5,11 @@
 
 import React from 'react';
 
-import {IInlineEditingSettings, IItemsActions, ISchema} from '.';
+import {IInlineEditingSettings, IItemsActions, ISchema} from './utils/types';
 
 export interface IFrontendDataSetContext {
 	actionParameterName?: string | null;
+	allItemsSelectedActive: boolean;
 	apiURL?: string;
 	appURL?: string;
 	applyItemInlineUpdates: Function;
@@ -18,19 +19,35 @@ export interface IFrontendDataSetContext {
 		tableCell?: Array<TRenderer>;
 		views?: Array<TRenderer>;
 	};
-	executeAsyncItemAction: Function;
+	executeAsyncItemAction: ({
+		errorMessage,
+		method,
+		requestBody,
+		setActionItemLoading,
+		successMessage,
+		url,
+	}: {
+		errorMessage: string;
+		method: string;
+		requestBody?: string;
+		setActionItemLoading?: (loading: boolean) => void;
+		successMessage?: string;
+		url: string;
+	}) => Promise<void>;
 	formId?: string;
 	formName?: string;
 	highlightItems: Function;
-	highlightedItemsValue?: string;
+	highlightedItemsValue?: Array<string>;
 	id?: string;
+	infoPanelId?: string;
+	infoPanelOpen?: boolean;
 	inlineAddingSettings?: {
 		apiURL?: string;
 		defaultBodyContent?: object;
 	};
 	inlineEditingSettings?: IInlineEditingSettings;
 	itemsActions?: Array<IItemsActions>;
-	itemsChanges?: Array<any>;
+	itemsChanges?: {[key: string]: any};
 	loadData: Function;
 	modalId?: string;
 	namespace?: string;
@@ -38,31 +55,46 @@ export interface IFrontendDataSetContext {
 	nestedItemsReferenceKey?: string;
 	onActionDropdownItemClick: Function;
 	onBulkActionItemClick: Function;
-	onItemsChange: ({
-		itemKey,
-		items,
-	}: {
-		itemKey?: string;
-		items: Array<any>;
-	}) => void;
+	onInfoPanelToggleButtonClick: Function;
+	onItemsChange: ({itemKey, items}: {itemKey: string; items: any}) => void;
 	onSearch: ({query}: {query: string}) => void;
-	onSelect: Function;
+	onSelect?: ({selectedItems}: {selectedItems: Array<any>}) => void;
 	openModal: Function;
 	openSidePanel: Function;
 	portletId?: string;
 	searchParam?: string;
+	searching: boolean;
 	selectItems: Function;
 	selectable?: boolean;
-	selectedItemsKey?: string;
+	selectedItems?: Array<any>;
+	selectedItemsKey: string;
 	selectedItemsValue?: Array<any>;
 	selectionType?: string;
+	setSearching: (value: boolean) => void;
+	showBulkActionsManagementBar: boolean;
+	showBulkActionsManagementBarActions: boolean;
+	showInfoPanel: boolean;
 	sidePanelId?: string;
 	sorts?: Array<TRenderer>;
 	style?: string;
 	toggleItemInlineEdit: Function;
 	uniformActionsDisplay?: boolean;
-	updateDataSetItems: Function;
+	updateDataSetItems: ({
+		items,
+		lastPage,
+		page,
+		pageSize,
+		totalCount,
+	}: IDataSetData) => void;
 	updateItem: Function;
+}
+
+export interface IDataSetData {
+	items: Array<any>;
+	lastPage: number;
+	page: number;
+	pageSize?: number;
+	totalCount: number;
 }
 
 export interface IHTMLElementBuilder {
@@ -91,6 +123,7 @@ export interface IInternalRenderer {
 export type TRenderer = IClientExtensionRenderer | IInternalRenderer;
 
 const FrontendDataSetContext = React.createContext({
+	allItemsSelectedActive: false,
 	applyItemInlineUpdates: () => {},
 	createInlineItem: () => {},
 	executeAsyncItemAction: () => {},
@@ -98,6 +131,7 @@ const FrontendDataSetContext = React.createContext({
 	loadData: () => {},
 	onActionDropdownItemClick: () => {},
 	onBulkActionItemClick: () => {},
+	onInfoPanelToggleButtonClick: () => {},
 	onItemsChange: () => {},
 	onSearch: () => {},
 	onSelect: () => {},
@@ -106,9 +140,10 @@ const FrontendDataSetContext = React.createContext({
 	selectItems: () => {},
 	selectable: false,
 	selectedItemsValue: [],
+	setSearching: () => {},
 	toggleItemInlineEdit: () => {},
 	updateDataSetItems: () => {},
 	updateItem: () => {},
-} as IFrontendDataSetContext);
+} as unknown as IFrontendDataSetContext);
 
 export default FrontendDataSetContext;

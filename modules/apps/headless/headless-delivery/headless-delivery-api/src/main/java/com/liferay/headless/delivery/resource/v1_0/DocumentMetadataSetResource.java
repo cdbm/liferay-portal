@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.DocumentMetadataSet;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -22,18 +20,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -50,13 +48,41 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DocumentMetadataSetResource {
 
+	public void deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
+	public void deleteDocumentMetadataSet(Long documentMetadataSetId)
+		throws Exception;
+
+	public Response deleteDocumentMetadataSetBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteSiteDocumentMetadataSetByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public DocumentMetadataSet
+			getAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+				Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
 	public Page<DocumentMetadataSet> getAssetLibraryDocumentMetadataSetsPage(
 			Long assetLibraryId, Pagination pagination)
 		throws Exception;
 
-	public Response postAssetLibraryDocumentMetadataSetsPageExportBatch(
-			Long assetLibraryId, String callbackURL, String contentType,
-			String fieldNames)
+	public DocumentMetadataSet getDocumentMetadataSet(
+			Long documentMetadataSetId)
+		throws Exception;
+
+	public DocumentMetadataSet
+			getSiteDocumentMetadataSetByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<DocumentMetadataSet> getSiteDocumentMetadataSetsPage(
+			Long siteId, Pagination pagination)
 		throws Exception;
 
 	public DocumentMetadataSet postAssetLibraryDocumentMetadataSet(
@@ -67,38 +93,8 @@ public interface DocumentMetadataSetResource {
 			Long assetLibraryId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode(
-			Long assetLibraryId, String externalReferenceCode)
-		throws Exception;
-
-	public DocumentMetadataSet
-			getAssetLibraryDocumentMetadataSetByExternalReferenceCode(
-				Long assetLibraryId, String externalReferenceCode)
-		throws Exception;
-
-	public DocumentMetadataSet
-			putAssetLibraryDocumentMetadataSetByExternalReferenceCode(
-				Long assetLibraryId, String externalReferenceCode,
-				DocumentMetadataSet documentMetadataSet)
-		throws Exception;
-
-	public void deleteDocumentMetadataSet(Long documentMetadataSetId)
-		throws Exception;
-
-	public Response deleteDocumentMetadataSetBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public DocumentMetadataSet getDocumentMetadataSet(
-			Long documentMetadataSetId)
-		throws Exception;
-
-	public Page<DocumentMetadataSet> getSiteDocumentMetadataSetsPage(
-			Long siteId, Pagination pagination)
-		throws Exception;
-
-	public Response postSiteDocumentMetadataSetsPageExportBatch(
-			Long siteId, String callbackURL, String contentType,
+	public Response postAssetLibraryDocumentMetadataSetsPageExportBatch(
+			Long assetLibraryId, String callbackURL, String contentType,
 			String fieldNames)
 		throws Exception;
 
@@ -110,13 +106,15 @@ public interface DocumentMetadataSetResource {
 			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteSiteDocumentMetadataSetByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public Response postSiteDocumentMetadataSetsPageExportBatch(
+			Long siteId, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public DocumentMetadataSet
-			getSiteDocumentMetadataSetByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+			putAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+				Long assetLibraryId, String externalReferenceCode,
+				DocumentMetadataSet documentMetadataSet)
 		throws Exception;
 
 	public DocumentMetadataSet
@@ -147,7 +145,8 @@ public interface DocumentMetadataSetResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -172,19 +171,23 @@ public interface DocumentMetadataSetResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

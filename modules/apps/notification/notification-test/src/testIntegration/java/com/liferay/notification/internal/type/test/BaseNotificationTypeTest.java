@@ -131,6 +131,8 @@ public class BaseNotificationTypeTest {
 		).put(
 			"integerObjectField", "12345"
 		).put(
+			"localizedTextObjectField", "localizedTextObjectFieldValue"
+		).put(
 			"longIntegerObjectField", "123456789"
 		).put(
 			"multiselectPicklistObjectField",
@@ -242,7 +244,8 @@ public class BaseNotificationTypeTest {
 	public void setUp() throws Exception {
 		childObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				user1.getUserId(), 0, null, false, false, true, false, false,
+				user1.getUserId(), 0, null, false, false, true, true, false,
+				false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -351,6 +354,15 @@ public class BaseNotificationTypeTest {
 					).labelMap(
 						LocalizedMapUtil.getLocalizedMap(
 							RandomTestUtil.randomString())
+					).localized(
+						true
+					).name(
+						"localizedTextObjectField"
+					).build(),
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
 					).name(
 						"textObjectField"
 					).build()));
@@ -363,6 +375,7 @@ public class BaseNotificationTypeTest {
 		parentObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
 				user1.getUserId(), 0, null, false, false, true, false, false,
+				false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"ParentObjectDefinition", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -614,6 +627,7 @@ public class BaseNotificationTypeTest {
 				getTermName("dateTimeObjectField"),
 				getTermName("emailTextObjectField"),
 				getTermName("integerObjectField"),
+				getTermName("localizedTextObjectField"),
 				getTermName("longIntegerObjectField"),
 				getTermName("multiselectPicklistObjectField"),
 				getTermName("picklistObjectField"),

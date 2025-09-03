@@ -88,7 +88,7 @@ public class PortalWorkspace extends BaseWorkspace {
 
 		portalWorkspaceGitRepository.setUp();
 
-		_configureBladeSamplesWorkspaceGitRepository();
+		_configureLiferayBladeSamplesWorkspaceGitRepository();
 		_configureLiferayFacesAlloyWorkspaceGitRepository();
 		_configureLiferayFacesBridgeImplWorkspaceGitRepository();
 		_configureLiferayFacesPortalWorkspaceGitRepository();
@@ -97,6 +97,7 @@ public class PortalWorkspace extends BaseWorkspace {
 		_configureOSBFaroWorkspaceGitRepository();
 		_configurePluginsWorkspaceGitRepository();
 		_configurePortalsPlutoWorkspaceGitRepository();
+		_configurePortletAPIGitRepository();
 		_configureReleaseToolWorkspaceGitRepository();
 
 		super.setUp();
@@ -244,9 +245,14 @@ public class PortalWorkspace extends BaseWorkspace {
 		copyOSBAsahRepositoryToModule();
 	}
 
-	private void _configureBladeSamplesWorkspaceGitRepository() {
-		_updateWorkspaceGitRepository(
-			"git-commit-blade-samples", "liferay-blade-samples");
+	private void _configureLiferayBladeSamplesWorkspaceGitRepository() {
+		boolean updated = _updateWorkspaceGitRepository(
+			"git-commit/liferay-blade-samples", "liferay-blade-samples");
+
+		if (!updated) {
+			_updateWorkspaceGitRepository(
+				"git-commit-blade-samples", "liferay-blade-samples");
+		}
 	}
 
 	private void _configureLiferayFacesAlloyWorkspaceGitRepository() {
@@ -399,8 +405,23 @@ public class PortalWorkspace extends BaseWorkspace {
 	}
 
 	private void _configurePortalsPlutoWorkspaceGitRepository() {
-		_updateWorkspaceGitRepository(
-			"git-commit-portals-pluto", "portals-pluto");
+		boolean updated = _updateWorkspaceGitRepository(
+			"git-commit/portals-pluto", "portals-pluto");
+
+		if (!updated) {
+			_updateWorkspaceGitRepository(
+				"git-commit-portals-pluto", "portals-pluto");
+		}
+	}
+
+	private void _configurePortletAPIGitRepository() {
+		boolean updated = _updateWorkspaceGitRepository(
+			"git-commit/portlet-api", "portlet-api");
+
+		if (!updated) {
+			_updateWorkspaceGitRepository(
+				"git-commit-portlet-api", "portlet-api");
+		}
 	}
 
 	private void _configureReleaseToolWorkspaceGitRepository() {

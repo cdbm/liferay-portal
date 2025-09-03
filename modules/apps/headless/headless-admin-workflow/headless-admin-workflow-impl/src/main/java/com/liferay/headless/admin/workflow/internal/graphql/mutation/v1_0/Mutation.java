@@ -27,7 +27,6 @@ import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskTransitionsResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -38,15 +37,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -116,24 +115,48 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createWorkflowDefinitionsPageExportBatch(
-			@GraphQLName("active") Boolean active,
-			@GraphQLName("sort") String sortsString,
+	public boolean deleteWorkflowDefinition(
+			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_workflowDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionResource ->
+				workflowDefinitionResource.deleteWorkflowDefinition(
+					workflowDefinitionId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteWorkflowDefinitionBatch(
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_workflowDefinitionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			workflowDefinitionResource ->
-				workflowDefinitionResource.
-					postWorkflowDefinitionsPageExportBatch(
-						active,
-						_sortsBiFunction.apply(
-							workflowDefinitionResource, sortsString),
-						callbackURL, contentType, fieldNames));
+				workflowDefinitionResource.deleteWorkflowDefinitionBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteWorkflowDefinitionUndeploy(
+			@GraphQLName("name") String name,
+			@GraphQLName("version") String version)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_workflowDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionResource ->
+				workflowDefinitionResource.deleteWorkflowDefinitionUndeploy(
+					name, version));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -193,22 +216,6 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteWorkflowDefinitionUndeploy(
-			@GraphQLName("name") String name,
-			@GraphQLName("version") String version)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_workflowDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowDefinitionResource ->
-				workflowDefinitionResource.deleteWorkflowDefinitionUndeploy(
-					name, version));
-
-		return true;
-	}
-
-	@GraphQLField
 	public WorkflowDefinition createWorkflowDefinitionUpdateActive(
 			@GraphQLName("active") Boolean active,
 			@GraphQLName("name") String name,
@@ -224,32 +231,24 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteWorkflowDefinition(
-			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_workflowDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowDefinitionResource ->
-				workflowDefinitionResource.deleteWorkflowDefinition(
-					workflowDefinitionId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteWorkflowDefinitionBatch(
+	public Response createWorkflowDefinitionsPageExportBatch(
+			@GraphQLName("active") Boolean active,
+			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_workflowDefinitionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			workflowDefinitionResource ->
-				workflowDefinitionResource.deleteWorkflowDefinitionBatch(
-					callbackURL, object));
+				workflowDefinitionResource.
+					postWorkflowDefinitionsPageExportBatch(
+						active,
+						_sortsBiFunction.apply(
+							workflowDefinitionResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -283,24 +282,6 @@ public class Mutation {
 
 	@GraphQLField
 	public WorkflowDefinitionLink
-			updateWorkflowDefinitionLinkByExternalReferenceCode(
-				@GraphQLName("externalReferenceCode") String
-					externalReferenceCode,
-				@GraphQLName("workflowDefinitionLink") WorkflowDefinitionLink
-					workflowDefinitionLink)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowDefinitionLinkResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowDefinitionLinkResource ->
-				workflowDefinitionLinkResource.
-					putWorkflowDefinitionLinkByExternalReferenceCode(
-						externalReferenceCode, workflowDefinitionLink));
-	}
-
-	@GraphQLField
-	public WorkflowDefinitionLink
 			createWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 				@GraphQLName("externalReferenceCode") String
 					externalReferenceCode,
@@ -315,25 +296,6 @@ public class Mutation {
 				workflowDefinitionLinkResource.
 					postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 						externalReferenceCode, workflowDefinitionLink));
-	}
-
-	@GraphQLField
-	public Response
-			createWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
-				@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
-				@GraphQLName("callbackURL") String callbackURL,
-				@GraphQLName("contentType") String contentType,
-				@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowDefinitionLinkResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowDefinitionLinkResource ->
-				workflowDefinitionLinkResource.
-					postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
-						workflowDefinitionId, callbackURL, contentType,
-						fieldNames));
 	}
 
 	@GraphQLField
@@ -370,36 +332,40 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createWorkflowInstancesPageExportBatch(
-			@GraphQLName("assetClassName") String assetClassName,
-			@GraphQLName("assetPrimaryKey") Long assetPrimaryKey,
-			@GraphQLName("completed") Boolean completed,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+	public Response
+			createWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+				@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_workflowInstanceResourceComponentServiceObjects,
+			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			workflowInstanceResource ->
-				workflowInstanceResource.postWorkflowInstancesPageExportBatch(
-					assetClassName, assetPrimaryKey, completed, callbackURL,
-					contentType, fieldNames));
+			workflowDefinitionLinkResource ->
+				workflowDefinitionLinkResource.
+					postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+						workflowDefinitionId, callbackURL, contentType,
+						fieldNames));
 	}
 
 	@GraphQLField
-	public WorkflowInstance createWorkflowInstanceSubmit(
-			@GraphQLName("workflowInstanceSubmit") WorkflowInstanceSubmit
-				workflowInstanceSubmit)
+	public WorkflowDefinitionLink
+			updateWorkflowDefinitionLinkByExternalReferenceCode(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("workflowDefinitionLink") WorkflowDefinitionLink
+					workflowDefinitionLink)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_workflowInstanceResourceComponentServiceObjects,
+			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			workflowInstanceResource ->
-				workflowInstanceResource.postWorkflowInstanceSubmit(
-					workflowInstanceSubmit));
+			workflowDefinitionLinkResource ->
+				workflowDefinitionLinkResource.
+					putWorkflowDefinitionLinkByExternalReferenceCode(
+						externalReferenceCode, workflowDefinitionLink));
 	}
 
 	@GraphQLField
@@ -446,6 +412,39 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public WorkflowInstance createWorkflowInstanceSubmit(
+			@GraphQLName("workflowInstanceSubmit") WorkflowInstanceSubmit
+				workflowInstanceSubmit)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowInstanceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowInstanceResource ->
+				workflowInstanceResource.postWorkflowInstanceSubmit(
+					workflowInstanceSubmit));
+	}
+
+	@GraphQLField
+	public Response createWorkflowInstancesPageExportBatch(
+			@GraphQLName("assetClassName") String assetClassName,
+			@GraphQLName("assetPrimaryKey") Long assetPrimaryKey,
+			@GraphQLName("completed") Boolean completed,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowInstanceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowInstanceResource ->
+				workflowInstanceResource.postWorkflowInstancesPageExportBatch(
+					assetClassName, assetPrimaryKey, completed, callbackURL,
+					contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public Response createWorkflowInstanceWorkflowLogsPageExportBatch(
 			@GraphQLName("workflowInstanceId") Long workflowInstanceId,
 			@GraphQLName("types") String[] types,
@@ -480,49 +479,6 @@ public class Mutation {
 				workflowLogResource.postWorkflowTaskWorkflowLogsPageExportBatch(
 					workflowTaskId, types, callbackURL, contentType,
 					fieldNames));
-	}
-
-	@GraphQLField
-	public Response createWorkflowInstanceWorkflowTasksPageExportBatch(
-			@GraphQLName("workflowInstanceId") Long workflowInstanceId,
-			@GraphQLName("completed") Boolean completed,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowTaskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowTaskResource ->
-				workflowTaskResource.
-					postWorkflowInstanceWorkflowTasksPageExportBatch(
-						workflowInstanceId, completed, callbackURL, contentType,
-						fieldNames));
-	}
-
-	@GraphQLField
-	public java.util.Collection<WorkflowTask> createWorkflowTasksPage(
-			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("workflowTasksBulkSelection")
-				WorkflowTasksBulkSelection workflowTasksBulkSelection)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowTaskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowTaskResource -> {
-				Page paginationPage =
-					workflowTaskResource.postWorkflowTasksPage(
-						Pagination.of(page, pageSize),
-						_sortsBiFunction.apply(
-							workflowTaskResource, sortsString),
-						workflowTasksBulkSelection);
-
-				return paginationPage.getItems();
-			});
 	}
 
 	@GraphQLField
@@ -571,6 +527,25 @@ public class Mutation {
 					workflowTaskAssignToMes));
 
 		return true;
+	}
+
+	@GraphQLField
+	public Response createWorkflowInstanceWorkflowTasksPageExportBatch(
+			@GraphQLName("workflowInstanceId") Long workflowInstanceId,
+			@GraphQLName("completed") Boolean completed,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowTaskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowTaskResource ->
+				workflowTaskResource.
+					postWorkflowInstanceWorkflowTasksPageExportBatch(
+						workflowInstanceId, completed, callbackURL, contentType,
+						fieldNames));
 	}
 
 	@GraphQLField
@@ -645,6 +620,30 @@ public class Mutation {
 			workflowTaskResource ->
 				workflowTaskResource.postWorkflowTaskUpdateDueDate(
 					workflowTaskId, workflowTaskAssignToMe));
+	}
+
+	@GraphQLField
+	public java.util.Collection<WorkflowTask> createWorkflowTasksPage(
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("workflowTasksBulkSelection")
+				WorkflowTasksBulkSelection workflowTasksBulkSelection)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowTaskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowTaskResource -> {
+				Page paginationPage =
+					workflowTaskResource.postWorkflowTasksPage(
+						Pagination.of(page, pageSize),
+						_sortsBiFunction.apply(
+							workflowTaskResource, sortsString),
+						workflowTasksBulkSelection);
+
+				return paginationPage.getItems();
+			});
 	}
 
 	@GraphQLField
@@ -878,7 +877,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

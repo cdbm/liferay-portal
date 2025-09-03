@@ -13,10 +13,8 @@ import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,16 +26,6 @@ import org.osgi.service.component.annotations.Reference;
 public class GroupModelListener extends BaseModelListener<Group> {
 
 	@Override
-	public void onAfterCreate(Group group) throws ModelListenerException {
-		try {
-			_onAfterCreate(group);
-		}
-		catch (Exception exception) {
-			throw new ModelListenerException(exception);
-		}
-	}
-
-	@Override
 	public void onBeforeRemove(Group group) throws ModelListenerException {
 		try {
 			_onBeforeRemove(group);
@@ -47,34 +35,10 @@ public class GroupModelListener extends BaseModelListener<Group> {
 		}
 	}
 
-	private void _onAfterCreate(Group group) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				group.getCompanyId(), "LPD-17564") ||
-			!group.isDepot()) {
-
-			return;
-		}
-
-		_objectEntryFolderLocalService.addObjectEntryFolder(
-			"L_CONTENTS", group.getCreatorUserId(), group.getGroupId(),
-			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
-			HashMapBuilder.put(
-				LocaleUtil.ENGLISH, "Contents"
-			).build(),
-			"Contents", ServiceContextThreadLocal.getServiceContext());
-		_objectEntryFolderLocalService.addObjectEntryFolder(
-			"L_FILES", group.getCreatorUserId(), group.getGroupId(),
-			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
-			HashMapBuilder.put(
-				LocaleUtil.ENGLISH, "Files"
-			).build(),
-			"Files", ServiceContextThreadLocal.getServiceContext());
-	}
-
 	private void _onBeforeRemove(Group group) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				group.getCompanyId(), "LPD-17564") ||
-			!group.isDepot()) {
+		if ((group.getType() != GroupConstants.TYPE_DEPOT) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-17564")) {
 
 			return;
 		}
@@ -84,10 +48,14 @@ public class GroupModelListener extends BaseModelListener<Group> {
 					setForceDeleteSystemObjectEntryFolderWithSafeCloseable(
 						true)) {
 
-			_objectEntryFolderLocalService.deleteObjectEntryFolder(
-				"L_CONTENTS", group.getGroupId(), group.getCompanyId());
-			_objectEntryFolderLocalService.deleteObjectEntryFolder(
-				"L_FILES", group.getGroupId(), group.getCompanyId());
+			_objectEntryFolderLocalService.
+				deleteObjectEntryFolderByExternalReferenceCode(
+					ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENTS,
+					group.getGroupId(), group.getCompanyId());
+			_objectEntryFolderLocalService.
+				deleteObjectEntryFolderByExternalReferenceCode(
+					ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_FILES,
+					group.getGroupId(), group.getCompanyId());
 		}
 	}
 

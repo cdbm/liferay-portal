@@ -20,6 +20,9 @@ import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataDefinitionSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -59,6 +62,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -76,16 +89,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -132,6 +135,16 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			testCompany.getCompanyId());
 
 		dataDefinitionResource = DataDefinitionResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -218,405 +231,6 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePage()
-		throws Exception {
-
-		String contentType =
-			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
-		String irrelevantContentType =
-			testGetDataDefinitionByContentTypeContentTypePage_getIrrelevantContentType();
-
-		Page<DataDefinition> page =
-			dataDefinitionResource.
-				getDataDefinitionByContentTypeContentTypePage(
-					contentType, RandomTestUtil.randomString(),
-					Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantContentType != null) {
-			DataDefinition irrelevantDataDefinition =
-				testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-					irrelevantContentType, randomIrrelevantDataDefinition());
-
-			page =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						irrelevantContentType, null,
-						Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantDataDefinition,
-				(List<DataDefinition>)page.getItems());
-			assertValid(
-				page,
-				testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
-					irrelevantContentType));
-		}
-
-		DataDefinition dataDefinition1 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, randomDataDefinition());
-
-		DataDefinition dataDefinition2 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, randomDataDefinition());
-
-		page =
-			dataDefinitionResource.
-				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(dataDefinition1, (List<DataDefinition>)page.getItems());
-		assertContains(dataDefinition2, (List<DataDefinition>)page.getItems());
-		assertValid(
-			page,
-			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
-				contentType));
-
-		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
-
-		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
-				String contentType)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePageWithPagination()
-		throws Exception {
-
-		String contentType =
-			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
-
-		Page<DataDefinition> dataDefinitionPage =
-			dataDefinitionResource.
-				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(
-			dataDefinitionPage.getTotalCount());
-
-		DataDefinition dataDefinition1 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, randomDataDefinition());
-
-		DataDefinition dataDefinition2 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, randomDataDefinition());
-
-		DataDefinition dataDefinition3 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, randomDataDefinition());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<DataDefinition> page1 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(
-				dataDefinition1, (List<DataDefinition>)page1.getItems());
-
-			Page<DataDefinition> page2 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(
-				dataDefinition2, (List<DataDefinition>)page2.getItems());
-
-			Page<DataDefinition> page3 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(
-				dataDefinition3, (List<DataDefinition>)page3.getItems());
-		}
-		else {
-			Page<DataDefinition> page1 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null, Pagination.of(1, totalCount + 2),
-						null);
-
-			List<DataDefinition> dataDefinitions1 =
-				(List<DataDefinition>)page1.getItems();
-
-			Assert.assertEquals(
-				dataDefinitions1.toString(), totalCount + 2,
-				dataDefinitions1.size());
-
-			Page<DataDefinition> page2 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null, Pagination.of(2, totalCount + 2),
-						null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<DataDefinition> dataDefinitions2 =
-				(List<DataDefinition>)page2.getItems();
-
-			Assert.assertEquals(
-				dataDefinitions2.toString(), 1, dataDefinitions2.size());
-
-			Page<DataDefinition> page3 =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(
-				dataDefinition1, (List<DataDefinition>)page3.getItems());
-			assertContains(
-				dataDefinition2, (List<DataDefinition>)page3.getItems());
-			assertContains(
-				dataDefinition3, (List<DataDefinition>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePageWithSortDateTime()
-		throws Exception {
-
-		testGetDataDefinitionByContentTypeContentTypePageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, dataDefinition1, dataDefinition2) -> {
-				BeanTestUtil.setProperty(
-					dataDefinition1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePageWithSortDouble()
-		throws Exception {
-
-		testGetDataDefinitionByContentTypeContentTypePageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, dataDefinition1, dataDefinition2) -> {
-				BeanTestUtil.setProperty(
-					dataDefinition1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					dataDefinition2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePageWithSortInteger()
-		throws Exception {
-
-		testGetDataDefinitionByContentTypeContentTypePageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, dataDefinition1, dataDefinition2) -> {
-				BeanTestUtil.setProperty(
-					dataDefinition1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(
-					dataDefinition2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetDataDefinitionByContentTypeContentTypePageWithSortString()
-		throws Exception {
-
-		testGetDataDefinitionByContentTypeContentTypePageWithSort(
-			EntityField.Type.STRING,
-			(entityField, dataDefinition1, dataDefinition2) -> {
-				Class<?> clazz = dataDefinition1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						dataDefinition1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						dataDefinition2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						dataDefinition1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						dataDefinition2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						dataDefinition1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						dataDefinition2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetDataDefinitionByContentTypeContentTypePageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer
-				<EntityField, DataDefinition, DataDefinition, Exception>
-					unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String contentType =
-			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
-
-		DataDefinition dataDefinition1 = randomDataDefinition();
-		DataDefinition dataDefinition2 = randomDataDefinition();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(
-				entityField, dataDefinition1, dataDefinition2);
-		}
-
-		dataDefinition1 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, dataDefinition1);
-
-		dataDefinition2 =
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				contentType, dataDefinition2);
-
-		Page<DataDefinition> page =
-			dataDefinitionResource.
-				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<DataDefinition> ascPage =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":asc");
-
-			assertContains(
-				dataDefinition1, (List<DataDefinition>)ascPage.getItems());
-			assertContains(
-				dataDefinition2, (List<DataDefinition>)ascPage.getItems());
-
-			Page<DataDefinition> descPage =
-				dataDefinitionResource.
-					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":desc");
-
-			assertContains(
-				dataDefinition2, (List<DataDefinition>)descPage.getItems());
-			assertContains(
-				dataDefinition1, (List<DataDefinition>)descPage.getItems());
-		}
-	}
-
-	protected DataDefinition
-			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
-				String contentType, DataDefinition dataDefinition)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetDataDefinitionByContentTypeContentTypePage_getContentType()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetDataDefinitionByContentTypeContentTypePage_getIrrelevantContentType()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostDataDefinitionByContentType() throws Exception {
-		DataDefinition randomDataDefinition = randomDataDefinition();
-
-		DataDefinition postDataDefinition =
-			testPostDataDefinitionByContentType_addDataDefinition(
-				randomDataDefinition);
-
-		assertEquals(randomDataDefinition, postDataDefinition);
-		assertValid(postDataDefinition);
-	}
-
-	protected DataDefinition
-			testPostDataDefinitionByContentType_addDataDefinition(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetDataDefinitionDataDefinitionFieldFieldTypes()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testDeleteDataDefinition() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataDefinition dataDefinition =
@@ -631,7 +245,6 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			404,
 			dataDefinitionResource.getDataDefinitionHttpResponse(
 				dataDefinition.getId()));
-
 		assertHttpResponseStatusCode(
 			404, dataDefinitionResource.getDataDefinitionHttpResponse(0L));
 	}
@@ -724,6 +337,84 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		throws Exception {
 
 		return testGraphQLDataDefinition_addDataDefinition();
+	}
+
+	@Test
+	public void testDeleteDataDefinitionBatch() throws Exception {
+		DataDefinition dataDefinition1 =
+			testDeleteDataDefinitionBatch_addDataDefinition();
+
+		testDeleteDataDefinitionBatch_deleteDataDefinition(
+			202, null, dataDefinition1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataDefinitionResource.getDataDefinitionHttpResponse(
+				dataDefinition1.getId()));
+	}
+
+	protected DataDefinition testDeleteDataDefinitionBatch_addDataDefinition()
+		throws Exception {
+
+		return testDeleteDataDefinition_addDataDefinition();
+	}
+
+	protected void testDeleteDataDefinitionBatch_deleteDataDefinition(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			dataDefinitionResource.deleteDataDefinitionBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataDefinition dataDefinition =
+			testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataDefinitionResource.
+				deleteSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
+					dataDefinition.getSiteId(), dataDefinition.getContentType(),
+					dataDefinition.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
+					dataDefinition.getSiteId(), dataDefinition.getContentType(),
+					dataDefinition.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
+					dataDefinition.getSiteId(), dataDefinition.getContentType(),
+					"-"));
+	}
+
+	protected DataDefinition
+			testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1039,86 +730,385 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testPatchDataDefinition() throws Exception {
-		DataDefinition postDataDefinition =
-			testPatchDataDefinition_addDataDefinition();
-
-		DataDefinition randomPatchDataDefinition = randomPatchDataDefinition();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataDefinition patchDataDefinition =
-			dataDefinitionResource.patchDataDefinition(
-				postDataDefinition.getId(), randomPatchDataDefinition);
-
-		DataDefinition expectedPatchDataDefinition = postDataDefinition.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchDataDefinition, expectedPatchDataDefinition);
-
-		DataDefinition getDataDefinition =
-			dataDefinitionResource.getDataDefinition(
-				patchDataDefinition.getId());
-
-		assertEquals(expectedPatchDataDefinition, getDataDefinition);
-		assertValid(getDataDefinition);
-	}
-
-	protected DataDefinition testPatchDataDefinition_addDataDefinition()
+	public void testGetDataDefinitionByContentTypeContentTypePage()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		String contentType =
+			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
+		String irrelevantContentType =
+			testGetDataDefinitionByContentTypeContentTypePage_getIrrelevantContentType();
+
+		Page<DataDefinition> page =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantContentType != null) {
+			DataDefinition irrelevantDataDefinition =
+				testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+					irrelevantContentType, randomIrrelevantDataDefinition());
+
+			page =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						irrelevantContentType, null,
+						Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantDataDefinition,
+				(List<DataDefinition>)page.getItems());
+			assertValid(
+				page,
+				testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+					irrelevantContentType));
+		}
+
+		DataDefinition dataDefinition1 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, randomDataDefinition());
+
+		DataDefinition dataDefinition2 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, randomDataDefinition());
+
+		page =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(dataDefinition1, (List<DataDefinition>)page.getItems());
+		assertContains(dataDefinition2, (List<DataDefinition>)page.getItems());
+		assertValid(
+			page,
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				contentType));
+
+		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
+
+		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				String contentType)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
-	public void testPutDataDefinition() throws Exception {
-		DataDefinition postDataDefinition =
-			testPutDataDefinition_addDataDefinition();
-
-		DataDefinition randomDataDefinition = randomDataDefinition();
-
-		DataDefinition putDataDefinition =
-			dataDefinitionResource.putDataDefinition(
-				postDataDefinition.getId(), randomDataDefinition);
-
-		assertEquals(randomDataDefinition, putDataDefinition);
-		assertValid(putDataDefinition);
-
-		DataDefinition getDataDefinition =
-			dataDefinitionResource.getDataDefinition(putDataDefinition.getId());
-
-		assertEquals(randomDataDefinition, getDataDefinition);
-		assertValid(getDataDefinition);
-	}
-
-	protected DataDefinition testPutDataDefinition_addDataDefinition()
+	public void testGetDataDefinitionByContentTypeContentTypePageWithPagination()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		String contentType =
+			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
+
+		Page<DataDefinition> dataDefinitionsPage =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			dataDefinitionsPage.getTotalCount());
+
+		DataDefinition dataDefinition1 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, randomDataDefinition());
+
+		DataDefinition dataDefinition2 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, randomDataDefinition());
+
+		DataDefinition dataDefinition3 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, randomDataDefinition());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DataDefinition> page1 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)page1.getItems());
+
+			Page<DataDefinition> page2 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)page2.getItems());
+
+			Page<DataDefinition> page3 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(
+				dataDefinition3, (List<DataDefinition>)page3.getItems());
+		}
+		else {
+			Page<DataDefinition> page1 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null, Pagination.of(1, totalCount + 2),
+						null);
+
+			List<DataDefinition> dataDefinitions1 =
+				(List<DataDefinition>)page1.getItems();
+
+			Assert.assertEquals(
+				dataDefinitions1.toString(), totalCount + 2,
+				dataDefinitions1.size());
+
+			Page<DataDefinition> page2 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null, Pagination.of(2, totalCount + 2),
+						null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DataDefinition> dataDefinitions2 =
+				(List<DataDefinition>)page2.getItems();
+
+			Assert.assertEquals(
+				dataDefinitions2.toString(), 1, dataDefinitions2.size());
+
+			Page<DataDefinition> page3 =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)page3.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)page3.getItems());
+			assertContains(
+				dataDefinition3, (List<DataDefinition>)page3.getItems());
+		}
 	}
 
 	@Test
-	public void testPostDataDefinitionCopy() throws Exception {
-		DataDefinition randomDataDefinition = randomDataDefinition();
+	public void testGetDataDefinitionByContentTypeContentTypePageWithSortDateTime()
+		throws Exception {
 
-		DataDefinition postDataDefinition =
-			testPostDataDefinitionCopy_addDataDefinition(randomDataDefinition);
-
-		assertEquals(randomDataDefinition, postDataDefinition);
-		assertValid(postDataDefinition);
+		testGetDataDefinitionByContentTypeContentTypePageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, dataDefinition1, dataDefinition2) -> {
+				BeanTestUtil.setProperty(
+					dataDefinition1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
 	}
 
-	protected DataDefinition testPostDataDefinitionCopy_addDataDefinition(
-			DataDefinition dataDefinition)
+	@Test
+	public void testGetDataDefinitionByContentTypeContentTypePageWithSortDouble()
+		throws Exception {
+
+		testGetDataDefinitionByContentTypeContentTypePageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, dataDefinition1, dataDefinition2) -> {
+				BeanTestUtil.setProperty(
+					dataDefinition1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					dataDefinition2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetDataDefinitionByContentTypeContentTypePageWithSortInteger()
+		throws Exception {
+
+		testGetDataDefinitionByContentTypeContentTypePageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, dataDefinition1, dataDefinition2) -> {
+				BeanTestUtil.setProperty(
+					dataDefinition1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					dataDefinition2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetDataDefinitionByContentTypeContentTypePageWithSortString()
+		throws Exception {
+
+		testGetDataDefinitionByContentTypeContentTypePageWithSort(
+			EntityField.Type.STRING,
+			(entityField, dataDefinition1, dataDefinition2) -> {
+				Class<?> clazz = dataDefinition1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						dataDefinition1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						dataDefinition2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						dataDefinition1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						dataDefinition2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						dataDefinition1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						dataDefinition2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetDataDefinitionByContentTypeContentTypePageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, DataDefinition, DataDefinition, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String contentType =
+			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
+
+		DataDefinition dataDefinition1 = randomDataDefinition();
+		DataDefinition dataDefinition2 = randomDataDefinition();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(
+				entityField, dataDefinition1, dataDefinition2);
+		}
+
+		dataDefinition1 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, dataDefinition1);
+
+		dataDefinition2 =
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				contentType, dataDefinition2);
+
+		Page<DataDefinition> page =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<DataDefinition> ascPage =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
+
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)ascPage.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)ascPage.getItems());
+
+			Page<DataDefinition> descPage =
+				dataDefinitionResource.
+					getDataDefinitionByContentTypeContentTypePage(
+						contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
+
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)descPage.getItems());
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)descPage.getItems());
+		}
+	}
+
+	protected DataDefinition
+			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
+				String contentType, DataDefinition dataDefinition)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetDataDefinitionByContentTypeContentTypePage_getContentType()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetDataDefinitionByContentTypeContentTypePage_getIrrelevantContentType()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetDataDefinitionDataDefinitionFieldFieldTypes()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	@Test
 	public void testGetDataDefinitionPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataDefinition postDataDefinition =
 			testGetDataDefinitionPermissionsPage_addDataDefinition();
 
@@ -1138,48 +1128,343 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testPutDataDefinitionPermissionsPage() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataDefinition dataDefinition =
-			testPutDataDefinitionPermissionsPage_addDataDefinition();
+	public void testGetSiteDataDefinitionByContentTypeByDataDefinitionKey()
+		throws Exception {
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
+		DataDefinition postDataDefinition =
+			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition();
 
-		assertHttpResponseStatusCode(
-			200,
-			dataDefinitionResource.putDataDefinitionPermissionsPageHttpResponse(
-				dataDefinition.getId(),
-				new Permission[] {
-					new Permission() {
-						{
-							setActionIds(new String[] {"VIEW"});
-							setRoleName(role.getName());
-						}
-					}
-				}));
+		DataDefinition getDataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+					postDataDefinition.getSiteId(),
+					postDataDefinition.getContentType(),
+					postDataDefinition.getDataDefinitionKey());
 
-		assertHttpResponseStatusCode(
-			404,
-			dataDefinitionResource.putDataDefinitionPermissionsPageHttpResponse(
-				0L,
-				new Permission[] {
-					new Permission() {
-						{
-							setActionIds(new String[] {"-"});
-							setRoleName("-");
-						}
-					}
-				}));
+		assertEquals(postDataDefinition, getDataDefinition);
+		assertValid(getDataDefinition);
 	}
 
 	protected DataDefinition
-			testPutDataDefinitionPermissionsPage_addDataDefinition()
+			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey()
+		throws Exception {
+
+		DataDefinition dataDefinition =
+			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				dataDefinition,
+				DataDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataDefinitionByContentTypeByDataDefinitionKey",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" + dataDefinition.getSiteId() +
+												"\"");
+										put(
+											"contentType",
+											"\"" +
+												dataDefinition.
+													getContentType() + "\"");
+										put(
+											"dataDefinitionKey",
+											"\"" +
+												dataDefinition.
+													getDataDefinitionKey() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertTrue(
+			equals(
+				dataDefinition,
+				DataDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataEngine_v2_0",
+								new GraphQLField(
+									"dataDefinitionByContentTypeByDataDefinitionKey",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													dataDefinition.getSiteId() +
+														"\"");
+											put(
+												"contentType",
+												"\"" +
+													dataDefinition.
+														getContentType() +
+															"\"");
+											put(
+												"dataDefinitionKey",
+												"\"" +
+													dataDefinition.
+														getDataDefinitionKey() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/dataEngine_v2_0",
+						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKeyNotFound()
+		throws Exception {
+
+		String irrelevantContentType =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantDataDefinitionKey =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataDefinitionByContentTypeByDataDefinitionKey",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put("contentType", irrelevantContentType);
+								put(
+									"dataDefinitionKey",
+									irrelevantDataDefinitionKey);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"dataDefinitionByContentTypeByDataDefinitionKey",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put("contentType", irrelevantContentType);
+									put(
+										"dataDefinitionKey",
+										irrelevantDataDefinitionKey);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected DataDefinition
+			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition()
+		throws Exception {
+
+		return testGraphQLDataDefinition_addDataDefinition();
+	}
+
+	@Test
+	public void testGetSiteDataDefinitionByContentTypeByExternalReferenceCode()
+		throws Exception {
+
+		DataDefinition postDataDefinition =
+			testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
+
+		DataDefinition getDataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByExternalReferenceCode(
+					postDataDefinition.getSiteId(),
+					postDataDefinition.getContentType(),
+					postDataDefinition.getExternalReferenceCode());
+
+		assertEquals(postDataDefinition, getDataDefinition);
+		assertValid(getDataDefinition);
+	}
+
+	protected DataDefinition
+			testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode()
+		throws Exception {
+
+		DataDefinition dataDefinition =
+			testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				dataDefinition,
+				DataDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataDefinitionByContentTypeByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" + dataDefinition.getSiteId() +
+												"\"");
+										put(
+											"contentType",
+											"\"" +
+												dataDefinition.
+													getContentType() + "\"");
+										put(
+											"externalReferenceCode",
+											"\"" +
+												dataDefinition.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/dataDefinitionByContentTypeByExternalReferenceCode"))));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertTrue(
+			equals(
+				dataDefinition,
+				DataDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataEngine_v2_0",
+								new GraphQLField(
+									"dataDefinitionByContentTypeByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													dataDefinition.getSiteId() +
+														"\"");
+											put(
+												"contentType",
+												"\"" +
+													dataDefinition.
+														getContentType() +
+															"\"");
+											put(
+												"externalReferenceCode",
+												"\"" +
+													dataDefinition.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/dataEngine_v2_0",
+						"Object/dataDefinitionByContentTypeByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantContentType =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataDefinitionByContentTypeByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put("contentType", irrelevantContentType);
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"dataDefinitionByContentTypeByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put("contentType", irrelevantContentType);
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected DataDefinition
+			testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
+		throws Exception {
+
+		return testGraphQLDataDefinition_addDataDefinition();
 	}
 
 	@Test
@@ -1198,8 +1483,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		Page<DataDefinition> page =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeContentTypePage(
-					siteId, contentType, RandomTestUtil.randomString(),
-					Pagination.of(1, 10), null);
+					siteId, contentType, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -1272,13 +1556,13 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		String contentType =
 			testGetSiteDataDefinitionByContentTypeContentTypePage_getContentType();
 
-		Page<DataDefinition> dataDefinitionPage =
+		Page<DataDefinition> dataDefinitionsPage =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeContentTypePage(
 					siteId, contentType, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			dataDefinitionPage.getTotalCount());
+			dataDefinitionsPage.getTotalCount());
 
 		DataDefinition dataDefinition1 =
 			testGetSiteDataDefinitionByContentTypeContentTypePage_addDataDefinition(
@@ -1578,6 +1862,78 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
+	public void testPatchDataDefinition() throws Exception {
+		DataDefinition postDataDefinition =
+			testPatchDataDefinition_addDataDefinition();
+
+		DataDefinition randomPatchDataDefinition = randomPatchDataDefinition();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataDefinition patchDataDefinition =
+			dataDefinitionResource.patchDataDefinition(
+				postDataDefinition.getId(), randomPatchDataDefinition);
+
+		DataDefinition expectedPatchDataDefinition = postDataDefinition.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchDataDefinition, expectedPatchDataDefinition);
+
+		DataDefinition getDataDefinition =
+			dataDefinitionResource.getDataDefinition(
+				patchDataDefinition.getId());
+
+		assertEquals(expectedPatchDataDefinition, getDataDefinition);
+		assertValid(getDataDefinition);
+	}
+
+	protected DataDefinition testPatchDataDefinition_addDataDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostDataDefinitionByContentType() throws Exception {
+		DataDefinition randomDataDefinition = randomDataDefinition();
+
+		DataDefinition postDataDefinition =
+			testPostDataDefinitionByContentType_addDataDefinition(
+				randomDataDefinition);
+
+		assertEquals(randomDataDefinition, postDataDefinition);
+		assertValid(postDataDefinition);
+	}
+
+	protected DataDefinition
+			testPostDataDefinitionByContentType_addDataDefinition(
+				DataDefinition dataDefinition)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostDataDefinitionCopy() throws Exception {
+		DataDefinition randomDataDefinition = randomDataDefinition();
+
+		DataDefinition postDataDefinition =
+			testPostDataDefinitionCopy_addDataDefinition(randomDataDefinition);
+
+		assertEquals(randomDataDefinition, postDataDefinition);
+		assertValid(postDataDefinition);
+	}
+
+	protected DataDefinition testPostDataDefinitionCopy_addDataDefinition(
+			DataDefinition dataDefinition)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostSiteDataDefinitionByContentType() throws Exception {
 		DataDefinition randomDataDefinition = randomDataDefinition();
 
@@ -1599,34 +1955,27 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteDataDefinitionByContentTypeByDataDefinitionKey()
-		throws Exception {
-
+	public void testPutDataDefinition() throws Exception {
 		DataDefinition postDataDefinition =
-			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition();
+			testPutDataDefinition_addDataDefinition();
+
+		DataDefinition randomDataDefinition = randomDataDefinition();
+
+		DataDefinition putDataDefinition =
+			dataDefinitionResource.putDataDefinition(
+				postDataDefinition.getId(), randomDataDefinition);
+
+		assertEquals(randomDataDefinition, putDataDefinition);
+		assertValid(putDataDefinition);
 
 		DataDefinition getDataDefinition =
-			dataDefinitionResource.
-				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
-					testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
-						postDataDefinition),
-					postDataDefinition.getContentType(),
-					postDataDefinition.getDataDefinitionKey());
+			dataDefinitionResource.getDataDefinition(putDataDefinition.getId());
 
-		assertEquals(postDataDefinition, getDataDefinition);
+		assertEquals(randomDataDefinition, getDataDefinition);
 		assertValid(getDataDefinition);
 	}
 
-	protected Long
-			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		return dataDefinition.getSiteId();
-	}
-
-	protected DataDefinition
-			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition()
+	protected DataDefinition testPutDataDefinition_addDataDefinition()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1634,404 +1983,48 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey()
-		throws Exception {
-
-		DataDefinition dataDefinition =
-			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				dataDefinition,
-				DataDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataDefinitionByContentTypeByDataDefinitionKey",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"siteKey",
-											"\"" +
-												testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
-													dataDefinition) + "\"");
-
-										put(
-											"contentType",
-											"\"" +
-												dataDefinition.
-													getContentType() + "\"");
-
-										put(
-											"dataDefinitionKey",
-											"\"" +
-												dataDefinition.
-													getDataDefinitionKey() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertTrue(
-			equals(
-				dataDefinition,
-				DataDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataEngine_v2_0",
-								new GraphQLField(
-									"dataDefinitionByContentTypeByDataDefinitionKey",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"siteKey",
-												"\"" +
-													testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
-														dataDefinition) + "\"");
-
-											put(
-												"contentType",
-												"\"" +
-													dataDefinition.
-														getContentType() +
-															"\"");
-
-											put(
-												"dataDefinitionKey",
-												"\"" +
-													dataDefinition.
-														getDataDefinitionKey() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/dataEngine_v2_0",
-						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
-	}
-
-	protected Long
-			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		return dataDefinition.getSiteId();
-	}
-
-	@Test
-	public void testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKeyNotFound()
-		throws Exception {
-
-		String irrelevantContentType =
-			"\"" + RandomTestUtil.randomString() + "\"";
-		String irrelevantDataDefinitionKey =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataDefinitionByContentTypeByDataDefinitionKey",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"siteKey",
-									"\"" + irrelevantGroup.getGroupId() + "\"");
-								put("contentType", irrelevantContentType);
-								put(
-									"dataDefinitionKey",
-									irrelevantDataDefinitionKey);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"dataDefinitionByContentTypeByDataDefinitionKey",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"siteKey",
-										"\"" + irrelevantGroup.getGroupId() +
-											"\"");
-									put("contentType", irrelevantContentType);
-									put(
-										"dataDefinitionKey",
-										irrelevantDataDefinitionKey);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected DataDefinition
-			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_addDataDefinition()
-		throws Exception {
-
-		return testGraphQLDataDefinition_addDataDefinition();
-	}
-
-	@Test
-	public void testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode()
-		throws Exception {
-
+	public void testPutDataDefinitionPermissionsPage() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataDefinition dataDefinition =
-			testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
+			testPutDataDefinitionPermissionsPage_addDataDefinition();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
 
 		assertHttpResponseStatusCode(
-			204,
-			dataDefinitionResource.
-				deleteSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						dataDefinition),
-					dataDefinition.getContentType(),
-					dataDefinition.getExternalReferenceCode()));
+			200,
+			dataDefinitionResource.putDataDefinitionPermissionsPageHttpResponse(
+				dataDefinition.getId(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"VIEW"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
 
 		assertHttpResponseStatusCode(
 			404,
-			dataDefinitionResource.
-				getSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						dataDefinition),
-					dataDefinition.getContentType(),
-					dataDefinition.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			dataDefinitionResource.
-				getSiteDataDefinitionByContentTypeByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						dataDefinition),
-					dataDefinition.getContentType(),
-					dataDefinition.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		return dataDefinition.getSiteId();
+			dataDefinitionResource.putDataDefinitionPermissionsPageHttpResponse(
+				0L,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
 	}
 
 	protected DataDefinition
-			testDeleteSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
+			testPutDataDefinitionPermissionsPage_addDataDefinition()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetSiteDataDefinitionByContentTypeByExternalReferenceCode()
-		throws Exception {
-
-		DataDefinition postDataDefinition =
-			testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
-
-		DataDefinition getDataDefinition =
-			dataDefinitionResource.
-				getSiteDataDefinitionByContentTypeByExternalReferenceCode(
-					testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						postDataDefinition),
-					postDataDefinition.getContentType(),
-					postDataDefinition.getExternalReferenceCode());
-
-		assertEquals(postDataDefinition, getDataDefinition);
-		assertValid(getDataDefinition);
-	}
-
-	protected Long
-			testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		return dataDefinition.getSiteId();
-	}
-
-	protected DataDefinition
-			testGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode()
-		throws Exception {
-
-		DataDefinition dataDefinition =
-			testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				dataDefinition,
-				DataDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataDefinitionByContentTypeByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"siteKey",
-											"\"" +
-												testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-													dataDefinition) + "\"");
-
-										put(
-											"contentType",
-											"\"" +
-												dataDefinition.
-													getContentType() + "\"");
-
-										put(
-											"externalReferenceCode",
-											"\"" +
-												dataDefinition.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/dataDefinitionByContentTypeByExternalReferenceCode"))));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertTrue(
-			equals(
-				dataDefinition,
-				DataDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataEngine_v2_0",
-								new GraphQLField(
-									"dataDefinitionByContentTypeByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"siteKey",
-												"\"" +
-													testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-														dataDefinition) + "\"");
-
-											put(
-												"contentType",
-												"\"" +
-													dataDefinition.
-														getContentType() +
-															"\"");
-
-											put(
-												"externalReferenceCode",
-												"\"" +
-													dataDefinition.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/dataEngine_v2_0",
-						"Object/dataDefinitionByContentTypeByExternalReferenceCode"))));
-	}
-
-	protected Long
-			testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-				DataDefinition dataDefinition)
-		throws Exception {
-
-		return dataDefinition.getSiteId();
-	}
-
-	@Test
-	public void testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantContentType =
-			"\"" + RandomTestUtil.randomString() + "\"";
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataDefinitionByContentTypeByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"siteKey",
-									"\"" + irrelevantGroup.getGroupId() + "\"");
-								put("contentType", irrelevantContentType);
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"dataDefinitionByContentTypeByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"siteKey",
-										"\"" + irrelevantGroup.getGroupId() +
-											"\"");
-									put("contentType", irrelevantContentType);
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected DataDefinition
-			testGraphQLGetSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
-		throws Exception {
-
-		return testGraphQLDataDefinition_addDataDefinition();
 	}
 
 	@Test
@@ -2046,8 +2039,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		DataDefinition putDataDefinition =
 			dataDefinitionResource.
 				putSiteDataDefinitionByContentTypeByExternalReferenceCode(
-					testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						postDataDefinition),
+					postDataDefinition.getSiteId(),
 					postDataDefinition.getContentType(),
 					postDataDefinition.getExternalReferenceCode(),
 					randomDataDefinition);
@@ -2058,8 +2050,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		DataDefinition getDataDefinition =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeByExternalReferenceCode(
-					testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						putDataDefinition),
+					putDataDefinition.getSiteId(),
 					putDataDefinition.getContentType(),
 					putDataDefinition.getExternalReferenceCode());
 
@@ -2072,8 +2063,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		putDataDefinition =
 			dataDefinitionResource.
 				putSiteDataDefinitionByContentTypeByExternalReferenceCode(
-					testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						newDataDefinition),
+					newDataDefinition.getSiteId(),
 					newDataDefinition.getContentType(),
 					newDataDefinition.getExternalReferenceCode(),
 					newDataDefinition);
@@ -2084,8 +2074,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		getDataDefinition =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeByExternalReferenceCode(
-					testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-						putDataDefinition),
+					putDataDefinition.getSiteId(),
 					putDataDefinition.getContentType(),
 					putDataDefinition.getExternalReferenceCode());
 
@@ -2096,12 +2085,12 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			putDataDefinition.getExternalReferenceCode());
 	}
 
-	protected Long
-			testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_getSiteId(
-				DataDefinition dataDefinition)
+	protected DataDefinition
+			testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
 		throws Exception {
 
-		return dataDefinition.getSiteId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected DataDefinition
@@ -2111,12 +2100,59 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		return randomDataDefinition();
 	}
 
-	protected DataDefinition
-			testPutSiteDataDefinitionByContentTypeByExternalReferenceCode_addDataDefinition()
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DataDefinition dataDefinition1 =
+			testBatchEngineDeleteImportTask_addDataDefinition();
+
+		testBatchEngineDeleteImportTask_deleteDataDefinition(
+			200, null, dataDefinition1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataDefinitionResource.getDataDefinitionHttpResponse(
+				dataDefinition1.getId()));
+	}
+
+	protected DataDefinition testBatchEngineDeleteImportTask_addDataDefinition()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testDeleteDataDefinition_addDataDefinition();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDataDefinition(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.data.engine.rest.dto.v2_0.DataDefinition", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DataDefinition testGraphQLDataDefinition_addDataDefinition()
@@ -3148,7 +3184,30 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		return randomDataDefinition();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DataDefinitionResource dataDefinitionResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

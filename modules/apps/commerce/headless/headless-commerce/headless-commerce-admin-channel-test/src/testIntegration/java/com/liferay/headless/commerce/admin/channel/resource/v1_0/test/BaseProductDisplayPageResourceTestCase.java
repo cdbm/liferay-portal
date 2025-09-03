@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.ProductDisplayPage;
 import com.liferay.headless.commerce.admin.channel.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.channel.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 			testCompany.getCompanyId());
 
 		productDisplayPageResource = ProductDisplayPageResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -211,6 +224,156 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 		Assert.assertEquals(regex, productDisplayPage.getPageUuid());
 		Assert.assertEquals(
 			regex, productDisplayPage.getProductExternalReferenceCode());
+	}
+
+	@Test
+	public void testDeleteProductDisplayPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductDisplayPage productDisplayPage =
+			testDeleteProductDisplayPage_addProductDisplayPage();
+
+		assertHttpResponseStatusCode(
+			204,
+			productDisplayPageResource.deleteProductDisplayPageHttpResponse(
+				productDisplayPage.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			productDisplayPageResource.getProductDisplayPageHttpResponse(
+				productDisplayPage.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			productDisplayPageResource.getProductDisplayPageHttpResponse(0L));
+	}
+
+	protected ProductDisplayPage
+			testDeleteProductDisplayPage_addProductDisplayPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteProductDisplayPage() throws Exception {
+
+		// No namespace
+
+		ProductDisplayPage productDisplayPage1 =
+			testGraphQLDeleteProductDisplayPage_addProductDisplayPage();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteProductDisplayPage",
+						new HashMap<String, Object>() {
+							{
+								put("id", productDisplayPage1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteProductDisplayPage"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"productDisplayPage",
+					new HashMap<String, Object>() {
+						{
+							put("id", productDisplayPage1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		ProductDisplayPage productDisplayPage2 =
+			testGraphQLDeleteProductDisplayPage_addProductDisplayPage();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"deleteProductDisplayPage",
+							new HashMap<String, Object>() {
+								{
+									put("id", productDisplayPage2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminChannel_v1_0",
+				"Object/deleteProductDisplayPage"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminChannel_v1_0",
+					new GraphQLField(
+						"productDisplayPage",
+						new HashMap<String, Object>() {
+							{
+								put("id", productDisplayPage2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ProductDisplayPage
+			testGraphQLDeleteProductDisplayPage_addProductDisplayPage()
+		throws Exception {
+
+		return testGraphQLProductDisplayPage_addProductDisplayPage();
+	}
+
+	@Test
+	public void testDeleteProductDisplayPageBatch() throws Exception {
+		ProductDisplayPage productDisplayPage1 =
+			testDeleteProductDisplayPageBatch_addProductDisplayPage();
+
+		testDeleteProductDisplayPageBatch_deleteProductDisplayPage(
+			202, null, productDisplayPage1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productDisplayPageResource.getProductDisplayPageHttpResponse(
+				productDisplayPage1.getId()));
+	}
+
+	protected ProductDisplayPage
+			testDeleteProductDisplayPageBatch_addProductDisplayPage()
+		throws Exception {
+
+		return testDeleteProductDisplayPage_addProductDisplayPage();
+	}
+
+	protected void testDeleteProductDisplayPageBatch_deleteProductDisplayPage(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productDisplayPageResource.
+				deleteProductDisplayPageBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -407,13 +570,13 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 		String externalReferenceCode =
 			testGetChannelByExternalReferenceCodeProductDisplayPagesPage_getExternalReferenceCode();
 
-		Page<ProductDisplayPage> productDisplayPagePage =
+		Page<ProductDisplayPage> productDisplayPagesPage =
 			productDisplayPageResource.
 				getChannelByExternalReferenceCodeProductDisplayPagesPage(
 					externalReferenceCode, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productDisplayPagePage.getTotalCount());
+			productDisplayPagesPage.getTotalCount());
 
 		ProductDisplayPage productDisplayPage1 =
 			testGetChannelByExternalReferenceCodeProductDisplayPagesPage_addProductDisplayPage(
@@ -709,30 +872,6 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 	}
 
 	@Test
-	public void testPostChannelByExternalReferenceCodeProductDisplayPage()
-		throws Exception {
-
-		ProductDisplayPage randomProductDisplayPage =
-			randomProductDisplayPage();
-
-		ProductDisplayPage postProductDisplayPage =
-			testPostChannelByExternalReferenceCodeProductDisplayPage_addProductDisplayPage(
-				randomProductDisplayPage);
-
-		assertEquals(randomProductDisplayPage, postProductDisplayPage);
-		assertValid(postProductDisplayPage);
-	}
-
-	protected ProductDisplayPage
-			testPostChannelByExternalReferenceCodeProductDisplayPage_addProductDisplayPage(
-				ProductDisplayPage productDisplayPage)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetChannelIdProductDisplayPagesPage() throws Exception {
 		Long id = testGetChannelIdProductDisplayPagesPage_getId();
 		Long irrelevantId =
@@ -907,12 +1046,12 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 
 		Long id = testGetChannelIdProductDisplayPagesPage_getId();
 
-		Page<ProductDisplayPage> productDisplayPagePage =
+		Page<ProductDisplayPage> productDisplayPagesPage =
 			productDisplayPageResource.getChannelIdProductDisplayPagesPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productDisplayPagePage.getTotalCount());
+			productDisplayPagesPage.getTotalCount());
 
 		ProductDisplayPage productDisplayPage1 =
 			testGetChannelIdProductDisplayPagesPage_addProductDisplayPage(
@@ -1189,137 +1328,6 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostChannelIdProductDisplayPage() throws Exception {
-		ProductDisplayPage randomProductDisplayPage =
-			randomProductDisplayPage();
-
-		ProductDisplayPage postProductDisplayPage =
-			testPostChannelIdProductDisplayPage_addProductDisplayPage(
-				randomProductDisplayPage);
-
-		assertEquals(randomProductDisplayPage, postProductDisplayPage);
-		assertValid(postProductDisplayPage);
-	}
-
-	protected ProductDisplayPage
-			testPostChannelIdProductDisplayPage_addProductDisplayPage(
-				ProductDisplayPage productDisplayPage)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteProductDisplayPage() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ProductDisplayPage productDisplayPage =
-			testDeleteProductDisplayPage_addProductDisplayPage();
-
-		assertHttpResponseStatusCode(
-			204,
-			productDisplayPageResource.deleteProductDisplayPageHttpResponse(
-				productDisplayPage.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			productDisplayPageResource.getProductDisplayPageHttpResponse(
-				productDisplayPage.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			productDisplayPageResource.getProductDisplayPageHttpResponse(
-				productDisplayPage.getId()));
-	}
-
-	protected ProductDisplayPage
-			testDeleteProductDisplayPage_addProductDisplayPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteProductDisplayPage() throws Exception {
-
-		// No namespace
-
-		ProductDisplayPage productDisplayPage1 =
-			testGraphQLDeleteProductDisplayPage_addProductDisplayPage();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteProductDisplayPage",
-						new HashMap<String, Object>() {
-							{
-								put("id", productDisplayPage1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteProductDisplayPage"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"productDisplayPage",
-					new HashMap<String, Object>() {
-						{
-							put("id", productDisplayPage1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminChannel_v1_0
-
-		ProductDisplayPage productDisplayPage2 =
-			testGraphQLDeleteProductDisplayPage_addProductDisplayPage();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminChannel_v1_0",
-						new GraphQLField(
-							"deleteProductDisplayPage",
-							new HashMap<String, Object>() {
-								{
-									put("id", productDisplayPage2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminChannel_v1_0",
-				"Object/deleteProductDisplayPage"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminChannel_v1_0",
-					new GraphQLField(
-						"productDisplayPage",
-						new HashMap<String, Object>() {
-							{
-								put("id", productDisplayPage2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ProductDisplayPage
-			testGraphQLDeleteProductDisplayPage_addProductDisplayPage()
-		throws Exception {
-
-		return testGraphQLProductDisplayPage_addProductDisplayPage();
 	}
 
 	@Test
@@ -1665,6 +1673,108 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostChannelByExternalReferenceCodeProductDisplayPage()
+		throws Exception {
+
+		ProductDisplayPage randomProductDisplayPage =
+			randomProductDisplayPage();
+
+		ProductDisplayPage postProductDisplayPage =
+			testPostChannelByExternalReferenceCodeProductDisplayPage_addProductDisplayPage(
+				randomProductDisplayPage);
+
+		assertEquals(randomProductDisplayPage, postProductDisplayPage);
+		assertValid(postProductDisplayPage);
+	}
+
+	protected ProductDisplayPage
+			testPostChannelByExternalReferenceCodeProductDisplayPage_addProductDisplayPage(
+				ProductDisplayPage productDisplayPage)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostChannelIdProductDisplayPage() throws Exception {
+		ProductDisplayPage randomProductDisplayPage =
+			randomProductDisplayPage();
+
+		ProductDisplayPage postProductDisplayPage =
+			testPostChannelIdProductDisplayPage_addProductDisplayPage(
+				randomProductDisplayPage);
+
+		assertEquals(randomProductDisplayPage, postProductDisplayPage);
+		assertValid(postProductDisplayPage);
+	}
+
+	protected ProductDisplayPage
+			testPostChannelIdProductDisplayPage_addProductDisplayPage(
+				ProductDisplayPage productDisplayPage)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ProductDisplayPage productDisplayPage1 =
+			testBatchEngineDeleteImportTask_addProductDisplayPage();
+
+		testBatchEngineDeleteImportTask_deleteProductDisplayPage(
+			200, null, productDisplayPage1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productDisplayPageResource.getProductDisplayPageHttpResponse(
+				productDisplayPage1.getId()));
+	}
+
+	protected ProductDisplayPage
+			testBatchEngineDeleteImportTask_addProductDisplayPage()
+		throws Exception {
+
+		return testDeleteProductDisplayPage_addProductDisplayPage();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteProductDisplayPage(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.channel.dto.v1_0.ProductDisplayPage",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2340,7 +2450,30 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 		return randomProductDisplayPage();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductDisplayPageResource productDisplayPageResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

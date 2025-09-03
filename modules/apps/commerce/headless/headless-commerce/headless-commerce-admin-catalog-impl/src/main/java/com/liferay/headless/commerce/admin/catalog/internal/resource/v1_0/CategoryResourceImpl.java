@@ -14,7 +14,7 @@ import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Category;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.CategoryResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -26,10 +26,10 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

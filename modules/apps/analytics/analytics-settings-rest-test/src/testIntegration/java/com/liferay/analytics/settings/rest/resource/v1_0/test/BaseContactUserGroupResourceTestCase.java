@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -185,7 +185,7 @@ public abstract class BaseContactUserGroupResourceTestCase {
 	public void testGetContactUserGroupsPage() throws Exception {
 		Page<ContactUserGroup> page =
 			contactUserGroupResource.getContactUserGroupsPage(
-				RandomTestUtil.randomString(), Pagination.of(1, 10), null);
+				null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -220,11 +220,11 @@ public abstract class BaseContactUserGroupResourceTestCase {
 
 	@Test
 	public void testGetContactUserGroupsPageWithPagination() throws Exception {
-		Page<ContactUserGroup> contactUserGroupPage =
+		Page<ContactUserGroup> contactUserGroupsPage =
 			contactUserGroupResource.getContactUserGroupsPage(null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			contactUserGroupPage.getTotalCount());
+			contactUserGroupsPage.getTotalCount());
 
 		ContactUserGroup contactUserGroup1 =
 			testGetContactUserGroupsPage_addContactUserGroup(

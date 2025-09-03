@@ -20,8 +20,8 @@ import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChanne
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
 import com.liferay.headless.commerce.admin.channel.internal.odata.entity.v1_0.ChannelEntityModel;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
@@ -36,9 +36,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Collections;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Collections;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -307,9 +307,8 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(),
-				GetterUtil.getString(
-					channel.getAccountExternalReferenceCode()));
+				GetterUtil.getString(channel.getAccountExternalReferenceCode()),
+				contextCompany.getCompanyId());
 
 		if (accountEntry != null) {
 			return accountEntry.getAccountEntryId();

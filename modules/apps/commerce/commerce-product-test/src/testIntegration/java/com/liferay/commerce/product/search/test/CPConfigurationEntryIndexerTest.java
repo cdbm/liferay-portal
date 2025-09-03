@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -118,12 +119,13 @@ public class CPConfigurationEntryIndexerTest {
 
 		CPConfigurationList cpConfigurationList2 =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, commerceCatalog.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), commerceCatalog.getGroupId(),
 				cpConfigurationList1.getCPConfigurationListId(), false,
 				"Test List", 0D, calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		searchContext.setAttribute(
 			CPField.CP_CONFIGURATION_LIST_ID,

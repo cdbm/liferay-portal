@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.FeatureFlag;
 
 import java.util.Collections;
 
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class FieldResourceTest extends BaseFieldResourceTestCase {
 
+	@FeatureFlag("LPD-17564")
 	@Override
 	@Test
 	public void testGetPlanInternalClassNameKeyFieldsPage() throws Exception {
@@ -123,11 +125,19 @@ public class FieldResourceTest extends BaseFieldResourceTestCase {
 		assertEqualsIgnoringOrder(
 			ListUtil.fromArray(
 				_toField(null, "defaultLanguageId", false, "string", null),
+				_toField(null, "displayDate", false, "string", null),
+				_toField(null, "expirationDate", false, "string", null),
 				_toField(null, "externalReferenceCode", false, "string", null),
 				_toField(null, "friendlyUrlPath", false, "string", null),
 				_toField(null, "friendlyUrlPath_i18n", false, "object", null),
 				_toField(null, "keywords", false, "array", "CSV"),
+				_toField(
+					null, "objectEntryFolderExternalReferenceCode", false,
+					"string", null),
+				_toField(null, "objectEntryFolderId", false, "integer", null),
 				_toField(null, "permissions", false, "array", null),
+				_toField(null, "removedBy", false, null, null),
+				_toField(null, "reviewDate", false, "string", null),
 				_toField(null, "taxonomyCategoryIds", false, "array", "CSV"),
 				_toField(null, fieldName, false, "string", null),
 				_toField(

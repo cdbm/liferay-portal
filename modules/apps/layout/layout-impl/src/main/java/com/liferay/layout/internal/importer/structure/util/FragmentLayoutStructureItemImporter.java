@@ -18,6 +18,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.DefaultFragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.service.FragmentCollectionService;
@@ -27,9 +28,9 @@ import com.liferay.fragment.validator.FragmentEntryValidator;
 import com.liferay.headless.delivery.dto.v1_0.ActionExecutionResult;
 import com.liferay.headless.delivery.dto.v1_0.FragmentLink;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
+import com.liferay.layout.importer.PortletPermissionsImporter;
 import com.liferay.layout.internal.importer.LayoutStructureItemImporterContext;
 import com.liferay.layout.internal.importer.helper.PortletConfigurationImporterHelper;
-import com.liferay.layout.internal.importer.helper.PortletPermissionsImporterHelper;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
@@ -65,6 +66,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -75,9 +79,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Jürgen Kappler
@@ -99,7 +100,7 @@ public class FragmentLayoutStructureItemImporter
 		PortletConfigurationImporterHelper portletConfigurationImporterHelper,
 		PortletFileRepository portletFileRepository,
 		PortletLocalService portletLocalService,
-		PortletPermissionsImporterHelper portletPermissionsImporterHelper,
+		PortletPermissionsImporter portletPermissionsImporter,
 		SegmentsExperienceLocalService segmentsExperienceLocalService) {
 
 		_companyLocalService = companyLocalService;
@@ -115,7 +116,7 @@ public class FragmentLayoutStructureItemImporter
 			portletConfigurationImporterHelper;
 		_portletFileRepository = portletFileRepository;
 		_portletLocalService = portletLocalService;
-		_portletPermissionsImporterHelper = portletPermissionsImporterHelper;
+		_portletPermissionsImporter = portletPermissionsImporter;
 		_segmentsExperienceLocalService = segmentsExperienceLocalService;
 	}
 
@@ -338,6 +339,7 @@ public class FragmentLayoutStructureItemImporter
 		String js = StringPool.BLANK;
 		String css = StringPool.BLANK;
 		String configuration = StringPool.BLANK;
+		JSONObject configurationJSONObject = null;
 		int type = FragmentConstants.TYPE_COMPONENT;
 
 		JSONObject defaultEditableValuesJSONObject =
@@ -346,9 +348,23 @@ public class FragmentLayoutStructureItemImporter
 		if (fragmentEntry != null) {
 			js = fragmentEntry.getJs();
 			css = fragmentEntry.getCss();
+
 			configuration = fragmentEntry.getConfiguration();
+
+			configurationJSONObject = JSONFactoryUtil.safeCreateJSONObject(
+				configuration, true);
+
 			html = fragmentEntry.getHtml();
 			type = fragmentEntry.getType();
+		}
+		else {
+			configurationJSONObject =
+				fragmentRenderer.getConfigurationJSONObject(
+					new DefaultFragmentRendererContext(null));
+
+			configuration = JSONFactoryUtil.toString(configurationJSONObject);
+
+			type = fragmentRenderer.getType();
 		}
 
 		JSONObject fragmentEntryProcessorValuesJSONObject =
@@ -356,11 +372,11 @@ public class FragmentLayoutStructureItemImporter
 
 		JSONObject freeMarkerFragmentEntryProcessorJSONObject =
 			_toFreeMarkerFragmentEntryProcessorJSONObject(
-				_getConfigurationTypes(configuration),
+				_getConfigurationTypes(configurationJSONObject),
 				(Map<String, Object>)definitionMap.get("fragmentConfig"));
 
 		_fragmentEntryValidator.validateConfigurationValues(
-			configuration, fragmentEntryProcessorValuesJSONObject);
+			configurationJSONObject, fragmentEntryProcessorValuesJSONObject);
 
 		if (freeMarkerFragmentEntryProcessorJSONObject.length() > 0) {
 			fragmentEntryProcessorValuesJSONObject.put(
@@ -382,7 +398,7 @@ public class FragmentLayoutStructureItemImporter
 							fragmentEntryProcessorValuesJSONObject.toString(),
 							fragmentCollection, fragmentEntry.getHtml(),
 							fragmentKey, type),
-						configuration);
+						configurationJSONObject);
 		}
 
 		Map<String, String> editableTypes =
@@ -760,14 +776,18 @@ public class FragmentLayoutStructureItemImporter
 		return jsonObject3;
 	}
 
-	private Map<String, String> _getConfigurationTypes(String configuration)
+	private Map<String, String> _getConfigurationTypes(
+			JSONObject configurationJSONObject)
 		throws Exception {
 
 		Map<String, String> configurationTypes = new HashMap<>();
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(configuration);
+		if (configurationJSONObject == null) {
+			return configurationTypes;
+		}
 
-		JSONArray fieldSetsJSONArray = jsonObject.getJSONArray("fieldSets");
+		JSONArray fieldSetsJSONArray = configurationJSONObject.getJSONArray(
+			"fieldSets");
 
 		if (fieldSetsJSONArray == null) {
 			return configurationTypes;
@@ -1120,7 +1140,7 @@ public class FragmentLayoutStructureItemImporter
 				(List<Map<String, Object>>)widgetInstanceMap.get(
 					"widgetPermissions");
 
-			_portletPermissionsImporterHelper.importPortletPermissions(
+			_portletPermissionsImporter.importPortletPermissions(
 				layout.getPlid(),
 				PortletIdCodec.encode(widgetName, widgetInstanceId),
 				warningMessages, widgetPermissionsMaps);
@@ -1410,8 +1430,7 @@ public class FragmentLayoutStructureItemImporter
 		_portletConfigurationImporterHelper;
 	private final PortletFileRepository _portletFileRepository;
 	private final PortletLocalService _portletLocalService;
-	private final PortletPermissionsImporterHelper
-		_portletPermissionsImporterHelper;
+	private final PortletPermissionsImporter _portletPermissionsImporter;
 	private final SegmentsExperienceLocalService
 		_segmentsExperienceLocalService;
 

@@ -21,6 +21,7 @@ import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductConfig
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.core.util.DateConfig;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -58,8 +59,8 @@ public class ProductConfigurationListAccountGroupResourceTest
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -74,11 +75,12 @@ public class ProductConfigurationListAccountGroupResourceTest
 
 		_cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				RandomTestUtil.randomString(), _commerceCatalog.getGroupId(),
-				_user.getUserId(), 0, false, RandomTestUtil.randomString(), 0D,
-				dateConfig.getMonth(), dateConfig.getDay(),
-				dateConfig.getYear(), dateConfig.getHour(),
-				dateConfig.getMinute(), 0, 0, 0, 0, 0, true);
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_commerceCatalog.getGroupId(), 0, false,
+				RandomTestUtil.randomString(), 0D, dateConfig.getMonth(),
+				dateConfig.getDay(), dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 	}
 
 	@Override
@@ -167,8 +169,9 @@ public class ProductConfigurationListAccountGroupResourceTest
 
 		AccountGroup randomAccountGroup =
 			_accountGroupLocalService.addAccountGroup(
-				_user.getUserId(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), _serviceContext);
+				StringPool.BLANK, _user.getUserId(),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				_serviceContext);
 
 		_accountGroupIds.add(randomAccountGroup.getAccountGroupId());
 
@@ -189,6 +192,36 @@ public class ProductConfigurationListAccountGroupResourceTest
 					_cpConfigurationList.getCPConfigurationListId();
 			}
 		};
+	}
+
+	@Override
+	protected ProductConfigurationListAccountGroup
+			testBatchEngineDeleteImportTask_addProductConfigurationListAccountGroup()
+		throws Exception {
+
+		return testDeleteProductConfigurationListAccountGroup_addProductConfigurationListAccountGroup();
+	}
+
+	@Override
+	protected ProductConfigurationListAccountGroup
+			testDeleteProductConfigurationListAccountGroup_addProductConfigurationListAccountGroup()
+		throws Exception {
+
+		return productConfigurationListAccountGroupResource.
+			postProductConfigurationListIdProductConfigurationListAccountGroup(
+				_cpConfigurationList.getCPConfigurationListId(),
+				randomProductConfigurationListAccountGroup());
+	}
+
+	@Override
+	protected ProductConfigurationListAccountGroup
+			testDeleteProductConfigurationListAccountGroupBatch_addProductConfigurationListAccountGroup()
+		throws Exception {
+
+		return productConfigurationListAccountGroupResource.
+			postProductConfigurationListIdProductConfigurationListAccountGroup(
+				_cpConfigurationList.getCPConfigurationListId(),
+				randomProductConfigurationListAccountGroup());
 	}
 
 	@Override

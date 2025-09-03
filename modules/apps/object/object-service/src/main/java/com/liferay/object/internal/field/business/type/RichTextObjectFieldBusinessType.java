@@ -7,6 +7,7 @@ package com.liferay.object.internal.field.business.type;
 
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -14,6 +15,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
 import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HtmlParser;
@@ -69,11 +71,12 @@ public class RichTextObjectFieldBusinessType
 
 	@Override
 	public Object getValue(
-			ObjectField objectField, long userId, Map<String, Object> values)
+			Long groupId, ObjectField objectField, long userId,
+			Map<String, Object> values)
 		throws PortalException {
 
 		Object value = ObjectFieldBusinessType.super.getValue(
-			objectField, userId, values);
+			groupId, objectField, userId, values);
 
 		if (Validator.isNull(value)) {
 			return value;
@@ -83,10 +86,18 @@ public class RichTextObjectFieldBusinessType
 			ObjectDefinition objectDefinition =
 				objectField.getObjectDefinition();
 
-			value = SanitizerUtil.sanitize(
-				objectField.getCompanyId(), 0, objectField.getUserId(),
-				objectDefinition.getClassName(), 0, ContentTypes.TEXT_HTML,
-				Sanitizer.MODE_ALL, String.valueOf(value), null);
+			try {
+				value = SanitizerUtil.sanitize(
+					objectField.getCompanyId(), 0, objectField.getUserId(),
+					objectDefinition.getClassName(), 0, ContentTypes.TEXT_HTML,
+					Sanitizer.MODE_ALL, String.valueOf(value), null);
+			}
+			catch (SanitizerException sanitizerException) {
+				Throwable throwable = sanitizerException.getCause();
+
+				throw new ObjectEntryValuesException.InvalidValue(
+					throwable.getMessage(), objectField.getName());
+			}
 		}
 		else {
 			value = _htmlParser.extractText(
@@ -94,11 +105,6 @@ public class RichTextObjectFieldBusinessType
 		}
 
 		return value;
-	}
-
-	@Override
-	public boolean isLocalizable() {
-		return true;
 	}
 
 	@Reference

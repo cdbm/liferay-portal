@@ -16,6 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,13 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -91,7 +91,7 @@ public class ShippingMethod implements Serializable {
 	private Supplier<Boolean> _activeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		example = "{hu_HU=Product Description HU, hr_HR=Product Description HR, en_US=Professional hand stainless steel saw for wood. Made to last and saw forever. Made of best steel}"
+		example = "{en_US=Professional hand stainless steel saw for wood. Made to last and saw forever. Made of best steel, hr_HR=Product Description HR, hu_HU=Product Description HU}"
 	)
 	@Valid
 	public Map<String, String> getDescription() {

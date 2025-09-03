@@ -49,12 +49,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.Portlet;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
-
-import javax.portlet.Portlet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -191,7 +191,7 @@ public class PortletFragmentEntryProcessorTest {
 			null, _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
 			"Fragment Entry", null, html, null, false, null, null, 0, false,
-			FragmentConstants.TYPE_SECTION, null,
+			false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -220,7 +220,7 @@ public class PortletFragmentEntryProcessorTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
@@ -288,7 +288,7 @@ public class PortletFragmentEntryProcessorTest {
 	private Group _group;
 
 	@Inject(
-		filter = "javax.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET
+		filter = "jakarta.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET
 	)
 	private final Portlet _instanceablePortlet = null;
 
@@ -298,7 +298,7 @@ public class PortletFragmentEntryProcessorTest {
 	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Inject(
-		filter = "javax.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_NONINSTANCEABLE_TEST_PORTLET
+		filter = "jakarta.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_NONINSTANCEABLE_TEST_PORTLET
 	)
 	private final Portlet _noninstanceablePortlet = null;
 

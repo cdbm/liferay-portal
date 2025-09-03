@@ -273,6 +273,14 @@ public class WorkflowDefinitionLinkPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_C() throws Exception {
+		_persistence.countByC_C(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_C(0L, 0L);
+	}
+
+	@Test
 	public void testCountByG_C_C() throws Exception {
 		_persistence.countByG_C_C(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -668,32 +676,6 @@ public class WorkflowDefinitionLinkPersistenceTest {
 			ReflectionTestUtil.<Long>invoke(
 				workflowDefinitionLink, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "groupId"));
-
-		Assert.assertEquals(
-			Long.valueOf(workflowDefinitionLink.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(
-				workflowDefinitionLink, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "groupId"));
-		Assert.assertEquals(
-			Long.valueOf(workflowDefinitionLink.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(
-				workflowDefinitionLink, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "companyId"));
-		Assert.assertEquals(
-			Long.valueOf(workflowDefinitionLink.getClassNameId()),
-			ReflectionTestUtil.<Long>invoke(
-				workflowDefinitionLink, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "classNameId"));
-		Assert.assertEquals(
-			Long.valueOf(workflowDefinitionLink.getClassPK()),
-			ReflectionTestUtil.<Long>invoke(
-				workflowDefinitionLink, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "classPK"));
-		Assert.assertEquals(
-			Long.valueOf(workflowDefinitionLink.getTypePK()),
-			ReflectionTestUtil.<Long>invoke(
-				workflowDefinitionLink, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "typePK"));
 
 		Assert.assertEquals(
 			workflowDefinitionLink.getExternalReferenceCode(),

@@ -18,9 +18,9 @@ import com.liferay.commerce.payment.service.CommercePaymentEntryService;
 import com.liferay.headless.commerce.admin.payment.dto.v1_0.Payment;
 import com.liferay.headless.commerce.admin.payment.internal.odata.entity.v1_0.PaymentEntityModel;
 import com.liferay.headless.commerce.admin.payment.resource.v1_0.PaymentResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ActionUtil;
 import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -42,16 +42,16 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

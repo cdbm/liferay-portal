@@ -75,10 +75,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -723,7 +723,7 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), ".component{color:blue;}",
 			"Fragment Entry HTML", "console.log('test');", cacheable, null,
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 

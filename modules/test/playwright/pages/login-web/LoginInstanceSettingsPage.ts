@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {waitForLoading} from '../../tests/osb-faro-web/main/utils/loading';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {waitForAlert} from '../../utils/waitForAlert';
 import {InstanceSettingsPage} from '../configuration-admin-web/InstanceSettingsPage';
@@ -22,24 +23,19 @@ export class LoginInstanceSettingsPage {
 
 	async goto() {
 		await this.instanceSettingsPage.goToInstanceSetting('Login', 'Login');
+		await waitForLoading(this.page);
 	}
 
 	async enableLoginPrompt() {
-		await this.page.getByRole('menuitem', {name: 'Login'}).waitFor();
 		await this.page.getByLabel('Prompt Enabled').check();
 		await this.saveButton.click();
 		await waitForAlert(this.page);
 	}
 
 	async resetLoginPrompt() {
-		await this.page
-			.getByRole('button', {
-				name: 'Actions',
-			})
-			.click();
 		await clickAndExpectToBeVisible({
 			autoClick: true,
-			target: this.page.getByRole('link', {
+			target: this.page.getByRole('menuitem', {
 				name: 'Reset Default Values',
 			}),
 			trigger: this.page.getByRole('button', {

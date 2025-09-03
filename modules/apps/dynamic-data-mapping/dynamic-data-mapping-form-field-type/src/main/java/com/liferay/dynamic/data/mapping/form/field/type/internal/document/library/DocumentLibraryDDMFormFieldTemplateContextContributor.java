@@ -12,7 +12,7 @@ import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
-import com.liferay.dynamic.data.mapping.form.item.selector.criterion.DDMUserPersonalFolderItemSelectorCriterion;
+import com.liferay.dynamic.data.mapping.form.item.selector.DDMUserPersonalFolderItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
@@ -59,16 +59,16 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -165,12 +165,16 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, DDMPermissionChecker.class, "javax.portlet.name");
+			bundleContext, DDMPermissionChecker.class, "jakarta.portlet.name");
 	}
 
 	protected boolean containsPermission(
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext,
 		String portletId) {
+
+		if (portletId.equals(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN)) {
+			return true;
+		}
 
 		try {
 			DDMPermissionChecker ddmPermissionChecker =

@@ -40,6 +40,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.RoleResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.RoleSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -242,9 +242,9 @@ public abstract class BaseRoleResourceTestCase {
 		return null;
 	}
 
-	protected Role testGraphQLRole_addRole() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(Role role, List<Role> roles) {

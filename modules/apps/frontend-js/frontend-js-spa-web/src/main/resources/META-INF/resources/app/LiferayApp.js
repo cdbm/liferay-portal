@@ -125,6 +125,8 @@ class LiferayApp extends App {
 		body.appendChild(
 			buildFragment('<div class="lfr-spa-loading-bar"></div>')
 		);
+
+		this.setLinkSelector(this.getLinkSelector() + ':not(.ck-content *)');
 	}
 
 	/**
@@ -277,8 +279,7 @@ class LiferayApp extends App {
 		if (
 			this.isInPortletBlacklist(
 				event.target.closest(this.getLinkSelector())
-			) ||
-			event.detail > 1
+			)
 		) {
 			return;
 		}

@@ -630,11 +630,6 @@ renderResponse.setTitle(headerTitle);
 			</div>
 		</div>
 	</aui:form>
-
-	<liferay-document-library:upload-progress
-		id="<%= uploadProgressId %>"
-		message="uploading"
-	/>
 </clay:container-fluid>
 
 <c:if test="<%= (fileEntry != null) && checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
@@ -711,10 +706,6 @@ renderResponse.setTitle(headerTitle);
 
 	function <portlet:namespace />saveFileEntry(draft) {
 		var fileElement = Liferay.Util.getFormElement(form, 'file');
-
-		if (fileElement && fileElement.value) {
-			<%= HtmlUtil.escape(uploadProgressId) %>.startProgress();
-		}
 
 		var cmdElement = Liferay.Util.getFormElement(form, 'cmd');
 

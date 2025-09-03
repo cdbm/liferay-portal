@@ -7,12 +7,12 @@ package com.liferay.commerce.payment.method.mercanet.internal.servlet;
 
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.payment.engine.CommercePaymentEngine;
+import com.liferay.commerce.payment.helper.CommercePaymentHttpHelper;
 import com.liferay.commerce.payment.method.mercanet.internal.MercanetCommercePaymentMethod;
 import com.liferay.commerce.payment.method.mercanet.internal.configuration.MercanetGroupServiceConfiguration;
 import com.liferay.commerce.payment.method.mercanet.internal.connector.Environment;
 import com.liferay.commerce.payment.method.mercanet.internal.connector.PaypageClient;
 import com.liferay.commerce.payment.method.mercanet.internal.constants.MercanetCommercePaymentMethodConstants;
-import com.liferay.commerce.payment.util.CommercePaymentHttpHelper;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
@@ -34,6 +34,14 @@ import com.worldline.sips.model.PaypageResponse;
 import com.worldline.sips.model.ResponseCode;
 import com.worldline.sips.model.ResponseData;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.net.URL;
@@ -41,14 +49,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

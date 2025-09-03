@@ -15,12 +15,13 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import reactor.util.retry.Retry;
 
@@ -30,10 +31,19 @@ import reactor.util.retry.Retry;
 @Component
 public class ConsoleService extends BaseService {
 
-	public void deleteProject(String projectId) throws Exception {
-		String projectName = _consoleProjectPrefix + "-ext" + projectId;
+	public void deleteProject(long projectId, String projectPrefix)
+		throws Exception {
 
-		delete(getAuthorization(), "", "/projects/" + projectName);
+		String projectName = projectPrefix + "-ext" + projectId;
+
+		delete(
+			getAuthorization(), "",
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
+			).path(
+				"/projects/" + projectName
+			).build(
+			).toUri());
 	}
 
 	public JSONObject deployApp(
@@ -49,7 +59,12 @@ public class ConsoleService extends BaseService {
 				).put(
 					"userEmail", emailAddress
 				).toString(),
-				"/admin/projects/" + projectId + "/apps"));
+				UriComponentsBuilder.fromUriString(
+					_consoleAuthURL
+				).path(
+					"/admin/projects/" + projectId + "/apps"
+				).build(
+				).toUri()));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Deployed app for project " + projectId);
@@ -73,7 +88,12 @@ public class ConsoleService extends BaseService {
 			).put(
 				"password", _consoleAuthPassword
 			).toString(),
-			"/login");
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
+			).path(
+				"/login"
+			).build(
+			).toUri());
 
 		if (json == null) {
 			throw new Exception("Unable to get authorization");
@@ -95,43 +115,82 @@ public class ConsoleService extends BaseService {
 	public String getProjectsUsage(String userEmail) throws Exception {
 		return get(
 			getAuthorization(),
-			_defaultUriBuilderFactory.builder(
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
 			).path(
 				"/admin/user-projects-plan-usage"
 			).queryParam(
 				"userEmail", userEmail
 			).build(
-			).toString());
+			).toUri());
+	}
+
+	public String getProjectUsage(String emailAddress, String projectId)
+		throws Exception {
+
+		JSONObject jsonObject = new JSONObject(getProjectsUsage(emailAddress));
+
+		JSONArray userProjectsJSONArray = jsonObject.getJSONArray(
+			"userProjects");
+
+		for (int i = 0; i < userProjectsJSONArray.length(); i++) {
+			JSONObject userProjectJSONObject =
+				userProjectsJSONArray.getJSONObject(i);
+
+			JSONArray environmentsJSONArray =
+				userProjectJSONObject.getJSONArray("environments");
+
+			for (int j = 0; j < environmentsJSONArray.length(); j++) {
+				JSONObject environmentJSONObject =
+					environmentsJSONArray.getJSONObject(j);
+
+				if (Objects.equals(
+						environmentJSONObject.getString("projectId"),
+						projectId)) {
+
+					return userProjectJSONObject.toString();
+				}
+			}
+		}
+
+		throw new Exception(
+			StringBundler.concat(
+				"No project found with email address ", emailAddress,
+				" and project ID ", projectId));
 	}
 
 	public void setUpProject(
-			String[] emailAddresses, String dxpVirtualInstanceId, long orderId)
+			String cluster, boolean deployable, String dxpProjectUid,
+			String dxpVirtualInstanceId, String[] emailAddresses, long orderId,
+			String projectPrefix)
 		throws Exception {
 
-		JSONObject jsonObject = _postProject(
-			_consoleProjectPrefix + "-ext" + orderId);
+		String projectId = projectPrefix + "-ext" + orderId;
+
+		JSONObject jsonObject = _postProject(cluster, projectId);
 
 		for (String emailAddress : emailAddresses) {
-			_inviteProject(emailAddress, jsonObject.getString("projectId"));
+			_inviteProject(emailAddress, projectId);
 		}
 
-		_inviteProject(
-			_trialAdminEmailAddress, jsonObject.getString("projectId"));
+		_linkDXPWithProject(
+			dxpProjectUid, dxpVirtualInstanceId, jsonObject.getString("id"));
 
-		_linkDXPWithProject(dxpVirtualInstanceId, jsonObject.getString("id"));
-
-		deployApp(
-			_consoleAuthEmailAddress, String.valueOf(orderId),
-			jsonObject.getString("projectId"));
+		if (deployable) {
+			deployApp(
+				_consoleAuthEmailAddress, String.valueOf(orderId), projectId);
+		}
 	}
 
 	public void uninstallApp(long orderId) throws Exception {
-		delete(getAuthorization(), "", "/apps/" + orderId);
-	}
-
-	@Override
-	protected String getWebClientBaseURL() {
-		return _consoleAuthURL;
+		delete(
+			getAuthorization(), "",
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
+			).path(
+				"/apps/" + orderId
+			).build(
+			).toUri());
 	}
 
 	@Override
@@ -167,7 +226,12 @@ public class ConsoleService extends BaseService {
 			).put(
 				"role", "admin"
 			).toString(),
-			"/projects/" + projectId + "/invite");
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
+			).path(
+				"/projects/" + projectId + "/invite"
+			).build(
+			).toUri());
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -177,20 +241,26 @@ public class ConsoleService extends BaseService {
 	}
 
 	private void _linkDXPWithProject(
-			String dxpVirtualInstanceId, String extensionProjectUid)
+			String dxpProjectUid, String dxpVirtualInstanceId,
+			String extensionProjectUid)
 		throws Exception {
 
 		post(
 			getAuthorization(),
 			new JSONObject(
 			).put(
-				"dxpProjectUid", _consoleProjectUid
+				"dxpProjectUid", dxpProjectUid
 			).put(
 				"dxpVirtualInstanceId", dxpVirtualInstanceId
 			).put(
 				"extensionProjectUid", extensionProjectUid
 			).toString(),
-			"/lxc-extension-links");
+			UriComponentsBuilder.fromUriString(
+				_consoleAuthURL
+			).path(
+				"/lxc-extension-links"
+			).build(
+			).toUri());
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -200,13 +270,15 @@ public class ConsoleService extends BaseService {
 		}
 	}
 
-	private JSONObject _postProject(String projectId) throws Exception {
+	private JSONObject _postProject(String cluster, String projectId)
+		throws Exception {
+
 		JSONObject jsonObject = new JSONObject(
 			post(
 				getAuthorization(),
 				new JSONObject(
 				).put(
-					"cluster", _consoleCluster
+					"cluster", cluster
 				).put(
 					"environment", true
 				).put(
@@ -218,7 +290,12 @@ public class ConsoleService extends BaseService {
 				).put(
 					"projectId", projectId
 				).toString(),
-				"/projects"));
+				UriComponentsBuilder.fromUriString(
+					_consoleAuthURL
+				).path(
+					"/projects"
+				).build(
+				).toUri()));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Created project " + jsonObject);
@@ -240,20 +317,6 @@ public class ConsoleService extends BaseService {
 	@Value("${liferay.marketplace.console.auth.url}")
 	private String _consoleAuthURL;
 
-	@Value("${liferay.marketplace.console.cluster}")
-	private String _consoleCluster;
-
-	@Value("${liferay.marketplace.console.project.prefix}")
-	private String _consoleProjectPrefix;
-
-	@Value("${liferay.marketplace.console.project.uid}")
-	private String _consoleProjectUid;
-
-	private final DefaultUriBuilderFactory _defaultUriBuilderFactory =
-		new DefaultUriBuilderFactory();
 	private long _tokenExpirationMillis;
-
-	@Value("${liferay.marketplace.trial.admin.email.address}")
-	private String _trialAdminEmailAddress;
 
 }

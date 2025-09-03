@@ -19,14 +19,14 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,10 +56,10 @@ public class CommerceCurrencyExchangeRateScreenNavigationEntry
 
 		RenderRequest renderRequest =
 			(RenderRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 		RenderResponse renderResponse =
 			(RenderResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext =
 			new CommerceCurrenciesDisplayContext(

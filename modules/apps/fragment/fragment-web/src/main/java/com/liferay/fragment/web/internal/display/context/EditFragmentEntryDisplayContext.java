@@ -22,6 +22,7 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
@@ -63,17 +64,17 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Jürgen Kappler
@@ -419,6 +420,7 @@ public class EditFragmentEntryDisplayContext {
 		freeMarkerVariables.add("configuration");
 		freeMarkerVariables.add("fragmentElementId");
 		freeMarkerVariables.add("fragmentEntryLinkNamespace");
+		freeMarkerVariables.add("fragmentName");
 		freeMarkerVariables.add("layoutMode");
 
 		FragmentCollection fragmentCollection =
@@ -663,7 +665,8 @@ public class EditFragmentEntryDisplayContext {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
 		DateInfoFieldType.INSTANCE, DateTimeInfoFieldType.INSTANCE,
 		FileInfoFieldType.INSTANCE, FormButtonInfoFieldType.INSTANCE,
-		HTMLInfoFieldType.INSTANCE, LocalizationSelectInfoFieldType.INSTANCE,
+		FriendlyURLInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
+		LocalizationSelectInfoFieldType.INSTANCE,
 		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
 		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
 		SelectInfoFieldType.INSTANCE, StepperInfoFieldType.INSTANCE,

@@ -8,7 +8,6 @@ package com.liferay.scim.rest.internal.resource.v1_0;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -20,45 +19,29 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
+import com.liferay.scim.rest.dto.v1_0.Filter;
 import com.liferay.scim.rest.dto.v1_0.Operation;
 import com.liferay.scim.rest.dto.v1_0.User;
 import com.liferay.scim.rest.resource.v1_0.SchemaResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Olivér Kecskeméty
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseSchemaResourceImpl implements SchemaResource {
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/scim/v1.0/v2/Schemas'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(description = "Lists schemas.")
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Schema")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/v2/Schemas")
-	@javax.ws.rs.Produces("application/scim+json")
-	@Override
-	public Object getV2Schemas() throws Exception {
-		return null;
-	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -76,16 +59,34 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Schema")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/v2/Schemas/{id}")
-	@javax.ws.rs.Produces("application/scim+json")
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/v2/Schemas/{id}")
+	@jakarta.ws.rs.Produces("application/scim+json")
 	@Override
 	public Object getV2SchemaById(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
 			String id)
 		throws Exception {
 
+		return null;
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/scim/v1.0/v2/Schemas'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(description = "Lists schemas.")
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Schema")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/v2/Schemas")
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@Override
+	public Object getV2Schemas() throws Exception {
 		return null;
 	}
 
@@ -123,7 +124,8 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -204,6 +206,20 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -219,6 +235,80 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -231,11 +321,45 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -255,6 +379,104 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -270,6 +492,29 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 			collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
 	protected HttpServletRequest contextHttpServletRequest;
@@ -277,7 +522,8 @@ public abstract class BaseSchemaResourceImpl implements SchemaResource {
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

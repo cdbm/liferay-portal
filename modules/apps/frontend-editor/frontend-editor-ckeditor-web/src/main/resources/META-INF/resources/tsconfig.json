@@ -1,25 +1,33 @@
 {
-	"@generated": "f1fe763720d1bed021db9028199688d903f155ea",
+	"@generated": "3be9adbdb5dc992a859fb999383c4ec15cafb625",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/cookies-banner-web": [
 				"../../../../../../../cookies/cookies-banner-web/src/main/resources/META-INF/resources/js/index.d.ts"
 			],
+			"@liferay/frontend-js-state-web": [
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
+			],
 			"frontend-js-components-web": [
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -40,6 +48,9 @@
 	"references": [
 		{
 			"path": "../../../../../../../cookies/cookies-banner-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"

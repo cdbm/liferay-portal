@@ -26,6 +26,7 @@ import com.liferay.exportimport.kernel.exception.ExportImportIOException;
 import com.liferay.exportimport.kernel.exception.ExportImportRuntimeException;
 import com.liferay.exportimport.kernel.exception.LARFileException;
 import com.liferay.exportimport.kernel.exception.LARFileSizeException;
+import com.liferay.exportimport.kernel.exception.LARScopeException;
 import com.liferay.exportimport.kernel.exception.LARTypeException;
 import com.liferay.exportimport.kernel.exception.LayoutImportException;
 import com.liferay.exportimport.kernel.exception.MissingPortletDataHandlerException;
@@ -153,6 +154,10 @@ import com.liferay.portlet.exportimport.staging.ProxiedLayoutsThreadLocal;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.configuration.StagingConfiguration;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
@@ -173,10 +178,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -526,11 +527,10 @@ public class StagingImpl implements Staging {
 						missingReference.getClassPK(), false));
 			}
 			else if (referrers.size() == 1) {
-				Set<Map.Entry<String, String>> referrerDisplayNames =
-					referrers.entrySet();
+				Set<Map.Entry<String, String>> entries = referrers.entrySet();
 
 				Iterator<Map.Entry<String, String>> iterator =
-					referrerDisplayNames.iterator();
+					entries.iterator();
 
 				Map.Entry<String, String> entry = iterator.next();
 
@@ -1146,6 +1146,14 @@ public class StagingImpl implements Staging {
 			}
 
 			errorType = ServletResponseConstants.SC_FILE_SIZE_EXCEPTION;
+		}
+		else if (exception instanceof LARScopeException) {
+			errorMessage = _language.get(
+				locale,
+				"the-lar-file-contains-one-or-more-entities-with-a-different-" +
+					"scope");
+
+			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
 		}
 		else if (exception instanceof LARTypeException) {
 			LARTypeException larTypeException = (LARTypeException)exception;

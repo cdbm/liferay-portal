@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {CTCollectionApi} from '@liferay/change-tracking-rest-client-js';
+import {CTCollectionAPI} from '@liferay/change-tracking-rest-client-js';
 
 import getRandomString from '../utils/getRandomString';
 import {ApiHelpers} from './ApiHelpers';
@@ -18,10 +18,10 @@ export class HeadlessChangeTrackingApiHelper {
 	}
 
 	async checkoutCTCollection(ctCollectionId: number) {
-		const ctCollectionApiClient =
-			await this.apiHelpers.buildRestClient(CTCollectionApi);
+		const ctCollectionAPIClient =
+			await this.apiHelpers.buildRestClient(CTCollectionAPI);
 
-		return await ctCollectionApiClient.postCTCollectionCheckout(
+		return await ctCollectionAPIClient.postCTCollectionCheckout(
 			ctCollectionId
 		);
 	}
@@ -34,25 +34,43 @@ export class HeadlessChangeTrackingApiHelper {
 			status: {code: 0, label: 'string', label_i18n: 'string'},
 		};
 
-		const ctCollectionApiClient =
-			await this.apiHelpers.buildRestClient(CTCollectionApi);
+		const ctCollectionAPIClient =
+			await this.apiHelpers.buildRestClient(CTCollectionAPI);
 
-		return await ctCollectionApiClient.postCTCollection(requestBody);
+		return await ctCollectionAPIClient.postCTCollection(requestBody);
 	}
 
 	async deleteCTCollection(ctCollectionId: number) {
-		const ctCollectionApiClient =
-			await this.apiHelpers.buildRestClient(CTCollectionApi);
+		const ctCollectionAPIClient =
+			await this.apiHelpers.buildRestClient(CTCollectionAPI);
 
-		return await ctCollectionApiClient.deleteCTCollection(ctCollectionId);
+		return await ctCollectionAPIClient.deleteCTCollection(ctCollectionId);
 	}
 
 	async publishCTCollection(ctCollectionId: number) {
-		const ctCollectionApiClient =
-			await this.apiHelpers.buildRestClient(CTCollectionApi);
+		const ctCollectionAPIClient =
+			await this.apiHelpers.buildRestClient(CTCollectionAPI);
 
-		return await ctCollectionApiClient.postCTCollectionPublish(
+		return await ctCollectionAPIClient.postCTCollectionPublish(
 			ctCollectionId
+		);
+	}
+
+	async scheduleCTCollection(ctCollectionId: number) {
+		const today = new Date();
+
+		const scheduledDate = new Date(
+			today.getFullYear() + 1,
+			today.getMonth(),
+			today.getDate()
+		);
+
+		const ctCollectionAPIClient =
+			await this.apiHelpers.buildRestClient(CTCollectionAPI);
+
+		return await ctCollectionAPIClient.postCTCollectionSchedulePublish(
+			ctCollectionId,
+			scheduledDate
 		);
 	}
 }

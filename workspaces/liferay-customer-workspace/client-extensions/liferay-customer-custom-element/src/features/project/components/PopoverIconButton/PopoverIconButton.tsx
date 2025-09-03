@@ -13,18 +13,18 @@ type PopoverIconButtonProps = {
 	alignPosition?: Writeable<(typeof ALIGN_POSITIONS)[number]>;
 	formatedHTML?: string;
 	iconSize?: 'regular' | 'sm' | 'xs';
-	isSubscriptionCard?: boolean;
 	popoverLink?: {textLink: string; url: string};
 	popoverText?: string;
+	symbol?: string;
 };
 
 const PopoverIconButton: React.FC<PopoverIconButtonProps> = ({
 	alignPosition = 'bottom',
 	formatedHTML,
 	iconSize = 'sm',
-	isSubscriptionCard,
 	popoverLink,
 	popoverText,
+	symbol = 'info-circle',
 }) => {
 	return (
 		<ClayPopover
@@ -35,20 +35,12 @@ const PopoverIconButton: React.FC<PopoverIconButtonProps> = ({
 			trigger={
 				<Button
 					aria-labelledby="Info Icon"
-					className="text-brand-primary-darken-2"
+					className="btn-monospaced text-brand-primary-darken-2"
 					displayType={null}
 					onClick={(event) => event.stopPropagation()}
 					size={iconSize}
 				>
-					<span>
-						<ClayIcon
-							symbol={
-								isSubscriptionCard
-									? 'question-circle'
-									: 'info-circle'
-							}
-						/>
-					</span>
+					<ClayIcon symbol={symbol} />
 				</Button>
 			}
 		>

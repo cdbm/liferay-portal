@@ -6,6 +6,7 @@
 package com.liferay.jenkins.results.parser;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -13,6 +14,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,26 +26,68 @@ import org.apache.commons.lang.StringEscapeUtils;
  */
 public class JenkinsConsoleTextLoader {
 
-	public JenkinsConsoleTextLoader(String buildURL) {
-		this(buildURL, false);
+	public static JenkinsConsoleTextLoader getInstance(String buildURL) {
+		synchronized (_jenkinsConsoleTextLoaders) {
+			Matcher matcher = _buildURLPattern.matcher(buildURL);
+
+			if (!matcher.find()) {
+				throw new IllegalArgumentException(
+					"Invalid build URL " + buildURL);
+			}
+
+			String jobName = matcher.group("jobName");
+
+			jobName = jobName.replace("%28", "(");
+			jobName = jobName.replace("%29", ")");
+
+			buildURL = JenkinsResultsParserUtil.combine(
+				"https://", matcher.group("masterHostname"),
+				".liferay.com/job/", jobName, "/",
+				matcher.group("buildNumber"));
+
+			if (_jenkinsConsoleTextLoaders.containsKey(buildURL)) {
+				return _jenkinsConsoleTextLoaders.get(buildURL);
+			}
+
+			if (jobName.contains("-batch") || jobName.contains("-downstream") ||
+				jobName.contains("maintenance") ||
+				jobName.contains("-validation")) {
+
+				_jenkinsConsoleTextLoaders.put(
+					buildURL, new JenkinsConsoleTextLoader(buildURL, false));
+			}
+			else {
+				_jenkinsConsoleTextLoaders.put(
+					buildURL, new JenkinsConsoleTextLoader(buildURL, true));
+			}
+
+			return _jenkinsConsoleTextLoaders.get(buildURL);
+		}
 	}
 
-	public JenkinsConsoleTextLoader(
-		String buildURL, boolean bypassConsoleLogSizeLimit) {
+	public void deleteCacheFile() {
+		File cacheFile = JenkinsResultsParserUtil.getCacheFile(
+			consoleLogFileKey);
 
-		this.buildURL = JenkinsResultsParserUtil.getLocalURL(buildURL);
-		this.bypassConsoleLogSizeLimit = bypassConsoleLogSizeLimit;
+		if ((cacheFile == null) || !cacheFile.exists()) {
+			return;
+		}
 
-		consoleLogFileKey = JenkinsResultsParserUtil.combine(
-			"jenkins_console_log-", String.valueOf(buildURL.hashCode()),
-			".log");
+		cacheFile.delete();
 
-		JenkinsResultsParserUtil.saveToCacheFile(consoleLogFileKey, "");
-
-		serverLogSize = 0;
+		System.out.println("Deleted " + cacheFile);
 	}
 
 	public String getConsoleText() {
+		if ((_archiveFile != null) && _archiveFile.exists()) {
+			try {
+				return JenkinsResultsParserUtil.read(_archiveFile);
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+		}
+
 		if (buildURL.startsWith("file:") || buildURL.contains("mirrors")) {
 			try {
 				return JenkinsResultsParserUtil.toString(
@@ -81,6 +126,33 @@ public class JenkinsConsoleTextLoader {
 		return hasMoreData;
 	}
 
+	public void moveCacheFileToArchiveFile(File archiveFile) {
+		if ((archiveFile == null) ||
+			JenkinsResultsParserUtil.isNullOrEmpty(getConsoleText())) {
+
+			return;
+		}
+
+		try {
+			File cacheFile = JenkinsResultsParserUtil.getCacheFile(
+				consoleLogFileKey);
+
+			JenkinsResultsParserUtil.move(cacheFile, archiveFile);
+
+			System.out.println("Moved " + cacheFile + " to " + archiveFile);
+
+			if (!archiveFile.exists()) {
+				throw new RuntimeException(
+					"Unable to move " + cacheFile + " to " + archiveFile);
+			}
+
+			_archiveFile = archiveFile;
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	protected synchronized void update() {
 		Retryable<Object> retryable = new Retryable<Object>(true, 3, 5, true) {
 
@@ -109,6 +181,21 @@ public class JenkinsConsoleTextLoader {
 	protected boolean hasMoreData = true;
 	protected long serverLogSize;
 	protected boolean truncated;
+
+	private JenkinsConsoleTextLoader(
+		String buildURL, boolean bypassConsoleLogSizeLimit) {
+
+		this.buildURL = JenkinsResultsParserUtil.getLocalURL(buildURL);
+		this.bypassConsoleLogSizeLimit = bypassConsoleLogSizeLimit;
+
+		consoleLogFileKey = JenkinsResultsParserUtil.combine(
+			"jenkins_console_log-", String.valueOf(buildURL.hashCode()),
+			".log");
+
+		JenkinsResultsParserUtil.saveToCacheFile(consoleLogFileKey, "");
+
+		serverLogSize = 0;
+	}
 
 	private synchronized void _update() throws IOException {
 		boolean hasMoreData = true;
@@ -228,5 +315,12 @@ public class JenkinsConsoleTextLoader {
 
 	private static final Pattern _anchorPattern = Pattern.compile(
 		"\\<a[^>]*\\>(?<text>[^<]*)\\</a\\>");
+	private static final Pattern _buildURLPattern = Pattern.compile(
+		"https?://(?<masterHostname>[^/\\.]+)(.liferay.com)?/+job/+" +
+			"(?<jobName>[^/]+)/+(?<buildNumber>\\d+)/?");
+	private static final Map<String, JenkinsConsoleTextLoader>
+		_jenkinsConsoleTextLoaders = new HashMap<>();
+
+	private File _archiveFile;
 
 }

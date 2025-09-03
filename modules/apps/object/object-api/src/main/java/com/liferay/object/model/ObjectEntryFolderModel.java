@@ -251,6 +251,21 @@ public interface ObjectEntryFolderModel
 	public void setParentObjectEntryFolderId(long parentObjectEntryFolderId);
 
 	/**
+	 * Returns the description of this object entry folder.
+	 *
+	 * @return the description of this object entry folder
+	 */
+	@AutoEscape
+	public String getDescription();
+
+	/**
+	 * Sets the description of this object entry folder.
+	 *
+	 * @param description the description of this object entry folder
+	 */
+	public void setDescription(String description);
+
+	/**
 	 * Returns the label of this object entry folder.
 	 *
 	 * @return the label of this object entry folder
@@ -378,6 +393,20 @@ public interface ObjectEntryFolderModel
 	 * @param treePath the tree path of this object entry folder
 	 */
 	public void setTreePath(String treePath);
+
+	/**
+	 * Returns the status of this object entry folder.
+	 *
+	 * @return the status of this object entry folder
+	 */
+	public int getStatus();
+
+	/**
+	 * Sets the status of this object entry folder.
+	 *
+	 * @param status the status of this object entry folder
+	 */
+	public void setStatus(int status);
 
 	/**
 	 * Returns the container model ID of this object entry folder.

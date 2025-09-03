@@ -17,6 +17,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -28,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -504,7 +504,7 @@ public class FragmentComposition implements Serializable {
 	private Supplier<String> _nameSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The fragment composition's page element, whose definition must be of type PageSectionDefinition."
+		description = "The fragment composition's page element, whose definition must be of type ContainerPageElementDefinition."
 	)
 	@Valid
 	public PageElement getPageElement() {
@@ -541,7 +541,7 @@ public class FragmentComposition implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "The fragment composition's page element, whose definition must be of type PageSectionDefinition."
+		description = "The fragment composition's page element, whose definition must be of type ContainerPageElementDefinition."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected PageElement pageElement;

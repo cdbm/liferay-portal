@@ -11,11 +11,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -24,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -140,7 +139,7 @@ public class Settings implements Serializable {
 		description = "The FavIcon of the page specification."
 	)
 	@Valid
-	public Object getFavIcon() {
+	public FavIcon getFavIcon() {
 		if (_favIconSupplier != null) {
 			favIcon = _favIconSupplier.get();
 
@@ -150,7 +149,7 @@ public class Settings implements Serializable {
 		return favIcon;
 	}
 
-	public void setFavIcon(Object favIcon) {
+	public void setFavIcon(FavIcon favIcon) {
 		this.favIcon = favIcon;
 
 		_favIconSupplier = null;
@@ -158,7 +157,7 @@ public class Settings implements Serializable {
 
 	@JsonIgnore
 	public void setFavIcon(
-		UnsafeSupplier<Object, Exception> favIconUnsafeSupplier) {
+		UnsafeSupplier<FavIcon, Exception> favIconUnsafeSupplier) {
 
 		_favIconSupplier = () -> {
 			try {
@@ -175,10 +174,10 @@ public class Settings implements Serializable {
 
 	@GraphQLField(description = "The FavIcon of the page specification.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Object favIcon;
+	protected FavIcon favIcon;
 
 	@JsonIgnore
-	private Supplier<Object> _favIconSupplier;
+	private Supplier<FavIcon> _favIconSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The client extensions for global CSS associated to the page."
@@ -670,7 +669,7 @@ public class Settings implements Serializable {
 			sb.append("\"");
 		}
 
-		Object favIcon = getFavIcon();
+		FavIcon favIcon = getFavIcon();
 
 		if (favIcon != null) {
 			if (sb.length() > 1) {
@@ -679,17 +678,7 @@ public class Settings implements Serializable {
 
 			sb.append("\"favIcon\": ");
 
-			if (favIcon instanceof Map) {
-				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)favIcon));
-			}
-			else if (favIcon instanceof String) {
-				sb.append("\"");
-				sb.append(_escape((String)favIcon));
-				sb.append("\"");
-			}
-			else {
-				sb.append(favIcon);
-			}
+			sb.append(String.valueOf(favIcon));
 		}
 
 		ClientExtension[] globalCSSClientExtensions =

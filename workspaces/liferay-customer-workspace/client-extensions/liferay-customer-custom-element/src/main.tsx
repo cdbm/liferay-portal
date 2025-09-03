@@ -11,14 +11,13 @@ import {Root, createRoot} from 'react-dom/client';
 import {SWRConfig} from 'swr';
 
 import {AppPropertiesContext} from './contexts/AppPropertiesContext';
-import AttachmentFileUploader from './features/attachment-uploader';
-import Home from './features/home';
+import AttachmentUploader from './features/attachment-uploader';
 import Onboarding from './features/onboarding';
-import CustomerPortal from './features/project';
+import Project from './features/project';
+import Projects from './features/projects';
 import SecurityVulnerabilities from './features/security-vulnerabilities';
 import useApollo from './hooks/useApollo';
 import useGlobalNetworkIndicator from './hooks/useGlobalNetworkIndicator';
-import {Liferay} from './services/liferay';
 import getIconSpriteMap from './utils/getIconSpriteMap';
 import swrCacheProvider from './utils/swrCacheProvider';
 
@@ -27,10 +26,10 @@ import './main.css';
 const ELEMENT_ID = 'liferay-customer-custom-element';
 
 const AppRoutes = {
-	attachmentFileUploader: AttachmentFileUploader,
-	home: Home,
+	attachmentUploader: AttachmentUploader,
 	onboarding: Onboarding,
-	portal: CustomerPortal,
+	project: Project,
+	projects: Projects,
 	securityVulnerabilities: SecurityVulnerabilities,
 };
 
@@ -43,6 +42,7 @@ type Properties = {
 	articleNotifiedWhenMyActivationKeyIsAboutToExpireURL: string | null;
 	articleWhatIsMyInstanceSizingValueURL: string | null;
 	featureFlags?: string[];
+	helpCenterURL: string | null;
 	importDate?: Date | null;
 	submitSupportTicketURL: string | null;
 	theOverviewPageURL: string | null;
@@ -123,6 +123,7 @@ class CustomerPortalWebComponent extends HTMLElement {
 			featureFlags: (super.getAttribute('feature-flags') ?? '')
 				.split(',')
 				.map((featureflag) => featureflag.trim()),
+			helpCenterURL: super.getAttribute('help-center-url'),
 			importDate: super.getAttribute('import-date')
 				? new Date(super.getAttribute('import-date') as string)
 				: undefined,
@@ -133,13 +134,6 @@ class CustomerPortalWebComponent extends HTMLElement {
 				'about-the-overview-page-url'
 			),
 		};
-
-		if (
-			!properties.featureFlags.includes('LPS-153478') &&
-			(Liferay.FeatureFlags as any)['LPS-153478']
-		) {
-			properties.featureFlags.push('LPS-153478');
-		}
 
 		const apis = {
 			gravatarAPI: super.getAttribute('gravatar-api'),

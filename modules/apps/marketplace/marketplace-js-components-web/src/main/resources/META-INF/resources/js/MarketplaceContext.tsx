@@ -15,7 +15,12 @@ import React, {
 
 import {MarketplaceRest} from './core/MarketplaceRest';
 import {useMarketplaceConfiguration} from './hooks/useMarketplaceConfiguration';
-import {APIResponse, MarketplaceConfiguration, Product} from './types';
+import {
+	APIResponse,
+	AppsPermissions,
+	MarketplaceConfiguration,
+	Product,
+} from './types';
 
 import './style/index.scss';
 
@@ -37,6 +42,7 @@ type State = {
 	marketplaceConfiguration: ReturnType<typeof useMarketplaceConfiguration>;
 	marketplaceRest: MarketplaceRest;
 	modal: ReturnType<typeof useModal>;
+	permissions?: AppsPermissions;
 	product: Product;
 	productListView: {
 		loading: boolean;
@@ -62,6 +68,8 @@ export type MarketplaceContextProviderProps = {
 	children: ReactNode;
 	className?: string;
 	defaultView?: MarketplaceView;
+	onCloseModal?: () => void;
+	permissions?: AppsPermissions;
 	settings: {
 		productFilter?: 'all' | 'fragments' | 'payments';
 		productFilterCustom?: string;
@@ -92,7 +100,9 @@ export function MarketplaceContextProvider({
 	children,
 	defaultView = MarketplaceView.PRODUCTS,
 	className,
+	permissions,
 	settings,
+	onCloseModal,
 }: MarketplaceContextProviderProps) {
 	const [loading, setLoading] = useState(false);
 	const [product, setProduct] = useState<Product>();
@@ -103,7 +113,12 @@ export function MarketplaceContextProvider({
 		useState<APIResponse<Product>>();
 	const [view, setView] = useState(defaultView);
 
-	const modal = useModal({onClose: () => setView(defaultView)});
+	const modal = useModal({
+		onClose: () => {
+			setView(defaultView);
+			onCloseModal?.();
+		},
+	});
 
 	const marketplaceConfiguration =
 		useMarketplaceConfiguration(baseResourceURL);
@@ -134,7 +149,8 @@ export function MarketplaceContextProvider({
 				settings
 			),
 			'images.accountId': '-1',
-			'nestedFields': 'productSpecifications,skus,categories,images',
+			'nestedFields':
+				'attachments,productSpecifications,skus,categories,images',
 			'page': String(productSearchParams.page),
 			'pageSize': String(productSearchParams.pageSize),
 			'search': productSearchParams.search,
@@ -169,6 +185,7 @@ export function MarketplaceContextProvider({
 					marketplaceConfiguration,
 					marketplaceRest,
 					modal,
+					permissions,
 					product: product || ({} as Product),
 					productListView: {
 						loading,

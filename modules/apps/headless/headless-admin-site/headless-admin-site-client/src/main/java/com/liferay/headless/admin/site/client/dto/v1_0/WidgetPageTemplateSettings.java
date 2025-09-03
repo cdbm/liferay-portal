@@ -8,11 +8,11 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.WidgetPageTemplateSettingsSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -47,29 +47,27 @@ public class WidgetPageTemplateSettings
 
 	protected String layoutTemplateId;
 
-	public NavigationMenuSettings getNavigationMenuSettings() {
-		return navigationMenuSettings;
+	public NavigationSettings getNavigationSettings() {
+		return navigationSettings;
 	}
 
-	public void setNavigationMenuSettings(
-		NavigationMenuSettings navigationMenuSettings) {
-
-		this.navigationMenuSettings = navigationMenuSettings;
+	public void setNavigationSettings(NavigationSettings navigationSettings) {
+		this.navigationSettings = navigationSettings;
 	}
 
-	public void setNavigationMenuSettings(
-		UnsafeSupplier<NavigationMenuSettings, Exception>
-			navigationMenuSettingsUnsafeSupplier) {
+	public void setNavigationSettings(
+		UnsafeSupplier<NavigationSettings, Exception>
+			navigationSettingsUnsafeSupplier) {
 
 		try {
-			navigationMenuSettings = navigationMenuSettingsUnsafeSupplier.get();
+			navigationSettings = navigationSettingsUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected NavigationMenuSettings navigationMenuSettings;
+	protected NavigationSettings navigationSettings;
 
 	@Override
 	public WidgetPageTemplateSettings clone()

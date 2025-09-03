@@ -72,6 +72,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -79,9 +82,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -179,7 +179,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 			Object infoItem = null;
 
-			String className = _portal.getClassName(
+			String className = _portal.fetchClassName(
 				ParamUtil.getLong(httpServletRequest, "classNameId"));
 
 			InfoItemIdentifier infoItemIdentifier = _getInfoItemIdentifier(
@@ -519,7 +519,10 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			return new ClassPKInfoItemIdentifier(classPK);
 		}
 		else if (Validator.isNotNull(externalReferenceCode)) {
-			return new ERCInfoItemIdentifier(externalReferenceCode);
+			return new ERCInfoItemIdentifier(
+				externalReferenceCode,
+				ParamUtil.getString(
+					httpServletRequest, "scopeExternalReferenceCode", null));
 		}
 
 		return null;
@@ -646,7 +649,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 		if ((fragmentEntryLink == null) ||
 			!GetterUtil.getBoolean(
 				_fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					new FragmentConfigurationField(
 						"inputRequired", "boolean", "false", false, "checkbox"),
 					LocaleUtil.getMostRelevantLocale()))) {
@@ -656,7 +659,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 		String inputFieldId = GetterUtil.getString(
 			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				new FragmentConfigurationField(
 					"inputFieldId", "string", "", false, "text"),
 				LocaleUtil.getMostRelevantLocale()));

@@ -40,7 +40,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServ
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
-import com.liferay.layout.theme.item.selector.criterion.LayoutThemeItemSelectorCriterion;
+import com.liferay.layout.theme.item.selector.LayoutThemeItemSelectorCriterion;
 import com.liferay.layout.util.comparator.LayoutCreateDateComparator;
 import com.liferay.layout.util.comparator.LayoutRelevanceComparator;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -98,11 +98,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.RobotsUtil;
 import com.liferay.site.display.context.GroupDisplayContextHelper;
@@ -110,6 +110,12 @@ import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalServiceUtil;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import java.io.IOException;
 
@@ -120,14 +126,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.TreeMap;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
 
 /**
  * @author Eudaldo Alonso
@@ -594,7 +594,7 @@ public class LayoutsAdminDisplayContext {
 
 		LayoutSet layoutSet = selLayout.getLayoutSet();
 
-		TreeMap<String, String> virtualHostnames =
+		NavigableMap<String, String> virtualHostnames =
 			layoutSet.getVirtualHostnames();
 
 		if (virtualHostnames.isEmpty() ||
@@ -737,6 +737,8 @@ public class LayoutsAdminDisplayContext {
 
 				return portletDisplay.getURLBackTitle();
 			}
+		).setParameter(
+			"privateLayout", isPrivateLayout()
 		).setParameter(
 			"selPlid", plid
 		).buildPortletURL();
@@ -1570,7 +1572,7 @@ public class LayoutsAdminDisplayContext {
 
 		String virtualHostname = null;
 
-		TreeMap<String, String> virtualHostnames =
+		NavigableMap<String, String> virtualHostnames =
 			PortalUtil.getVirtualHostnames(layoutSet);
 
 		if (!virtualHostnames.isEmpty()) {
@@ -2437,7 +2439,7 @@ public class LayoutsAdminDisplayContext {
 
 	private boolean _matchesHostname(
 		StringBuilder friendlyURLBase,
-		TreeMap<String, String> virtualHostnames) {
+		NavigableMap<String, String> virtualHostnames) {
 
 		for (String virtualHostname : virtualHostnames.keySet()) {
 			if (friendlyURLBase.indexOf(virtualHostname) != -1) {

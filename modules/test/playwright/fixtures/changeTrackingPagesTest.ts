@@ -39,12 +39,6 @@ const changeTrackingPages = test.extend<{
 						getRandomString()
 					);
 
-				// Checkout ctCollection
-
-				await apiHelpers.headlessChangeTracking.checkoutCTCollection(
-					ctCollection.body.id
-				);
-
 				await use(ctCollection);
 			}
 			catch {
@@ -68,6 +62,12 @@ const changeTrackingPages = test.extend<{
 		},
 		{auto: true},
 	],
+});
+
+test.afterEach(async ({page}) => {
+	const apiHelpers = new ApiHelpers(page);
+
+	await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 });
 
 const changeTrackingPagesTest = mergeTests(loginTest(), changeTrackingPages);

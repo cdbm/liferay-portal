@@ -41,6 +41,10 @@ import com.liferay.portal.tools.rest.builder.test.client.serdes.v1_0.TestEntityA
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -195,6 +195,14 @@ public abstract class BaseTestEntityAddressResourceTestCase {
 		assertValid(getTestEntityAddress);
 	}
 
+	protected TestEntityAddress
+			testGetTestEntityTestEntityAddress_addTestEntityAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long testGetTestEntityTestEntityAddress_getTestEntityId()
 		throws Exception {
 
@@ -202,12 +210,111 @@ public abstract class BaseTestEntityAddressResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	protected TestEntityAddress
-			testGetTestEntityTestEntityAddress_addTestEntityAddress()
+	@Test
+	public void testGraphQLGetTestEntityTestEntityAddress() throws Exception {
+		TestEntityAddress testEntityAddress =
+			testGraphQLGetTestEntityTestEntityAddress_addTestEntityAddress();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				testEntityAddress,
+				TestEntityAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"testEntityTestEntityAddress",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"testEntityId",
+											testGraphQLGetTestEntityTestEntityAddress_getTestEntityId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/testEntityTestEntityAddress"))));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertTrue(
+			equals(
+				testEntityAddress,
+				TestEntityAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"test_v1_0",
+								new GraphQLField(
+									"testEntityTestEntityAddress",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"testEntityId",
+												testGraphQLGetTestEntityTestEntityAddress_getTestEntityId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/test_v1_0",
+						"Object/testEntityTestEntityAddress"))));
+	}
+
+	protected Long testGraphQLGetTestEntityTestEntityAddress_getTestEntityId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetTestEntityTestEntityAddressNotFound()
+		throws Exception {
+
+		Long irrelevantTestEntityId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"testEntityTestEntityAddress",
+						new HashMap<String, Object>() {
+							{
+								put("testEntityId", irrelevantTestEntityId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"testEntityTestEntityAddress",
+							new HashMap<String, Object>() {
+								{
+									put("testEntityId", irrelevantTestEntityId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected TestEntityAddress
+			testGraphQLGetTestEntityTestEntityAddress_addTestEntityAddress()
+		throws Exception {
+
+		return testGraphQLTestEntityAddress_addTestEntityAddress();
 	}
 
 	protected TestEntityAddress

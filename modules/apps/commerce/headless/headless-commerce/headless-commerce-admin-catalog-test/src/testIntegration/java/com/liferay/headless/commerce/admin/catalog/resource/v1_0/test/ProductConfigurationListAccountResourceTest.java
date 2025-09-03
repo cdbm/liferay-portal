@@ -18,6 +18,7 @@ import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductConfig
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.core.util.DateConfig;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -65,11 +66,12 @@ public class ProductConfigurationListAccountResourceTest
 
 		_cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				RandomTestUtil.randomString(), _commerceCatalog.getGroupId(),
-				_user.getUserId(), 0, false, RandomTestUtil.randomString(), 0D,
-				dateConfig.getMonth(), dateConfig.getDay(),
-				dateConfig.getYear(), dateConfig.getHour(),
-				dateConfig.getMinute(), 0, 0, 0, 0, 0, true);
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_commerceCatalog.getGroupId(), 0, false,
+				RandomTestUtil.randomString(), 0D, dateConfig.getMonth(),
+				dateConfig.getDay(), dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 	}
 
 	@After
@@ -87,6 +89,13 @@ public class ProductConfigurationListAccountResourceTest
 			_cpConfigurationListRelLocalService.deleteCPConfigurationListRel(
 				productConfigurationListAccountId);
 		}
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
 	}
 
 	@Override
@@ -129,8 +138,8 @@ public class ProductConfigurationListAccountResourceTest
 		throws Exception {
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -152,21 +161,25 @@ public class ProductConfigurationListAccountResourceTest
 
 	@Override
 	protected ProductConfigurationListAccount
+			testDeleteProductConfigurationListAccountBatch_addProductConfigurationListAccount()
+		throws Exception {
+
+		return productConfigurationListAccountResource.
+			postProductConfigurationListIdProductConfigurationListAccount(
+				_cpConfigurationList.getCPConfigurationListId(),
+				randomProductConfigurationListAccount());
+	}
+
+	@Override
+	protected ProductConfigurationListAccount
 			testGetProductConfigurationListByExternalReferenceCodeProductConfigurationListAccountsPage_addProductConfigurationListAccount(
 				String externalReferenceCode,
 				ProductConfigurationListAccount productConfigurationListAccount)
 		throws Exception {
 
-		ProductConfigurationListAccount postProductConfigurationListAccount =
-			productConfigurationListAccountResource.
-				postProductConfigurationListByExternalReferenceCodeProductConfigurationListAccount(
-					externalReferenceCode, productConfigurationListAccount);
-
-		_productConfigurationListAccountIds.add(
-			postProductConfigurationListAccount.
-				getProductConfigurationListAccountId());
-
-		return postProductConfigurationListAccount;
+		return productConfigurationListAccountResource.
+			postProductConfigurationListByExternalReferenceCodeProductConfigurationListAccount(
+				externalReferenceCode, productConfigurationListAccount);
 	}
 
 	@Override
@@ -184,16 +197,9 @@ public class ProductConfigurationListAccountResourceTest
 				ProductConfigurationListAccount productConfigurationListAccount)
 		throws Exception {
 
-		ProductConfigurationListAccount postProductConfigurationListAccount =
-			productConfigurationListAccountResource.
-				postProductConfigurationListIdProductConfigurationListAccount(
-					id, productConfigurationListAccount);
-
-		_productConfigurationListAccountIds.add(
-			postProductConfigurationListAccount.
-				getProductConfigurationListAccountId());
-
-		return postProductConfigurationListAccount;
+		return productConfigurationListAccountResource.
+			postProductConfigurationListIdProductConfigurationListAccount(
+				id, productConfigurationListAccount);
 	}
 
 	@Override

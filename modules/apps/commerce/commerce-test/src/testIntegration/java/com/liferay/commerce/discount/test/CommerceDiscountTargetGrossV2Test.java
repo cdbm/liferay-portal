@@ -109,6 +109,7 @@ public class CommerceDiscountTargetGrossV2Test {
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
 
+		_commerceChannel.setPriceDisplayType("tax-included");
 		_commerceChannel.setDiscountsTargetNetPrice(false);
 
 		_commerceChannel = _commerceChannelLocalService.updateCommerceChannel(
@@ -1083,7 +1084,7 @@ public class CommerceDiscountTargetGrossV2Test {
 		String couponCode = StringUtil.randomString();
 
 		CommerceDiscount commerceDiscount =
-			CommerceDiscountTestUtil.addCouponDiscount(
+			CommerceDiscountTestUtil.addCouponCommerceDiscount(
 				_group.getGroupId(), 10, couponCode,
 				CommerceDiscountConstants.TARGET_PRODUCTS,
 				cpDefinition.getCPDefinitionId());

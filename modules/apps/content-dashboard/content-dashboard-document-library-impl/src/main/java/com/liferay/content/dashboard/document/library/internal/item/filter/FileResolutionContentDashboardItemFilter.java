@@ -22,14 +22,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mikel Lorza
@@ -202,7 +202,7 @@ public class FileResolutionContentDashboardItemFilter
 	private String _getURL(ContentDashboardConstants.Resolution resolution) {
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		String url = HttpComponentsUtil.removeParameter(
 			_portal.getCurrentCompleteURL(_httpServletRequest),

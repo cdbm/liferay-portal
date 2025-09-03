@@ -48,6 +48,10 @@
 		"type": 1
 	},
 	{
+		"name": "Provisioning Member",
+		"type": 1
+	},
+	{
 		"name": "Requester",
 		"type": 6
 	},

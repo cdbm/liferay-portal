@@ -10,6 +10,7 @@ import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
 import com.liferay.osb.faro.engine.client.constants.FilterConstants;
 import com.liferay.osb.faro.engine.client.model.Field;
 import com.liferay.osb.faro.engine.client.model.Individual;
+import com.liferay.osb.faro.engine.client.model.ProjectUsageMetric;
 import com.liferay.osb.faro.engine.client.model.Results;
 import com.liferay.osb.faro.engine.client.util.FilterBuilder;
 import com.liferay.osb.faro.engine.client.util.FilterUtil;
@@ -130,6 +131,14 @@ public class MockContactsEngineClientImpl
 	@Override
 	public Date getLastSeenDate(FaroProject faroProject) {
 		return contactsEngineClient.getLastSeenDate(faroProject);
+	}
+
+	@Override
+	public Results<ProjectUsageMetric> getProjectUsageMetrics(
+		FaroProject faroProject, Date sinceDate) {
+
+		return contactsEngineClient.getProjectUsageMetrics(
+			faroProject, sinceDate);
 	}
 
 	@Override

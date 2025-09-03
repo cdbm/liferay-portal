@@ -6,30 +6,38 @@
 package com.liferay.asset.categories.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.exception.NoSuchCategoryException;
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -38,9 +46,12 @@ import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -86,6 +97,75 @@ public class AssetCategoryServiceTest {
 		_testAddCategory(
 			String.valueOf(assetCategory.getPrimaryKey()),
 			RoleConstants.SITE_MEMBER);
+	}
+
+	@Test
+	public void testGetOrAddEmptyCategory() throws Exception {
+
+		// Lazy referencing disabled
+
+		try {
+			_assetCategoryService.getOrAddEmptyCategory(
+				RandomTestUtil.randomString(), _group.getGroupId());
+
+			Assert.fail();
+		}
+		catch (NoSuchCategoryException noSuchCategoryException) {
+			Assert.assertNotNull(noSuchCategoryException);
+		}
+
+		// Lazy referencing enabled
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			// With permissions
+
+			AssetCategory assetCategory =
+				_assetCategoryService.getOrAddEmptyCategory(
+					RandomTestUtil.randomString(), _group.getGroupId());
+
+			Assert.assertNotNull(assetCategory);
+
+			// Without permissions
+
+			User user = UserTestUtil.addGroupUser(
+				_group, RoleConstants.SITE_MEMBER);
+
+			PermissionChecker permissionChecker =
+				PermissionCheckerFactoryUtil.create(user);
+
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					user, permissionChecker)) {
+
+				_assetCategoryService.getOrAddEmptyCategory(
+					RandomTestUtil.randomString(), user.getGroupId());
+
+				Assert.fail();
+			}
+			catch (PrincipalException.MustHavePermission principalException) {
+				Assert.assertNotNull(principalException);
+			}
+
+			// Without permissions, existing category
+
+			String externalReferenceCode = RandomTestUtil.randomString();
+
+			_assetCategoryLocalService.addCategory(
+				externalReferenceCode, TestPropsValues.getUserId(),
+				_group.getGroupId(),
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				Collections.singletonMap(
+					LocaleUtil.US, RandomTestUtil.randomString()),
+				Collections.singletonMap(
+					LocaleUtil.US, RandomTestUtil.randomString()),
+				_assetVocabulary.getVocabularyId(), null, new ServiceContext());
+
+			assetCategory = _assetCategoryService.getOrAddEmptyCategory(
+				externalReferenceCode, _group.getGroupId());
+
+			Assert.assertNotNull(assetCategory);
+		}
 	}
 
 	@Test

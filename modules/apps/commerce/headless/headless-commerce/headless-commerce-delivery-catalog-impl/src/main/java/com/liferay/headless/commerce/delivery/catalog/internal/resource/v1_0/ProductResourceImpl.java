@@ -11,12 +11,13 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPQuery;
-import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
 import com.liferay.commerce.product.exception.NoSuchCProductException;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
@@ -24,8 +25,6 @@ import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
@@ -35,7 +34,6 @@ import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductResou
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
@@ -60,13 +58,13 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -115,14 +113,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		CommerceContext commerceContext = _commerceContextFactory.create(
 			commerceAccountId, commerceChannel.getGroupId(), null, 0,
 			contextCompany.getCompanyId());
-
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10889") &&
-			!cpDefinition.isVisible(
-				commerceContext.getCPConfigurationListId(
-					cpDefinition.getGroupId()))) {
-
-			return null;
-		}
 
 		return _toProduct(commerceContext, cpDefinition);
 	}
@@ -192,12 +182,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		CommerceContext commerceContext = _commerceContextFactory.create(
 			commerceAccountId, commerceChannel.getGroupId(), null, 0,
 			contextCompany.getCompanyId());
-
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10889")) {
-			searchContext.setAttribute(
-				CPField.CP_CONFIGURATION_LIST_IDS,
-				commerceContext.getCPConfigurationListIds());
-		}
 
 		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(

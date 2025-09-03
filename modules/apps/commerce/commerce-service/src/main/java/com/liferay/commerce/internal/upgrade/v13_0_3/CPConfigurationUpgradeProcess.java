@@ -13,6 +13,7 @@ import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -121,7 +122,7 @@ public class CPConfigurationUpgradeProcess extends UpgradeProcess {
 
 					CPConfigurationList cpConfigurationList =
 						_cpConfigurationListLocalService.addCPConfigurationList(
-							null, groupId, userId, 0, true,
+							null, userId, groupId, 0, true,
 							_language.format(
 								LocaleUtil.fromLanguageId(
 									catalogDefaultLanguageId),
@@ -132,7 +133,8 @@ public class CPConfigurationUpgradeProcess extends UpgradeProcess {
 							calendar.get(Calendar.DAY_OF_MONTH),
 							calendar.get(Calendar.YEAR),
 							calendar.get(Calendar.HOUR_OF_DAY),
-							calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+							calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+							new ServiceContext());
 
 					cpConfigurationListId =
 						cpConfigurationList.getCPConfigurationListId();
@@ -182,7 +184,7 @@ public class CPConfigurationUpgradeProcess extends UpgradeProcess {
 						configurationEntryResultSet.getBoolean(
 							"shipSeparately"),
 						configurationEntryResultSet.getBoolean("taxExempt"),
-						true, configurationEntryResultSet.getDouble("weight"),
+						configurationEntryResultSet.getDouble("weight"),
 						configurationEntryResultSet.getDouble("width"));
 				}
 			}

@@ -16,6 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -27,13 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -102,6 +102,53 @@ public class Keyword implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of asset libraries that are associated with this keyword."
+	)
+	@Valid
+	public AssetLibrary[] getAssetLibraries() {
+		if (_assetLibrariesSupplier != null) {
+			assetLibraries = _assetLibrariesSupplier.get();
+
+			_assetLibrariesSupplier = null;
+		}
+
+		return assetLibraries;
+	}
+
+	public void setAssetLibraries(AssetLibrary[] assetLibraries) {
+		this.assetLibraries = assetLibraries;
+
+		_assetLibrariesSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraries(
+		UnsafeSupplier<AssetLibrary[], Exception>
+			assetLibrariesUnsafeSupplier) {
+
+		_assetLibrariesSupplier = () -> {
+			try {
+				return assetLibrariesUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "A list of asset libraries that are associated with this keyword."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected AssetLibrary[] assetLibraries;
+
+	@JsonIgnore
+	private Supplier<AssetLibrary[]> _assetLibrariesSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAssetLibraryKey() {
@@ -622,6 +669,28 @@ public class Keyword implements Serializable {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(actions));
+		}
+
+		AssetLibrary[] assetLibraries = getAssetLibraries();
+
+		if (assetLibraries != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraries\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < assetLibraries.length; i++) {
+				sb.append(String.valueOf(assetLibraries[i]));
+
+				if ((i + 1) < assetLibraries.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		String assetLibraryKey = getAssetLibraryKey();

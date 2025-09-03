@@ -21,6 +21,7 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
 import com.liferay.object.info.field.converter.ObjectFieldInfoFieldConverter;
 import com.liferay.object.info.item.ObjectEntryInfoItemFields;
+import com.liferay.object.info.item.util.ObjectEntryInfoItemUtil;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -31,6 +32,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -80,14 +82,14 @@ public class ObjectEntryInfoItemFormProviderUtil {
 
 					unsafeConsumer.accept(
 						_getInfoFieldSet(
-							true, currentObjectDefinition.getLabelMap(),
+							true, false, currentObjectDefinition.getLabelMap(),
 							currentObjectDefinition.getName(),
 							ObjectField.class.getSimpleName(),
 							currentObjectDefinition,
 							objectDefinitionLocalService,
 							objectFieldInfoFieldConverter,
 							objectFieldLocalService,
-							objectRelationshipLocalService));
+							objectRelationshipLocalService, null));
 				}
 			}
 		).infoFieldSetEntry(
@@ -188,36 +190,37 @@ public class ObjectEntryInfoItemFormProviderUtil {
 							objectDefinitionId,
 							ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
 
-					if (!objectRelationship.isSelf() &&
-						Objects.equals(
+					ObjectDefinition relatedObjectDefinition = null;
+
+					if (Objects.equals(
 							objectDefinitionId,
-							objectRelationship.getObjectDefinitionId1())) {
+							objectRelationship.getObjectDefinitionId1()) &&
+						FeatureFlagManagerUtil.isEnabled("LPD-50377")) {
 
-						continue;
+						relatedObjectDefinition =
+							objectDefinitionLocalService.fetchObjectDefinition(
+								objectRelationship.getObjectDefinitionId2());
+					}
+					else if (FeatureFlagManagerUtil.isEnabled("LPD-60546") &&
+							 !Objects.equals(
+								 objectDefinitionId,
+								 objectRelationship.getObjectDefinitionId1())) {
+
+						relatedObjectDefinition =
+							objectDefinitionLocalService.fetchObjectDefinition(
+								objectRelationship.getObjectDefinitionId1());
 					}
 
-					ObjectDefinition parentObjectDefinition =
-						objectDefinitionLocalService.fetchObjectDefinition(
-							objectRelationship.getObjectDefinitionId1());
+					if ((relatedObjectDefinition == null) ||
+						relatedObjectDefinition.isUnmodifiableSystemObject()) {
 
-					if (parentObjectDefinition == null) {
-						_log.error(
-							new NoSuchObjectDefinitionException(
-								String.valueOf(
-									objectRelationship.
-										getObjectDefinitionId1())));
-
-						continue;
-					}
-
-					if (parentObjectDefinition.isUnmodifiableSystemObject()) {
 						continue;
 					}
 
 					Map<Locale, String> fieldSetLabelMap = new HashMap<>();
 
 					Map<Locale, String> labelMap =
-						parentObjectDefinition.getLabelMap();
+						relatedObjectDefinition.getLabelMap();
 
 					for (Map.Entry<Locale, String> entry :
 							labelMap.entrySet()) {
@@ -235,18 +238,15 @@ public class ObjectEntryInfoItemFormProviderUtil {
 
 					unsafeConsumer.accept(
 						_getInfoFieldSet(
-							true, fieldSetLabelMap,
+							true, false, fieldSetLabelMap,
 							objectRelationship.getName(),
-							StringBundler.concat(
-								ObjectRelationship.class.getSimpleName(),
-								StringPool.POUND,
-								parentObjectDefinition.getName(),
-								StringPool.POUND, objectRelationship.getName()),
-							parentObjectDefinition,
+							ObjectEntryInfoItemUtil.getInfoFieldNamespace(
+								relatedObjectDefinition, objectRelationship),
+							relatedObjectDefinition,
 							objectDefinitionLocalService,
 							objectFieldInfoFieldConverter,
 							objectFieldLocalService,
-							objectRelationshipLocalService));
+							objectRelationshipLocalService, objectDefinition));
 				}
 			}
 		).infoFieldSetEntry(
@@ -305,12 +305,13 @@ public class ObjectEntryInfoItemFormProviderUtil {
 	}
 
 	private static InfoFieldSet _getInfoFieldSet(
-		boolean editable, Map<Locale, String> labelMap, String name,
-		String namespace, ObjectDefinition objectDefinition,
+		boolean editable, boolean friendlyURL, Map<Locale, String> labelMap,
+		String name, String namespace, ObjectDefinition objectDefinition,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectFieldInfoFieldConverter objectFieldInfoFieldConverter,
 		ObjectFieldLocalService objectFieldLocalService,
-		ObjectRelationshipLocalService objectRelationshipLocalService) {
+		ObjectRelationshipLocalService objectRelationshipLocalService,
+		ObjectDefinition parentObjectDefinition) {
 
 		return InfoFieldSet.builder(
 		).infoFieldSetEntry(
@@ -331,12 +332,21 @@ public class ObjectEntryInfoItemFormProviderUtil {
 								fetchObjectRelationshipByObjectFieldId2(
 									objectField.getObjectFieldId());
 
-						ObjectDefinition parentObjectDefinition =
+						if ((parentObjectDefinition != null) &&
+							Objects.equals(
+								objectRelationship.getObjectDefinitionId1(),
+								parentObjectDefinition.
+									getObjectDefinitionId())) {
+
+							continue;
+						}
+
+						ObjectDefinition relatedObjectDefinition =
 							objectDefinitionLocalService.fetchObjectDefinition(
 								objectRelationship.getObjectDefinitionId1());
 
-						if ((parentObjectDefinition == null) ||
-							!parentObjectDefinition.isActive()) {
+						if ((relatedObjectDefinition == null) ||
+							!relatedObjectDefinition.isActive()) {
 
 							continue;
 						}
@@ -345,6 +355,79 @@ public class ObjectEntryInfoItemFormProviderUtil {
 					unsafeConsumer.accept(
 						objectFieldInfoFieldConverter.getInfoField(
 							editable, namespace, objectField));
+				}
+
+				if (friendlyURL) {
+					unsafeConsumer.accept(
+						ObjectEntryInfoItemFields.getFriendlyURLInfoField(
+							objectDefinition.isEnableFriendlyURLCustomization(),
+							name, namespace));
+				}
+			}
+		).infoFieldSetEntry(
+			unsafeConsumer -> {
+				for (ObjectRelationship objectRelationship :
+						objectRelationshipLocalService.getObjectRelationships(
+							objectDefinition.getObjectDefinitionId(),
+							ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+
+					if (objectRelationship.isSelf() ||
+						Objects.equals(
+							objectDefinition.getObjectDefinitionId(),
+							objectRelationship.getObjectDefinitionId2()) ||
+						!FeatureFlagManagerUtil.isEnabled("LPD-50377")) {
+
+						continue;
+					}
+
+					ObjectDefinition relatedObjectDefinition =
+						objectDefinitionLocalService.fetchObjectDefinition(
+							objectRelationship.getObjectDefinitionId2());
+
+					if (relatedObjectDefinition == null) {
+						_log.error(
+							new NoSuchObjectDefinitionException(
+								String.valueOf(
+									objectRelationship.
+										getObjectDefinitionId1())));
+
+						continue;
+					}
+
+					if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
+						continue;
+					}
+
+					Map<Locale, String> fieldSetLabelMap = new HashMap<>();
+
+					Map<Locale, String> parentLabelMap =
+						relatedObjectDefinition.getLabelMap();
+
+					for (Map.Entry<Locale, String> entry :
+							parentLabelMap.entrySet()) {
+
+						Locale locale = entry.getKey();
+
+						fieldSetLabelMap.put(
+							locale,
+							StringBundler.concat(
+								objectRelationship.getLabel(locale),
+								StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
+								entry.getValue(),
+								StringPool.CLOSE_PARENTHESIS));
+					}
+
+					unsafeConsumer.accept(
+						_getInfoFieldSet(
+							true, false, fieldSetLabelMap,
+							objectRelationship.getName(),
+							ObjectEntryInfoItemUtil.getInfoFieldNamespace(
+								relatedObjectDefinition, objectRelationship),
+							relatedObjectDefinition,
+							objectDefinitionLocalService,
+							objectFieldInfoFieldConverter,
+							objectFieldLocalService,
+							objectRelationshipLocalService, objectDefinition));
 				}
 			}
 		).labelInfoLocalizedValue(
@@ -357,6 +440,8 @@ public class ObjectEntryInfoItemFormProviderUtil {
 			).build()
 		).name(
 			name
+		).relationship(
+			parentObjectDefinition != null
 		).build();
 	}
 

@@ -130,15 +130,15 @@ public class CommerceCatalogLocalServiceImpl
 		}
 
 		_cpConfigurationListLocalService.addCPConfigurationList(
-			null, commerceCatalog.getGroupId(), user.getUserId(), 0, true,
+			null, user.getUserId(), commerceCatalog.getGroupId(), 0, true,
 			_language.format(
 				LocaleUtil.fromLanguageId(
 					commerceCatalog.getCatalogDefaultLanguageId()),
 				"master-configuration-x", commerceCatalog.getName(), false),
 			0D, calendar.get(Calendar.MONTH),
 			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
-			displayDateHour, calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
-			true);
+			displayDateHour, calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+			new ServiceContext());
 
 		return commerceCatalog;
 	}
@@ -269,8 +269,8 @@ public class CommerceCatalogLocalServiceImpl
 					_cpConfigurationListLocalService.getCPConfigurationLists(
 						group.getGroupId(), commerceCatalog.getCompanyId())) {
 
-				_cpConfigurationListLocalService.forceDeleteCPConfigurationList(
-					cpConfigurationList);
+				_cpConfigurationListLocalService.deleteCPConfigurationList(
+					cpConfigurationList, true);
 			}
 
 			_groupLocalService.deleteGroup(group);

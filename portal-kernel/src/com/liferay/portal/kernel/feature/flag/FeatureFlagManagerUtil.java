@@ -6,6 +6,7 @@
 package com.liferay.portal.kernel.feature.flag;
 
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -28,6 +29,22 @@ import org.osgi.framework.ServiceRegistration;
  * @author Drew Brokke
  */
 public class FeatureFlagManagerUtil {
+
+	public static void checkEnabled(long companyId, String key) {
+		if (!isEnabled(companyId, key)) {
+			throw new UnsupportedOperationException(
+				StringBundler.concat(
+					"Feature flag ", key, " is disabled for company ",
+					companyId));
+		}
+	}
+
+	public static void checkEnabled(String key) {
+		if (!isEnabled(key)) {
+			throw new UnsupportedOperationException(
+				"Feature flag " + key + " is disabled");
+		}
+	}
 
 	public static String getJSON(long companyId) {
 		return _withFeatureFlagManager(
@@ -54,6 +71,11 @@ public class FeatureFlagManagerUtil {
 			});
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *		#isEnabled(long, String)}
+	 */
+	@Deprecated
 	public static boolean isEnabled(String key) {
 		return _withFeatureFlagManager(
 			featureFlagManager -> featureFlagManager.isEnabled(key),
@@ -130,7 +152,7 @@ public class FeatureFlagManagerUtil {
 								servicePropertiesFunction.apply(enabled)));
 					},
 					MapUtil.singletonDictionary(
-						"featureFlagKey", featureFlagKey));
+						"feature.flag.key", featureFlagKey));
 		}
 
 		@Override

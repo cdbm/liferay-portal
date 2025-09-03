@@ -5,15 +5,14 @@
 
 package com.liferay.customer.service;
 
+import com.liferay.client.extension.util.spring.boot3.service.BaseService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Base64;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,19 +30,27 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Jenny Chen
  */
 @Component
-public class JiraService {
+public class JiraService extends BaseService {
 
-	@CacheEvict(
-		allEntries = true, value = {"affectedVersions", "issue", "issues"}
-	)
-	@Scheduled(cron = "0 0 0 * * *")
-	public void cacheEvict() throws Exception {
+	public void addComment(String issueKey, String body) {
+		post(
+			body,
+			HashMapBuilder.put(
+				HttpHeaders.AUTHORIZATION, _getCredentials()
+			).put(
+				HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE
+			).build(),
+			UriComponentsBuilder.fromUriString(
+				StringBundler.concat(
+					_jiraURL, "/rest/api/3/issue/", issueKey, "/comment")
+			).build(
+			).toUri());
 	}
 
 	@Cacheable("affectedVersions")
@@ -107,23 +114,43 @@ public class JiraService {
 		return null;
 	}
 
+	public JSONObject getAssetObject(String workspaceId, String objectId) {
+		JSONObject jsonObject = new JSONObject(
+			get(
+				_getCredentials(),
+				UriComponentsBuilder.fromUriString(
+					StringBundler.concat(
+						_JIRA_CLOUD_API_URL, "/jsm/assets/workspace/",
+						workspaceId, "/v1/object/", objectId)
+				).build(
+				).toUri()));
+
+		if (jsonObject.has("errorMessages")) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to get asset object " +
+						jsonObject.getJSONArray("errorMessages"));
+			}
+
+			return null;
+		}
+
+		return jsonObject;
+	}
+
 	@Cacheable("issue")
 	public JSONObject getIssueJSONObject(String issueKey) throws Exception {
 		try {
 			JSONObject jsonObject = new JSONObject(
-				WebClient.create(
-					_jiraURL
-				).get(
-				).uri(
-					StringBundler.concat(_URL_REST_API_2, "/issue/", issueKey)
-				).accept(
-					MediaType.APPLICATION_JSON
-				).header(
-					HttpHeaders.AUTHORIZATION, _getCredentials()
-				).retrieve(
-				).bodyToMono(
-					String.class
-				).block());
+				get(
+					_getCredentials(),
+					UriComponentsBuilder.fromUriString(
+						StringBundler.concat(
+							_jiraURL, _URL_REST_API_2, "/issue/", issueKey)
+					).queryParam(
+						"expand", "renderedFields"
+					).build(
+					).toUri()));
 
 			return _transformIssue(jsonObject);
 		}
@@ -137,6 +164,30 @@ public class JiraService {
 		return null;
 	}
 
+	@CacheEvict(allEntries = true, value = "affectedVersions")
+	@Scheduled(
+		cron = "${liferay.customer.jira.service.affected.versions.cache.eviction.cron}"
+	)
+	public void scheduledAffectedVersionsCacheEviction() throws Exception {
+	}
+
+	@CacheEvict(allEntries = true, value = {"issue", "issues"})
+	@Scheduled(
+		cron = "${liferay.customer.jira.service.issues.cache.eviction.cron}"
+	)
+	public void scheduledIssuesCacheEviction() throws Exception {
+	}
+
+	public JSONObject search(
+			String jql, int page, int pageSize, String[] returnFields)
+		throws Exception {
+
+		JSONObject jsonObject = _search(
+			jql, pageSize, returnFields, _calculateStartAt(page, pageSize));
+
+		return _transformSearchResults(jsonObject);
+	}
+
 	@Cacheable("issues")
 	public JSONObject search(
 			String[] filterAffectedVersions, String[] filterCategories,
@@ -145,7 +196,7 @@ public class JiraService {
 			String sortOrder, boolean hasEarlyPublishAccess)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(51);
+		StringBundler sb = new StringBundler(49);
 
 		sb.append("project = '");
 		sb.append(_jiraSecurityVulnerabilityProject);
@@ -155,26 +206,19 @@ public class JiraService {
 				_jiraSecurityVulnerabilityFieldPublishingStatus));
 		sb.append(" = 'Ready for Publishing'");
 
-		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
-			"yyyy-MM-dd 00:00");
-
 		if (hasEarlyPublishAccess) {
 			sb.append(" AND ");
 			sb.append(
 				_getJQLCustomField(
 					_jiraSecurityVulnerabilityFieldPartnerPublishingDate));
-			sb.append(" <= '");
-			sb.append(dateTimeFormatter.format(LocalDateTime.now()));
-			sb.append("'");
+			sb.append(" <= now()");
 		}
 		else {
 			sb.append(" AND ");
 			sb.append(
 				_getJQLCustomField(
 					_jiraSecurityVulnerabilityFieldCustomerPublishingDate));
-			sb.append(" <= '");
-			sb.append(dateTimeFormatter.format(LocalDateTime.now()));
-			sb.append("'");
+			sb.append(" <= now()");
 		}
 
 		if (ArrayUtil.isNotEmpty(filterAffectedVersions)) {
@@ -316,6 +360,16 @@ public class JiraService {
 		return flattenedJSONArray;
 	}
 
+	private String _getAssetObjectFieldId(JSONArray jsonArray) {
+		if ((jsonArray != null) && (jsonArray.length() > 0)) {
+			JSONObject jsonObject = jsonArray.getJSONObject(0);
+
+			return jsonObject.getString("id");
+		}
+
+		return null;
+	}
+
 	private String _getCredentials() {
 		String jiraUserNameAndJiraApiToken =
 			_jiraAPIEmailAddress + StringPool.COLON + _jiraAPIToken;
@@ -329,9 +383,9 @@ public class JiraService {
 		return "cf[" + customField.substring(pos + 1) + "]";
 	}
 
-	private String _getJSONObjectFieldValue(JSONObject jsonObject) {
+	private String _getJSONObjectFieldValue(JSONObject jsonObject, String key) {
 		if (jsonObject != null) {
-			return jsonObject.optString("value");
+			return jsonObject.optString(key);
 		}
 
 		return null;
@@ -343,29 +397,22 @@ public class JiraService {
 
 		try {
 			return new JSONObject(
-				WebClient.create(
-					_jiraURL
-				).get(
-				).uri(
-					uriBuilder -> uriBuilder.path(
-						_URL_REST_API_2 + "/search"
+				get(
+					_getCredentials(),
+					UriComponentsBuilder.fromUriString(
+						_jiraURL + _URL_REST_API_2 + "/search"
 					).queryParam(
-						"jql", jql
+						"expand", "renderedFields"
 					).queryParam(
 						"fields", StringUtil.merge(returnFields)
+					).queryParam(
+						"jql", jql
 					).queryParam(
 						"maxResults", maxResults
 					).queryParam(
 						"startAt", startAt
-					).build()
-				).accept(
-					MediaType.APPLICATION_JSON
-				).header(
-					HttpHeaders.AUTHORIZATION, _getCredentials()
-				).retrieve(
-				).bodyToMono(
-					String.class
-				).block());
+					).build(
+					).toUri()));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -381,88 +428,113 @@ public class JiraService {
 		return new JSONObject(
 		).put(
 			"fields",
-			_transformIssueFields(issueJSONObject.getJSONObject("fields"))
+			_transformIssueFields(
+				issueJSONObject.optJSONObject("fields"),
+				issueJSONObject.optJSONObject("renderedFields"))
 		).put(
 			"key", issueJSONObject.getString(_FIELD_ISSUE_KEY)
 		);
 	}
 
-	private JSONObject _transformIssueFields(JSONObject issueFieldsJSONObject) {
-		return new JSONObject(
-		).put(
-			"affectedVersionsDetails",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldAffectedVersionsDetails)
-		).put(
-			"affectedVersions",
-			_flattenJSONArray(
-				issueFieldsJSONObject.getJSONArray(_FIELD_VERSIONS))
-		).put(
-			"affects",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldAffects)
-		).put(
-			"categories",
-			_flattenJSONArray(
-				issueFieldsJSONObject.optJSONArray(
-					_jiraSecurityVulnerabilityFieldCategories))
-		).put(
-			"components",
-			_flattenJSONArray(
-				issueFieldsJSONObject.getJSONArray(_FIELD_COMPONENTS))
-		).put(
-			"customerPortalDescription",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCustomerPortalDescription)
-		).put(
-			"customerPortalSummary",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCustomerPortalSummary)
-		).put(
-			"customerPublishingDate",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCustomerPublishingDate)
-		).put(
-			"cveIds",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCVEIds)
-		).put(
-			"cvssBaseScore",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCVSSBaseScore)
-		).put(
-			"cvssVectorString",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCVSSVectorString)
-		).put(
-			"cweIds",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldCWEIds)
-		).put(
-			"fixVersions",
-			_flattenJSONArray(
-				issueFieldsJSONObject.optJSONArray(
-					_jiraSecurityVulnerabilityFieldFixVersions))
-		).put(
-			"issueClassification",
-			_getJSONObjectFieldValue(
-				issueFieldsJSONObject.optJSONObject(
-					_jiraSecurityVulnerabilityFieldIssueClassification))
-		).put(
-			"partnerPublishingDate",
-			issueFieldsJSONObject.optString(
-				_jiraSecurityVulnerabilityFieldPartnerPublishingDate)
-		).put(
-			"publishingStatus",
-			_getJSONObjectFieldValue(
-				issueFieldsJSONObject.optJSONObject(
-					_jiraSecurityVulnerabilityFieldPublishingStatus))
-		).put(
-			"severity",
-			_getJSONObjectFieldValue(
-				issueFieldsJSONObject.optJSONObject(
-					_jiraSecurityVulnerabilityFieldSeverity))
-		);
+	private JSONObject _transformIssueFields(
+		JSONObject issueFieldsJSONObject,
+		JSONObject issueRenderedFieldsJSONObject) {
+
+		JSONObject jsonObject = new JSONObject();
+
+		if (issueFieldsJSONObject != null) {
+			jsonObject.put(
+				"affectedVersions",
+				_flattenJSONArray(
+					issueFieldsJSONObject.optJSONArray(_FIELD_VERSIONS))
+			).put(
+				"affectedVersionsDetails",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldAffectedVersionsDetails)
+			).put(
+				"affects",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldAffects)
+			).put(
+				"categories",
+				_flattenJSONArray(
+					issueFieldsJSONObject.optJSONArray(
+						_jiraSecurityVulnerabilityFieldCategories))
+			).put(
+				"components",
+				_flattenJSONArray(
+					issueFieldsJSONObject.optJSONArray(_FIELD_COMPONENTS))
+			).put(
+				"customerPortalSummary",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCustomerPortalSummary)
+			).put(
+				"customerPublishingDate",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCustomerPublishingDate)
+			).put(
+				"cveIds",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCVEIds)
+			).put(
+				"cvssBaseScore",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCVSSBaseScore)
+			).put(
+				"cvssVectorString",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCVSSVectorString)
+			).put(
+				"cweIds",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCWEIds)
+			).put(
+				"fixVersions",
+				_flattenJSONArray(
+					issueFieldsJSONObject.optJSONArray(
+						_jiraSecurityVulnerabilityFieldFixVersions))
+			).put(
+				"issueClassification",
+				_getJSONObjectFieldValue(
+					issueFieldsJSONObject.optJSONObject(
+						_jiraSecurityVulnerabilityFieldIssueClassification),
+					"value")
+			).put(
+				"organization",
+				_getAssetObjectFieldId(
+					issueFieldsJSONObject.optJSONArray(
+						_jiraSupportFieldOrganization))
+			).put(
+				"partnerPublishingDate",
+				issueFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldPartnerPublishingDate)
+			).put(
+				"publishingStatus",
+				_getJSONObjectFieldValue(
+					issueFieldsJSONObject.optJSONObject(
+						_jiraSecurityVulnerabilityFieldPublishingStatus),
+					"value")
+			).put(
+				"severity",
+				_getJSONObjectFieldValue(
+					issueFieldsJSONObject.optJSONObject(
+						_jiraSecurityVulnerabilityFieldSeverity),
+					"value")
+			).put(
+				"status",
+				_getJSONObjectFieldValue(
+					issueFieldsJSONObject.optJSONObject(_FIELD_STATUS), "name")
+			);
+		}
+
+		if (issueRenderedFieldsJSONObject != null) {
+			jsonObject.put(
+				"customerPortalDescription",
+				issueRenderedFieldsJSONObject.optString(
+					_jiraSecurityVulnerabilityFieldCustomerPortalDescription));
+		}
+
+		return jsonObject;
 	}
 
 	private JSONObject _transformSearchResults(JSONObject resultsJSONObject) {
@@ -497,7 +569,12 @@ public class JiraService {
 
 	private static final String _FIELD_ISSUE_KEY = "key";
 
+	private static final String _FIELD_STATUS = "status";
+
 	private static final String _FIELD_VERSIONS = "versions";
+
+	private static final String _JIRA_CLOUD_API_URL =
+		"https://api.atlassian.com";
 
 	private static final String _URL_REST_API_2 = "/rest/api/2";
 
@@ -574,6 +651,9 @@ public class JiraService {
 
 	@Value("${liferay.customer.jira.security.vulnerability.project}")
 	private String _jiraSecurityVulnerabilityProject;
+
+	@Value("${liferay.customer.jira.support.field.organization}")
+	private String _jiraSupportFieldOrganization;
 
 	@Value("${liferay.customer.jira.url}")
 	private String _jiraURL;

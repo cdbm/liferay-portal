@@ -5,8 +5,8 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
+import com.liferay.headless.admin.site.dto.v1_0.FragmentDropZonePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
-import com.liferay.headless.admin.site.dto.v1_0.PageFragmentDropZoneDefinition;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
 import com.liferay.layout.util.structure.FragmentDropZoneLayoutStructureItem;
@@ -36,15 +36,17 @@ public class FragmentDropZoneLayoutStructureItemImporter
 							pageElement, layoutStructure),
 						pageElement.getPosition());
 
-		PageFragmentDropZoneDefinition pageFragmentDropZoneDefinition =
-			(PageFragmentDropZoneDefinition)pageElement.getDefinition();
+		FragmentDropZonePageElementDefinition
+			fragmentDropZonePageElementDefinition =
+				(FragmentDropZonePageElementDefinition)
+					pageElement.getPageElementDefinition();
 
-		if (pageFragmentDropZoneDefinition == null) {
+		if (fragmentDropZonePageElementDefinition == null) {
 			return fragmentDropZoneLayoutStructureItem;
 		}
 
 		fragmentDropZoneLayoutStructureItem.setFragmentDropZoneId(
-			pageFragmentDropZoneDefinition.getFragmentDropZoneId());
+			fragmentDropZonePageElementDefinition.getFragmentDropZoneId());
 
 		return fragmentDropZoneLayoutStructureItem;
 	}

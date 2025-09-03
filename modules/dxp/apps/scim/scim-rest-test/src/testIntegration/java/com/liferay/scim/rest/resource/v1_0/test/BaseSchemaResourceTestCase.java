@@ -42,6 +42,10 @@ import com.liferay.scim.rest.client.pagination.Page;
 import com.liferay.scim.rest.client.resource.v1_0.SchemaResource;
 import com.liferay.scim.rest.client.serdes.v1_0.SchemaSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -183,18 +183,13 @@ public abstract class BaseSchemaResourceTestCase {
 	}
 
 	@Test
-	public void testGetV2Schemas() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetV2SchemaById() throws Exception {
 		Assert.assertTrue(false);
 	}
 
-	protected Schema testGraphQLSchema_addSchema() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testGetV2Schemas() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 	protected void assertContains(Schema schema, List<Schema> schemas) {

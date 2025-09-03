@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -191,14 +191,14 @@ public abstract class BaseCategoryResourceTestCase {
 		assertValid(getCategory);
 	}
 
-	protected Long testGetDiscountCategoryCategory_getDiscountCategoryId()
+	protected Category testGetDiscountCategoryCategory_addCategory()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Category testGetDiscountCategoryCategory_addCategory()
+	protected Long testGetDiscountCategoryCategory_getDiscountCategoryId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -330,15 +330,15 @@ public abstract class BaseCategoryResourceTestCase {
 		assertValid(getCategory);
 	}
 
-	protected Long
-			testGetPriceModifierCategoryCategory_getPriceModifierCategoryId()
+	protected Category testGetPriceModifierCategoryCategory_addCategory()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Category testGetPriceModifierCategoryCategory_addCategory()
+	protected Long
+			testGetPriceModifierCategoryCategory_getPriceModifierCategoryId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(

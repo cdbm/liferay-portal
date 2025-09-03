@@ -19,8 +19,8 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Catalog;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.CatalogEntityModel;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.CatalogResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -39,11 +39,11 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

@@ -46,13 +46,14 @@ public class CPConfigurationListPanelApp extends BasePanelApp {
 
 		boolean show = super.isShow(permissionChecker, group);
 
-		show &= FeatureFlagManagerUtil.isEnabled("LPD-10889");
+		show &= FeatureFlagManagerUtil.isEnabled(
+			group.getCompanyId(), "LPD-10889");
 
 		return show;
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + CPPortletKeys.CP_CONFIGURATION_LISTS + ")"
+		target = "(jakarta.portlet.name=" + CPPortletKeys.CP_CONFIGURATION_LISTS + ")"
 	)
 	private Portlet _portlet;
 

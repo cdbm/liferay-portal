@@ -66,11 +66,12 @@ public class ProductConfigurationListChannelResourceTest
 
 		_cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				RandomTestUtil.randomString(), _commerceCatalog.getGroupId(),
-				_user.getUserId(), 0, false, RandomTestUtil.randomString(), 0D,
-				dateConfig.getMonth(), dateConfig.getDay(),
-				dateConfig.getYear(), dateConfig.getHour(),
-				dateConfig.getMinute(), 0, 0, 0, 0, 0, true);
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_commerceCatalog.getGroupId(), 0, false,
+				RandomTestUtil.randomString(), 0D, dateConfig.getMonth(),
+				dateConfig.getDay(), dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 	}
 
 	@After
@@ -82,6 +83,13 @@ public class ProductConfigurationListChannelResourceTest
 			_commerceChannelLocalService.deleteCommerceChannel(
 				commerceChannelId);
 		}
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
 	}
 
 	@Override
@@ -137,6 +145,17 @@ public class ProductConfigurationListChannelResourceTest
 					_cpConfigurationList.getCPConfigurationListId();
 			}
 		};
+	}
+
+	@Override
+	protected ProductConfigurationListChannel
+			testDeleteProductConfigurationListChannelBatch_addProductConfigurationListChannel()
+		throws Exception {
+
+		return productConfigurationListChannelResource.
+			postProductConfigurationListIdProductConfigurationListChannel(
+				_cpConfigurationList.getCPConfigurationListId(),
+				randomProductConfigurationListChannel());
 	}
 
 	@Override

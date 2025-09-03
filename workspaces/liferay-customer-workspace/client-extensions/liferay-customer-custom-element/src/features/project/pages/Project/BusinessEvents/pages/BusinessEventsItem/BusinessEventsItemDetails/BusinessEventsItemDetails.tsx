@@ -6,48 +6,120 @@
 import {Nav} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useModal} from '@clayui/modal';
 import NavigationBar from '@clayui/navigation-bar';
-import {useEffect, useState} from 'react';
-import {Link, useNavigate, useParams} from 'react-router-dom';
+import {useCallback, useEffect, useState} from 'react';
+import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
 import {ButtonDropDown} from '~/components';
-import {getBusinessEventById} from '~/services/liferay/api';
+import {useAppPropertiesContext} from '~/contexts/AppPropertiesContext';
+import {Liferay} from '~/services/liferay';
 import i18n from '~/utils/I18n';
 import {getFormattedDate} from '~/utils/getFormattedDate';
 import {getFormattedTime} from '~/utils/getFormattedTime';
-import {IBusinessEvent} from '~/utils/types';
+import {ITicket} from '~/utils/types';
+
+import './BusinessEventsItemDetails.css';
+
+import getKebabCase from '~/utils/getKebabCase';
+
+import AssociatedTicketsContainer from '../../../components/AssociatedTicketsContainer';
+import ManageEventModal from '../../../components/ManageEventModal';
+import useAccountsTickets from '../../../hooks/useAccountsTickets';
+import useGetBusinessEvent from '../../../hooks/useGetBusinessEvent';
+import useHasAllEventsPermissions from '../../../hooks/useHasAllEventsPermissions';
 
 const BusinessEventsItemDetails = () => {
 	const {accountKey, id} = useParams<{accountKey: string; id: string}>();
-	const [businessEvent, setBusinessEvent] = useState<IBusinessEvent | null>(
-		null
+
+	const {businessEvent, fetchBusinessEvent, loading} = useGetBusinessEvent(
+		id || ''
 	);
-	const [loading, setLoading] = useState(true);
+
+	const {client} = useAppPropertiesContext();
+
+	const [modalType, setModalType] = useState('');
+	const {hasAllEventsPermissions} = useHasAllEventsPermissions();
+
+	const {loading: loadingTickets, tickets} = useAccountsTickets(accountKey);
+
+	const location = useLocation();
+	const navigate = useNavigate();
+
+	const {observer, onOpenChange, open} = useModal();
+
+	const userOptions = [
+		{
+			customOptionStyle: 'pr-5',
+			icon: <ClayIcon symbol="pencil" />,
+			label: i18n.translate('edit-event'),
+			onClick: () => {
+				navigate(`/${accountKey}/business-events/${id}/edit`);
+			},
+		},
+		{
+			customOptionStyle: 'pr-5',
+			icon: <ClayIcon symbol="check-circle" />,
+			label: i18n.translate('record-actual-go-live'),
+			onClick: () => {
+				setModalType('goLiveEvent');
+				onOpenChange(true);
+			},
+		},
+		{
+			customOptionStyle: 'cancel-event-option pr-5',
+			icon: <ClayIcon symbol="trash" />,
+			label: i18n.translate('cancel-event'),
+			onClick: () => {
+				setModalType('cancelEvent');
+				onOpenChange(true);
+			},
+		},
+	];
+
+	const [ticketOptions, setTicketOptions] = useState<ITicket[]>([]);
+
+	const handleOnCancel = useCallback(() => {
+		fetchBusinessEvent();
+
+		Liferay.Util.openToast({
+			message: i18n.translate('business-event-canceled-successfully'),
+			type: 'success',
+		});
+	}, [fetchBusinessEvent]);
+
+	const handleOnCompleted = useCallback(() => {
+		fetchBusinessEvent();
+
+		Liferay.Util.openToast({
+			message: i18n.translate(
+				'business-event-actual-go-live-date-recorded-successfully'
+			),
+			type: 'success',
+		});
+	}, [fetchBusinessEvent]);
 
 	useEffect(() => {
-		if (id) {
-			const fetchEvent = async () => {
-				try {
-					setLoading(true);
+		if (businessEvent && tickets) {
+			const associatedTickets = JSON.parse(
+				businessEvent.associatedTickets!
+			);
 
-					const eventData = await getBusinessEventById(id);
-
-					setBusinessEvent(eventData);
-				}
-				catch (error) {
-					console.error('Error', error);
-
-					setBusinessEvent(null);
-				}
-				finally {
-					setLoading(false);
-				}
-			};
-
-			fetchEvent();
+			setTicketOptions([
+				...(tickets?.filter((ticket) =>
+					associatedTickets.includes(ticket.ticketId)
+				) || []),
+			]);
 		}
-	}, [id]);
 
-	const navigate = useNavigate();
+		const params = new URLSearchParams(location.search);
+		const modalType = params.get('openModal');
+
+		if (modalType === 'goLiveEvent') {
+			setModalType('goLiveEvent');
+
+			onOpenChange(true);
+		}
+	}, [businessEvent, location.search, onOpenChange, tickets]);
 
 	if (loading) {
 		return (
@@ -60,29 +132,6 @@ const BusinessEventsItemDetails = () => {
 	if (!businessEvent) {
 		return <div>{i18n.translate('no-data-found')}</div>;
 	}
-
-	const userOptions = [
-		{
-			customOptionStyle: 'pr-5',
-			icon: <ClayIcon symbol="pencil" />,
-			label: i18n.translate('edit-event-details'),
-			onClick: () => {
-				navigate(`/${accountKey}/business-events/${id}/edit`);
-			},
-		},
-		{
-			customOptionStyle: 'pr-5',
-			icon: <ClayIcon symbol="check-circle" />,
-			label: i18n.translate('record-actual-go-live'),
-			onClick: () => {},
-		},
-		{
-			customOptionStyle: 'pr-5',
-			icon: <ClayIcon symbol="trash" />,
-			label: i18n.translate('cancel-event'),
-			onClick: () => {},
-		},
-	];
 
 	return (
 		<div>
@@ -100,21 +149,40 @@ const BusinessEventsItemDetails = () => {
 				<div
 					className={`align-items-center font-weight-semi-bold be-status be-status-${businessEvent?.eventStatus?.key} mb-1 d-inline px-2 py-1`}
 				>
-					{businessEvent?.eventStatus?.name}
+					{i18n.translate(
+						getKebabCase(
+							businessEvent?.eventStatus?.key as string
+						) as string
+					)}
 				</div>
 
 				<div className="alight-items-center d-flex justify-content-between mb-4 mt-2">
 					<div className="font-weight-bold text-neutral-10">
 						<h3>{businessEvent.name}</h3>
 					</div>
-					<div>
-						<ButtonDropDown items={userOptions} label="Actions" />
-					</div>
+
+					{hasAllEventsPermissions &&
+						!['canceled', 'completed'].includes(
+							businessEvent.eventStatus?.key!
+						) && (
+							<div className="be-actions">
+								<ButtonDropDown
+									items={userOptions}
+									label={i18n.translate('actions')}
+									menuElementAttrs={{
+										className: 'p-0',
+									}}
+								/>
+							</div>
+						)}
 				</div>
 			</div>
 
 			<div className="mb-4">
-				<NavigationBar triggerLabel={i18n.translate('event-details')}>
+				<NavigationBar
+					fluidSize={false}
+					triggerLabel={i18n.translate('event-details')}
+				>
 					<Nav.Item>
 						<Nav.Link
 							active={true}
@@ -124,16 +192,17 @@ const BusinessEventsItemDetails = () => {
 							{i18n.translate('event-details')}
 						</Nav.Link>
 					</Nav.Item>
-					<Nav.Item>
+					<Nav.Item
+						onClick={() =>
+							navigate(
+								`/${accountKey}/business-events/${id}/activity-history`
+							)
+						}
+					>
 						<Nav.Link
 							active={false}
 							aria-label={`Switch to ${i18n.translate('activity-history')}`}
 							className="be-nav-link text-neutral-10"
-							onClick={() =>
-								navigate(
-									`/${accountKey}/business-events/${id}/activity-history`
-								)
-							}
 						>
 							{i18n.translate('activity-history')}
 						</Nav.Link>
@@ -145,19 +214,23 @@ const BusinessEventsItemDetails = () => {
 				<div className="event-detail-container">
 					{businessEvent?.eventType && (
 						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
+							<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
 								{i18n.translate('event-type')}
 							</div>
 
 							<div className="d-inline-block event-detail-value font-weight-semi-bold rounded text-neutral-9">
-								{businessEvent?.eventType?.name}
+								{i18n.translate(
+									getKebabCase(
+										businessEvent?.eventType?.key as string
+									) as string
+								)}
 							</div>
 						</div>
 					)}
 
-					{businessEvent?.currentLiferayVersion && (
+					{businessEvent?.currentLiferayVersion?.key && (
 						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
+							<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
 								{i18n.translate('current-version')}
 							</div>
 
@@ -167,9 +240,9 @@ const BusinessEventsItemDetails = () => {
 						</div>
 					)}
 
-					{businessEvent?.newLiferayVersion && (
+					{businessEvent?.newLiferayVersion?.key && (
 						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
+							<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
 								{i18n.translate('new-version')}
 							</div>
 
@@ -179,9 +252,21 @@ const BusinessEventsItemDetails = () => {
 						</div>
 					)}
 
+					{businessEvent?.description && (
+						<div className="event-detail-item mb-4">
+							<div className="event-detail-title font-weight-semi-bold mb-2 text-neutral-8">
+								{i18n.translate('details')}
+							</div>
+
+							<div className="d-inline-block text-neutral-9">
+								{businessEvent?.description}
+							</div>
+						</div>
+					)}
+
 					{businessEvent?.targetGoLiveDateTime && (
 						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
+							<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
 								{i18n.translate('target-go-live-date')}
 							</div>
 
@@ -190,13 +275,14 @@ const BusinessEventsItemDetails = () => {
 									{getFormattedDate(
 										businessEvent?.targetGoLiveDateTime,
 										'day2DMonthSYearN',
-										'GMT'
+										'UTC'
 									)}
 								</div>
+
 								<div className="be-subtitle text-neutral-7">
 									{getFormattedTime(
 										businessEvent?.targetGoLiveDateTime,
-										'GMT'
+										'UTC'
 									)}
 								</div>
 							</div>
@@ -205,7 +291,7 @@ const BusinessEventsItemDetails = () => {
 
 					{businessEvent?.actualGoLiveDateTime && (
 						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
+							<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
 								{i18n.translate('actual-go-live-date')}
 							</div>
 
@@ -214,32 +300,68 @@ const BusinessEventsItemDetails = () => {
 									{getFormattedDate(
 										businessEvent?.actualGoLiveDateTime,
 										'day2DMonthSYearN',
-										'GMT'
+										'UTC'
 									)}
 								</div>
+
 								<div className="be-subtitle text-neutral-7">
 									{getFormattedTime(
 										businessEvent?.actualGoLiveDateTime,
-										'GMT'
+										'UTC'
 									)}
 								</div>
 							</div>
 						</div>
 					)}
 
-					{businessEvent?.associatedTickets && (
-						<div className="event-detail-item mb-4">
-							<div className="event-detail-title mb-1 text-neutral-8">
-								{i18n.translate('associated-tickets')}
-							</div>
+					{!loadingTickets ? (
+						!tickets ? (
+							<p
+								dangerouslySetInnerHTML={{
+									__html: i18n.sub(
+										'we-apologize-for-the-inconvenience-but-we-ve-detected-a-system-error-with-this-project',
+										[
+											'<a href="https://help.liferay.com">',
+											'</a>',
+										]
+									),
+								}}
+							/>
+						) : (
+							Boolean(ticketOptions.length) && (
+								<div className="event-detail-item mb-4">
+									<div className="event-detail-title font-weight-semi-bold mb-1 text-neutral-8">
+										{i18n.translate('associated-tickets')}
+									</div>
 
-							<div className="d-inline-block event-detail-value font-weight-semi-bold rounded text-neutral-9">
-								{businessEvent?.associatedTickets}
-							</div>
+									<div className="w-50">
+										<AssociatedTicketsContainer
+											ticketOptions={ticketOptions}
+										/>
+									</div>
+								</div>
+							)
+						)
+					) : (
+						<div className="w-25">
+							<ClayLoadingIndicator size="sm" />
 						</div>
 					)}
 				</div>
 			</div>
+
+			{businessEvent && open && (
+				<ManageEventModal
+					accountExternalReferenceCode={accountKey || ''}
+					businessEvent={businessEvent}
+					client={client}
+					closeFunction={onOpenChange}
+					modalType={modalType}
+					observer={observer}
+					onCancel={handleOnCancel}
+					onCompleted={handleOnCompleted}
+				/>
+			)}
 		</div>
 	);
 };

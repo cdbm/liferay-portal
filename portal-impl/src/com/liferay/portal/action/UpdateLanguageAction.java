@@ -34,13 +34,13 @@ import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -237,9 +237,8 @@ public class UpdateLanguageAction implements Action {
 
 			redirect = layoutURL + friendlyURLSeparatorPart;
 		}
-		else if (layoutURL.equals(StringPool.SLASH) ||
-				 isGroupFriendlyURL(
-					 layout.getGroup(), layout, layoutURL, currentLocale)) {
+		else if (isGroupFriendlyURL(
+					layout.getGroup(), layout, layoutURL, currentLocale)) {
 
 			if (localePrependFriendlyURLStyle == 0) {
 				redirect = layoutURL;
@@ -301,9 +300,8 @@ public class UpdateLanguageAction implements Action {
 	protected boolean isGroupFriendlyURL(
 		Group group, Layout layout, String layoutURL, Locale locale) {
 
-		if (Objects.equals(layoutURL, PortalUtil.getPathContext()) ||
-			Objects.equals(
-				layoutURL, PortalUtil.getPathContext() + StringPool.SLASH) ||
+		if (Validator.isNull(layoutURL) ||
+			Objects.equals(layoutURL, StringPool.SLASH) ||
 			PortalUtil.isGroupFriendlyURL(
 				layoutURL, group.getFriendlyURL(),
 				layout.getFriendlyURL(locale))) {
@@ -311,8 +309,7 @@ public class UpdateLanguageAction implements Action {
 			return true;
 		}
 
-		int index = layoutURL.indexOf(
-			PortalUtil.getPathContext() + StringPool.SLASH);
+		int index = layoutURL.indexOf(StringPool.SLASH);
 
 		String string = layoutURL.substring(index + 1);
 

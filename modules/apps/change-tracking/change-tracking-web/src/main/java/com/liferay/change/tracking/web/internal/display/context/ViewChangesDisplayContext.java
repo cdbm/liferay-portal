@@ -106,6 +106,14 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.text.Format;
@@ -124,14 +132,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -249,9 +249,9 @@ public class ViewChangesDisplayContext {
 						).setParameter(
 							"ctCollectionId", _ctCollection.getCtCollectionId()
 						).buildString(),
-						"move-folder", "move-changes", "post",
+						"move-folder", "move-changes",
 						_language.get(_httpServletRequest, "move-changes"),
-						"move-changes", null));
+						"post", "move-changes", null));
 			}
 
 			if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
@@ -266,11 +266,14 @@ public class ViewChangesDisplayContext {
 						).setParameter(
 							"ctCollectionId", _ctCollection.getCtCollectionId()
 						).buildString(),
-						"trash", "view-discard", "delete",
-						_language.get(_httpServletRequest, "discard"),
-						"view-discard", null));
+						"trash", "view-discard",
+						_language.get(_httpServletRequest, "discard-changes"),
+						"delete", "view-discard", null));
 			}
 		}
+
+		bulkActionDropdownItems.forEach(
+			dropdownItem -> dropdownItem.putData("highlighted", "true"));
 
 		return bulkActionDropdownItems;
 	}
@@ -453,7 +456,8 @@ public class ViewChangesDisplayContext {
 			"itemsOverview", itemsOverviewJSONArray
 		).put(
 			"publicationSizeClassification",
-			_ctCollection.getScoreSizeClassification()
+			_language.get(
+				_httpServletRequest, _ctCollection.getScoreSizeClassification())
 		).build();
 	}
 
@@ -1660,10 +1664,6 @@ public class ViewChangesDisplayContext {
 				).put(
 					"modelKey", modelInfo._modelKey
 				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
-				).put(
 					"title",
 					_getTitle(
 						CTConstants.CT_COLLECTION_ID_PRODUCTION,
@@ -1766,10 +1766,6 @@ public class ViewChangesDisplayContext {
 				).put(
 					"modifiedTime", modifiedDate.getTime()
 				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
-				).put(
 					"timeDescription",
 					_language.getTimeDescription(
 						_httpServletRequest,
@@ -1863,12 +1859,12 @@ public class ViewChangesDisplayContext {
 		ViewChangesDisplayContext.class);
 
 	private static final Snapshot<Searcher> _searcherSnapshot = new Snapshot<>(
-		DisplayContextUtil.class, Searcher.class);
+		ViewChangesDisplayContext.class, Searcher.class);
 	private static final Snapshot<SearchRequestBuilderFactory>
 		_searchRequestBuilderFactorySnapshot = new Snapshot<>(
-			DisplayContextUtil.class, SearchRequestBuilderFactory.class);
+			ViewChangesDisplayContext.class, SearchRequestBuilderFactory.class);
 	private static final Snapshot<Sorts> _sortsSnapshot = new Snapshot<>(
-		DisplayContextUtil.class, Sorts.class);
+		ViewChangesDisplayContext.class, Sorts.class);
 
 	private final long _activeCTCollectionId;
 	private final BasePersistenceRegistry _basePersistenceRegistry;

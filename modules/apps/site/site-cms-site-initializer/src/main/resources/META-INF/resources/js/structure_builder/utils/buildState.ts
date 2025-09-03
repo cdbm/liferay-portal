@@ -3,112 +3,36 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {State, Uuid} from '../contexts/StateContext';
-import {ObjectDefinition, ObjectField} from '../types/ObjectDefinition';
-import {DB_TYPE_FIELD_TYPE, Field} from './field';
-import getUuid from './getUuid';
+import {State} from '../contexts/StateContext';
+import {ObjectDefinition, ObjectDefinitions} from '../types/ObjectDefinition';
+import buildStructure from './buildStructure';
+import {getChildrenUuids} from './getChildrenUuids';
 
-export default function buildState(
-	objectDefinition: ObjectDefinition
-): State | null {
-	if (!objectDefinition) {
+export default function buildState({
+	mainObjectDefinition,
+	objectDefinitions,
+}: {
+	mainObjectDefinition: ObjectDefinition;
+	objectDefinitions: ObjectDefinitions;
+}): State | null {
+	if (!mainObjectDefinition) {
 		return null;
 	}
 
-	const fields = new Map<Uuid, Field>();
-
-	objectDefinition.objectFields?.forEach((objectField) => {
-		if (objectField.system) {
-			return;
-		}
-
-		const indexableConfig = {
-			indexed: objectField.indexed,
-		} as Field['indexableConfig'];
-
-		if (indexableConfig.indexed) {
-			indexableConfig.indexedAsKeyword =
-				objectField.indexedAsKeyword ?? false;
-			indexableConfig.indexedLanguageId =
-				objectField.indexedLanguageId !== ''
-					? objectField.indexedLanguageId
-					: undefined;
-		}
-
-		const uuid = getUuid();
-
-		fields.set(uuid, {
-			erc: objectField.externalReferenceCode,
-			indexableConfig,
-			label: objectField.label,
-			localized: objectField.localized,
-			name: objectField.name,
-			required: objectField.required,
-			settings: getSettings(objectField),
-			type: DB_TYPE_FIELD_TYPE[objectField.DBType],
-			uuid,
-		});
-	});
-
-	const isPublished = objectDefinition.status?.label === 'approved';
+	const structure = buildStructure({mainObjectDefinition, objectDefinitions});
 
 	return {
-		erc: objectDefinition.externalReferenceCode,
 		error: null,
-		fields,
-		id: objectDefinition.id ?? null,
-		invalids: new Set(),
-		label: objectDefinition.label,
-		name: objectDefinition.name ?? '',
-		publishedFields: isPublished ? new Set(fields.keys()) : new Set(),
+		history: {
+			deletedChildren: false,
+		},
+		invalids: new Map(),
+		publishedChildren:
+			structure.status === 'published'
+				? getChildrenUuids({root: structure})
+				: new Set(),
 		selection: [],
-		status: isPublished ? 'published' : 'draft',
-		uuid: getUuid(),
+		structure,
+		unsavedChanges: false,
 	};
-}
-
-function getSettings(objectField: ObjectField): Field['settings'] {
-	const settings: Record<string, any> = {};
-
-	const objectFieldSettings: Record<string, any> = {};
-
-	for (const objectFieldSetting of objectField.objectFieldSettings ?? []) {
-		objectFieldSettings[objectFieldSetting.name] = objectFieldSetting.value;
-	}
-
-	if (objectField.businessType === 'Attachment') {
-		settings.acceptedFileExtensions =
-			objectFieldSettings.acceptedFileExtensions;
-		settings.fileSource = objectFieldSettings.fileSource;
-		settings.maximumFileSize = objectFieldSettings.maximumFileSize;
-
-		if (objectFieldSettings.fileSource === 'userComputer') {
-			settings.showFilesInDocumentsAndMedia =
-				objectFieldSettings.showFilesInDocumentsAndMedia;
-			settings.storageDLFolderPath =
-				objectFieldSettings.storageDLFolderPath;
-		}
-	}
-	else if (objectField.businessType === 'DateTime') {
-		settings.timeStorage = objectFieldSettings.timeStorage;
-	}
-	else if (
-		objectField.businessType === 'Integer' ||
-		objectField.businessType === 'LongText' ||
-		objectField.businessType === 'Text'
-	) {
-		if (objectFieldSettings.maxLength) {
-			settings.maxLength = objectFieldSettings.maxLength;
-		}
-
-		if (objectFieldSettings.showCounter) {
-			settings.showCounter = objectFieldSettings.showCounter;
-		}
-
-		if (objectFieldSettings.uniqueValues) {
-			settings.uniqueValues = objectFieldSettings.uniqueValues;
-		}
-	}
-
-	return settings as Field['settings'];
 }

@@ -43,11 +43,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -348,16 +348,14 @@ public class BlogsEntryContentDashboardItemTest {
 		ContentDashboardItem contentDashboardItem =
 			_contentDashboardItemFactory.create(blogsEntry.getEntryId());
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
 
 		Assert.assertEquals(
-			specificInformationList.toString(), 1,
-			specificInformationList.size());
+			specificInformations.toString(), 1, specificInformations.size());
 
 		ContentDashboardItem.SpecificInformation<?> specificInformation =
-			specificInformationList.get(0);
+			specificInformations.get(0);
 
 		Assert.assertEquals(
 			specificInformation.getValue(), blogsEntry.getDisplayDate());

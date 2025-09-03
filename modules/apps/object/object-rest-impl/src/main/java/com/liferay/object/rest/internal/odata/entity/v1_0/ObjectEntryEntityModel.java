@@ -32,6 +32,8 @@ import com.liferay.portal.odata.entity.IdEntityField;
 import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 
+import jakarta.ws.rs.BadRequestException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -39,8 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-
-import javax.ws.rs.BadRequestException;
 
 /**
  * @author Javier de Arcos
@@ -285,13 +285,32 @@ public class ObjectEntryEntityModel implements EntityModel {
 						NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
 					objectField);
 
-			entityFieldsMap.put(
-				objectRelationshipERCObjectFieldName,
-				new ReferenceStringEntityField(
+			// TODO: Temporary workaround for LPD-59378. Remove when filtering
+			// is supported for system objects.
+
+			ObjectDefinition relatedObjectDefinition =
+				ObjectRelationshipUtil.getRelatedObjectDefinition(
+					objectDefinition,
+					ObjectRelationshipLocalServiceUtil.
+						fetchObjectRelationshipByObjectFieldId2(
+							objectField.getObjectFieldId()));
+
+			if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
+				entityFieldsMap.put(
 					objectRelationshipERCObjectFieldName,
-					_getExternalReferenceCodeFunction(),
-					objectFieldName.split(StringPool.UNDERLINE)[1] +
-						"/externalReferenceCode"));
+					new StringEntityField(
+						objectRelationshipERCObjectFieldName,
+						locale -> objectFieldName));
+			}
+			else {
+				entityFieldsMap.put(
+					objectRelationshipERCObjectFieldName,
+					new ReferenceStringEntityField(
+						objectRelationshipERCObjectFieldName,
+						_getExternalReferenceCodeFunction(),
+						objectFieldName.split(StringPool.UNDERLINE)[1] +
+							"/externalReferenceCode"));
+			}
 
 			String relationshipIdName = objectFieldName.substring(
 				objectFieldName.lastIndexOf(StringPool.UNDERLINE) + 1);

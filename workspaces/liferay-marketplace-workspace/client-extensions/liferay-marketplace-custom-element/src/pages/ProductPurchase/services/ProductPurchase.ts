@@ -4,25 +4,38 @@
  */
 
 import {Analytics} from '../../../core/Analytics';
-import {ORDER_TYPES} from '../../../enums/Order';
-import CommerceSelectAccountImpl from '../../../services/rest/CommerceSelectAccount';
+import {OrderTypes} from '../../../enums/Order';
+import {Liferay} from '../../../liferay/liferay';
+import CommerceSelectAccount from '../../../services/rest/CommerceSelectAccount';
 import HeadlessCommerceDeliveryCart from '../../../services/rest/HeadlessCommerceDeliveryCart';
 
 export default class ProductPurchase {
-	protected orderTypeExternalReferenceCode?: ORDER_TYPES;
+	protected orderTypeExternalReferenceCode?: OrderTypes;
 	protected HeadlessCommerceDeliveryCart = HeadlessCommerceDeliveryCart;
 
 	constructor(
-		protected account: Account,
-		protected channel: Channel,
-		protected product: DeliveryProduct | Product
+		protected readonly account: Account,
+		protected readonly product: DeliveryProduct
 	) {}
 
-	protected getCartItems() {
+	protected getCart() {
+		return {
+			accountId: this.account.id,
+			cartItems: this.getCartItems(),
+			currencyCode: Liferay.CommerceContext.currency.currencyCode,
+			orderTypeExternalReferenceCode: this.orderTypeExternalReferenceCode,
+		} as Cart;
+	}
+
+	public async getNextStepsLink(cart: Cart) {
+		return `/next-steps?orderId=${cart.id}`;
+	}
+
+	protected getCartItems(skuId = this.product.skus[0]?.id) {
 		return [
 			{
 				price: {
-					currency: this.channel.currencyCode,
+					currency: Liferay.CommerceContext.currency.currencyCode,
 					discount: 0,
 				},
 				productId: this.product.productId,
@@ -30,37 +43,39 @@ export default class ProductPurchase {
 				settings: {
 					maxQuantity: 1,
 				},
-				skuId: this.product.skus[0]?.id,
+				skuId,
 			},
 		];
 	}
 
-	public async createOrder(order?: Partial<Cart>): Promise<Cart> {
-		const accountId = Number(this.account.id);
-
-		const cart = await HeadlessCommerceDeliveryCart.createCart(
-			this.channel.id,
-			{
-				...order,
-				accountId,
-				cartItems: this.getCartItems(),
-				currencyCode: this.channel.currencyCode,
-				orderTypeExternalReferenceCode:
-					this.orderTypeExternalReferenceCode,
-			}
-		);
-
-		await Promise.all([
-			CommerceSelectAccountImpl.selectAccount(this.account.id),
-			HeadlessCommerceDeliveryCart.checkoutCart(cart.id),
-		]);
-
+	protected analyticsTrack() {
 		Analytics.track('ORDER_CREATION', {
 			accountId: this.account.id,
 			orderTypeExternalReferenceCode: this.orderTypeExternalReferenceCode,
 			productName: this.product.name,
 		});
+	}
 
-		return cart;
+	public async createOrder(cart?: Cart, _options?: unknown): Promise<Cart> {
+		const body = {
+			...this.getCart(),
+			...cart,
+		};
+
+		const newCart = await (cart?.id
+			? HeadlessCommerceDeliveryCart.updateCart(cart.id, body)
+			: HeadlessCommerceDeliveryCart.createCart(
+					Liferay.CommerceContext.commerceChannelId,
+					body
+				));
+
+		await Promise.all([
+			CommerceSelectAccount.selectAccount(this.account.id),
+			HeadlessCommerceDeliveryCart.checkoutCart(newCart.id),
+		]);
+
+		this.analyticsTrack();
+
+		return newCart;
 	}
 }

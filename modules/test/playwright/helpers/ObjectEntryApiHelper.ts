@@ -13,6 +13,12 @@ export class ObjectEntryApiHelper {
 		this.apiHelpers = apiHelpers;
 	}
 
+	async deleteObjectEntry(applicationName: string, objectEntryId: string) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${applicationName}/${objectEntryId}`
+		);
+	}
+
 	async deleteObjectEntryByExternalReferenceCode(
 		applicationName: string,
 		scopeKey: string,
@@ -44,6 +50,12 @@ export class ObjectEntryApiHelper {
 	) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${applicationName}/by-external-reference-code/${externalReferenceCode}`
+		);
+	}
+
+	async getObjectEntryById(applicationName: string, id: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${applicationName}/${id}`
 		);
 	}
 

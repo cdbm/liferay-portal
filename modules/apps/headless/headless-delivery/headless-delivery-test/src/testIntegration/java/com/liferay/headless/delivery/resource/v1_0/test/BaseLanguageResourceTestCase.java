@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
@@ -45,6 +46,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -98,16 +99,28 @@ public abstract class BaseLanguageResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_languageResource.setContextCompany(testCompany);
 
@@ -271,7 +284,7 @@ public abstract class BaseLanguageResourceTestCase {
 			testGetAssetLibraryLanguagesPage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
+		return irrelevantDepotEntry.getDepotEntryId();
 	}
 
 	@Test
@@ -405,6 +418,11 @@ public abstract class BaseLanguageResourceTestCase {
 		throws Exception {
 
 		return testGraphQLLanguage_addLanguage();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Language testGraphQLLanguage_addLanguage() throws Exception {
@@ -1029,7 +1047,10 @@ public abstract class BaseLanguageResourceTestCase {
 	protected LanguageResource languageResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {

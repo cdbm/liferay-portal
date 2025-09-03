@@ -57,11 +57,12 @@ import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.service.http.GroupServiceHttp;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.ReadOnlyException;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.ReadOnlyException;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,7 +71,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Máté Thurzó
  */
 @Component(
-	property = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+	property = "jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class DLExportImportPortletPreferencesProcessor
@@ -406,6 +407,33 @@ public class DLExportImportPortletPreferencesProcessor
 						readOnlyException);
 				}
 			}
+		}
+
+		try {
+			long sourceGroupId = portletDataContext.getSourceGroupId();
+
+			if (sourceGroupId != 0) {
+				Group group = _groupLocalService.getGroup(sourceGroupId);
+
+				if (Objects.equals(
+						group.getExternalReferenceCode(),
+						portletPreferences.getValue(
+							_PREFERENCE_KEY_SELECTED_GROUP_EXTERNAL_REFERENCE_CODE,
+							null))) {
+
+					Group selectedGroup = _groupLocalService.getGroup(
+						portletDataContext.getGroupId());
+
+					portletPreferences.setValue(
+						_PREFERENCE_KEY_SELECTED_GROUP_EXTERNAL_REFERENCE_CODE,
+						selectedGroup.getExternalReferenceCode());
+				}
+			}
+		}
+		catch (Exception exception) {
+			throw new PortletDataException(
+				"Unable to update portlet preferences during import",
+				exception);
 		}
 
 		// Root folder external reference code is not set, need to import
@@ -759,7 +787,7 @@ public class DLExportImportPortletPreferencesProcessor
 	private DLFolderLocalService _dlFolderLocalService;
 
 	@Reference(
-		target = "(javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY + ")"
+		target = "(jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY + ")"
 	)
 	private PortletDataHandler _dlPortletDataHandler;
 

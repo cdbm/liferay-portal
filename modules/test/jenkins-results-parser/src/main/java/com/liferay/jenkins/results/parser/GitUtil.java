@@ -277,8 +277,28 @@ public class GitUtil {
 		ExecutionResult executionResult = null;
 
 		try {
+			String timeoutSeconds = null;
+
+			try {
+				timeoutSeconds = JenkinsResultsParserUtil.getBuildProperty(
+					"git.lsremote.timeout.seconds");
+			}
+			catch (IOException ioException) {
+				System.out.println(
+					"Unable to get build property, " +
+						"\"git.lsremote.timeout.seconds\"");
+
+				ioException.printStackTrace();
+			}
+			finally {
+				if (JenkinsResultsParserUtil.isNullOrEmpty(timeoutSeconds)) {
+					timeoutSeconds = "120";
+				}
+			}
+
 			executionResult = executeBashCommands(
-				3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60, workingDirectory,
+				3, GitUtil.MILLIS_RETRY_DELAY,
+				1000 * Long.parseLong(timeoutSeconds), workingDirectory,
 				command);
 
 			if (executionResult.getExitValue() != 0) {
@@ -354,11 +374,7 @@ public class GitUtil {
 	public static boolean isValidGitHubRefURL(String gitHubURL) {
 		Matcher matcher = _gitHubRefURLPattern.matcher(gitHubURL);
 
-		if (!matcher.find()) {
-			return false;
-		}
-
-		return true;
+		return matcher.find();
 	}
 
 	public static boolean isValidRemoteURL(String remoteURL) {
@@ -490,7 +506,7 @@ public class GitUtil {
 					modifiedCommands[i] = modifiedCommand;
 				}
 			}
-			else {
+			else if (!gitHubDevNodeHostname.isEmpty()) {
 				for (int i = 0; i < modifiedCommands.length; i++) {
 					modifiedCommands[i] = modifiedCommands[i].replace(
 						_HOSTNAME_GITHUB_CACHE_PROXY, gitHubDevNodeHostname);

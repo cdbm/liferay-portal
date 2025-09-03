@@ -42,7 +42,7 @@ import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -63,7 +63,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Victor Kammerer
  */
-@FeatureFlags("LPD-32050")
+@FeatureFlag("LPD-32050")
 @RunWith(Arquillian.class)
 public class ObjectEntryIndexerReindexTest {
 
@@ -85,7 +85,7 @@ public class ObjectEntryIndexerReindexTest {
 			ObjectDefinition objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
 					TestPropsValues.getUserId(), 0, null, false, false, true,
-					true, false,
+					true, false, false, false, false, null,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					ObjectDefinitionTestUtil.getRandomName(), null, null,
@@ -201,7 +201,7 @@ public class ObjectEntryIndexerReindexTest {
 				objectDefinition.getObjectDefinitionId());
 
 			ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-				TestPropsValues.getUserId(), 0,
+				0, TestPropsValues.getUserId(),
 				objectDefinition.getObjectDefinitionId(),
 				ObjectEntryFolderConstants.
 					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,

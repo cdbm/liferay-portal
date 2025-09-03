@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 
 import java.util.Iterator;
@@ -47,18 +48,18 @@ public class CPConfigurationListServiceImpl
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire)
+			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkCommerceCatalog(groupId, ActionKeys.UPDATE);
 
 		return cpConfigurationListLocalService.addCPConfigurationList(
-			externalReferenceCode, groupId, getUserId(),
+			externalReferenceCode, getUserId(), groupId,
 			parentCPConfigurationListId, masterCPConfigurationList, name,
 			priority, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire);
+			expirationDateMinute, neverExpire, serviceContext);
 	}
 
 	@Override
@@ -70,18 +71,18 @@ public class CPConfigurationListServiceImpl
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire)
+			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkCommerceCatalog(groupId, ActionKeys.UPDATE);
 
 		return cpConfigurationListLocalService.addOrUpdateCPConfigurationList(
-			externalReferenceCode, companyId, groupId, getUserId(),
+			externalReferenceCode, companyId, getUserId(), groupId,
 			parentCPConfigurationListId, masterCPConfigurationList, name,
 			priority, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire);
+			expirationDateMinute, neverExpire, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -130,20 +131,6 @@ public class CPConfigurationListServiceImpl
 		}
 
 		return cpConfigurationList;
-	}
-
-	@Indexable(type = IndexableType.DELETE)
-	@Override
-	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
-	public CPConfigurationList forceDeleteCPConfigurationList(
-			CPConfigurationList cpConfigurationList)
-		throws PortalException {
-
-		_checkCommerceCatalog(
-			cpConfigurationList.getGroupId(), ActionKeys.UPDATE);
-
-		return cpConfigurationListLocalService.forceDeleteCPConfigurationList(
-			cpConfigurationList);
 	}
 
 	@Override
@@ -220,18 +207,18 @@ public class CPConfigurationListServiceImpl
 			int displayDateHour, int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire)
+			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkCommerceCatalog(groupId, ActionKeys.UPDATE);
 
 		return cpConfigurationListLocalService.updateCPConfigurationList(
-			externalReferenceCode, cpConfigurationListId, groupId, getUserId(),
+			externalReferenceCode, cpConfigurationListId, getUserId(), groupId,
 			parentCPConfigurationListId, masterCPConfigurationList, name,
 			priority, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire);
+			expirationDateMinute, neverExpire, serviceContext);
 	}
 
 	private void _checkCommerceCatalog(long groupId, String actionId)

@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -180,247 +180,318 @@ public abstract class BasePageElementResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage()
-		throws Exception {
-
-		String siteExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getSiteExternalReferenceCode();
-		String irrelevantSiteExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantSiteExternalReferenceCode();
-		String pageSpecificationExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageSpecificationExternalReferenceCode();
-		String irrelevantPageSpecificationExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageSpecificationExternalReferenceCode();
-		String pageExperienceExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageExperienceExternalReferenceCode();
-		String irrelevantPageExperienceExternalReferenceCode =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageExperienceExternalReferenceCode();
-
-		Page<PageElement> page =
-			pageElementResource.
-				getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
-					siteExternalReferenceCode,
-					pageSpecificationExternalReferenceCode,
-					pageExperienceExternalReferenceCode, null);
-
-		long totalCount = page.getTotalCount();
-
-		if ((irrelevantSiteExternalReferenceCode != null) &&
-			(irrelevantPageSpecificationExternalReferenceCode != null) &&
-			(irrelevantPageExperienceExternalReferenceCode != null)) {
-
-			PageElement irrelevantPageElement =
-				testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
-					irrelevantSiteExternalReferenceCode,
-					irrelevantPageSpecificationExternalReferenceCode,
-					irrelevantPageExperienceExternalReferenceCode,
-					randomIrrelevantPageElement());
-
-			page =
-				pageElementResource.
-					getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
-						irrelevantSiteExternalReferenceCode,
-						irrelevantPageSpecificationExternalReferenceCode,
-						irrelevantPageExperienceExternalReferenceCode, null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantPageElement, (List<PageElement>)page.getItems());
-			assertValid(
-				page,
-				testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
-					irrelevantSiteExternalReferenceCode,
-					irrelevantPageSpecificationExternalReferenceCode,
-					irrelevantPageExperienceExternalReferenceCode));
-		}
-
-		PageElement pageElement1 =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
-				siteExternalReferenceCode,
-				pageSpecificationExternalReferenceCode,
-				pageExperienceExternalReferenceCode, randomPageElement());
-
-		PageElement pageElement2 =
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
-				siteExternalReferenceCode,
-				pageSpecificationExternalReferenceCode,
-				pageExperienceExternalReferenceCode, randomPageElement());
-
-		page =
-			pageElementResource.
-				getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
-					siteExternalReferenceCode,
-					pageSpecificationExternalReferenceCode,
-					pageExperienceExternalReferenceCode, null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(pageElement1, (List<PageElement>)page.getItems());
-		assertContains(pageElement2, (List<PageElement>)page.getItems());
-		assertValid(
-			page,
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
-				siteExternalReferenceCode,
-				pageSpecificationExternalReferenceCode,
-				pageExperienceExternalReferenceCode));
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
-				String siteExternalReferenceCode,
-				String pageSpecificationExternalReferenceCode,
-				String pageExperienceExternalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	protected PageElement
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
-				String siteExternalReferenceCode,
-				String pageSpecificationExternalReferenceCode,
-				String pageExperienceExternalReferenceCode,
-				PageElement pageElement)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getSiteExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantSiteExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageSpecificationExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageSpecificationExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageExperienceExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageExperienceExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostSiteSiteByExternalReferenceCodePageExperiencePageElement()
-		throws Exception {
-
-		PageElement randomPageElement = randomPageElement();
-
-		PageElement postPageElement =
-			testPostSiteSiteByExternalReferenceCodePageExperiencePageElement_addPageElement(
-				randomPageElement);
-
-		assertEquals(randomPageElement, postPageElement);
-		assertValid(postPageElement);
-	}
-
-	protected PageElement
-			testPostSiteSiteByExternalReferenceCodePageExperiencePageElement_addPageElement(
-				PageElement pageElement)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteSiteSiteByExternalReferenceCodePageElement()
 		throws Exception {
 
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PageElement pageElement =
+			testDeleteSiteSiteByExternalReferenceCodePageElement_addPageElement();
+
+		assertHttpResponseStatusCode(
+			204,
+			pageElementResource.
+				deleteSiteSiteByExternalReferenceCodePageElementHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+					pageElement.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			pageElementResource.
+				getSiteSiteByExternalReferenceCodePageElementHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+					pageElement.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			pageElementResource.
+				getSiteSiteByExternalReferenceCodePageElementHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+					testDeleteSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+					"-"));
+	}
+
+	protected PageElement
+			testDeleteSiteSiteByExternalReferenceCodePageElement_addPageElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGetSiteSiteByExternalReferenceCodePageElement()
 		throws Exception {
 
-		Assert.assertTrue(false);
+		PageElement postPageElement =
+			testGetSiteSiteByExternalReferenceCodePageElement_addPageElement();
+
+		PageElement getPageElement =
+			pageElementResource.getSiteSiteByExternalReferenceCodePageElement(
+				testGetSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+				testGetSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+				testGetSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+				postPageElement.getExternalReferenceCode());
+
+		assertEquals(postPageElement, getPageElement);
+		assertValid(getPageElement);
+	}
+
+	protected PageElement
+			testGetSiteSiteByExternalReferenceCodePageElement_addPageElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLGetSiteSiteByExternalReferenceCodePageElement()
 		throws Exception {
 
-		Assert.assertTrue(true);
+		PageElement pageElement =
+			testGraphQLGetSiteSiteByExternalReferenceCodePageElement_addPageElement();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				pageElement,
+				PageElementSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"siteByExternalReferenceCodePageElement",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteExternalReferenceCode",
+											"\"" +
+												testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode() +
+													"\"");
+
+										put(
+											"pageSpecificationExternalReferenceCode",
+											"\"" +
+												testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode() +
+													"\"");
+
+										put(
+											"pageExperienceExternalReferenceCode",
+											"\"" +
+												testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode() +
+													"\"");
+										put(
+											"pageElementExternalReferenceCode",
+											"\"" +
+												pageElement.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/siteByExternalReferenceCodePageElement"))));
+
+		// Using the namespace headlessAdminSite_v1_0
+
+		Assert.assertTrue(
+			equals(
+				pageElement,
+				PageElementSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminSite_v1_0",
+								new GraphQLField(
+									"siteByExternalReferenceCodePageElement",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteExternalReferenceCode",
+												"\"" +
+													testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode() +
+														"\"");
+
+											put(
+												"pageSpecificationExternalReferenceCode",
+												"\"" +
+													testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode() +
+														"\"");
+
+											put(
+												"pageExperienceExternalReferenceCode",
+												"\"" +
+													testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode() +
+														"\"");
+											put(
+												"pageElementExternalReferenceCode",
+												"\"" +
+													pageElement.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminSite_v1_0",
+						"Object/siteByExternalReferenceCodePageElement"))));
+	}
+
+	protected String
+			testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGraphQLGetSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLGetSiteSiteByExternalReferenceCodePageElementNotFound()
 		throws Exception {
 
-		Assert.assertTrue(true);
-	}
+		String irrelevantPageSpecificationExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantPageExperienceExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantPageElementExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
 
-	@Test
-	public void testPatchSiteSiteByExternalReferenceCodePageElement()
-		throws Exception {
+		// No namespace
 
-		Assert.assertTrue(false);
-	}
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"siteByExternalReferenceCodePageElement",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteExternalReferenceCode",
+									"\"" +
+										irrelevantGroup.
+											getExternalReferenceCode() + "\"");
+								put(
+									"pageSpecificationExternalReferenceCode",
+									irrelevantPageSpecificationExternalReferenceCode);
+								put(
+									"pageExperienceExternalReferenceCode",
+									irrelevantPageExperienceExternalReferenceCode);
+								put(
+									"pageElementExternalReferenceCode",
+									irrelevantPageElementExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 
-	@Test
-	public void testPutSiteSiteByExternalReferenceCodePageElement()
-		throws Exception {
+		// Using the namespace headlessAdminSite_v1_0
 
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition()
-		throws Exception {
-
-		PageElement randomPageElement = randomPageElement();
-
-		PageElement postPageElement =
-			testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition_addPageElement(
-				randomPageElement);
-
-		assertEquals(randomPageElement, postPageElement);
-		assertValid(postPageElement);
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminSite_v1_0",
+						new GraphQLField(
+							"siteByExternalReferenceCodePageElement",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteExternalReferenceCode",
+										"\"" +
+											irrelevantGroup.
+												getExternalReferenceCode() +
+													"\"");
+									put(
+										"pageSpecificationExternalReferenceCode",
+										irrelevantPageSpecificationExternalReferenceCode);
+									put(
+										"pageExperienceExternalReferenceCode",
+										irrelevantPageExperienceExternalReferenceCode);
+									put(
+										"pageElementExternalReferenceCode",
+										irrelevantPageElementExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
 	protected PageElement
-			testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition_addPageElement(
-				PageElement pageElement)
+			testGraphQLGetSiteSiteByExternalReferenceCodePageElement_addPageElement()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGraphQLPageElement_addPageElement();
 	}
 
 	@Test
@@ -553,15 +624,14 @@ public abstract class BasePageElementResourceTestCase {
 			testGetSiteSiteByExternalReferenceCodePageElementPageElementsPage_getSiteExternalReferenceCode()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGroup.getExternalReferenceCode();
 	}
 
 	protected String
 			testGetSiteSiteByExternalReferenceCodePageElementPageElementsPage_getIrrelevantSiteExternalReferenceCode()
 		throws Exception {
 
-		return null;
+		return irrelevantGroup.getExternalReferenceCode();
 	}
 
 	protected String
@@ -607,6 +677,317 @@ public abstract class BasePageElementResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage()
+		throws Exception {
+
+		String siteExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getSiteExternalReferenceCode();
+		String irrelevantSiteExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantSiteExternalReferenceCode();
+		String pageSpecificationExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageSpecificationExternalReferenceCode();
+		String irrelevantPageSpecificationExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageSpecificationExternalReferenceCode();
+		String pageExperienceExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageExperienceExternalReferenceCode();
+		String irrelevantPageExperienceExternalReferenceCode =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageExperienceExternalReferenceCode();
+
+		Page<PageElement> page =
+			pageElementResource.
+				getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
+					siteExternalReferenceCode,
+					pageSpecificationExternalReferenceCode,
+					pageExperienceExternalReferenceCode, null);
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantSiteExternalReferenceCode != null) &&
+			(irrelevantPageSpecificationExternalReferenceCode != null) &&
+			(irrelevantPageExperienceExternalReferenceCode != null)) {
+
+			PageElement irrelevantPageElement =
+				testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
+					irrelevantSiteExternalReferenceCode,
+					irrelevantPageSpecificationExternalReferenceCode,
+					irrelevantPageExperienceExternalReferenceCode,
+					randomIrrelevantPageElement());
+
+			page =
+				pageElementResource.
+					getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
+						irrelevantSiteExternalReferenceCode,
+						irrelevantPageSpecificationExternalReferenceCode,
+						irrelevantPageExperienceExternalReferenceCode, null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantPageElement, (List<PageElement>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
+					irrelevantSiteExternalReferenceCode,
+					irrelevantPageSpecificationExternalReferenceCode,
+					irrelevantPageExperienceExternalReferenceCode));
+		}
+
+		PageElement pageElement1 =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
+				siteExternalReferenceCode,
+				pageSpecificationExternalReferenceCode,
+				pageExperienceExternalReferenceCode, randomPageElement());
+
+		PageElement pageElement2 =
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
+				siteExternalReferenceCode,
+				pageSpecificationExternalReferenceCode,
+				pageExperienceExternalReferenceCode, randomPageElement());
+
+		page =
+			pageElementResource.
+				getSiteSiteByExternalReferenceCodePageExperiencePageElementsPage(
+					siteExternalReferenceCode,
+					pageSpecificationExternalReferenceCode,
+					pageExperienceExternalReferenceCode, null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(pageElement1, (List<PageElement>)page.getItems());
+		assertContains(pageElement2, (List<PageElement>)page.getItems());
+		assertValid(
+			page,
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
+				siteExternalReferenceCode,
+				pageSpecificationExternalReferenceCode,
+				pageExperienceExternalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getExpectedActions(
+				String siteExternalReferenceCode,
+				String pageSpecificationExternalReferenceCode,
+				String pageExperienceExternalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected PageElement
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_addPageElement(
+				String siteExternalReferenceCode,
+				String pageSpecificationExternalReferenceCode,
+				String pageExperienceExternalReferenceCode,
+				PageElement pageElement)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getSiteExternalReferenceCode()
+		throws Exception {
+
+		return testGroup.getExternalReferenceCode();
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantSiteExternalReferenceCode()
+		throws Exception {
+
+		return irrelevantGroup.getExternalReferenceCode();
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodePageExperiencePageElementsPage_getIrrelevantPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPatchSiteSiteByExternalReferenceCodePageElement()
+		throws Exception {
+
+		PageElement postPageElement =
+			testPatchSiteSiteByExternalReferenceCodePageElement_addPageElement();
+
+		PageElement randomPatchPageElement = randomPatchPageElement();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PageElement patchPageElement =
+			pageElementResource.patchSiteSiteByExternalReferenceCodePageElement(
+				null, null, null, postPageElement.getExternalReferenceCode(),
+				randomPatchPageElement);
+
+		PageElement expectedPatchPageElement = postPageElement.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchPageElement, expectedPatchPageElement);
+
+		PageElement getPageElement =
+			pageElementResource.getSiteSiteByExternalReferenceCodePageElement(
+				null, null, null, patchPageElement.getExternalReferenceCode());
+
+		assertEquals(expectedPatchPageElement, getPageElement);
+		assertValid(getPageElement);
+	}
+
+	protected PageElement
+			testPatchSiteSiteByExternalReferenceCodePageElement_addPageElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition()
+		throws Exception {
+
+		PageElement randomPageElement = randomPageElement();
+
+		PageElement postPageElement =
+			testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition_addPageElement(
+				randomPageElement);
+
+		assertEquals(randomPageElement, postPageElement);
+		assertValid(postPageElement);
+	}
+
+	protected PageElement
+			testPostSiteSiteByExternalReferenceCodePageElementFragmentComposition_addPageElement(
+				PageElement pageElement)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostSiteSiteByExternalReferenceCodePageExperiencePageElement()
+		throws Exception {
+
+		PageElement randomPageElement = randomPageElement();
+
+		PageElement postPageElement =
+			testPostSiteSiteByExternalReferenceCodePageExperiencePageElement_addPageElement(
+				randomPageElement);
+
+		assertEquals(randomPageElement, postPageElement);
+		assertValid(postPageElement);
+	}
+
+	protected PageElement
+			testPostSiteSiteByExternalReferenceCodePageExperiencePageElement_addPageElement(
+				PageElement pageElement)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutSiteSiteByExternalReferenceCodePageElement()
+		throws Exception {
+
+		PageElement postPageElement =
+			testPutSiteSiteByExternalReferenceCodePageElement_addPageElement();
+
+		PageElement randomPageElement = randomPageElement();
+
+		PageElement putPageElement =
+			pageElementResource.putSiteSiteByExternalReferenceCodePageElement(
+				testPutSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+				testPutSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+				testPutSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+				postPageElement.getExternalReferenceCode(), randomPageElement);
+
+		assertEquals(randomPageElement, putPageElement);
+		assertValid(putPageElement);
+
+		PageElement getPageElement =
+			pageElementResource.getSiteSiteByExternalReferenceCodePageElement(
+				testPutSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode(),
+				testPutSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode(),
+				testPutSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode(),
+				putPageElement.getExternalReferenceCode());
+
+		assertEquals(randomPageElement, getPageElement);
+		assertValid(getPageElement);
+	}
+
+	protected PageElement
+			testPutSiteSiteByExternalReferenceCodePageElement_addPageElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteSiteByExternalReferenceCodePageElement_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteSiteByExternalReferenceCodePageElement_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteSiteByExternalReferenceCodePageElement_getPageExperienceExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
+	}
+
+	protected PageElement testGraphQLPageElement_addPageElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertContains(
@@ -682,8 +1063,10 @@ public abstract class BasePageElementResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
-			if (Objects.equals("definition", additionalAssertFieldName)) {
-				if (pageElement.getDefinition() == null) {
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (pageElement.getExternalReferenceCode() == null) {
 					valid = false;
 				}
 
@@ -691,9 +1074,9 @@ public abstract class BasePageElementResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"externalReferenceCode", additionalAssertFieldName)) {
+					"pageElementDefinition", additionalAssertFieldName)) {
 
-				if (pageElement.getExternalReferenceCode() == null) {
+				if (pageElement.getPageElementDefinition() == null) {
 					valid = false;
 				}
 
@@ -720,14 +1103,6 @@ public abstract class BasePageElementResourceTestCase {
 
 			if (Objects.equals("position", additionalAssertFieldName)) {
 				if (pageElement.getPosition() == null) {
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("type", additionalAssertFieldName)) {
-				if (pageElement.getType() == null) {
 					valid = false;
 				}
 
@@ -853,10 +1228,12 @@ public abstract class BasePageElementResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
-			if (Objects.equals("definition", additionalAssertFieldName)) {
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
 				if (!Objects.deepEquals(
-						pageElement1.getDefinition(),
-						pageElement2.getDefinition())) {
+						pageElement1.getExternalReferenceCode(),
+						pageElement2.getExternalReferenceCode())) {
 
 					return false;
 				}
@@ -865,11 +1242,11 @@ public abstract class BasePageElementResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"externalReferenceCode", additionalAssertFieldName)) {
+					"pageElementDefinition", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						pageElement1.getExternalReferenceCode(),
-						pageElement2.getExternalReferenceCode())) {
+						pageElement1.getPageElementDefinition(),
+						pageElement2.getPageElementDefinition())) {
 
 					return false;
 				}
@@ -905,16 +1282,6 @@ public abstract class BasePageElementResourceTestCase {
 				if (!Objects.deepEquals(
 						pageElement1.getPosition(),
 						pageElement2.getPosition())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("type", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						pageElement1.getType(), pageElement2.getType())) {
 
 					return false;
 				}
@@ -1029,11 +1396,6 @@ public abstract class BasePageElementResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
-		if (entityFieldName.equals("definition")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
-		}
-
 		if (entityFieldName.equals("externalReferenceCode")) {
 			Object object = pageElement.getExternalReferenceCode();
 
@@ -1078,6 +1440,11 @@ public abstract class BasePageElementResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("pageElementDefinition")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("pageElements")) {
@@ -1135,11 +1502,6 @@ public abstract class BasePageElementResourceTestCase {
 			sb.append(String.valueOf(pageElement.getPosition()));
 
 			return sb.toString();
-		}
-
-		if (entityFieldName.equals("type")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
 		}
 
 		throw new IllegalArgumentException(

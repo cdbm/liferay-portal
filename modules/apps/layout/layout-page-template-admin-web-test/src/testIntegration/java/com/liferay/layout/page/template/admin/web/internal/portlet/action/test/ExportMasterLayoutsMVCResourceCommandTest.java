@@ -36,6 +36,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ResourceRequest;
+
 import java.io.File;
 
 import java.util.Arrays;
@@ -43,8 +45,6 @@ import java.util.Enumeration;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.portlet.ResourceRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -85,7 +85,8 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), layoutPageTemplateEntry.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateEntry.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(
 						layoutPageTemplateEntry.getPlid()),

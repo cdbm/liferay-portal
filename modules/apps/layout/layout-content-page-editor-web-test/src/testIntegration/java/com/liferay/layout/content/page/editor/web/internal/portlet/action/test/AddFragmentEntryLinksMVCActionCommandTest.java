@@ -68,16 +68,16 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -198,7 +198,7 @@ public class AddFragmentEntryLinksMVCActionCommandTest {
 				fragmentCollection.getFragmentCollectionId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				StringPool.BLANK, html, StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false, fragmentEntryType,
+				StringPool.BLANK, null, 0, false, false, fragmentEntryType,
 				JSONUtil.toString(JSONUtil.put("fieldTypes", fieldTypes)),
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 
@@ -235,8 +235,9 @@ public class AddFragmentEntryLinksMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), layout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		String layoutStructureItemJSON =
 			_layoutStructureItemJSONSerializer.toJSONString(

@@ -60,6 +60,80 @@
 					"name": "AuditFieldChange"
 				}
 			},
+			"Collaborator": {
+				"description": "Represents a collaborator for an entry.",
+				"properties": {
+					"actionIds": {
+						"description": "The collaborator actions for the shared asset.",
+						"items": {
+							"description": "The collaborator actions for the shared asset.",
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"actions": {
+						"additionalProperties": {
+							"description": "Block of actions allowed by the user making the request.",
+							"type": "object"
+						},
+						"description": "Block of actions allowed by the user making the request.",
+						"readOnly": true,
+						"type": "object"
+					},
+					"creator": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"dateExpired": {
+						"description": "The expiration date to be a collaborator of the asset.",
+						"format": "date-time",
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The collaborator external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"id": {
+						"description": "The collaborator ID.",
+						"format": "int64",
+						"type": "integer"
+					},
+					"name": {
+						"description": "The collaborator name.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"portrait": {
+						"description": "The collaborator portrait.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"share": {
+						"description": "If the collaborator can share or not the asset.",
+						"type": "boolean"
+					},
+					"type": {
+						"description": "The collaborator type.",
+						"example": "User",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.headless.object.dto.v1_0.Collaborator",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"required": [
+					"actionIds",
+					"type"
+				],
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "Collaborator"
+				}
+			},
 			"Creator": {
 				"properties": {
 					"additionalName": {
@@ -168,8 +242,8 @@
 						"type": "string"
 					},
 					"fileURL": {
-						"type": "string",
-						"writeOnly": true
+						"description": "optional field that specifies the source of the file to be downloaded, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)",
+						"type": "string"
 					},
 					"folder": {
 						"$ref": "#/components/schemas/Folder"
@@ -181,11 +255,25 @@
 					"link": {
 						"$ref": "#/components/schemas/Link"
 					},
+					"mimeType": {
+						"readOnly": true,
+						"type": "string"
+					},
 					"name": {
+						"type": "string"
+					},
+					"previewURL": {
+						"description": "optional field that specifies the preview URL of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.previewURL`)",
+						"readOnly": true,
 						"type": "string"
 					},
 					"scope": {
 						"$ref": "#/components/schemas/Scope"
+					},
+					"thumbnailURL": {
+						"description": "optional field that specifies the thumbnail of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.thumbnailURL`)",
+						"readOnly": true,
+						"type": "string"
 					},
 					"x-class-name": {
 						"default": "com.liferay.object.rest.dto.v1_0.FileEntry",
@@ -313,6 +401,20 @@
 					"defaultLanguageId": {
 						"type": "string"
 					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
 					"externalReferenceCode": {
 						"readOnly": false,
 						"type": "string",
@@ -353,6 +455,13 @@
 						"type": "array",
 						"x-batch-unsupported-formats": "CSV"
 					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
 					"permissions": {
 						"items": {
 							"$ref": "#/components/schemas/Permission"
@@ -373,6 +482,26 @@
 						},
 						"type": "array"
 					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
@@ -389,7 +518,6 @@
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
 						"type": "array",
 						"x-batch-unsupported-formats": "CSV"
 					},
@@ -621,6 +749,20 @@
 					"defaultLanguageId": {
 						"type": "string"
 					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
 					"externalReferenceCode": {
 						"readOnly": false,
 						"type": "string",
@@ -665,6 +807,13 @@
 						"readOnly": false,
 						"type": "array",
 						"x-parent-map": "properties"
+					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
 					},
 					"permissions": {
 						"items": {
@@ -711,6 +860,26 @@
 						},
 						"type": "array"
 					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
@@ -727,7 +896,6 @@
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
 						"type": "array",
 						"x-batch-unsupported-formats": "CSV"
 					},
@@ -985,6 +1153,20 @@
 					"defaultLanguageId": {
 						"type": "string"
 					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
 					"externalReferenceCode": {
 						"readOnly": false,
 						"type": "string",
@@ -1030,6 +1212,13 @@
 						"type": "array",
 						"x-parent-map": "properties"
 					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
 					"permissions": {
 						"items": {
 							"$ref": "#/components/schemas/Permission"
@@ -1069,6 +1258,26 @@
 						},
 						"type": "array"
 					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
@@ -1085,7 +1294,6 @@
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
 						"type": "array",
 						"x-batch-unsupported-formats": "CSV"
 					},
@@ -1324,6 +1532,50 @@
 					"name": "ObjectEntry"
 				}
 			},
+			"PageCollaborator": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Collaborator"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				]
+			},
 			"PageObject1": {
 				"properties": {
 					"actions": {
@@ -1515,6 +1767,44 @@
 				"x-filterable": [
 				]
 			},
+			"ParentTaxonomyCategory": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent taxonomy category's external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyCategory",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "ParentTaxonomyCategory"
+				}
+			},
+			"ParentTaxonomyVocabulary": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent category's `TaxonomyVocabulary` external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyVocabulary",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "ParentTaxonomyVocabulary"
+				}
+			},
 			"Permission": {
 				"properties": {
 					"actionIds": {
@@ -1523,7 +1813,13 @@
 						},
 						"type": "array"
 					},
+					"roleExternalReferenceCode": {
+						"type": "string"
+					},
 					"roleName": {
+						"type": "string"
+					},
+					"roleType": {
 						"type": "string"
 					}
 				},
@@ -1542,6 +1838,7 @@
 					"type": {
 						"enum": [
 							"AssetLibrary",
+							"CMS",
 							"Site"
 						],
 						"type": "string"
@@ -1594,6 +1891,19 @@
 						"description": "Optional field with the embedded taxonomy category, can be embedded with nestedFields",
 						"readOnly": true,
 						"type": "object"
+					},
+					"parentTaxonomyCategory": {
+						"$ref": "#/components/schemas/ParentTaxonomyCategory"
+					},
+					"parentTaxonomyVocabulary": {
+						"$ref": "#/components/schemas/ParentTaxonomyVocabulary"
+					},
+					"scope": {
+						"$ref": "#/components/schemas/Scope"
+					},
+					"taxonomyCategoryExternalReferenceCode": {
+						"description": "The category's external reference code.",
+						"type": "string"
 					},
 					"taxonomyCategoryId": {
 						"description": "The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API.",
@@ -1654,6 +1964,95 @@
 				"xml": {
 					"name": "UserGroupBrief"
 				}
+			},
+			"ValidationError": {
+				"properties": {
+					"errorMessage": {
+						"type": "string"
+					},
+					"objectFieldName": {
+						"type": "string"
+					},
+					"objectValidationRuleExternalReferenceCode": {
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationError",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "ValidationError"
+				}
+			},
+			"ValidationRequest": {
+				"properties": {
+					"objectValidationRuleExternalReferenceCodes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"values": {
+						"$ref": "#/components/schemas/Object2"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationRequest",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "ValidationRequest"
+				}
+			},
+			"ValidationResponse": {
+				"properties": {
+					"validationErrors": {
+						"items": {
+							"$ref": "#/components/schemas/ValidationError"
+						},
+						"type": "array"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationResponse",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "ValidationResponse"
+				}
+			},
+			"Version": {
+				"properties": {
+					"number": {
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Version",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": [
+				],
+				"xml": {
+					"name": "Version"
+				}
 			}
 		}
 	},
@@ -1684,13 +2083,6 @@
 					{
 						"in": "query",
 						"name": "filter",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "flatten",
 						"schema": {
 							"type": "string"
 						}
@@ -1898,9 +2290,257 @@
 				]
 			}
 		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship1": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship1Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
 		"/by-external-reference-code/{currentExternalReferenceCode}/relationship1/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship1Object1",
+				"operationId": "putByExternalReferenceCodeObject2Relationship1Object1",
 				"parameters": [
 					{
 						"in": "path",
@@ -1941,9 +2581,126 @@
 				]
 			}
 		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship3": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
 		"/by-external-reference-code/{currentExternalReferenceCode}/relationship3/{relatedExternalReferenceCode}": {
-			"put": {
-				"operationId": "putObject2Relationship3Object3",
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship3Object3",
 				"parameters": [
 					{
 						"in": "path",
@@ -1962,6 +2719,254 @@
 						}
 					}
 				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship4": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship4Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
 				"responses": {
 					"default": {
 						"content": {
@@ -1985,8 +2990,139 @@
 			}
 		},
 		"/by-external-reference-code/{currentExternalReferenceCode}/relationship4/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship4Object3",
+				"operationId": "putByExternalReferenceCodeObject2Relationship4Object3",
 				"parameters": [
 					{
 						"in": "path",
@@ -2204,6 +3340,362 @@
 				]
 			}
 		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/subscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeSubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/unsubscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeUnsubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/versions": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
 		"/export-batch": {
 			"post": {
 				"operationId": "postObject2sPageExportBatch",
@@ -2290,6 +3782,1426 @@
 						"description": "default response"
 					}
 				}
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship1": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship1Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship1/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship3": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship3/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship4": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship4Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship4/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{externalReferenceCode}/collaborators": {
+			"get": {
+				"description": "Retrieves the collaborators of an object entry.",
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeCollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"post": {
+				"description": "Add or update all the collaborators received in the request. Delete existing collaborators that are not included in the request. Send a notification for the new collaborators and those whose permissions are different.",
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeCollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{externalReferenceCode}/collaborators/by-type/{type}/{collaboratorId}": {
+			"delete": {
+				"description": "Deletes the collaborator for an object entry and returns a 204 if the operation succeeds.",
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeCollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"get": {
+				"description": "Retrieves the collaborator for an object entry.",
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeCollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"put": {
+				"description": "Add or update a collaborator received in the request.",
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeCollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/validate": {
+			"post": {
+				"operationId": "postValidate",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}": {
@@ -2447,6 +5359,602 @@
 						}
 					}
 				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteObject2ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getObject2ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postObject2ByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postObject2ByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putObject2ByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/collaborators": {
+			"get": {
+				"description": "Retrieves the collaborators of an object entry.",
+				"operationId": "getObject2CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"post": {
+				"description": "Add or update all the collaborators received in the request. Delete existing collaborators that are not included in the request.",
+				"operationId": "postObject2CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/collaborators/by-type/{type}/{collaboratorId}": {
+			"delete": {
+				"description": "Deletes the collaborator for an object entry and returns a 204 if the operation succeeds.",
+				"operationId": "deleteObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"get": {
+				"description": "Retrieves the collaborator for an object entry.",
+				"operationId": "getObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"put": {
+				"description": "Add or update a collaborator received in the request.",
+				"operationId": "putObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/collaborators/export-batch": {
+			"post": {
+				"operationId": "postObject2CollaboratorsPageExportBatch",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "callbackURL",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contentType",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fieldNames",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/expire": {
+			"post": {
+				"operationId": "postObject2Expire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"default": {
 						"content": {
@@ -2653,6 +6161,53 @@
 				"tags": [
 					"Object2"
 				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}/relationship1/{object1Id}": {
@@ -2691,8 +6246,104 @@
 					"Object2"
 				]
 			},
+			"get": {
+				"operationId": "getObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship1Object1",
+				"operationId": "putCurrentObject2",
 				"parameters": [
 					{
 						"in": "path",
@@ -2801,6 +6452,53 @@
 				"tags": [
 					"Object2"
 				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}/relationship3/{object3Id}": {
@@ -2839,8 +6537,104 @@
 					"Object2"
 				]
 			},
+			"get": {
+				"operationId": "getObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship3Object3",
+				"operationId": "putCurrentObject2",
 				"parameters": [
 					{
 						"in": "path",
@@ -2949,6 +6743,53 @@
 				"tags": [
 					"Object2"
 				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}/relationship4/{object3Id}": {
@@ -2987,8 +6828,104 @@
 					"Object2"
 				]
 			},
+			"get": {
+				"operationId": "getObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship4Object3",
+				"operationId": "putCurrentObject2",
 				"parameters": [
 					{
 						"in": "path",
@@ -3018,6 +6955,62 @@
 							"application/xml": {
 								"schema": {
 									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/versions": {
+			"get": {
+				"operationId": "getObject2sVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
 								}
 							}
 						},

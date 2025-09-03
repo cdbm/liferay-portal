@@ -12,6 +12,8 @@ import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
+import com.liferay.layout.util.structure.CollectionItemLayoutStructureItem;
+import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
@@ -21,12 +23,12 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Lourdes Fernández Besada
@@ -107,6 +109,13 @@ public class LayoutPageTemplateStructureRenderUtil {
 
 		if (parentLayoutStructureItem == null) {
 			return false;
+		}
+
+		if (layoutStructureItem instanceof CollectionItemLayoutStructureItem ||
+			layoutStructureItem instanceof
+				CollectionStyledLayoutStructureItem) {
+
+			return true;
 		}
 
 		if (layoutStructureItem instanceof ContainerStyledLayoutStructureItem) {

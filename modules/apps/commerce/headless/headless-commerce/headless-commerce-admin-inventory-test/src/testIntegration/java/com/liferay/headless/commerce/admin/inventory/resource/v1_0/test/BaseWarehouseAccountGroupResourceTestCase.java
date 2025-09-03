@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.inventory.client.dto.v1_0.WarehouseAccountGroup;
 import com.liferay.headless.commerce.admin.inventory.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.inventory.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		warehouseAccountGroupResource = WarehouseAccountGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -194,12 +207,117 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 
 	@Test
 	public void testDeleteWarehouseAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		WarehouseAccountGroup warehouseAccountGroup =
+			testDeleteWarehouseAccountGroup_addWarehouseAccountGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			warehouseAccountGroupResource.
+				deleteWarehouseAccountGroupHttpResponse(
+					warehouseAccountGroup.getWarehouseAccountGroupId()));
+	}
+
+	protected WarehouseAccountGroup
+			testDeleteWarehouseAccountGroup_addWarehouseAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteWarehouseAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		WarehouseAccountGroup warehouseAccountGroup1 =
+			testGraphQLDeleteWarehouseAccountGroup_addWarehouseAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteWarehouseAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"warehouseAccountGroupId",
+									warehouseAccountGroup1.
+										getWarehouseAccountGroupId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteWarehouseAccountGroup"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		WarehouseAccountGroup warehouseAccountGroup2 =
+			testGraphQLDeleteWarehouseAccountGroup_addWarehouseAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"deleteWarehouseAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"warehouseAccountGroupId",
+										warehouseAccountGroup2.
+											getWarehouseAccountGroupId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminInventory_v1_0",
+				"Object/deleteWarehouseAccountGroup"));
+	}
+
+	protected WarehouseAccountGroup
+			testGraphQLDeleteWarehouseAccountGroup_addWarehouseAccountGroup()
+		throws Exception {
+
+		return testGraphQLWarehouseAccountGroup_addWarehouseAccountGroup();
+	}
+
+	@Test
+	public void testDeleteWarehouseAccountGroupBatch() throws Exception {
+		WarehouseAccountGroup warehouseAccountGroup1 =
+			testDeleteWarehouseAccountGroupBatch_addWarehouseAccountGroup();
+
+		testDeleteWarehouseAccountGroupBatch_deleteWarehouseAccountGroup(
+			202, null, warehouseAccountGroup1.getWarehouseAccountGroupId());
+	}
+
+	protected WarehouseAccountGroup
+			testDeleteWarehouseAccountGroupBatch_addWarehouseAccountGroup()
+		throws Exception {
+
+		return testDeleteWarehouseAccountGroup_addWarehouseAccountGroup();
+	}
+
+	protected void
+			testDeleteWarehouseAccountGroupBatch_deleteWarehouseAccountGroup(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			warehouseAccountGroupResource.
+				deleteWarehouseAccountGroupBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"warehouseAccountGroupId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -266,6 +384,12 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 			page,
 			testGetWarehouseByExternalReferenceCodeWarehouseAccountGroupsPage_getExpectedActions(
 				externalReferenceCode));
+
+		warehouseAccountGroupResource.deleteWarehouseAccountGroup(
+			warehouseAccountGroup1.getWarehouseAccountGroupId());
+
+		warehouseAccountGroupResource.deleteWarehouseAccountGroup(
+			warehouseAccountGroup2.getWarehouseAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -285,13 +409,13 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetWarehouseByExternalReferenceCodeWarehouseAccountGroupsPage_getExternalReferenceCode();
 
-		Page<WarehouseAccountGroup> warehouseAccountGroupPage =
+		Page<WarehouseAccountGroup> warehouseAccountGroupsPage =
 			warehouseAccountGroupResource.
 				getWarehouseByExternalReferenceCodeWarehouseAccountGroupsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			warehouseAccountGroupPage.getTotalCount());
+			warehouseAccountGroupsPage.getTotalCount());
 
 		WarehouseAccountGroup warehouseAccountGroup1 =
 			testGetWarehouseByExternalReferenceCodeWarehouseAccountGroupsPage_addWarehouseAccountGroup(
@@ -421,30 +545,6 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 	}
 
 	@Test
-	public void testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup()
-		throws Exception {
-
-		WarehouseAccountGroup randomWarehouseAccountGroup =
-			randomWarehouseAccountGroup();
-
-		WarehouseAccountGroup postWarehouseAccountGroup =
-			testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup_addWarehouseAccountGroup(
-				randomWarehouseAccountGroup);
-
-		assertEquals(randomWarehouseAccountGroup, postWarehouseAccountGroup);
-		assertValid(postWarehouseAccountGroup);
-	}
-
-	protected WarehouseAccountGroup
-			testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup_addWarehouseAccountGroup(
-				WarehouseAccountGroup warehouseAccountGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetWarehouseIdWarehouseAccountGroupsPage()
 		throws Exception {
 
@@ -506,6 +606,12 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 			page,
 			testGetWarehouseIdWarehouseAccountGroupsPage_getExpectedActions(
 				id));
+
+		warehouseAccountGroupResource.deleteWarehouseAccountGroup(
+			warehouseAccountGroup1.getWarehouseAccountGroupId());
+
+		warehouseAccountGroupResource.deleteWarehouseAccountGroup(
+			warehouseAccountGroup2.getWarehouseAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -627,13 +733,13 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 
 		Long id = testGetWarehouseIdWarehouseAccountGroupsPage_getId();
 
-		Page<WarehouseAccountGroup> warehouseAccountGroupPage =
+		Page<WarehouseAccountGroup> warehouseAccountGroupsPage =
 			warehouseAccountGroupResource.
 				getWarehouseIdWarehouseAccountGroupsPage(
 					id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			warehouseAccountGroupPage.getTotalCount());
+			warehouseAccountGroupsPage.getTotalCount());
 
 		WarehouseAccountGroup warehouseAccountGroup1 =
 			testGetWarehouseIdWarehouseAccountGroupsPage_addWarehouseAccountGroup(
@@ -925,6 +1031,30 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 	}
 
 	@Test
+	public void testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup()
+		throws Exception {
+
+		WarehouseAccountGroup randomWarehouseAccountGroup =
+			randomWarehouseAccountGroup();
+
+		WarehouseAccountGroup postWarehouseAccountGroup =
+			testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup_addWarehouseAccountGroup(
+				randomWarehouseAccountGroup);
+
+		assertEquals(randomWarehouseAccountGroup, postWarehouseAccountGroup);
+		assertValid(postWarehouseAccountGroup);
+	}
+
+	protected WarehouseAccountGroup
+			testPostWarehouseByExternalReferenceCodeWarehouseAccountGroup_addWarehouseAccountGroup(
+				WarehouseAccountGroup warehouseAccountGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostWarehouseIdWarehouseAccountGroup() throws Exception {
 		WarehouseAccountGroup randomWarehouseAccountGroup =
 			randomWarehouseAccountGroup();
@@ -946,8 +1076,67 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		WarehouseAccountGroup warehouseAccountGroup1 =
+			testBatchEngineDeleteImportTask_addWarehouseAccountGroup();
+
+		testBatchEngineDeleteImportTask_deleteWarehouseAccountGroup(
+			200, null, warehouseAccountGroup1.getWarehouseAccountGroupId());
+	}
+
+	protected WarehouseAccountGroup
+			testBatchEngineDeleteImportTask_addWarehouseAccountGroup()
+		throws Exception {
+
+		return testDeleteWarehouseAccountGroup_addWarehouseAccountGroup();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteWarehouseAccountGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseAccountGroup",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"warehouseAccountGroupId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected WarehouseAccountGroup
+			testGraphQLWarehouseAccountGroup_addWarehouseAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		WarehouseAccountGroup warehouseAccountGroup,
@@ -1037,6 +1226,10 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (warehouseAccountGroup.getWarehouseAccountGroupId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1621,7 +1814,30 @@ public abstract class BaseWarehouseAccountGroupResourceTestCase {
 		return randomWarehouseAccountGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected WarehouseAccountGroupResource warehouseAccountGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

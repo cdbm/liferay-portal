@@ -38,7 +38,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.portlet.ActionRequest;
+import jakarta.portlet.ActionRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -187,7 +187,7 @@ public class UpdateFragmentsHighlightedConfigurationMVCActionCommandTest {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockLiferayPortletActionRequest.setAttribute(WebKeys.LAYOUT, _layout);
 		mockLiferayPortletActionRequest.setAttribute(

@@ -40,6 +40,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.IndexResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.IndexSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -224,6 +224,11 @@ public abstract class BaseIndexResourceTestCase {
 	@Test
 	public void testPatchIndexReindex() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(Index index, List<Index> indexes) {

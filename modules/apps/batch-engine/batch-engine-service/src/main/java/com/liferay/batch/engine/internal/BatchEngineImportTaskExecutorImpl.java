@@ -17,6 +17,7 @@ import com.liferay.batch.engine.action.ImportTaskPreAction;
 import com.liferay.batch.engine.action.ItemReaderPostAction;
 import com.liferay.batch.engine.configuration.BatchEngineTaskCompanyConfiguration;
 import com.liferay.batch.engine.constants.BatchEngineImportTaskConstants;
+import com.liferay.batch.engine.exception.handler.BatchEngineImportTaskExceptionHandler;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutor;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutorFactory;
 import com.liferay.batch.engine.internal.reader.BatchEngineImportTaskItemReader;
@@ -32,13 +33,13 @@ import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalService;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
 import com.liferay.batch.engine.strategy.BatchEngineImportStrategy;
+import com.liferay.batch.engine.thread.local.BatchEngineThreadLocal;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
-import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -127,6 +128,8 @@ public class BatchEngineImportTaskExecutorImpl
 		}
 
 		try (SafeCloseable safeCloseable2 = SearchContext.openBatchMode()) {
+			BatchEngineThreadLocal.setBatchImportInProcess(true);
+
 			batchEngineImportTask.setExecuteStatus(
 				BatchEngineTaskExecuteStatus.STARTED.toString());
 			batchEngineImportTask.setStartTime(new Date());
@@ -165,6 +168,8 @@ public class BatchEngineImportTaskExecutorImpl
 				throwable);
 		}
 		finally {
+			BatchEngineThreadLocal.setBatchImportInProcess(false);
+
 			file.delete();
 
 			// LPS-167011 Because of call to _updateBatchEngineImportTask when
@@ -189,6 +194,9 @@ public class BatchEngineImportTaskExecutorImpl
 		_batchEngineTaskItemDelegateExecutorFactory =
 			new BatchEngineTaskItemDelegateExecutorFactory(
 				_batchEngineTaskItemDelegateRegistry, null, null, null);
+		_batchEngineImportTaskExceptionHandlers =
+			ServiceTrackerListFactory.open(
+				bundleContext, BatchEngineImportTaskExceptionHandler.class);
 		_importTaskPostActions = ServiceTrackerListFactory.open(
 			bundleContext, ImportTaskPostAction.class);
 		_importTaskPreActions = ServiceTrackerListFactory.open(
@@ -199,6 +207,7 @@ public class BatchEngineImportTaskExecutorImpl
 
 	@Deactivate
 	protected void deactivate() {
+		_batchEngineImportTaskExceptionHandlers.close();
 		_importTaskPostActions.close();
 		_importTaskPreActions.close();
 		_itemReaderPostActions.close();
@@ -231,13 +240,16 @@ public class BatchEngineImportTaskExecutorImpl
 					IMPORT_STRATEGY_ON_ERROR_CONTINUE) {
 
 			return new OnErrorContinueBatchEngineImportStrategy(
-				batchEngineImportTask, _importTaskPostActions.toList(),
+				batchEngineImportTask,
+				_batchEngineImportTaskExceptionHandlers.toList(),
+				_importTaskPostActions.toList(),
 				_importTaskPreActions.toList());
 		}
 
 		return new OnErrorFailBatchEngineImportStrategy(
-			batchEngineImportTask, _importTaskPostActions.toList(),
-			_importTaskPreActions.toList());
+			batchEngineImportTask,
+			_batchEngineImportTaskExceptionHandlers.toList(),
+			_importTaskPostActions.toList(), _importTaskPreActions.toList());
 	}
 
 	private BatchEngineImportTaskItemReader _getBatchEngineImportTaskItemReader(
@@ -332,9 +344,7 @@ public class BatchEngineImportTaskExecutorImpl
 		try (InputStream inputStream = new FileInputStream(file);
 			BatchEngineImportTaskItemReader batchEngineImportTaskItemReader =
 				_getBatchEngineImportTaskItemReader(
-					batchEngineImportTask, inputStream, parameters);
-			SafeCloseable safeCloseable =
-				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+					batchEngineImportTask, inputStream, parameters)) {
 
 			BatchEngineTaskItemDelegateExecutor
 				batchEngineTaskItemDelegateExecutor =
@@ -449,6 +459,9 @@ public class BatchEngineImportTaskExecutorImpl
 	@Reference
 	private BatchEngineImportTaskErrorLocalService
 		_batchEngineImportTaskErrorLocalService;
+
+	private ServiceTrackerList<BatchEngineImportTaskExceptionHandler>
+		_batchEngineImportTaskExceptionHandlers;
 
 	@Reference
 	private BatchEngineImportTaskLocalService

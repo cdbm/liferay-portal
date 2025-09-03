@@ -10,18 +10,14 @@
 const contactPublisherButtonElement = fragmentElement.querySelector(
 	'button#contact-publisher'
 );
+const contactPublisherModal = document.querySelector(
+	'#help-and-support-link-contact-button'
+);
 const getAppButtonElement = fragmentElement.querySelector('button#get-app');
 const getAppDescriptionElement = fragmentElement.querySelector(
 	'#get-app-description'
 );
 const tooltipElement = fragmentElement.querySelector('.clay-tooltip-bottom');
-
-const isFragmentApp = (productSpecifications = []) =>
-	productSpecifications.some(
-		(productSpecification) =>
-			productSpecification.specificationKey === 'type' &&
-			productSpecification.value === 'fragment'
-	);
 
 const isFreeApp = (productSpecifications = []) =>
 	productSpecifications.some(
@@ -43,46 +39,58 @@ const productId = fragmentElement
 	.innerText.replace(/[\n\r]+|[\s]{2,}/g, ' ')
 	.trim();
 
-const getFragmentModal = () => `
-<div class="mb-5">
-	<p class="pb-3" style="color: #54555F;">Currently, it is not possible to install a fragment directly from the Marketplace. To do so, you need to use the DXP. Click link below to learn how to proceed.</p>
+const getProductPrice = async (product) => {
+	const {productSpecifications = []} = product;
 
-	<a href="https://learn.liferay.com/w/dxp/site-building/creating-pages/page-fragments-and-widgets/using-fragments/using-fragments-from-the-marketplace">https://learn.liferay.com</a>
-</div>
-`;
+	if (isFreeApp(productSpecifications)) {
+		return 'Free';
+	}
 
-const openFragmentModal = () => {
-	Liferay.Util.openModal({
-		bodyHTML: getFragmentModal(),
-		center: true,
-		headerHTML: 'How to Install a Fragment',
-		size: 'md',
-	});
+	const skus = product.skus.filter(({purchasable}) => purchasable);
+
+	const hasTrialSku = skus.some(({skuOptions}) =>
+		skuOptions.find((skuOption) =>
+			['trial', 'yes'].includes(skuOption.skuOptionValueKey)
+		)
+	);
+
+	const standardSku = skus.find(({skuOptions}) =>
+		skuOptions.some((skuOption) =>
+			['standard', 'no'].includes(skuOption.skuOptionValueKey)
+		)
+	);
+
+	const licenseType = productSpecifications.find(
+		(productSpecification) =>
+			productSpecification.specificationKey === 'license-type'
+	);
+
+	const licenseTypeText =
+		licenseType?.value === 'Perpetual' ? 'One-Time' : 'Annually';
+	const price = `${hasTrialSku ? '30-day trial or' : ''} ${standardSku?.price?.priceFormatted}`;
+
+	return `${price} ${licenseTypeText}`;
 };
 
-const customizeGetAppButton = (product) => {
+const customizeGetAppButton = async (product) => {
 	getAppButtonElement.onclick = () => {
-		if (isFragmentApp(product.productSpecifications)) {
-			openFragmentModal();
-
-			return;
-		}
-
 		trackAnalytics('Click on Get App Button', {
 			isFree: isFreeApp(product.productSpecifications),
 			productName: product.name,
 		});
 
-		Liferay.Util.navigate(`${getSiteURL()}/get-app?productId=${productId}`);
+		Liferay.Util.navigate(
+			`${getSiteURL()}/product-purchase?productId=${productId}`
+		);
 	};
 
-	getAppDescriptionElement.innerText = getProductPrice(product);
+	getAppDescriptionElement.innerText = await getProductPrice(product);
 };
 
 const getCommerceProduct = async (channelId) => {
 	try {
 		const response = await Liferay.Util.fetch(
-			`/o/headless-commerce-delivery-catalog/v1.0/channels/${channelId}/products/${productId}?nestedFields=productSpecifications,skus&accountId=-1&skus.accountId=-1`
+			`/o/headless-commerce-delivery-catalog/v1.0/channels/${channelId}/products/${productId}?nestedFields=productSpecifications,skus&accountId=-1&skus.accountId=-1&skus.currencyCode=${Liferay.CommerceContext.currency.currencyCode}`
 		);
 
 		const product = await response.json();
@@ -104,26 +112,6 @@ const getSiteURL = () => {
 	return '';
 };
 
-const getModalTemplate = ({accountName, email, logoURL, website}) => `
-<div class="d-flex">
-	<div class="mr-2" style="width:24px;">
-		${
-			logoURL &&
-			`<img class="rounded" src="${logoURL}" style="height: 24px; width: 24px;" />`
-		}
-	</div>
-
-	<div style="color: #282934; font-size: 20px; font-weight: 600;">${accountName}</div>
-</div>
-
-${email && `<p className="my-2">${email}</p>`}
-
-${
-	website &&
-	`<a href="${website}" target="_blank" style="font-weight: 600;">${website}</a>`
-}
-`;
-
 const customizeUnavailableButton = async (product) => {
 	contactPublisherButtonElement.onmouseover = () =>
 		tooltipElement.classList.replace('hide', 'show');
@@ -144,38 +132,13 @@ const customizeUnavailableButton = async (product) => {
 		return;
 	}
 
-	const customFields = product.customFields ?? [];
-
-	const getCustomFieldValue = (name) =>
-		customFields.find((customField) => customField.name === name)
-			?.customValue?.data ?? '';
-
 	contactPublisherButtonElement.onclick = () => {
 		trackAnalytics('Click on Contact Publisher Button', {
 			isFree: isFreeApp(product.productSpecifications),
 			productName: product.name,
 		});
 
-		Liferay.Util.openModal({
-			bodyHTML: getModalTemplate({
-				accountName: product.catalogName || product.name,
-				email: getCustomFieldValue('Support'),
-				logoURL:
-					getCustomFieldValue('Publisher Icon') ||
-					`/o/${product.urlImage.split('/o/')[1]}`,
-				website: getCustomFieldValue('Developer Website'),
-			}),
-			buttons: [
-				{
-					displayType: 'secondary',
-					label: 'Close',
-					type: 'cancel',
-				},
-			],
-			center: true,
-			headerHTML: 'Publisher Contact Info',
-			size: 'md',
-		});
+		contactPublisherModal.click();
 	};
 
 	if (sessionStorage.getItem('@marketplace/redirect-to')) {
@@ -193,6 +156,16 @@ const main = async () => {
 	}
 
 	const product = await getCommerceProduct(channelId);
+
+	const isReferral = product.productSpecifications.some(
+		({specificationKey, value}) =>
+			specificationKey === 'type' && value === 'referral'
+	);
+
+	if (isReferral) {
+		return;
+	}
+
 	const skuPublished = product.skus.some((sku) => sku.purchasable);
 
 	if (skuPublished) {

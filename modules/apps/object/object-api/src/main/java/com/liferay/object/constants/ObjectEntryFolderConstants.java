@@ -10,6 +10,10 @@ package com.liferay.object.constants;
  */
 public class ObjectEntryFolderConstants {
 
+	public static final String EXTERNAL_REFERENCE_CODE_CONTENTS = "L_CONTENTS";
+
+	public static final String EXTERNAL_REFERENCE_CODE_FILES = "L_FILES";
+
 	public static final String
 		EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_ENTRY_FOLDER = "L_";
 

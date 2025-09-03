@@ -8,6 +8,7 @@ import {dateUtils} from 'frontend-js-web';
 import {default as React, useEffect, useRef, useState} from 'react';
 
 import {PROPERTY_TYPES} from '../../utils/constants';
+import {convertTimezoneToUTC} from '../../utils/date';
 
 const INTERNAL_DATE_FORMAT = 'yyyy-MM-dd';
 const DISPLAY_DATE_FORMAT = 'yyyy/MM/dd';
@@ -95,11 +96,14 @@ function DateTimeInput({
 					input: `${propertyLabel}: ${Liferay.Language.get(
 						'input-a-value'
 					)}`,
+					selectMonth: `${Liferay.Language.get('select-a-month')}`,
+					selectYear: `${Liferay.Language.get('select-a-year')}`,
 				}}
 				data-testid="date-input"
 				dateFormat="yyyy/MM/dd"
 				disabled={disabled}
 				expanded={expanded}
+				firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 				months={[
 					`${Liferay.Language.get('january')}`,
 					`${Liferay.Language.get('february')}`,
@@ -118,6 +122,7 @@ function DateTimeInput({
 				onChange={setDisplayDate}
 				onExpandedChange={onExpandedChange}
 				value={displayDate}
+				weekdaysShort={dateUtils.getWeekdaysShort()}
 				years={{
 					end: new Date().getFullYear(),
 					start: 1900,
@@ -132,7 +137,7 @@ function datesAreEqual(dateA: string, dateB: string) {
 }
 
 function toDisplayDate(internalOrIsoDate: string, previousDate?: string) {
-	let dateObject = new Date(internalOrIsoDate);
+	let dateObject = convertTimezoneToUTC(internalOrIsoDate);
 
 	const resetDate = previousDate ? new Date(previousDate) : new Date();
 

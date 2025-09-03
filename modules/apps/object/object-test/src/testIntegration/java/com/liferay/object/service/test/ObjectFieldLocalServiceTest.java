@@ -63,8 +63,6 @@ import com.liferay.object.service.ObjectFilterLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.test.util.ObjectFieldTestUtil;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.test.util.ObjectRelationshipTestUtil;
-import com.liferay.object.test.util.TreeTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBInspector;
@@ -73,6 +71,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -88,7 +90,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -116,7 +118,7 @@ import org.junit.runner.RunWith;
  * @author Marco Leo
  * @author Brian Wing Shun Chan
  */
-@FeatureFlags("LPD-34594")
+@FeatureFlag("LPD-34594")
 @RunWith(Arquillian.class)
 public class ObjectFieldLocalServiceTest {
 
@@ -138,7 +140,7 @@ public class ObjectFieldLocalServiceTest {
 					ListTypeEntryUtil.createListTypeEntry(_listTypeEntryKey)));
 	}
 
-	@FeatureFlags("LPD-32050")
+	@FeatureFlag("LPD-32050")
 	@Test
 	public void testAddCustomObjectField() throws Exception {
 		AssertUtils.assertFailure(
@@ -255,7 +257,7 @@ public class ObjectFieldLocalServiceTest {
 				"attachment business types",
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, true,
-				false,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -298,7 +300,7 @@ public class ObjectFieldLocalServiceTest {
 				"attachment business types",
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, true,
-				false,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -1059,28 +1061,6 @@ public class ObjectFieldLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			relatedObjectDefinition);
 
-		objectRelationship = ObjectRelationshipTestUtil.addObjectRelationship(
-			_objectRelationshipLocalService,
-			ObjectDefinitionTestUtil.addCustomObjectDefinition("A"),
-			ObjectDefinitionTestUtil.addCustomObjectDefinition("AA"));
-
-		TreeTestUtil.bind(
-			_objectRelationshipLocalService,
-			Collections.singletonList(objectRelationship));
-
-		ObjectField objectField2 = _objectFieldLocalService.getObjectField(
-			objectRelationship.getObjectFieldId2());
-
-		objectField2.setRequired(false);
-
-		AssertUtils.assertFailure(
-			ObjectFieldRequiredException.class, null,
-			() -> _addOrUpdateCustomObjectField(objectField2));
-
-		TreeTestUtil.deleteObjectDefinitionHierarchy(
-			_objectDefinitionLocalService, new String[] {"C_A", "C_AA"},
-			_objectEntryLocalService, _objectRelationshipLocalService);
-
 		// Object field required
 
 		objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition();
@@ -1496,7 +1476,7 @@ public class ObjectFieldLocalServiceTest {
 			).build());
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			customObjectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -1673,6 +1653,16 @@ public class ObjectFieldLocalServiceTest {
 	public void testObjectFieldSettings() throws Exception {
 
 		// Business type attachment
+
+		String originalName = PrincipalThreadLocal.getName();
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
+
+		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
 
 		ObjectDefinition objectDefinition =
 			ObjectDefinitionTestUtil.addCustomObjectDefinition(
@@ -2075,6 +2065,10 @@ public class ObjectFieldLocalServiceTest {
 			).build());
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+
+		PermissionThreadLocal.setPermissionChecker(originalPermissionChecker);
+
+		PrincipalThreadLocal.setName(originalName);
 	}
 
 	@Test
@@ -2161,7 +2155,7 @@ public class ObjectFieldLocalServiceTest {
 			algorithm, enabled, key,
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, true,
-				false,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -2485,7 +2479,7 @@ public class ObjectFieldLocalServiceTest {
 		throws Exception {
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0, objectField.getObjectDefinitionId(),
+			0, TestPropsValues.getUserId(), objectField.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null, values, ServiceContextTestUtil.getServiceContext());
 
@@ -2807,7 +2801,7 @@ public class ObjectFieldLocalServiceTest {
 		objectDefinition1 =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, true,
-				false,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),

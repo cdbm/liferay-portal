@@ -15,8 +15,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/view_discard"
 	},
 	service = MVCRenderCommand.class
@@ -44,6 +44,8 @@ public class ViewDiscardMVCRenderCommand implements MVCRenderCommand {
 				_portal.getHttpServletRequest(renderRequest), renderRequest,
 				renderResponse, _userLocalService);
 
+		renderRequest.setAttribute(
+			CTWebKeys.VIEW_RELATED_ENTRIES_ACTION_TYPE, "discard");
 		renderRequest.setAttribute(
 			CTWebKeys.VIEW_RELATED_ENTRIES_DISPLAY_CONTEXT,
 			viewRelatedEntriesDisplayContext);

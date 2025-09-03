@@ -8,15 +8,22 @@ package com.liferay.frontend.editor.ckeditor.sample.web.internal.display.context
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.EditorConfigContributorCET;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
+import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import javax.portlet.RenderRequest;
+import jakarta.portlet.RenderRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Marko Cikos
@@ -27,10 +34,22 @@ public class CKEditorSampleDisplayContext {
 		CETManager cetManager, RenderRequest renderRequest) {
 
 		_cetManager = cetManager;
-		_renderRequest = renderRequest;
 
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+	}
+
+	public Object getCKEditor5ClassicEditorConfig() throws Exception {
+		EditorConfiguration editorConfiguration =
+			EditorConfigurationFactoryUtil.getEditorConfiguration(
+				StringPool.BLANK, StringPool.BLANK, "ckeditor5_classic",
+				new HashMap<String, Object>(), _themeDisplay,
+				RequestBackedPortletURLFactoryUtil.create(
+					_themeDisplay.getRequest()));
+
+		Map<String, Object> data = editorConfiguration.getData();
+
+		return data.get("editorConfig");
 	}
 
 	public JSONArray getEditorTransformerURLsJSONArray() throws Exception {
@@ -45,7 +64,10 @@ public class CKEditorSampleDisplayContext {
 
 				if (StringUtil.matches(
 						editorConfigContributorCET.getEditorConfigKeys(),
-						"sampleReactClassicEditor")) {
+						"sampleReactClassicEditor") ||
+					StringUtil.matches(
+						editorConfigContributorCET.getEditorConfigKeys(),
+						"sampleReactCKEditor5ClassicEditor")) {
 
 					return editorConfigContributorCET.getURL();
 				}
@@ -55,7 +77,6 @@ public class CKEditorSampleDisplayContext {
 	}
 
 	private final CETManager _cetManager;
-	private final RenderRequest _renderRequest;
 	private final ThemeDisplay _themeDisplay;
 
 }

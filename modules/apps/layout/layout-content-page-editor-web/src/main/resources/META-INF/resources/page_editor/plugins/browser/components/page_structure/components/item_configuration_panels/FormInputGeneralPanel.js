@@ -56,8 +56,49 @@ const NOT_SELECTED_OPTION = {
 	value: '',
 };
 
-function getInputCommonConfiguration(configurationValues, formFields) {
+function getInputCommonFields(
+	configurationValues,
+	formFields,
+	allowedInputTypes
+) {
 	const fields = [];
+
+	const baseFields = {
+		helpText: {
+			cssClass: 'mb-4',
+			defaultValue: Liferay.Language.get('add-your-help-text-here'),
+			label: Liferay.Language.get('help-text'),
+			localizable: true,
+			name: HELP_TEXT_CONFIGURATION_KEY,
+			type: 'text',
+		},
+		label: {
+			cssClass: 'mb-4',
+			defaultValue: '',
+			label: Liferay.Language.get('label'),
+			localizable: true,
+			name: LABEL_CONFIGURATION_KEY,
+			type: 'text',
+		},
+		showHelpText: {
+			defaultValue: false,
+			label: Liferay.Language.get('show-help-text'),
+			name: SHOW_HELP_TEXT_CONFIGURATION_KEY,
+			type: 'checkbox',
+			typeOptions: {displayType: 'toggle'},
+		},
+		showLabel: {
+			defaultValue: true,
+			label: Liferay.Language.get('show-label'),
+			name: 'inputShowLabel',
+			type: 'checkbox',
+			typeOptions: {displayType: 'toggle'},
+		},
+	};
+
+	if (allowedInputTypes?.includes('friendly-url')) {
+		return [baseFields.label];
+	}
 
 	if (configurationValues[FIELD_ID_CONFIGURATION_KEY]) {
 		const isRequiredField = isRequiredFormField(
@@ -76,36 +117,10 @@ function getInputCommonConfiguration(configurationValues, formFields) {
 	}
 
 	fields.push(
-		{
-			defaultValue: true,
-			label: Liferay.Language.get('show-label'),
-			name: 'inputShowLabel',
-			type: 'checkbox',
-			typeOptions: {displayType: 'toggle'},
-		},
-		{
-			cssClass: 'mb-4',
-			defaultValue: '',
-			label: Liferay.Language.get('label'),
-			localizable: true,
-			name: LABEL_CONFIGURATION_KEY,
-			type: 'text',
-		},
-		{
-			defaultValue: false,
-			label: Liferay.Language.get('show-help-text'),
-			name: SHOW_HELP_TEXT_CONFIGURATION_KEY,
-			type: 'checkbox',
-			typeOptions: {displayType: 'toggle'},
-		},
-		{
-			cssClass: 'mb-4',
-			defaultValue: Liferay.Language.get('add-your-help-text-here'),
-			label: Liferay.Language.get('help-text'),
-			localizable: true,
-			name: HELP_TEXT_CONFIGURATION_KEY,
-			type: 'text',
-		}
+		baseFields.showLabel,
+		baseFields.label,
+		baseFields.showHelpText,
+		baseFields.helpText
 	);
 
 	return fields;
@@ -300,9 +315,10 @@ export function FormInputGeneralPanel({item}) {
 			return fieldSetsWithoutLabel;
 		}
 
-		const inputCommonFields = getInputCommonConfiguration(
+		const inputCommonFields = getInputCommonFields(
 			configurationValues,
-			formFields
+			formFields,
+			allowedInputTypes
 		);
 
 		return [...inputCommonFields, ...fieldSetsWithoutLabel];
@@ -570,9 +586,11 @@ function FormInputMappingOptions({
 	);
 
 	const [sourceType, setSourceType] = useState(
-		selectedRelationship
-			? SOURCE_TYPES.relationship
-			: SOURCE_TYPES.mainObject
+		!Liferay.FeatureFlags['LPD-60546']
+			? SOURCE_TYPES.mainObject
+			: selectedRelationship
+				? SOURCE_TYPES.relationship
+				: SOURCE_TYPES.mainObject
 	);
 
 	useEffect(() => {
@@ -604,35 +622,42 @@ function FormInputMappingOptions({
 		<>
 			{relationships?.length ? (
 				<>
-					<ClayForm.Group small>
-						<label htmlFor={sourceSelectId}>
-							{Liferay.Language.get('source')}
-						</label>
+					{Liferay.FeatureFlags['LPD-60546'] ? (
+						<ClayForm.Group small>
+							<label htmlFor={sourceSelectId}>
+								{Liferay.Language.get('source')}
+							</label>
 
-						<ClaySelectWithOption
-							className="pr-4 text-truncate"
-							id={sourceSelectId}
-							onChange={(event) => {
-								setSourceType(event.target.value);
-								setSelectedRelationship(null);
-								onValueSelect(FIELD_ID_CONFIGURATION_KEY, null);
-							}}
-							options={[
-								{
-									label: sub(
-										Liferay.Language.get('x-default'),
-										type
-									),
-									value: SOURCE_TYPES.mainObject,
-								},
-								{
-									label: Liferay.Language.get('relationship'),
-									value: SOURCE_TYPES.relationship,
-								},
-							]}
-							value={sourceType}
-						/>
-					</ClayForm.Group>
+							<ClaySelectWithOption
+								className="pr-4 text-truncate"
+								id={sourceSelectId}
+								onChange={(event) => {
+									setSourceType(event.target.value);
+									setSelectedRelationship(null);
+									onValueSelect(
+										FIELD_ID_CONFIGURATION_KEY,
+										null
+									);
+								}}
+								options={[
+									{
+										label: sub(
+											Liferay.Language.get('x-default'),
+											type
+										),
+										value: SOURCE_TYPES.mainObject,
+									},
+									{
+										label: Liferay.Language.get(
+											'relationship'
+										),
+										value: SOURCE_TYPES.relationship,
+									},
+								]}
+								value={sourceType}
+							/>
+						</ClayForm.Group>
+					) : null}
 
 					{sourceType === SOURCE_TYPES.relationship ? (
 						<ClayForm.Group small>

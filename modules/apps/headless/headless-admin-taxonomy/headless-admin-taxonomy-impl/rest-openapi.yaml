@@ -1,5 +1,25 @@
 components:
     schemas:
+        AssetLibrary:
+            properties:
+                id:
+                    description:
+                        The asset library's site ID.
+                    format: int64
+                    type: integer
+                name:
+                    description:
+                        The asset library's name.
+                    readOnly: true
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    description:
+                        The localized asset library's name.
+                    readOnly: true
+                    type: object
+            type: object
         AssetType:
             description:
                 Represents the asset type associated with a `TaxonomyCategory`.
@@ -16,6 +36,11 @@ components:
                     description:
                         The asset's type (e.g., `BlogPosting`, `Document`, etc.).
                     type: string
+                typeId:
+                    description:
+                        The classNameId of the asset's type.
+                    format: int64
+                    type: integer
             type: object
         Creator:
             description:
@@ -84,6 +109,12 @@ components:
                         type: object
                     readOnly: true
                     type: object
+                assetLibraries:
+                    description:
+                        A list of asset libraries that are associated with this keyword.
+                    items:
+                        $ref: "#/components/schemas/AssetLibrary"
+                    type: array
                 assetLibraryKey:
                     readOnly: true
                     type: string
@@ -141,7 +172,7 @@ components:
                     readOnly: true
                     type: boolean
             required:
-                - name
+                -   name
             type: object
         TaxonomyCategory:
             description:
@@ -155,6 +186,9 @@ components:
                         type: object
                     readOnly: true
                     type: object
+                assetLibraryKey:
+                    readOnly: true
+                    type: string
                 availableLanguages:
                     description:
                         A list of languages the category has a translation for.
@@ -240,14 +274,16 @@ components:
                             type: string
                         id:
                             format: int64
+                            readOnly: true
                             type: integer
                         name:
+                            readOnly: true
                             type: string
                         name_i18n:
                             additionalProperties:
                                 type: string
+                            readOnly: true
                             type: object
-                    readOnly: true
                     type: object
                 permissions:
                     items:
@@ -286,7 +322,7 @@ components:
                     type: string
                     writeOnly: true
             required:
-                - name
+                -   name
             type: object
         TaxonomyCategoryProperty:
             # @review
@@ -309,7 +345,7 @@ components:
                         The taxonomy category property's value.
                     type: string
             required:
-                - key
+                -   key
             type: object
         TaxonomyVocabulary:
             description:
@@ -323,6 +359,12 @@ components:
                         type: object
                     readOnly: true
                     type: object
+                assetLibraries:
+                    description:
+                        A list of asset libraries (spaces) that this vocabulary is associated with.
+                    items:
+                        $ref: "#/components/schemas/AssetLibrary"
+                    type: array
                 assetLibraryKey:
                     readOnly: true
                     type: string
@@ -374,6 +416,10 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                multiValued:
+                    description:
+                        Whether multiple categories can be associated with this vocabulary.
+                    type: boolean
                 name:
                     description:
                         The vocabulary's name.
@@ -408,17 +454,22 @@ components:
                     enum: [Anyone, Members, Owner]
                     type: string
                     writeOnly: true
+                visibilityType:
+                    description:
+                        The vocabulary's visibility type.
+                    enum: [PUBLIC, INTERNAL]
+                    type: string
             required:
-                - name
+                -   name
             type: object
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.taxonomy.client', and version '4.0.39'."
+        'com.liferay.headless.admin.taxonomy.client', and version '4.0.43'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-    title: "Headless Admin Taxonomy"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+    title: Headless Admin Taxonomy
     version: v1.0
 openapi: 3.0.1
 paths:
@@ -426,46 +477,46 @@ paths:
         get:
             operationId: getAssetLibraryKeywordsPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -483,12 +534,12 @@ paths:
         post:
             operationId: postAssetLibraryKeyword
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -514,17 +565,17 @@ paths:
                 Deletes the asset library's keyword by external reference code.
             operationId: deleteAssetLibraryKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -537,25 +588,25 @@ paths:
                 Retrieves the asset library's keyword by external reference code.
             operationId: getAssetLibraryKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -573,17 +624,17 @@ paths:
                 exists.
             operationId: putAssetLibraryKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -606,24 +657,24 @@ paths:
         get:
             operationId: getAssetLibraryKeywordPermissionsPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -633,12 +684,12 @@ paths:
         put:
             operationId: putAssetLibraryKeywordPermissionsPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -649,50 +700,235 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["Keyword"]
+    "/asset-libraries/{assetLibraryId}/taxonomy-categories":
+        get:
+            # @review
+            description:
+                Retrieves the asset library's taxonomy categories.
+            operationId: getAssetLibraryTaxonomyCategoriesPage
+            parameters:
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+            tags: ["TaxonomyCategory"]
+        post:
+            description:
+                Inserts a new Category in a Scope.
+            operationId: postAssetLibraryTaxonomyCategory
+            parameters:
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
+    "/asset-libraries/{assetLibraryId}/taxonomy-categories/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the asset library's taxonomy category by external reference code.
+            operationId: deleteAssetLibraryTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyCategory"]
+        get:
+            # @review
+            description:
+                Retrieves the asset library's taxonomy category by external reference code.
+            operationId: getAssetLibraryTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
+        put:
+            # @review
+            description:
+                Updates the asset library's taxonomy category with the given external reference code, or creates it if
+                it not exists.
+            operationId: putAssetLibraryTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
     "/asset-libraries/{assetLibraryId}/taxonomy-vocabularies":
         get:
             operationId: getAssetLibraryTaxonomyVocabulariesPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -710,12 +946,12 @@ paths:
         post:
             operationId: postAssetLibraryTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -741,17 +977,17 @@ paths:
                 Deletes the asset library's taxonomy vocabulary by external reference code.
             operationId: deleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -764,25 +1000,25 @@ paths:
                 Retrieves the asset library's taxonomy vocabulary by external reference code.
             operationId: getAssetLibraryTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -800,17 +1036,17 @@ paths:
                 it not exists.
             operationId: putAssetLibraryTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -833,24 +1069,24 @@ paths:
         get:
             operationId: getAssetLibraryTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -860,12 +1096,12 @@ paths:
         put:
             operationId: putAssetLibraryTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: assetLibraryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: assetLibraryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -876,35 +1112,107 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["TaxonomyVocabulary"]
+    "/keywords":
+        get:
+            operationId: getKeywordsPage
+            parameters:
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Keyword"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Keyword"
+                                type: array
+            tags: ["Keyword"]
+        post:
+            operationId: postKeyword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Keyword"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Keyword"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Keyword"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Keyword"
+            tags: ["Keyword"]
     "/keywords/ranked":
         get:
             operationId: getKeywordsRankedPage
             parameters:
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: siteId
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: siteId
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:
@@ -925,12 +1233,12 @@ paths:
                 Deletes the keyword and returns a 204 if the operation succeeds.
             operationId: deleteKeyword
             parameters:
-                - in: path
-                  name: keywordId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: keywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 204:
                     content:
@@ -942,20 +1250,20 @@ paths:
                 Retrieves a keyword.
             operationId: getKeyword
             parameters:
-                - in: path
-                  name: keywordId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: keywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -972,12 +1280,12 @@ paths:
                 unless required.
             operationId: putKeyword
             parameters:
-                - in: path
-                  name: keywordId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: keywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -1000,12 +1308,12 @@ paths:
         put:
             operationId: putKeywordSubscribe
             parameters:
-                - in: path
-                  name: keywordId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: keywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 204:
                     content:
@@ -1016,12 +1324,38 @@ paths:
         put:
             operationId: putKeywordUnsubscribe
             parameters:
-                - in: path
-                  name: keywordId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: keywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Keyword"]
+    "/keywords/{toKeywordId}/merge":
+        put:
+            operationId: putKeywordMerge
+            parameters:
+                -   in: path
+                    name: toKeywordId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    explode: true
+                    name: fromKeywordIds
+                    required: true
+                    schema:
+                        items:
+                            format: int64
+                            type: integer
+                        type: array
+                    style: form
             responses:
                 204:
                     content:
@@ -1034,46 +1368,46 @@ paths:
                 Retrieves a Site's keywords. Results can be paginated, filtered, searched, and sorted.
             operationId: getSiteKeywordsPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1093,12 +1427,12 @@ paths:
                 Inserts a new keyword in a Site.
             operationId: postSiteKeyword
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -1124,17 +1458,17 @@ paths:
                 Deletes the site's keyword by external reference code.
             operationId: deleteSiteKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1147,25 +1481,25 @@ paths:
                 Retrieves the site's keyword by external reference code.
             operationId: getSiteKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1182,17 +1516,17 @@ paths:
                 Updates the site's keyword with the given external reference code, or creates it if it not exists.
             operationId: putSiteKeywordByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1215,24 +1549,24 @@ paths:
         get:
             operationId: getSiteKeywordPermissionsPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1242,12 +1576,12 @@ paths:
         put:
             operationId: putSiteKeywordPermissionsPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -1258,52 +1592,237 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["Keyword"]
+    "/sites/{siteId}/taxonomy-categories":
+        get:
+            # @review
+            description:
+                Retrieves the site's taxonomy categories.
+            operationId: getSiteTaxonomyCategoriesPage
+            parameters:
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+            tags: ["TaxonomyCategory"]
+        post:
+            description:
+                Inserts a new Category in a Scope.
+            operationId: postSiteTaxonomyCategory
+            parameters:
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
+    "/sites/{siteId}/taxonomy-categories/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's taxonomy category by external reference code.
+            operationId: deleteSiteTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyCategory"]
+        get:
+            # @review
+            description:
+                Retrieves the site's taxonomy category by external reference code.
+            operationId: getSiteTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
+        put:
+            # @review
+            description:
+                Updates the site's taxonomy category with the given external reference code, or creates it if it not
+                exists.
+            operationId: putSiteTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
     "/sites/{siteId}/taxonomy-vocabularies":
         get:
             description:
                 Retrieves a Site's taxonomy vocabularies. Results can be paginated, filtered, searched, and sorted.
             operationId: getSiteTaxonomyVocabulariesPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1323,12 +1842,12 @@ paths:
                 Inserts a new taxonomy vocabulary in a Site.
             operationId: postSiteTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -1354,17 +1873,17 @@ paths:
                 Deletes the site's taxonomy vocabulary by external reference code.
             operationId: deleteSiteTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1377,25 +1896,25 @@ paths:
                 Retrieves the site's taxonomy vocabulary by external reference code.
             operationId: getSiteTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1413,17 +1932,17 @@ paths:
                 exists.
             operationId: putSiteTaxonomyVocabularyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1446,24 +1965,24 @@ paths:
         get:
             operationId: getSiteTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1473,12 +1992,12 @@ paths:
         put:
             operationId: putSiteTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: siteId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -1493,27 +2012,27 @@ paths:
         get:
             operationId: getTaxonomyCategoriesRankedPage
             parameters:
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: siteId
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: siteId
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:
@@ -1535,45 +2054,45 @@ paths:
                 and sorted.
             operationId: getTaxonomyCategoryTaxonomyCategoriesPage
             parameters:
-                - in: path
-                  name: parentTaxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: parentTaxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1593,11 +2112,11 @@ paths:
                 Inserts a new child taxonomy category.
             operationId: postTaxonomyCategoryTaxonomyCategory
             parameters:
-                - in: path
-                  name: parentTaxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: parentTaxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1622,11 +2141,11 @@ paths:
                 Deletes the taxonomy category and returns a 204 if the operation succeeds.
             operationId: deleteTaxonomyCategory
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1638,19 +2157,19 @@ paths:
                 Retrieves a taxonomy category.
             operationId: getTaxonomyCategory
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1666,11 +2185,11 @@ paths:
                 Updates only the fields received in the request body. Other fields are left untouched.
             operationId: patchTaxonomyCategory
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1695,11 +2214,11 @@ paths:
                 deleted unless they are required.
             operationId: putTaxonomyCategory
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1722,23 +2241,23 @@ paths:
         get:
             operationId: getTaxonomyCategoryPermissionsPage
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1748,11 +2267,11 @@ paths:
         put:
             operationId: putTaxonomyCategoryPermissionsPage
             parameters:
-                - in: path
-                  name: taxonomyCategoryId
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyCategoryId
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json: {}
@@ -1763,18 +2282,99 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["TaxonomyCategory"]
+    "/taxonomy-vocabularies":
+        get:
+            description:
+                Gets all taxonomy vocabularies that were created in CMS. Does not retrieve vocabularies created in DXP.
+                CMS vocabularies are distinguished by having a `groupId = 0`.
+            operationId: getTaxonomyVocabulariesPage
+            parameters:
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyVocabulary"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyVocabulary"
+                                type: array
+                    description:
+                        successful operation
+            tags: ["TaxonomyVocabulary"]
+        post:
+            description:
+                Creates the asset library's taxonomy vocabulary in the given spaces.
+            operationId: postTaxonomyVocabulary
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                    description:
+                        successful operation
+            tags: ["TaxonomyVocabulary"]
     "/taxonomy-vocabularies/{taxonomyVocabularyId}":
         delete:
             description:
                 Deletes the taxonomy vocabulary and returns a 204 if the operation succeeds.
             operationId: deleteTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 204:
                     content:
@@ -1786,20 +2386,20 @@ paths:
                 Retrieves a taxonomy vocabulary.
             operationId: getTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1815,12 +2415,12 @@ paths:
                 Updates only the fields received in the request body. Any other fields are left untouched.
             operationId: patchTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -1845,12 +2445,12 @@ paths:
                 deleted unless they are required.
             operationId: putTaxonomyVocabulary
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -1873,24 +2473,24 @@ paths:
         get:
             operationId: getTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -1900,12 +2500,12 @@ paths:
         put:
             operationId: putTaxonomyVocabularyPermissionsPage
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -1922,50 +2522,50 @@ paths:
                 Retrieves a vocabulary's taxonomy categories. Results can be paginated, filtered, searched, and sorted.
             operationId: getTaxonomyVocabularyTaxonomyCategoriesPage
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: flatten
-                  schema:
-                      type: boolean
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: flatten
+                    schema:
+                        type: boolean
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1985,12 +2585,12 @@ paths:
                 Inserts a new taxonomy category in a taxonomy vocabulary.
             operationId: postTaxonomyVocabularyTaxonomyCategory
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -2016,17 +2616,17 @@ paths:
                 Deletes the site's taxonomy category by external reference code.
             operationId: deleteTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -2039,25 +2639,25 @@ paths:
                 Retrieves the site's taxonomy category by external reference code.
             operationId: getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -2075,17 +2675,17 @@ paths:
                 exists.
             operationId: putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
             parameters:
-                - in: path
-                  name: taxonomyVocabularyId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: taxonomyVocabularyId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:

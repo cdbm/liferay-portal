@@ -41,6 +41,10 @@ import com.liferay.scim.rest.client.pagination.Page;
 import com.liferay.scim.rest.client.resource.v1_0.GroupResource;
 import com.liferay.scim.rest.client.serdes.v1_0.GroupSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -182,21 +182,6 @@ public abstract class BaseGroupResourceTestCase {
 	}
 
 	@Test
-	public void testGetV2Groups() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostV2Group() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostV2GroupSearch() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testDeleteV2Group() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Group group = testDeleteV2Group_addGroup();
@@ -216,18 +201,28 @@ public abstract class BaseGroupResourceTestCase {
 	}
 
 	@Test
+	public void testGetV2Groups() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPatchV2Group() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostV2Group() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostV2GroupSearch() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
 	public void testPutV2Group() throws Exception {
 		Assert.assertTrue(false);
-	}
-
-	protected Group testGraphQLGroup_addGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	protected void assertContains(Group group, List<Group> groups) {

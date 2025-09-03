@@ -58,14 +58,14 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
-
-import javax.portlet.PortletPreferences;
+import java.util.NavigableMap;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -400,7 +400,7 @@ public class PortalImplAlternateURLTest {
 
 		LayoutSet layoutSet = group.getPublicLayoutSet();
 
-		TreeMap<String, String> virtualHostnames =
+		NavigableMap<String, String> virtualHostnames =
 			layoutSet.getVirtualHostnames();
 
 		if (virtualHostnames.isEmpty()) {

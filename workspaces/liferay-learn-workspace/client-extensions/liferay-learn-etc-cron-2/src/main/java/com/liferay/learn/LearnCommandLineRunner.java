@@ -5,8 +5,8 @@
 
 package com.liferay.learn;
 
-import com.liferay.client.extension.util.spring.boot.BaseRestController;
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
 
 import org.json.JSONObject;
 
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Nilton Vieira
@@ -31,7 +32,10 @@ public class LearnCommandLineRunner
 			).put(
 				"synchronizationStatus", "InProgress"
 			).toString(),
-			"/o/c/p2s3examresultssynchronizations/scopes/guest");
+			UriComponentsBuilder.fromPath(
+				"/o/c/p2s3examresultssynchronizations"
+			).build(
+			).toUri());
 	}
 
 	@Autowired

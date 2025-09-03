@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -414,17 +414,16 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 			sb.append(hiddenFromNavigation);
 		}
 
-		NavigationMenuSettings navigationMenuSettings =
-			getNavigationMenuSettings();
+		NavigationSettings navigationSettings = getNavigationSettings();
 
-		if (navigationMenuSettings != null) {
+		if (navigationSettings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"navigationMenuSettings\": ");
+			sb.append("\"navigationSettings\": ");
 
-			sb.append(String.valueOf(navigationMenuSettings));
+			sb.append(String.valueOf(navigationSettings));
 		}
 
 		OpenGraphSettings openGraphSettings = getOpenGraphSettings();
@@ -437,6 +436,18 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 			sb.append("\"openGraphSettings\": ");
 
 			sb.append(String.valueOf(openGraphSettings));
+		}
+
+		Integer priority = getPriority();
+
+		if (priority != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priority\": ");
+
+			sb.append(priority);
 		}
 
 		SEOSettings seoSettings = getSeoSettings();

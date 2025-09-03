@@ -15,13 +15,19 @@ import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFo
 import {PackageVersionModal} from '../../../../../../components/PackageVersionModal/PackageVersionModal';
 import {RadioCard} from '../../../../../../components/RadioCard/RadioCard';
 import {Section} from '../../../../../../components/Section/Section';
-import {ProductEditionOption} from '../../../../../../enums/ProductEditionOption';
-import {ProductSpecification} from '../../../../../../enums/ProductSpecification';
-import {ProductType} from '../../../../../../enums/ProductType';
-import {ProductUploadType} from '../../../../../../enums/ProductUploadType';
-import {ProductVersionOption} from '../../../../../../enums/ProductVersionOption';
-import {ProductVocabulary} from '../../../../../../enums/ProductVocabulary';
+import {LearnLinks} from '../../../../../../enums/Learn';
+import {
+	ProductEditionOption,
+	ProductSpecificationKey,
+	ProductType,
+	ProductUploadType,
+	ProductVersionOption,
+	ProductVocabulary,
+	ProductWorkflowStatusCode,
+	getOfferingTypes,
+} from '../../../../../../enums/Product';
 import i18n from '../../../../../../i18n';
+import HeadlessCommerceAdminCatalog from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {
 	createProductSpecification,
 	createProductVirtualEntry,
@@ -34,18 +40,12 @@ import {
 	updateProductSpecification,
 } from '../../../../../../utils/api';
 import {useAppContext} from '../AppContext/AppManageState';
-import {TYPES} from '../AppContext/actionTypes';
-import {getOfferingTypes} from './constants/offeringTypes';
-
-import './ProvideAppBuildPage.scss';
-import {
-	PRODUCT_SPECIFICATION_KEY,
-	PRODUCT_WORKFLOW_STATUS_CODE,
-} from '../../../../../../enums/Product';
-import HeadlessCommerceAdminCatalogImpl from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
+import {ActionTypes} from '../AppContext/actionTypes';
 import ResourceRequirements from './ResourceRequirements';
 import UploadAppPackagesComponent from './components/UploadAppPackages';
 import {ProductTypeOptions} from './constants/productTypes';
+
+import './ProvideAppBuildPage.scss';
 
 type BodyProductSpecificationProps = {
 	productId: number;
@@ -106,7 +106,7 @@ export function ProvideAppBuildPage({
 	const handleResetAppPackages = useCallback(
 		() =>
 			dispatch({
-				type: TYPES.RESET_APP_PACKAGES,
+				type: ActionTypes.RESET_APP_PACKAGES,
 			}),
 		[dispatch]
 	);
@@ -117,7 +117,7 @@ export function ProvideAppBuildPage({
 				isRemoved: true,
 				versionName: removedVersion,
 			},
-			type: TYPES.UPLOAD_BUILD_PACKAGE_FILES,
+			type: ActionTypes.UPLOAD_BUILD_PACKAGE_FILES,
 		});
 	};
 
@@ -166,12 +166,18 @@ export function ProvideAppBuildPage({
 		);
 
 		fullyManagedOption.forEach((managedOption) => {
-			newCategories.push({
-				externalReferenceCode: managedOption?.externalReferenceCode,
-				id: managedOption.id,
-				name: managedOption.name,
-				vocabulary: ProductVocabulary.LIFERAY_PLATFORM_OFFERING,
-			});
+			if (
+				!categories.items.find(
+					(category) => category.name === managedOption.name
+				)
+			) {
+				newCategories.push({
+					externalReferenceCode: managedOption?.externalReferenceCode,
+					id: managedOption.id,
+					name: managedOption.name,
+					vocabulary: ProductVocabulary.LIFERAY_PLATFORM_OFFERING,
+				});
+			}
 		});
 
 		if (appType.value === ProductType.CLOUD) {
@@ -246,7 +252,7 @@ export function ProvideAppBuildPage({
 		const filteredProductSpecifications = dataProductSpecifications.filter(
 			(specification) =>
 				specification.specificationKey !==
-				PRODUCT_SPECIFICATION_KEY.LIFERAY_VERSION
+				ProductSpecificationKey.LIFERAY_VERSION
 		);
 
 		for (const versionKey in buildAppPackages) {
@@ -260,7 +266,7 @@ export function ProvideAppBuildPage({
 					version: versionKey,
 				});
 				liferayVersionSpecifications.push({
-					specificationKey: PRODUCT_SPECIFICATION_KEY.LIFERAY_VERSION,
+					specificationKey: ProductSpecificationKey.LIFERAY_VERSION,
 					value: {
 						en_US: versionKey,
 					},
@@ -268,14 +274,14 @@ export function ProvideAppBuildPage({
 			}
 		}
 
-		await HeadlessCommerceAdminCatalogImpl.updateProductByExternalReferenceCode(
+		await HeadlessCommerceAdminCatalog.updateProductByExternalReferenceCode(
 			appERC,
 			{
 				productSpecifications: [
 					...filteredProductSpecifications,
 					...liferayVersionSpecifications,
 				],
-				productStatus: PRODUCT_WORKFLOW_STATUS_CODE.DRAFT,
+				productStatus: ProductWorkflowStatusCode.DRAFT,
 			}
 		);
 
@@ -318,7 +324,7 @@ export function ProvideAppBuildPage({
 						);
 						dispatch({
 							payload: buildAppPackages,
-							type: TYPES.UPDATE_BUILD_PACKAGE_FILES,
+							type: ActionTypes.UPDATE_BUILD_PACKAGE_FILES,
 						});
 					},
 					virtualSettingId,
@@ -359,7 +365,8 @@ export function ProvideAppBuildPage({
 		if (appType.id) {
 			return updateProductSpecification({
 				body: {
-					specificationKey: ProductSpecification.TYPE.toLowerCase(),
+					specificationKey:
+						ProductSpecificationKey.APP_TYPE.toLowerCase(),
 					value: {en_US: appType.value},
 				},
 				id: appType.id,
@@ -379,7 +386,7 @@ export function ProvideAppBuildPage({
 
 		dispatch({
 			payload: {id, value: appType.value},
-			type: TYPES.UPDATE_APP_LXC_COMPATIBILITY,
+			type: ActionTypes.UPDATE_APP_TYPE,
 		});
 	};
 
@@ -389,7 +396,7 @@ export function ProvideAppBuildPage({
 				id: appType.id,
 				value,
 			},
-			type: TYPES.UPDATE_APP_LXC_COMPATIBILITY,
+			type: ActionTypes.UPDATE_APP_TYPE,
 		});
 
 		handleResetAppPackages();
@@ -562,7 +569,7 @@ export function ProvideAppBuildPage({
 										payload: {
 											value: ProductUploadType.ZIP_UPLOAD,
 										},
-										type: TYPES.UPDATE_APP_BUILD,
+										type: ActionTypes.UPDATE_APP_BUILD,
 									})
 								}
 								selected={
@@ -581,7 +588,11 @@ export function ProvideAppBuildPage({
 											'zip-files-must-be-in-universal-file-format-archive-uffa-the-specially-structured-zip-encoded-archive-used-to-package-client-extension-project-outputs-this-format-must-support-the-following-use-cases-deliver-batch-engine-data-files-compatible-with-all-deployment-targets-deliver-dxp-configuration-resource-compatible-with-all-deployment-targets-deliver-static-resources-compatible-with-all-deployment-targets-deliver-the-infrastructure-metadata-necessary-to-deploy-to-lxc-sm-for-more-information-see'
 										)}
 
-										<a href="https://learn.liferay.com/web/guest/w/dxp/building-applications/client-extensions/working-with-client-extensions#working-with-client-extensions">
+										<a
+											href={
+												LearnLinks.WORKING_WITH_CLIENT_EXTENSIONS
+											}
+										>
 											{i18n.translate('liferay-learn')}
 										</a>
 									</span>
@@ -597,7 +608,7 @@ export function ProvideAppBuildPage({
 								onChange={() =>
 									dispatch({
 										payload: {value: ProductUploadType.LXC},
-										type: TYPES.UPDATE_APP_BUILD,
+										type: ActionTypes.UPDATE_APP_BUILD,
 									})
 								}
 								selected={appBuild === ProductUploadType.LXC}
@@ -620,7 +631,7 @@ export function ProvideAppBuildPage({
 										payload: {
 											value: ProductUploadType.GITHUB,
 										},
-										type: TYPES.UPDATE_APP_BUILD,
+										type: ActionTypes.UPDATE_APP_BUILD,
 									});
 								}}
 								selected={appBuild === ProductUploadType.GITHUB}
@@ -684,7 +695,7 @@ export function ProvideAppBuildPage({
 							);
 						}
 					}
-					catch (error) {
+					catch {
 						console.error(
 							'Something went wrong to buildCategores | buildTypeSpecifications | buildPackages | buildClouldResourceRequirements'
 						);

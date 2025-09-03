@@ -112,7 +112,7 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 
 		_assertRedirectURL(
 			JournalArticle.class.getName(),
-			"friendly-url-separator-error-can-not-be-a-number",
+			"friendly-url-separator-error-cannot-be-a-number",
 			friendlyURLSeparators, mockActionResponse.getRedirect());
 	}
 
@@ -431,9 +431,9 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 			Map<String, String> friendlyURLSeparators)
 		throws Exception {
 
-		String originalFriendlyURLSeparatorsJSON =
+		JSONObject originalFriendlyURLSeparatorsJSONObject =
 			_friendlyURLSeparatorConfigurationManager.
-				getFriendlyURLSeparatorsJSON(_company.getCompanyId());
+				getFriendlyURLSeparatorsJSONObject(_company.getCompanyId());
 
 		try {
 			ConfigurationTestUtil.updateConfiguration(
@@ -453,9 +453,9 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 					configuration.update();
 				});
 
-			JSONObject jsonObject = _jsonFactory.createJSONObject(
+			JSONObject jsonObject =
 				_friendlyURLSeparatorConfigurationManager.
-					getFriendlyURLSeparatorsJSON(_company.getCompanyId()));
+					getFriendlyURLSeparatorsJSONObject(_company.getCompanyId());
 
 			for (Map.Entry<String, String> friendlyURLSeparator :
 					friendlyURLSeparators.entrySet()) {
@@ -473,7 +473,8 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 		finally {
 			_friendlyURLSeparatorConfigurationManager.
 				updateFriendlyURLSeparatorCompanyConfiguration(
-					_company.getCompanyId(), originalFriendlyURLSeparatorsJSON);
+					_company.getCompanyId(),
+					originalFriendlyURLSeparatorsJSONObject.toString());
 		}
 	}
 

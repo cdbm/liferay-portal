@@ -43,6 +43,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -204,174 +204,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelBillingAddressIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelBillingAddressIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelBillingAddressIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelBillingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelBillingAddressId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelBillingAddressId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelBillingAddressId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelBillingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelBillingAddressId()
-		throws Exception {
-
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelBillingAddressId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelBillingAddressId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelBillingAddressId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelBillingAddressId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelBillingAddressId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelBillingAddressIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelBillingAddressId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelBillingAddressId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelBillingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelBillingAddressId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelBillingAddressId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelBillingAddressId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelBillingAddressId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelBillingAddressId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -394,171 +234,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			404,
 			accountChannelEntryResource.getAccountChannelCurrencyIdHttpResponse(
 				accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.getAccountChannelCurrencyIdHttpResponse(
-				accountChannelEntry.getId()));
+				0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelCurrencyId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelCurrencyId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelCurrencyId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelCurrencyId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelCurrencyId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelCurrencyId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelCurrencyId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelCurrencyId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelCurrencyId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelCurrencyId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelCurrencyId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelCurrencyIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelCurrencyId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelCurrencyId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelCurrencyId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelCurrencyId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelCurrencyId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelCurrencyId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelCurrencyId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelCurrencyId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -582,172 +265,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelDeliveryTermIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelDeliveryTermIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelDeliveryTermIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelDeliveryTermId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelDeliveryTermId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelDeliveryTermId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelDeliveryTermId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelDeliveryTermId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelDeliveryTermId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelDeliveryTermId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelDeliveryTermId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelDeliveryTermId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelDeliveryTermId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelDeliveryTermId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelDeliveryTermIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelDeliveryTermId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelDeliveryTermId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelDeliveryTermId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelDeliveryTermId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelDeliveryTermId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelDeliveryTermId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelDeliveryTermId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelDeliveryTermId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -770,171 +295,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			404,
 			accountChannelEntryResource.getAccountChannelDiscountIdHttpResponse(
 				accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.getAccountChannelDiscountIdHttpResponse(
-				accountChannelEntry.getId()));
+				0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelDiscountId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelDiscountId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelDiscountId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelDiscountId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelDiscountId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelDiscountId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelDiscountId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelDiscountId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelDiscountId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelDiscountId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelDiscountId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelDiscountIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelDiscountId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelDiscountId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelDiscountId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelDiscountId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelDiscountId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelDiscountId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelDiscountId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelDiscountId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -958,172 +326,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelPaymentMethodIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelPaymentMethodIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelPaymentMethodIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelPaymentMethodId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelPaymentMethodId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelPaymentMethodId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPaymentMethodId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelPaymentMethodId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPaymentMethodId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelPaymentMethodId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelPaymentMethodId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelPaymentMethodId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelPaymentMethodId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPaymentMethodIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelPaymentMethodId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelPaymentMethodId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelPaymentMethodId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelPaymentMethodId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPaymentMethodId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1147,172 +357,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelPaymentTermIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelPaymentTermIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelPaymentTermIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelPaymentTermId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelPaymentTermId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelPaymentTermId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPaymentTermId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelPaymentTermId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPaymentTermId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelPaymentTermId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelPaymentTermId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelPaymentTermId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelPaymentTermId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelPaymentTermId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPaymentTermIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelPaymentTermId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelPaymentTermId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelPaymentTermId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelPaymentTermId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelPaymentTermId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelPaymentTermId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPaymentTermId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelPaymentTermId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1336,172 +388,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelPriceListIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelPriceListIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelPriceListIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelPriceListId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelPriceListId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelPriceListId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPriceListId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelPriceListId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPriceListId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelPriceListId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelPriceListId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelPriceListId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelPriceListId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelPriceListId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelPriceListIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelPriceListId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelPriceListId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelPriceListId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelPriceListId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelPriceListId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelPriceListId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelPriceListId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelPriceListId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1525,174 +419,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.
 				getAccountChannelShippingAddressIdHttpResponse(
 					accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.
-				getAccountChannelShippingAddressIdHttpResponse(
-					accountChannelEntry.getId()));
+				getAccountChannelShippingAddressIdHttpResponse(0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelShippingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelShippingAddressId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelShippingAddressId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelShippingAddressId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelShippingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelShippingAddressId()
-		throws Exception {
-
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelShippingAddressId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelShippingAddressId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountChannelShippingAddressId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelShippingAddressId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelShippingAddressId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelShippingAddressIdNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelShippingAddressId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelShippingAddressId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelShippingAddressId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelShippingAddressId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelShippingAddressId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelShippingAddressId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelShippingAddressId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelShippingAddressId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1714,168 +448,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			404,
 			accountChannelEntryResource.getAccountChannelUserIdHttpResponse(
 				accountChannelEntry.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			accountChannelEntryResource.getAccountChannelUserIdHttpResponse(
-				accountChannelEntry.getId()));
+				0L));
 	}
 
 	protected AccountChannelEntry
 			testDeleteAccountChannelUserId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountChannelUserId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testGetAccountChannelUserId_addAccountChannelEntry();
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelUserId(
-				postAccountChannelEntry.getId());
-
-		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testGetAccountChannelUserId_addAccountChannelEntry()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelUserId() throws Exception {
-		AccountChannelEntry accountChannelEntry =
-			testGraphQLGetAccountChannelUserId_addAccountChannelEntry();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountChannelUserId",
-								new HashMap<String, Object>() {
-									{
-										put("id", accountChannelEntry.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/accountChannelUserId"))));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertTrue(
-			equals(
-				accountChannelEntry,
-				AccountChannelEntrySerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminAccount_v1_0",
-								new GraphQLField(
-									"accountChannelUserId",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												accountChannelEntry.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminAccount_v1_0",
-						"Object/accountChannelUserId"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountChannelUserIdNotFound() throws Exception {
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountChannelUserId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminAccount_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminAccount_v1_0",
-						new GraphQLField(
-							"accountChannelUserId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected AccountChannelEntry
-			testGraphQLGetAccountChannelUserId_addAccountChannelEntry()
-		throws Exception {
-
-		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
-	}
-
-	@Test
-	public void testPatchAccountChannelUserId() throws Exception {
-		AccountChannelEntry postAccountChannelEntry =
-			testPatchAccountChannelUserId_addAccountChannelEntry();
-
-		AccountChannelEntry randomPatchAccountChannelEntry =
-			randomPatchAccountChannelEntry();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountChannelEntry patchAccountChannelEntry =
-			accountChannelEntryResource.patchAccountChannelUserId(
-				postAccountChannelEntry.getId(),
-				randomPatchAccountChannelEntry);
-
-		AccountChannelEntry expectedPatchAccountChannelEntry =
-			postAccountChannelEntry.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
-
-		AccountChannelEntry getAccountChannelEntry =
-			accountChannelEntryResource.getAccountChannelUserId(
-				patchAccountChannelEntry.getId());
-
-		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
-		assertValid(getAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPatchAccountChannelUserId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1963,13 +543,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_addAccountChannelEntry(
@@ -2099,30 +679,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelBillingAddress()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelBillingAddress_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelBillingAddress_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage()
 		throws Exception {
 
@@ -2203,13 +759,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_addAccountChannelEntry(
@@ -2339,30 +895,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelCurrency()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelCurrency_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelCurrency_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage()
 		throws Exception {
 
@@ -2443,13 +975,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_addAccountChannelEntry(
@@ -2579,30 +1111,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage()
 		throws Exception {
 
@@ -2683,13 +1191,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_addAccountChannelEntry(
@@ -2819,30 +1327,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelDiscount()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelDiscount_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelDiscount_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage()
 		throws Exception {
 
@@ -2923,13 +1407,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
@@ -3059,30 +1543,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage()
 		throws Exception {
 
@@ -3163,13 +1623,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_addAccountChannelEntry(
@@ -3299,30 +1759,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage()
 		throws Exception {
 
@@ -3403,13 +1839,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_addAccountChannelEntry(
@@ -3539,30 +1975,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelPriceList()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelPriceList_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelPriceList_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage()
 		throws Exception {
 
@@ -3643,13 +2055,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_addAccountChannelEntry(
@@ -3779,30 +2191,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelShippingAddress()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelShippingAddress_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelShippingAddress_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelUsersPage()
 		throws Exception {
 
@@ -3883,13 +2271,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_getExternalReferenceCode();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_addAccountChannelEntry(
@@ -4019,27 +2407,1084 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountChannelUser()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
+	public void testGetAccountChannelBillingAddressId() throws Exception {
 		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountByExternalReferenceCodeAccountChannelUser_addAccountChannelEntry(
-				randomAccountChannelEntry);
+			testGetAccountChannelBillingAddressId_addAccountChannelEntry();
 
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelBillingAddressId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
 	}
 
 	protected AccountChannelEntry
-			testPostAccountByExternalReferenceCodeAccountChannelUser_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
+			testGetAccountChannelBillingAddressId_addAccountChannelEntry()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelBillingAddressId()
+		throws Exception {
+
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelBillingAddressId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelBillingAddressId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelBillingAddressId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelBillingAddressId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelBillingAddressId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelBillingAddressIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelBillingAddressId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelBillingAddressId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelBillingAddressId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelCurrencyId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelCurrencyId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelCurrencyId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelCurrencyId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelCurrencyId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelCurrencyId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelCurrencyId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelCurrencyId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelCurrencyId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelCurrencyId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelCurrencyIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelCurrencyId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelCurrencyId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelCurrencyId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelDeliveryTermId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelDeliveryTermId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelDeliveryTermId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelDeliveryTermId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelDeliveryTermId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelDeliveryTermId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelDeliveryTermId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelDeliveryTermId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelDeliveryTermId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelDeliveryTermId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelDeliveryTermIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelDeliveryTermId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelDeliveryTermId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelDeliveryTermId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelDiscountId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelDiscountId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelDiscountId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelDiscountId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelDiscountId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelDiscountId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelDiscountId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelDiscountId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelDiscountId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelDiscountId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelDiscountIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelDiscountId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelDiscountId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelDiscountId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentMethodId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelPaymentMethodId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelPaymentMethodId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPaymentMethodId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPaymentMethodId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentMethodIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelPaymentMethodId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPaymentMethodId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelPaymentTermId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelPaymentTermId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentTermId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelPaymentTermId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentTermId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelPaymentTermId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelPaymentTermId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelPaymentTermId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPaymentTermId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPaymentTermId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentTermIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelPaymentTermId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPaymentTermId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelPaymentTermId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelPriceListId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelPriceListId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPriceListId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelPriceListId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPriceListId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelPriceListId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelPriceListId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelPriceListId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPriceListId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPriceListId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPriceListIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelPriceListId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPriceListId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelPriceListId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelShippingAddressId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelShippingAddressId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelShippingAddressId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelShippingAddressId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelShippingAddressId()
+		throws Exception {
+
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelShippingAddressId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelShippingAddressId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelShippingAddressId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelShippingAddressId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelShippingAddressId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelShippingAddressIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelShippingAddressId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelShippingAddressId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelShippingAddressId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testGetAccountChannelUserId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelUserId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelUserId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelUserId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelUserId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelUserId_addAccountChannelEntry();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelUserId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/accountChannelUserId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelUserId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelUserId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelUserIdNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelUserId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelUserId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelUserId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
 	}
 
 	@Test
@@ -4119,12 +3564,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelBillingAddressesPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelBillingAddressesPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelBillingAddressesPage_addAccountChannelEntry(
@@ -4249,30 +3694,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelBillingAddress()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelBillingAddress_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelBillingAddress_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelCurrenciesPage()
 		throws Exception {
 
@@ -4349,12 +3770,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelCurrenciesPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelCurrenciesPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelCurrenciesPage_addAccountChannelEntry(
@@ -4479,28 +3900,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelCurrency() throws Exception {
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelCurrency_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelCurrency_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelDeliveryTermsPage()
 		throws Exception {
 
@@ -4577,12 +3976,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelDeliveryTermsPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelDeliveryTermsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelDeliveryTermsPage_addAccountChannelEntry(
@@ -4707,28 +4106,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelDeliveryTerm() throws Exception {
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelDeliveryTerm_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelDeliveryTerm_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelDiscountsPage() throws Exception {
 		Long id = testGetAccountIdAccountChannelDiscountsPage_getId();
 		Long irrelevantId =
@@ -4800,12 +4177,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelDiscountsPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelDiscountsPage_addAccountChannelEntry(
@@ -4929,28 +4306,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelDiscount() throws Exception {
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelDiscount_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelDiscount_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelPaymentMethodsPage()
 		throws Exception {
 
@@ -5027,12 +4382,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelPaymentMethodsPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPaymentMethodsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
@@ -5157,30 +4512,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelPaymentMethod()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelPaymentTermsPage()
 		throws Exception {
 
@@ -5257,12 +4588,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelPaymentTermsPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPaymentTermsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelPaymentTermsPage_addAccountChannelEntry(
@@ -5387,28 +4718,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelPaymentTerm() throws Exception {
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelPaymentTerm_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelPaymentTerm_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelPriceListsPage()
 		throws Exception {
 
@@ -5485,12 +4794,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelPriceListsPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPriceListsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelPriceListsPage_addAccountChannelEntry(
@@ -5615,28 +4924,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelPriceList() throws Exception {
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelPriceList_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelPriceList_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelShippingAddressesPage()
 		throws Exception {
 
@@ -5713,12 +5000,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelShippingAddressesPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelShippingAddressesPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelShippingAddressesPage_addAccountChannelEntry(
@@ -5843,30 +5130,6 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountIdAccountChannelShippingAddress()
-		throws Exception {
-
-		AccountChannelEntry randomAccountChannelEntry =
-			randomAccountChannelEntry();
-
-		AccountChannelEntry postAccountChannelEntry =
-			testPostAccountIdAccountChannelShippingAddress_addAccountChannelEntry(
-				randomAccountChannelEntry);
-
-		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
-		assertValid(postAccountChannelEntry);
-	}
-
-	protected AccountChannelEntry
-			testPostAccountIdAccountChannelShippingAddress_addAccountChannelEntry(
-				AccountChannelEntry accountChannelEntry)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountIdAccountChannelUsersPage() throws Exception {
 		Long id = testGetAccountIdAccountChannelUsersPage_getId();
 		Long irrelevantId =
@@ -5935,12 +5198,12 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Long id = testGetAccountIdAccountChannelUsersPage_getId();
 
-		Page<AccountChannelEntry> accountChannelEntryPage =
+		Page<AccountChannelEntry> accountChannelEntriesPage =
 			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountChannelEntryPage.getTotalCount());
+			accountChannelEntriesPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelUsersPage_addAccountChannelEntry(
@@ -6058,6 +5321,728 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
+	public void testPatchAccountChannelBillingAddressId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelBillingAddressId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelBillingAddressId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelBillingAddressId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelBillingAddressId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelCurrencyId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelCurrencyId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelCurrencyId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelCurrencyId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelCurrencyId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelDeliveryTermId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelDeliveryTermId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelDeliveryTermId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelDeliveryTermId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelDeliveryTermId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelDiscountId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelDiscountId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelDiscountId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelDiscountId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelDiscountId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelPaymentMethodId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentMethodId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelPaymentTermId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelPaymentTermId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelPaymentTermId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentTermId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelPaymentTermId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelPriceListId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelPriceListId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelPriceListId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPriceListId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelPriceListId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelShippingAddressId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelShippingAddressId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelShippingAddressId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelShippingAddressId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelShippingAddressId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountChannelUserId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelUserId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelUserId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelUserId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelUserId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelBillingAddress()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelBillingAddress_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelBillingAddress_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelCurrency()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelCurrency_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelCurrency_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelDeliveryTerm_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelDiscount()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelDiscount_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelDiscount_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentTerm_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelPriceList()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelPriceList_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelPriceList_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelShippingAddress()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelShippingAddress_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelShippingAddress_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelUser()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelUser_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelUser_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelBillingAddress()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelBillingAddress_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelBillingAddress_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelCurrency() throws Exception {
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelCurrency_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelCurrency_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelDeliveryTerm() throws Exception {
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelDeliveryTerm_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelDeliveryTerm_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelDiscount() throws Exception {
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelDiscount_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelDiscount_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelPaymentMethod()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelPaymentTerm() throws Exception {
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelPaymentTerm_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelPaymentTerm_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelPriceList() throws Exception {
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelPriceList_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelPriceList_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelShippingAddress()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelShippingAddress_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelShippingAddress_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountIdAccountChannelUser() throws Exception {
 		AccountChannelEntry randomAccountChannelEntry =
 			randomAccountChannelEntry();
@@ -6077,6 +6062,11 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected AccountChannelEntry

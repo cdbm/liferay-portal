@@ -19,6 +19,9 @@ import com.liferay.headless.admin.list.type.client.pagination.Page;
 import com.liferay.headless.admin.list.type.client.pagination.Pagination;
 import com.liferay.headless.admin.list.type.client.resource.v1_0.ListTypeDefinitionResource;
 import com.liferay.headless.admin.list.type.client.serdes.v1_0.ListTypeDefinitionSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			testCompany.getCompanyId());
 
 		listTypeDefinitionResource = ListTypeDefinitionResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -211,6 +224,617 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		Assert.assertEquals(
 			regex, listTypeDefinition.getExternalReferenceCode());
 		Assert.assertEquals(regex, listTypeDefinition.getName());
+	}
+
+	@Test
+	public void testDeleteListTypeDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ListTypeDefinition listTypeDefinition =
+			testDeleteListTypeDefinition_addListTypeDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			listTypeDefinitionResource.deleteListTypeDefinitionHttpResponse(
+				listTypeDefinition.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			listTypeDefinitionResource.getListTypeDefinitionHttpResponse(
+				listTypeDefinition.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			listTypeDefinitionResource.getListTypeDefinitionHttpResponse(0L));
+	}
+
+	protected ListTypeDefinition
+			testDeleteListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteListTypeDefinition() throws Exception {
+
+		// No namespace
+
+		ListTypeDefinition listTypeDefinition1 =
+			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteListTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"listTypeDefinitionId",
+									listTypeDefinition1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteListTypeDefinition"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"listTypeDefinition",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"listTypeDefinitionId",
+								listTypeDefinition1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		ListTypeDefinition listTypeDefinition2 =
+			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"deleteListTypeDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeDefinitionId",
+										listTypeDefinition2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminListType_v1_0",
+				"Object/deleteListTypeDefinition"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminListType_v1_0",
+					new GraphQLField(
+						"listTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"listTypeDefinitionId",
+									listTypeDefinition2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ListTypeDefinition
+			testGraphQLDeleteListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return testGraphQLListTypeDefinition_addListTypeDefinition();
+	}
+
+	@Test
+	public void testDeleteListTypeDefinitionBatch() throws Exception {
+		ListTypeDefinition listTypeDefinition1 =
+			testDeleteListTypeDefinitionBatch_addListTypeDefinition();
+
+		testDeleteListTypeDefinitionBatch_deleteListTypeDefinition(
+			202, null, listTypeDefinition1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			listTypeDefinitionResource.getListTypeDefinitionHttpResponse(
+				listTypeDefinition1.getId()));
+	}
+
+	protected ListTypeDefinition
+			testDeleteListTypeDefinitionBatch_addListTypeDefinition()
+		throws Exception {
+
+		return testDeleteListTypeDefinition_addListTypeDefinition();
+	}
+
+	protected void testDeleteListTypeDefinitionBatch_deleteListTypeDefinition(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			listTypeDefinitionResource.
+				deleteListTypeDefinitionBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetListTypeDefinition() throws Exception {
+		ListTypeDefinition postListTypeDefinition =
+			testGetListTypeDefinition_addListTypeDefinition();
+
+		ListTypeDefinition getListTypeDefinition =
+			listTypeDefinitionResource.getListTypeDefinition(
+				postListTypeDefinition.getId());
+
+		assertEquals(postListTypeDefinition, getListTypeDefinition);
+		assertValid(getListTypeDefinition);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		ListTypeDefinition postListTypeDefinition =
+			testGetListTypeDefinition_addListTypeDefinition();
+
+		ListTypeDefinition getListTypeDefinition =
+			listTypeDefinitionResource.getListTypeDefinition(
+				postListTypeDefinition.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postListTypeDefinition.getId());
+
+		assertEquals(
+			getListTypeDefinition,
+			ListTypeDefinitionSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected ListTypeDefinition
+			testGetListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetListTypeDefinition() throws Exception {
+		ListTypeDefinition listTypeDefinition =
+			testGraphQLGetListTypeDefinition_addListTypeDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"listTypeDefinition",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"listTypeDefinitionId",
+											listTypeDefinition.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/listTypeDefinition"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminListType_v1_0",
+								new GraphQLField(
+									"listTypeDefinition",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"listTypeDefinitionId",
+												listTypeDefinition.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminListType_v1_0",
+						"Object/listTypeDefinition"))));
+	}
+
+	@Test
+	public void testGraphQLGetListTypeDefinitionNotFound() throws Exception {
+		Long irrelevantListTypeDefinitionId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"listTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"listTypeDefinitionId",
+									irrelevantListTypeDefinitionId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"listTypeDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeDefinitionId",
+										irrelevantListTypeDefinitionId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ListTypeDefinition
+			testGraphQLGetListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return testGraphQLListTypeDefinition_addListTypeDefinition();
+	}
+
+	@Test
+	public void testGetListTypeDefinitionByExternalReferenceCode()
+		throws Exception {
+
+		ListTypeDefinition postListTypeDefinition =
+			testGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition();
+
+		ListTypeDefinition getListTypeDefinition =
+			listTypeDefinitionResource.
+				getListTypeDefinitionByExternalReferenceCode(
+					postListTypeDefinition.getExternalReferenceCode());
+
+		assertEquals(postListTypeDefinition, getListTypeDefinition);
+		assertValid(getListTypeDefinition);
+	}
+
+	protected ListTypeDefinition
+			testGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetListTypeDefinitionByExternalReferenceCode()
+		throws Exception {
+
+		ListTypeDefinition listTypeDefinition =
+			testGraphQLGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"listTypeDefinitionByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												listTypeDefinition.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/listTypeDefinitionByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminListType_v1_0",
+								new GraphQLField(
+									"listTypeDefinitionByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													listTypeDefinition.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminListType_v1_0",
+						"Object/listTypeDefinitionByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetListTypeDefinitionByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"listTypeDefinitionByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"listTypeDefinitionByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ListTypeDefinition
+			testGraphQLGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition()
+		throws Exception {
+
+		return testGraphQLListTypeDefinition_addListTypeDefinition();
 	}
 
 	@Test
@@ -353,12 +977,12 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	public void testGetListTypeDefinitionsPageWithPagination()
 		throws Exception {
 
-		Page<ListTypeDefinition> listTypeDefinitionPage =
+		Page<ListTypeDefinition> listTypeDefinitionsPage =
 			listTypeDefinitionResource.getListTypeDefinitionsPage(
 				null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			listTypeDefinitionPage.getTotalCount());
+			listTypeDefinitionsPage.getTotalCount());
 
 		ListTypeDefinition listTypeDefinition1 =
 			testGetListTypeDefinitionsPage_addListTypeDefinition(
@@ -700,6 +1324,41 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	@Test
+	public void testPatchListTypeDefinition() throws Exception {
+		ListTypeDefinition postListTypeDefinition =
+			testPatchListTypeDefinition_addListTypeDefinition();
+
+		ListTypeDefinition randomPatchListTypeDefinition =
+			randomPatchListTypeDefinition();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ListTypeDefinition patchListTypeDefinition =
+			listTypeDefinitionResource.patchListTypeDefinition(
+				postListTypeDefinition.getId(), randomPatchListTypeDefinition);
+
+		ListTypeDefinition expectedPatchListTypeDefinition =
+			postListTypeDefinition.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchListTypeDefinition, expectedPatchListTypeDefinition);
+
+		ListTypeDefinition getListTypeDefinition =
+			listTypeDefinitionResource.getListTypeDefinition(
+				patchListTypeDefinition.getId());
+
+		assertEquals(expectedPatchListTypeDefinition, getListTypeDefinition);
+		assertValid(getListTypeDefinition);
+	}
+
+	protected ListTypeDefinition
+			testPatchListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostListTypeDefinition() throws Exception {
 		ListTypeDefinition randomListTypeDefinition =
 			randomListTypeDefinition();
@@ -722,141 +1381,34 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGetListTypeDefinitionByExternalReferenceCode()
-		throws Exception {
-
+	public void testPutListTypeDefinition() throws Exception {
 		ListTypeDefinition postListTypeDefinition =
-			testGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition();
+			testPutListTypeDefinition_addListTypeDefinition();
+
+		ListTypeDefinition randomListTypeDefinition =
+			randomListTypeDefinition();
+
+		ListTypeDefinition putListTypeDefinition =
+			listTypeDefinitionResource.putListTypeDefinition(
+				postListTypeDefinition.getId(), randomListTypeDefinition);
+
+		assertEquals(randomListTypeDefinition, putListTypeDefinition);
+		assertValid(putListTypeDefinition);
 
 		ListTypeDefinition getListTypeDefinition =
-			listTypeDefinitionResource.
-				getListTypeDefinitionByExternalReferenceCode(
-					postListTypeDefinition.getExternalReferenceCode());
+			listTypeDefinitionResource.getListTypeDefinition(
+				putListTypeDefinition.getId());
 
-		assertEquals(postListTypeDefinition, getListTypeDefinition);
+		assertEquals(randomListTypeDefinition, getListTypeDefinition);
 		assertValid(getListTypeDefinition);
 	}
 
 	protected ListTypeDefinition
-			testGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition()
+			testPutListTypeDefinition_addListTypeDefinition()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetListTypeDefinitionByExternalReferenceCode()
-		throws Exception {
-
-		ListTypeDefinition listTypeDefinition =
-			testGraphQLGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				listTypeDefinition,
-				ListTypeDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"listTypeDefinitionByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												listTypeDefinition.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/listTypeDefinitionByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminListType_v1_0
-
-		Assert.assertTrue(
-			equals(
-				listTypeDefinition,
-				ListTypeDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminListType_v1_0",
-								new GraphQLField(
-									"listTypeDefinitionByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													listTypeDefinition.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessAdminListType_v1_0",
-						"Object/listTypeDefinitionByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetListTypeDefinitionByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"listTypeDefinitionByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminListType_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminListType_v1_0",
-						new GraphQLField(
-							"listTypeDefinitionByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ListTypeDefinition
-			testGraphQLGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition()
-		throws Exception {
-
-		return testGraphQLListTypeDefinition_addListTypeDefinition();
 	}
 
 	@Test
@@ -911,13 +1463,6 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	protected ListTypeDefinition
-			testPutListTypeDefinitionByExternalReferenceCode_createListTypeDefinition()
-		throws Exception {
-
-		return randomListTypeDefinition();
-	}
-
-	protected ListTypeDefinition
 			testPutListTypeDefinitionByExternalReferenceCode_addListTypeDefinition()
 		throws Exception {
 
@@ -925,501 +1470,67 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testDeleteListTypeDefinition() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ListTypeDefinition listTypeDefinition =
-			testDeleteListTypeDefinition_addListTypeDefinition();
+	protected ListTypeDefinition
+			testPutListTypeDefinitionByExternalReferenceCode_createListTypeDefinition()
+		throws Exception {
 
-		assertHttpResponseStatusCode(
-			204,
-			listTypeDefinitionResource.deleteListTypeDefinitionHttpResponse(
-				listTypeDefinition.getId()));
+		return randomListTypeDefinition();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ListTypeDefinition listTypeDefinition1 =
+			testBatchEngineDeleteImportTask_addListTypeDefinition();
+
+		testBatchEngineDeleteImportTask_deleteListTypeDefinition(
+			200, null, listTypeDefinition1.getId());
 
 		assertHttpResponseStatusCode(
 			404,
 			listTypeDefinitionResource.getListTypeDefinitionHttpResponse(
-				listTypeDefinition.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			listTypeDefinitionResource.getListTypeDefinitionHttpResponse(0L));
+				listTypeDefinition1.getId()));
 	}
 
 	protected ListTypeDefinition
-			testDeleteListTypeDefinition_addListTypeDefinition()
+			testBatchEngineDeleteImportTask_addListTypeDefinition()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testDeleteListTypeDefinition_addListTypeDefinition();
 	}
 
-	@Test
-	public void testGraphQLDeleteListTypeDefinition() throws Exception {
-
-		// No namespace
-
-		ListTypeDefinition listTypeDefinition1 =
-			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteListTypeDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"listTypeDefinitionId",
-									listTypeDefinition1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteListTypeDefinition"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"listTypeDefinition",
-					new HashMap<String, Object>() {
-						{
-							put(
-								"listTypeDefinitionId",
-								listTypeDefinition1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessAdminListType_v1_0
-
-		ListTypeDefinition listTypeDefinition2 =
-			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminListType_v1_0",
-						new GraphQLField(
-							"deleteListTypeDefinition",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"listTypeDefinitionId",
-										listTypeDefinition2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminListType_v1_0",
-				"Object/deleteListTypeDefinition"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminListType_v1_0",
-					new GraphQLField(
-						"listTypeDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"listTypeDefinitionId",
-									listTypeDefinition2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ListTypeDefinition
-			testGraphQLDeleteListTypeDefinition_addListTypeDefinition()
+	protected void testBatchEngineDeleteImportTask_deleteListTypeDefinition(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
 		throws Exception {
 
-		return testGraphQLListTypeDefinition_addListTypeDefinition();
-	}
-
-	@Test
-	public void testGetListTypeDefinition() throws Exception {
-		ListTypeDefinition postListTypeDefinition =
-			testGetListTypeDefinition_addListTypeDefinition();
-
-		ListTypeDefinition getListTypeDefinition =
-			listTypeDefinitionResource.getListTypeDefinition(
-				postListTypeDefinition.getId());
-
-		assertEquals(postListTypeDefinition, getListTypeDefinition);
-		assertValid(getListTypeDefinition);
-	}
-
-	@Test
-	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
-		ListTypeDefinition postListTypeDefinition =
-			testGetListTypeDefinition_addListTypeDefinition();
-
-		ListTypeDefinition getListTypeDefinition =
-			listTypeDefinitionResource.getListTypeDefinition(
-				postListTypeDefinition.getId());
-
-		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
-			_vulcanCRUDItemDelegateBuilderRegistry.builder(
-				testCompany,
-				"com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition"
-			).acceptLanguage(
-				new AcceptLanguage() {
-
-					@Override
-					public List<Locale> getLocales() {
-						return Arrays.asList(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public String getPreferredLanguageId() {
-						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public Locale getPreferredLocale() {
-						return LocaleUtil.getDefault();
-					}
-
-				}
-			).groupLocalService(
-				_groupLocalService
-			).httpServletRequest(
-				testVulcanCRUDItemDelegate_getHttpServletRequest()
-			).httpServletResponse(
-				new MockHttpServletResponse()
-			).resourceActionLocalService(
-				_resourceActionLocalService
-			).resourcePermissionLocalService(
-				_resourcePermissionLocalService
-			).roleLocalService(
-				_roleLocalService
-			).scopeChecker(
-				_scopeChecker
-			).uriInfo(
-				testVulcanCRUDItemDelegate_getUriInfo()
-			).user(
-				testVulcanCRUDItemDelegate_getUser()
-			).build();
-
-		Object item = vulcanCRUDItemDelegate.getItem(
-			postListTypeDefinition.getId());
-
-		assertEquals(
-			getListTypeDefinition,
-			ListTypeDefinitionSerDes.toDTO(item.toString()));
-	}
-
-	protected HttpServletRequest
-		testVulcanCRUDItemDelegate_getHttpServletRequest() {
-
-		return new MockHttpServletRequest() {
-
-			@Override
-			public StringBuffer getRequestURL() {
-				return new StringBuffer(
-					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
-						RandomTestUtil.randomString()));
-			}
-
-		};
-	}
-
-	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
-		String applicationPath = RandomTestUtil.randomString() + "/";
-		String resourcePath = RandomTestUtil.randomString();
-
-		return new UriInfo() {
-
-			@Override
-			public String getPath() {
-				return resourcePath;
-			}
-
-			@Override
-			public String getPath(boolean decode) {
-				return getPath();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments(boolean decode) {
-				return getPathSegments();
-			}
-
-			@Override
-			public URI getRequestUri() {
-				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
-			}
-
-			@Override
-			public UriBuilder getRequestUriBuilder() {
-				return UriBuilder.fromUri(getRequestUri());
-			}
-
-			@Override
-			public URI getAbsolutePath() {
-				return getRequestUri();
-			}
-
-			@Override
-			public UriBuilder getAbsolutePathBuilder() {
-				return getRequestUriBuilder();
-			}
-
-			@Override
-			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
-			}
-
-			@Override
-			public UriBuilder getBaseUriBuilder() {
-				return UriBuilder.fromUri(getBaseUri());
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters(
-				boolean decode) {
-
-				return getPathParameters();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters(
-				boolean decode) {
-
-				return getQueryParameters();
-			}
-
-			@Override
-			public List<String> getMatchedURIs() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<String> getMatchedURIs(boolean decode) {
-				return getMatchedURIs();
-			}
-
-			@Override
-			public List<Object> getMatchedResources() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public URI resolve(URI requestUri) {
-				return getBaseUri().resolve(requestUri);
-			}
-
-			@Override
-			public URI relativize(URI uri) {
-				return getBaseUri().relativize(uri);
-			}
-
-		};
-	}
-
-	protected com.liferay.portal.kernel.model.User
-		testVulcanCRUDItemDelegate_getUser() {
-
-		return _testCompanyAdminUser;
-	}
-
-	protected ListTypeDefinition
-			testGetListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetListTypeDefinition() throws Exception {
-		ListTypeDefinition listTypeDefinition =
-			testGraphQLGetListTypeDefinition_addListTypeDefinition();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				listTypeDefinition,
-				ListTypeDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"listTypeDefinition",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"listTypeDefinitionId",
-											listTypeDefinition.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/listTypeDefinition"))));
-
-		// Using the namespace headlessAdminListType_v1_0
-
-		Assert.assertTrue(
-			equals(
-				listTypeDefinition,
-				ListTypeDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminListType_v1_0",
-								new GraphQLField(
-									"listTypeDefinition",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"listTypeDefinitionId",
-												listTypeDefinition.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessAdminListType_v1_0",
-						"Object/listTypeDefinition"))));
-	}
-
-	@Test
-	public void testGraphQLGetListTypeDefinitionNotFound() throws Exception {
-		Long irrelevantListTypeDefinitionId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"listTypeDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"listTypeDefinitionId",
-									irrelevantListTypeDefinitionId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminListType_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminListType_v1_0",
-						new GraphQLField(
-							"listTypeDefinition",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"listTypeDefinitionId",
-										irrelevantListTypeDefinitionId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ListTypeDefinition
-			testGraphQLGetListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		return testGraphQLListTypeDefinition_addListTypeDefinition();
-	}
-
-	@Test
-	public void testPatchListTypeDefinition() throws Exception {
-		ListTypeDefinition postListTypeDefinition =
-			testPatchListTypeDefinition_addListTypeDefinition();
-
-		ListTypeDefinition randomPatchListTypeDefinition =
-			randomPatchListTypeDefinition();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ListTypeDefinition patchListTypeDefinition =
-			listTypeDefinitionResource.patchListTypeDefinition(
-				postListTypeDefinition.getId(), randomPatchListTypeDefinition);
-
-		ListTypeDefinition expectedPatchListTypeDefinition =
-			postListTypeDefinition.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchListTypeDefinition, expectedPatchListTypeDefinition);
-
-		ListTypeDefinition getListTypeDefinition =
-			listTypeDefinitionResource.getListTypeDefinition(
-				patchListTypeDefinition.getId());
-
-		assertEquals(expectedPatchListTypeDefinition, getListTypeDefinition);
-		assertValid(getListTypeDefinition);
-	}
-
-	protected ListTypeDefinition
-			testPatchListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutListTypeDefinition() throws Exception {
-		ListTypeDefinition postListTypeDefinition =
-			testPutListTypeDefinition_addListTypeDefinition();
-
-		ListTypeDefinition randomListTypeDefinition =
-			randomListTypeDefinition();
-
-		ListTypeDefinition putListTypeDefinition =
-			listTypeDefinitionResource.putListTypeDefinition(
-				postListTypeDefinition.getId(), randomListTypeDefinition);
-
-		assertEquals(randomListTypeDefinition, putListTypeDefinition);
-		assertValid(putListTypeDefinition);
-
-		ListTypeDefinition getListTypeDefinition =
-			listTypeDefinitionResource.getListTypeDefinition(
-				putListTypeDefinition.getId());
-
-		assertEquals(randomListTypeDefinition, getListTypeDefinition);
-		assertValid(getListTypeDefinition);
-	}
-
-	protected ListTypeDefinition
-			testPutListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2230,7 +2341,30 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		return randomListTypeDefinition();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ListTypeDefinitionResource listTypeDefinitionResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

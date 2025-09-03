@@ -6,7 +6,7 @@
 import {ClayCheckbox} from '@clayui/form';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayTable from '@clayui/table';
-import {sub} from 'frontend-js-web';
+import {getObjectValueFromPath, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useState} from 'react';
 
@@ -23,7 +23,10 @@ function SelectableTable({dataLoading, items: itemsProp, schema, style}) {
 
 	function handleCheckboxChange(itemField, itemId, value) {
 		const updatedItems = items.map((item) => {
-			const currentItemId = item[selectedItemsKey];
+			const currentItemId = getObjectValueFromPath({
+				object: item,
+				path: selectedItemsKey,
+			});
 			if (!itemId || currentItemId === itemId) {
 				return {
 					...item,
@@ -118,7 +121,10 @@ function SelectableTable({dataLoading, items: itemsProp, schema, style}) {
 
 				<ClayTable.Body>
 					{items.map((item, i) => {
-						const itemId = item[selectedItemsKey];
+						const itemId = getObjectValueFromPath({
+							object: item,
+							path: selectedItemsKey,
+						});
 
 						return (
 							<ClayTable.Row key={i}>

@@ -8,10 +8,12 @@ package com.liferay.frontend.data.set.admin.web.internal.portlet.action;
 import com.liferay.frontend.data.set.SystemFDSEntry;
 import com.liferay.frontend.data.set.SystemFDSEntryRegistry;
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminPortletKeys;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -22,13 +24,17 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.util.TransformUtil;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
+		"jakarta.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
 		"mvc.command.name=/frontend_data_set_admin/get_system_data_sets"
 	},
 	service = MVCResourceCommand.class
@@ -62,6 +68,22 @@ public class GetSystemDataSetsMVCResourceCommand
 			return;
 		}
 
+		List<SystemFDSEntry> systemFDSEntries = TransformUtil.transform(
+			systemFDSNames,
+			systemFDSName -> _systemFDSEntryRegistry.getSystemFDSEntry(
+				systemFDSName));
+
+		Collections.sort(
+			systemFDSEntries,
+			Comparator.comparing(
+				systemFDSEntry -> {
+					if (systemFDSEntry != null) {
+						return systemFDSEntry.getTitle();
+					}
+
+					return StringPool.BLANK;
+				}));
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -81,12 +103,8 @@ public class GetSystemDataSetsMVCResourceCommand
 			JSONUtil.put(
 				"items",
 				JSONUtil.toJSONArray(
-					systemFDSNames,
-					systemFDSName -> {
-						SystemFDSEntry systemFDSEntry =
-							_systemFDSEntryRegistry.getSystemFDSEntry(
-								systemFDSName);
-
+					systemFDSEntries,
+					systemFDSEntry -> {
 						if (!StringUtil.matchesIgnoreCase(
 								systemFDSEntry.getTitle(), search)) {
 
@@ -96,6 +114,7 @@ public class GetSystemDataSetsMVCResourceCommand
 						ObjectEntry objectEntry =
 							_objectEntryLocalService.fetchObjectEntry(
 								systemFDSEntry.getName(),
+								ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 								dataSetObjectDefinition.
 									getObjectDefinitionId());
 

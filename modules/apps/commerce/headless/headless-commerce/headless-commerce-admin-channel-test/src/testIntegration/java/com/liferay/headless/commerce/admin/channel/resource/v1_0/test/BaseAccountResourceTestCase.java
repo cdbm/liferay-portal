@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -187,14 +187,14 @@ public abstract class BaseAccountResourceTestCase {
 		assertValid(getAccount);
 	}
 
-	protected Long testGetChannelAccountAccount_getChannelAccountId()
+	protected Account testGetChannelAccountAccount_addAccount()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Account testGetChannelAccountAccount_addAccount()
+	protected Long testGetChannelAccountAccount_getChannelAccountId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(

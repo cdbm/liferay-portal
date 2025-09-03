@@ -5,6 +5,8 @@
 
 package com.liferay.search.experiences.rest.internal.resource.v1_0;
 
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -45,6 +47,18 @@ public class SearchableAssetNameDisplayResourceImpl
 						setClassName(() -> className1);
 						setDisplayName(
 							() -> _getDisplayName(className1, languageId));
+						setHasSubtype(
+							() -> {
+								if (className1.equals(
+										DLFileEntry.class.getName()) ||
+									className1.equals(
+										JournalArticle.class.getName())) {
+
+									return true;
+								}
+
+								return false;
+							});
 					}
 				}));
 	}

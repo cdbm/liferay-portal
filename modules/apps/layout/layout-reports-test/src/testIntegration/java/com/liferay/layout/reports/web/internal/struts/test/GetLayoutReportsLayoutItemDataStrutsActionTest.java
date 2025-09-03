@@ -134,7 +134,8 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				layoutStructure.toString());
@@ -204,6 +205,7 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
+				TestPropsValues.getUserId(),
 				masterLayoutPageTemplateEntry.getGroupId(),
 				masterLayoutPageTemplateEntry.getPlid(),
 				_segmentsExperienceLocalService.
@@ -299,7 +301,8 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				layoutStructure.toString());
@@ -387,7 +390,7 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			"Fragment Entry HTML", StringPool.BLANK, cacheable, null, null, 0,
-			false, FragmentConstants.TYPE_COMPONENT, null,
+			false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 
@@ -412,7 +415,8 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				layoutStructure.toString());

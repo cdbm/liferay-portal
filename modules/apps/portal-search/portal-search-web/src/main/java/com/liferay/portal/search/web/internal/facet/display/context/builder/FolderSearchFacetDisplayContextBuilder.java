@@ -21,14 +21,15 @@ import com.liferay.portal.search.web.internal.facet.display.context.BucketDispla
 import com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderTitleLookup;
 import com.liferay.portal.search.web.internal.folder.facet.configuration.FolderFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
+
+import jakarta.portlet.RenderRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.RenderRequest;
 
 /**
  * @author Lino Alves
@@ -132,14 +133,10 @@ public class FolderSearchFacetDisplayContextBuilder {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_folderFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_folderFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected String getFirstParameterValueString() {

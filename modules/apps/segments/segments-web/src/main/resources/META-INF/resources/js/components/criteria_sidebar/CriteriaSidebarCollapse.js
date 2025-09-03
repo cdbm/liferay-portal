@@ -10,6 +10,7 @@ import React, {useEffect} from 'react';
 
 import useKeyboardNavigation from '../../hooks/useKeyboardNavigation';
 import {PROPERTY_TYPES} from '../../utils/constants';
+import {getUtcDate} from '../../utils/date';
 import {LIST_ITEM_TYPES} from '../../utils/listItemTypes';
 import {propertyGroupShape} from '../../utils/types.es';
 import {jsDatetoYYYYMMDD} from '../../utils/utils';
@@ -32,7 +33,9 @@ function getDefaultValue(property) {
 		defaultValue = jsDatetoYYYYMMDD(new Date());
 	}
 	else if (type === PROPERTY_TYPES.DATE_TIME) {
-		defaultValue = new Date().toISOString();
+		const utcDate = getUtcDate();
+
+		defaultValue = utcDate.toISOString();
 	}
 	else if (type === PROPERTY_TYPES.BOOLEAN) {
 		defaultValue = 'true';

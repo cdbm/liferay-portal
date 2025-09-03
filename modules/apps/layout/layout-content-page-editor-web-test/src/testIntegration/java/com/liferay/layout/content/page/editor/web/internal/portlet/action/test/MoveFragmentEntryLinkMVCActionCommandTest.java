@@ -52,14 +52,14 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -105,7 +105,7 @@ public class MoveFragmentEntryLinkMVCActionCommandTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(WebKeys.LAYOUT, _layout);
 
@@ -259,7 +259,7 @@ public class MoveFragmentEntryLinkMVCActionCommandTest {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 		mockLiferayPortletActionRequest.setAttribute(WebKeys.LAYOUT, _layout);
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _themeDisplay);

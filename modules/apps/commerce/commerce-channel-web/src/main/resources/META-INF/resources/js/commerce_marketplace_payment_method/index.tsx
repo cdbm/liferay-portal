@@ -6,34 +6,56 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {
+	AppsPermissions,
 	Marketplace,
+	MarketplaceContext,
 	MarketplaceContextProvider,
-	MarketplaceRest,
+	MarketplaceView,
 } from '@liferay/marketplace-js-components-web';
 import React from 'react';
 
 import MarketplaceViews from './MarketplaceViews';
 
-const CommerceChannelAddPaymentMethod = () => (
-	<MarketplaceContextProvider
-		baseResourceURL={MarketplaceRest.getBaseResourceURL()}
-		className="d-flex justify-content-end my-2 px-2 py-2"
-		settings={{productFilter: 'payments'}}
-	>
-		<Marketplace.Modal
-			noConnectionMessage={Liferay.Language.get(
-				'you-are-trying-to-add-a-new-payment-method-through-the-marketplace,-but-the-connection-has-not-been-established-yet'
-			)}
-			trigger={
-				<ClayButton size="sm">
-					<ClayIcon className="mr-2" symbol="marketplace" />
+type CommerceChannelAddPaymentMethodProps = {
+	baseResourceURL: string;
+	permissions: AppsPermissions;
+};
 
-					{Liferay.Language.get('add')}
-				</ClayButton>
-			}
-		>
-			<MarketplaceViews />
-		</Marketplace.Modal>
+const CommerceChannelAddPaymentMethod = ({
+	baseResourceURL,
+	permissions,
+}: CommerceChannelAddPaymentMethodProps) => (
+	<MarketplaceContextProvider
+		baseResourceURL={baseResourceURL}
+		className="d-flex justify-content-end my-2 px-2 py-2"
+		permissions={permissions}
+		settings={{
+			productFilter: 'payments',
+		}}
+	>
+		<MarketplaceContext.Consumer>
+			{({view}) => (
+				<Marketplace.Modal
+					noConnectionMessage={`${Liferay.Language.get(
+						'you-are-trying-to-add-a-new-payment-method-through-the-marketplace,-but-the-connection-has-not-been-established-yet'
+					)}${Liferay.Language.get(
+						'please-go-to-instance-settings-to-enable-the-connection'
+					)}`}
+					size={
+						view === MarketplaceView.PURCHASE ? 'lg' : 'full-screen'
+					}
+					trigger={
+						<ClayButton size="sm">
+							<ClayIcon className="mr-2" symbol="marketplace" />
+
+							{Liferay.Language.get('add')}
+						</ClayButton>
+					}
+				>
+					<MarketplaceViews />
+				</Marketplace.Modal>
+			)}
+		</MarketplaceContext.Consumer>
 	</MarketplaceContextProvider>
 );
 

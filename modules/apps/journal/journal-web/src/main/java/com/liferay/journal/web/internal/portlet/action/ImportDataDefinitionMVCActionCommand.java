@@ -7,7 +7,9 @@ package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.web.internal.util.DataDefinitionUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -23,8 +25,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/import_data_definition"
 	},
 	service = MVCActionCommand.class
@@ -72,6 +74,14 @@ public class ImportDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
 					themeDisplay.getUser()
 				).build();
 
+			if (_ddmStructureLocalService.hasStructure(
+					themeDisplay.getScopeGroupId(),
+					_portal.getClassNameId(JournalArticle.class.getName()),
+					dataDefinition.getDataDefinitionKey())) {
+
+				dataDefinition.setDataDefinitionKey(() -> null);
+			}
+
 			dataDefinition.setExternalReferenceCode(() -> null);
 
 			dataDefinitionResource.postSiteDataDefinitionByContentType(
@@ -99,6 +109,9 @@ public class ImportDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
+
+	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Reference
 	private Portal _portal;

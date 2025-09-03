@@ -6,6 +6,7 @@
 package com.liferay.server.admin.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.captcha.configuration.CaptchaConfiguration;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
@@ -17,6 +18,8 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.mail.kernel.model.Account;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.captcha.CaptchaTextException;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -56,6 +59,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -69,14 +73,14 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.PortalPreferencesImpl;
 import com.liferay.portlet.PortalPreferencesWrapper;
 
+import jakarta.portlet.ActionRequest;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-
-import javax.portlet.ActionRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -295,7 +299,7 @@ public class EditServerMVCActionCommandTest {
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, _layout.getPlid(),
 				RandomTestUtil.randomString());
 
-			javax.portlet.PortletPreferences jxPortletPreferences =
+			jakarta.portlet.PortletPreferences jxPortletPreferences =
 				_portletPreferenceValueLocalService.getPreferences(
 					_portletPreferences);
 
@@ -410,21 +414,25 @@ public class EditServerMVCActionCommandTest {
 
 	@Test
 	public void testUpdateMail() {
-		javax.portlet.PortletPreferences portletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			PrefsPropsUtil.getPreferences(CompanyConstants.SYSTEM);
 
 		try {
 			_testUpdateMailPortletPreferences(
-				RandomTestUtil::randomBoolean, RandomTestUtil::randomInt,
-				RandomTestUtil::randomString, portletPreferences);
-
+				() -> false, () -> 0, () -> StringPool.BLANK,
+				jxPortletPreferences);
 			_testUpdateMailPortletPreferences(
-				() -> Boolean.FALSE, () -> 0, () -> StringPool.BLANK,
-				portletPreferences);
+				RandomTestUtil::randomBoolean, RandomTestUtil::randomInt,
+				RandomTestUtil::randomString, jxPortletPreferences);
+			_testUpdateMailWithAndWithoutSecureProtocol(
+				jxPortletPreferences, false);
+			_testUpdateMailWithAndWithoutSecureProtocol(
+				jxPortletPreferences, true);
+			_testUpdateMailWithPasswords(jxPortletPreferences);
 		}
 		finally {
 			PortalPreferencesWrapper portalPreferencesWrapper =
-				(PortalPreferencesWrapper)portletPreferences;
+				(PortalPreferencesWrapper)jxPortletPreferences;
 
 			PortalPreferencesImpl portalPreferencesImpl =
 				portalPreferencesWrapper.getPortalPreferencesImpl();
@@ -461,6 +469,20 @@ public class EditServerMVCActionCommandTest {
 		return _portletPreferencesLocalService.addPortletPreferences(
 			TestPropsValues.getCompanyId(), ownerId, ownerType, plid, portletId,
 			null, StringPool.BLANK);
+	}
+
+	private void _assertPasswords(
+		jakarta.portlet.PortletPreferences jxPortletPreferences,
+		String expectedPOP3Password, String expectedSMTPPassword) {
+
+		Assert.assertEquals(
+			expectedPOP3Password,
+			jxPortletPreferences.getValue(
+				PropsKeys.MAIL_SESSION_MAIL_POP3_PASSWORD, null));
+		Assert.assertEquals(
+			expectedSMTPPassword,
+			jxPortletPreferences.getValue(
+				PropsKeys.MAIL_SESSION_MAIL_SMTP_PASSWORD, null));
 	}
 
 	private LayoutRevision _getLayoutRevision() throws Exception {
@@ -508,36 +530,7 @@ public class EditServerMVCActionCommandTest {
 		MockLiferayPortletActionResponse mockLiferayPortletActionResponse =
 			new MockLiferayPortletActionResponse();
 
-		if (permissionChecker.isOmniadmin()) {
-			if (!cmd.equals("addLogLevel") &&
-				!cmd.equals("dlGenerateAudioPreviews") &&
-				!cmd.equals("dlGenerateOpenOfficePreviews") &&
-				!cmd.equals("dlGenerateVideoPreviews") &&
-				!cmd.equals("updateLogLevels") &&
-				!cmd.equals("updatePortalProperties")) {
-
-				try {
-					_mvcActionCommand.processAction(
-						mockLiferayPortletActionRequest,
-						mockLiferayPortletActionResponse);
-
-					Assert.fail(cmd + " should fail by CaptchaTextException");
-				}
-				catch (Exception exception) {
-					Throwable throwable = exception.getCause();
-
-					Assert.assertTrue(
-						throwable instanceof CaptchaTextException);
-				}
-			}
-			else {
-				Assert.assertTrue(
-					_mvcActionCommand.processAction(
-						mockLiferayPortletActionRequest,
-						mockLiferayPortletActionResponse));
-			}
-		}
-		else {
+		if (!permissionChecker.isOmniadmin()) {
 			if (cmd.equals("updateMail") &&
 				permissionChecker.isCompanyAdmin()) {
 
@@ -552,13 +545,66 @@ public class EditServerMVCActionCommandTest {
 						mockLiferayPortletActionRequest,
 						mockLiferayPortletActionResponse));
 			}
+
+			return;
+		}
+
+		if (cmd.equals("addLogLevel") ||
+			cmd.equals("dlGenerateAudioPreviews") ||
+			cmd.equals("dlGenerateOpenOfficePreviews") ||
+			cmd.equals("dlGenerateVideoPreviews") ||
+			cmd.equals("updateLogLevels") ||
+			cmd.equals("updatePortalProperties")) {
+
+			Assert.assertTrue(
+				_mvcActionCommand.processAction(
+					mockLiferayPortletActionRequest,
+					mockLiferayPortletActionResponse));
+
+			return;
+		}
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						CaptchaConfiguration.class.getName(),
+						new HashMapDictionaryBuilder(
+						).<String, Object>put(
+							"createAccountCaptchaEnabled", "true"
+						).put(
+							"maxChallenges", "1"
+						).put(
+							"sendPasswordCaptchaEnabled", "true"
+						).build());
+			ConfigurationTemporarySwapper configurationTemporarySwapper =
+				new ConfigurationTemporarySwapper(
+					CaptchaConfiguration.class.getName(),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"createAccountCaptchaEnabled", "true"
+					).put(
+						"maxChallenges", "1"
+					).put(
+						"sendPasswordCaptchaEnabled", "true"
+					).build())) {
+
+			_mvcActionCommand.processAction(
+				mockLiferayPortletActionRequest,
+				mockLiferayPortletActionResponse);
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Throwable throwable = exception.getCause();
+
+			Assert.assertTrue(throwable instanceof CaptchaTextException);
 		}
 	}
 
 	private void _testUpdateMailPortletPreferences(
 		BooleanSupplier booleanSupplier, IntSupplier intSupplier,
 		Supplier<String> stringSupplier,
-		javax.portlet.PortletPreferences portletPreferences) {
+		jakarta.portlet.PortletPreferences jxPortletPreferences) {
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
@@ -600,64 +646,147 @@ public class EditServerMVCActionCommandTest {
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "_updateMail",
 			new Class<?>[] {
-				ActionRequest.class, javax.portlet.PortletPreferences.class
+				ActionRequest.class, jakarta.portlet.PortletPreferences.class
 			},
-			mockLiferayPortletActionRequest, portletPreferences);
+			mockLiferayPortletActionRequest, jxPortletPreferences);
 
 		Assert.assertEquals(
 			parameters.get("advancedProperties"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_ADVANCED_PROPERTIES, null));
 		Assert.assertEquals(
 			parameters.get("pop3Host"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_POP3_HOST, null));
 		Assert.assertEquals(
 			parameters.get("pop3Password"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_POP3_PASSWORD, null));
 		Assert.assertEquals(
 			parameters.get("pop3Port"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_POP3_PORT, null));
 		Assert.assertEquals(
 			Boolean.valueOf(parameters.get("pop3Secure")) ?
 				Account.PROTOCOL_POPS : Account.PROTOCOL_POP,
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL, null));
 		Assert.assertEquals(
 			parameters.get("pop3User"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_POP3_USER, null));
 		Assert.assertEquals(
 			parameters.get("popServerNotificationsEnabled"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.POP_SERVER_NOTIFICATIONS_ENABLED, null));
 		Assert.assertEquals(
 			parameters.get("smtpHost"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_SMTP_HOST, null));
 		Assert.assertEquals(
 			parameters.get("smtpPassword"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_SMTP_PASSWORD, null));
 		Assert.assertEquals(
 			parameters.get("smtpPort"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_SMTP_PORT, null));
 		Assert.assertEquals(
 			Boolean.valueOf(parameters.get("smtpSecure")) ?
 				Account.PROTOCOL_SMTPS : Account.PROTOCOL_SMTP,
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL, null));
 		Assert.assertEquals(
 			parameters.get("smtpStartTLSEnable"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_SMTP_STARTTLS_ENABLE, null));
 		Assert.assertEquals(
 			parameters.get("smtpUser"),
-			portletPreferences.getValue(
+			jxPortletPreferences.getValue(
 				PropsKeys.MAIL_SESSION_MAIL_SMTP_USER, null));
+	}
+
+	private void _testUpdateMailWithAndWithoutSecureProtocol(
+		jakarta.portlet.PortletPreferences jxPortletPreferences,
+		boolean secure) {
+
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+			new MockLiferayPortletActionRequest();
+
+		mockLiferayPortletActionRequest.addParameter(
+			"pop3Secure", String.valueOf(secure));
+		mockLiferayPortletActionRequest.addParameter(
+			"smtpSecure", String.valueOf(secure));
+
+		ReflectionTestUtil.invoke(
+			_mvcActionCommand, "_updateMail",
+			new Class<?>[] {
+				ActionRequest.class, jakarta.portlet.PortletPreferences.class
+			},
+			mockLiferayPortletActionRequest, jxPortletPreferences);
+
+		Assert.assertEquals(
+			secure ? Account.PROTOCOL_POPS : Account.PROTOCOL_POP,
+			jxPortletPreferences.getValue(
+				PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL, null));
+		Assert.assertEquals(
+			secure ? Account.PROTOCOL_SMTPS : Account.PROTOCOL_SMTP,
+			jxPortletPreferences.getValue(
+				PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL, null));
+	}
+
+	private void _testUpdateMailWithPasswords(
+		jakarta.portlet.PortletPreferences jxPortletPreferences) {
+
+		_assertPasswords(
+			jxPortletPreferences, StringPool.BLANK, StringPool.BLANK);
+
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+			new MockLiferayPortletActionRequest();
+
+		_updatePasswords(
+			mockLiferayPortletActionRequest, jxPortletPreferences,
+			"pop3Password", "smtpPassword");
+
+		_assertPasswords(jxPortletPreferences, "pop3Password", "smtpPassword");
+
+		_updatePasswords(
+			mockLiferayPortletActionRequest, jxPortletPreferences,
+			Portal.TEMP_OBFUSCATION_VALUE, Portal.TEMP_OBFUSCATION_VALUE);
+
+		_assertPasswords(jxPortletPreferences, "pop3Password", "smtpPassword");
+
+		_updatePasswords(
+			mockLiferayPortletActionRequest, jxPortletPreferences,
+			"newPOP3Password", "newSMTPPassword");
+
+		_assertPasswords(
+			jxPortletPreferences, "newPOP3Password", "newSMTPPassword");
+
+		_updatePasswords(
+			mockLiferayPortletActionRequest, jxPortletPreferences,
+			StringPool.BLANK, StringPool.BLANK);
+
+		_assertPasswords(
+			jxPortletPreferences, StringPool.BLANK, StringPool.BLANK);
+	}
+
+	private void _updatePasswords(
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest,
+		jakarta.portlet.PortletPreferences jxPortletPreferences,
+		String pop3Password, String smtpPassword) {
+
+		mockLiferayPortletActionRequest.setParameter(
+			"pop3Password", pop3Password);
+		mockLiferayPortletActionRequest.setParameter(
+			"smtpPassword", smtpPassword);
+
+		ReflectionTestUtil.invoke(
+			_mvcActionCommand, "_updateMail",
+			new Class<?>[] {
+				ActionRequest.class, jakarta.portlet.PortletPreferences.class
+			},
+			mockLiferayPortletActionRequest, jxPortletPreferences);
 	}
 
 	private static final String[] _COMMANDS = {

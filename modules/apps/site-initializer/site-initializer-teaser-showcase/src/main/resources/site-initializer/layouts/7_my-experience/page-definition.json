@@ -65,7 +65,6 @@
 								"widgetName": "com_liferay_commerce_product_content_search_web_internal_portlet_CPSearchResultsPortlet"
 							}
 						},
-						"id": "063edad4-c7e5-c63c-890f-489ef47faf17",
 						"type": "Widget"
 					},
 					{
@@ -270,10 +269,24 @@
 															"id": "link",
 															"value": {
 																"fragmentLink": {
+																	"value": {
+																		"href": {
+																			"mapping": {
+																				"fieldKey": "DDMStructure_linkPage",
+																				"itemReference": {
+																					"contextSource": "CollectionItem"
+																				}
+																			}
+																		},
+																		"target": "Blank"
+																	}
 																},
 																"text": {
-																	"value_i18n": {
-																		"en_US": "Learn more"
+																	"mapping": {
+																		"fieldKey": "DDMStructure_linkText",
+																		"itemReference": {
+																			"contextSource": "CollectionItem"
+																		}
 																	}
 																}
 															}
@@ -565,7 +578,7 @@
 											"fragmentConfig": {
 												"inputFieldId": "ObjectField_comment",
 												"inputLabel": {
-													"en_US": "Do you have any question about products, orders, shipments, etc.? You will receive an answer as soon as possible"
+													"en_US": "Do you have any questions about products, orders, shipments, etc.? You will receive an answer as soon as possible."
 												},
 												"numberOfLines": 2,
 												"placeholder": "",
@@ -662,8 +675,8 @@
 								"definition": {
 									"gutters": true,
 									"indexed": true,
-									"modulesPerRow": 4,
-									"numberOfColumns": 4,
+									"modulesPerRow": 6,
+									"numberOfColumns": 6,
 									"reverseOrder": false,
 									"rowViewports": [
 										{
@@ -683,7 +696,7 @@
 											}
 										}
 									],
-									"verticalAlignment": "top"
+									"verticalAlignment": "middle"
 								},
 								"pageElements": [
 									{
@@ -758,7 +771,7 @@
 													"id": "tablet"
 												}
 											],
-											"size": 2
+											"size": 1
 										},
 										"pageElements": [
 											{
@@ -862,7 +875,7 @@
 													"id": "tablet"
 												}
 											],
-											"size": 6
+											"size": 4
 										},
 										"pageElements": [
 											{
@@ -882,6 +895,110 @@
 																"text": {
 																	"value_i18n": {
 																		"en_US": "Answer"
+																	}
+																}
+															}
+														}
+													],
+													"indexed": true
+												},
+												"type": "Fragment"
+											}
+										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 1
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragment": {
+														"key": "BASIC_COMPONENT-heading"
+													},
+													"fragmentConfig": {
+														"headingLevel": "h6"
+													},
+													"fragmentFields": [
+														{
+															"id": "element-text",
+															"value": {
+																"fragmentLink": {
+																},
+																"text": {
+																	"value_i18n": {
+																		"en_US": "Answered"
+																	}
+																}
+															}
+														}
+													],
+													"indexed": true
+												},
+												"type": "Fragment"
+											}
+										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 2
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragment": {
+														"key": "BASIC_COMPONENT-heading"
+													},
+													"fragmentConfig": {
+														"headingLevel": "h5"
+													},
+													"fragmentFields": [
+														{
+															"id": "element-text",
+															"value": {
+																"fragmentLink": {
+																},
+																"text": {
+																	"value_i18n": {
+																		"en_US": "Mark as answered?"
 																	}
 																}
 															}
@@ -969,8 +1086,8 @@
 													},
 													"gutters": true,
 													"indexed": true,
-													"modulesPerRow": 5,
-													"numberOfColumns": 5,
+													"modulesPerRow": 6,
+													"numberOfColumns": 6,
 													"reverseOrder": false,
 													"rowViewports": [
 														{
@@ -1067,7 +1184,7 @@
 																	"id": "tablet"
 																}
 															],
-															"size": 2
+															"size": 1
 														},
 														"pageElements": [
 															{
@@ -1229,69 +1346,267 @@
 																	"id": "tablet"
 																}
 															],
-															"size": 2
+															"size": 1
 														},
 														"pageElements": [
 															{
 																"definition": {
 																	"fragment": {
-																		"key": "BASIC_COMPONENT-button"
+																		"key": "BASIC_COMPONENT-paragraph"
 																	},
 																	"fragmentConfig": {
-																		"buttonSize": "sm",
-																		"buttonType": "primary",
-																		"type": "action"
 																	},
 																	"fragmentFields": [
 																		{
-																			"id": "action",
+																			"id": "element-text",
 																			"value": {
-																				"action": {
+																				"fragmentLink": {
+																				},
+																				"text": {
 																					"mapping": {
-																						"fieldKey": "ObjectAction_standaloneUserConfirmation",
+																						"fieldKey": "ObjectField_answered",
 																						"itemReference": {
 																							"contextSource": "CollectionItem"
 																						}
-																					}
-																				},
-																				"onError": {
-																					"type": "Notification",
-																					"value": {
-																						"reload": true,
-																						"text": {
-																							"value_i18n": {
-																								"en_US": "Sorry, try again later"
-																							}
-																						}
-																					}
-																				},
-																				"onSuccess": {
-																					"type": "Notification",
-																					"value": {
-																						"reload": true,
-																						"text": {
-																							"value_i18n": {
-																								"en_US": "Thank you for your confirmation"
-																							}
-																						}
-																					}
-																				},
-																				"text": {
-																					"value_i18n": {
-																						"en_US": "Mark as answered"
 																					}
 																				}
 																			}
 																		}
 																	],
-																	"fragmentStyle": {
-																		"borderColor": "primaryColor",
-																		"textAlign": "center",
-																		"textColor": ""
-																	},
 																	"indexed": true
 																},
 																"type": "Fragment"
+															}
+														],
+														"type": "Column"
+													},
+													{
+														"definition": {
+															"columnViewports": [
+																{
+																	"columnViewportDefinition": {
+																		"size": 12
+																	},
+																	"id": "landscapeMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "portraitMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "tablet"
+																}
+															],
+															"size": 2
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"gutters": false,
+																	"indexed": true,
+																	"modulesPerRow": 2,
+																	"numberOfColumns": 2,
+																	"reverseOrder": false,
+																	"rowViewports": [
+																		{
+																			"id": "landscapeMobile",
+																			"rowViewportDefinition": {
+																				"modulesPerRow": 1
+																			}
+																		},
+																		{
+																			"id": "portraitMobile",
+																			"rowViewportDefinition": {
+																			}
+																		},
+																		{
+																			"id": "tablet",
+																			"rowViewportDefinition": {
+																			}
+																		}
+																	],
+																	"verticalAlignment": "top"
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 6
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "BASIC_COMPONENT-button"
+																					},
+																					"fragmentConfig": {
+																						"buttonSize": "sm",
+																						"buttonType": "primary",
+																						"type": "action"
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "action",
+																							"value": {
+																								"action": {
+																									"mapping": {
+																										"fieldKey": "ObjectAction_standaloneUserAcceptance",
+																										"itemReference": {
+																											"contextSource": "CollectionItem"
+																										}
+																									}
+																								},
+																								"onError": {
+																									"type": "Notification",
+																									"value": {
+																										"reload": true,
+																										"text": {
+																											"value_i18n": {
+																												"en_US": "Sorry, try again later"
+																											}
+																										}
+																									}
+																								},
+																								"onSuccess": {
+																									"type": "Notification",
+																									"value": {
+																										"reload": true,
+																										"text": {
+																											"value_i18n": {
+																												"en_US": "Thank you for your confirmation"
+																											}
+																										}
+																									}
+																								},
+																								"text": {
+																									"value_i18n": {
+																										"en_US": "Yes"
+																									}
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"borderColor": "primaryColor",
+																						"textAlign": "center",
+																						"textColor": ""
+																					},
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Column"
+																	},
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 6
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "BASIC_COMPONENT-button"
+																					},
+																					"fragmentConfig": {
+																						"buttonSize": "sm",
+																						"buttonType": "primary",
+																						"type": "action"
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "action",
+																							"value": {
+																								"action": {
+																									"mapping": {
+																										"fieldKey": "ObjectAction_standaloneUserRejection",
+																										"itemReference": {
+																											"contextSource": "CollectionItem"
+																										}
+																									}
+																								},
+																								"onError": {
+																									"type": "Notification",
+																									"value": {
+																										"reload": true,
+																										"text": {
+																											"value_i18n": {
+																												"en_US": "Sorry, try again later"
+																											}
+																										}
+																									}
+																								},
+																								"onSuccess": {
+																									"type": "Notification",
+																									"value": {
+																										"reload": true,
+																										"text": {
+																											"value_i18n": {
+																												"en_US": "Thank you for your confirmation"
+																											}
+																										}
+																									}
+																								},
+																								"text": {
+																									"value_i18n": {
+																										"en_US": "No"
+																									}
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"borderColor": "primaryColor",
+																						"textAlign": "center",
+																						"textColor": ""
+																					},
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Column"
+																	}
+																],
+																"type": "Row"
 															}
 														],
 														"type": "Column"

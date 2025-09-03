@@ -598,28 +598,22 @@ public class DefaultAttributeResolver implements AttributeResolver {
 		boolean namespaceEnabled) {
 
 		try {
-			List<UserGroup> userGroups = user.getUserGroups();
-
-			if (userGroups.isEmpty()) {
-				return;
-			}
-
 			String name = null;
 			String nameFormat = null;
 
 			if (namespaceEnabled) {
-				name = "urn:liferay:userGroups";
+				name = "urn:liferay:membership:userGroups";
 				nameFormat = Attribute.URI_REFERENCE;
 			}
 			else {
-				name = "userGroups";
+				name = "membership:userGroups";
 				nameFormat = Attribute.UNSPECIFIED;
 			}
 
 			attributePublisher.publish(
 				name, nameFormat,
 				TransformUtil.transformToArray(
-					userGroups, UserGroup::getName, String.class));
+					user.getUserGroups(), UserGroup::getName, String.class));
 		}
 		catch (Exception exception) {
 			String message = StringBundler.concat(

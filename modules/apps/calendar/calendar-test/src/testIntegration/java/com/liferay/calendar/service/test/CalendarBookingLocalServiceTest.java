@@ -57,7 +57,7 @@ import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.mail.MailMessage;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -507,7 +507,7 @@ public class CalendarBookingLocalServiceTest {
 		Assert.assertTrue(secondChildCalendarBooking.isDenied());
 	}
 
-	@FeatureFlags("LPD-31212")
+	@FeatureFlag("LPD-31212")
 	@Test
 	public void testAddCalendarBookingWithVideoDescription() throws Exception {
 		ServiceContext serviceContext = createServiceContext();
@@ -520,10 +520,9 @@ public class CalendarBookingLocalServiceTest {
 			"<div class=\"embed-responsive embed-responsive-16by9\" ",
 			"data-embed-id=",
 			"\"https://www.youtube.com/embed/6LjQ7Z99N74?rel=0\" ",
-			"data-styles=\"{&quot;width&quot;:&quot;81%&quot;}",
-			"\" style=\"width:81%\"><iframe allow=\"autoplay; ",
-			"encrypted-media\" allowfullscreen=\"\" frameborder=\"0\" ",
-			"height=\"315\" src=",
+			"data-styles=\"{&quot;width&quot;:&quot;81%&quot;}\" ",
+			"style=\"width:81%\"><iframe allow=\"autoplay; encrypted-media\" ",
+			"allowfullscreen=\"\" frameborder=\"0\" height=\"315\" src=",
 			"\"https://www.youtube.com/embed/6LjQ7Z99N74?rel=0\" width=\"",
 			"560\"></iframe></div><p>&nbsp;</p>");
 
@@ -534,8 +533,8 @@ public class CalendarBookingLocalServiceTest {
 				HashMapBuilder.create(
 					HashMapBuilder.put(
 						LocaleUtil.getDefault(),
-						html + "<script type=\"text/javascript\">" +
-							"alert('xss vulnerability test');</script>"
+						html + "<script type=\"text/javascript\">alert('xss " +
+							"vulnerability test');</script>"
 					).build()
 				).build(),
 				startTime, startTime + (Time.HOUR * 10), null, (int)startTime,

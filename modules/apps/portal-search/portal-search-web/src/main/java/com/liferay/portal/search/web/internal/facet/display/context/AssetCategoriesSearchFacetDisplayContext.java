@@ -10,14 +10,15 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.category.facet.configuration.CategoryFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Lino Alves
@@ -29,13 +30,12 @@ public class AssetCategoriesSearchFacetDisplayContext
 			HttpServletRequest httpServletRequest)
 		throws ConfigurationException {
 
-		_httpServletRequest = httpServletRequest;
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		_categoryFacetPortletInstanceConfiguration =
 			ConfigurationProviderUtil.getPortletInstanceConfiguration(
-				CategoryFacetPortletInstanceConfiguration.class,
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY));
+				CategoryFacetPortletInstanceConfiguration.class, _themeDisplay);
 	}
 
 	@Override
@@ -64,22 +64,14 @@ public class AssetCategoriesSearchFacetDisplayContext
 
 	@Override
 	public long getDisplayStyleGroupId() {
-		if (_displayStyleGroupId != 0) {
-			return _displayStyleGroupId;
-		}
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_categoryFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
+	}
 
-		_displayStyleGroupId =
-			_categoryFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (_displayStyleGroupId <= 0) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)_httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			_displayStyleGroupId = themeDisplay.getScopeGroupId();
-		}
-
-		return _displayStyleGroupId;
+	public List<String> getGroupVocabularyExternalReferenceCodes() {
+		return _groupVocabularyExternalReferenceCodes;
 	}
 
 	@Override
@@ -100,6 +92,10 @@ public class AssetCategoriesSearchFacetDisplayContext
 	@Override
 	public List<String> getParameterValues() {
 		return _parameterValues;
+	}
+
+	public List<Long> getVocabularyIds() {
+		return _vocabularyIds;
 	}
 
 	public List<String> getVocabularyNames() {
@@ -136,6 +132,13 @@ public class AssetCategoriesSearchFacetDisplayContext
 		_cloud = cloud;
 	}
 
+	public void setGroupVocabularyExternalReferenceCodes(
+		List<String> groupVocabularyExternalReferenceCodes) {
+
+		_groupVocabularyExternalReferenceCodes =
+			groupVocabularyExternalReferenceCodes;
+	}
+
 	public void setNothingSelected(boolean nothingSelected) {
 		_nothingSelected = nothingSelected;
 	}
@@ -162,6 +165,10 @@ public class AssetCategoriesSearchFacetDisplayContext
 		_renderNothing = renderNothing;
 	}
 
+	public void setVocabularyIds(List<Long> vocabularyIds) {
+		_vocabularyIds = vocabularyIds;
+	}
+
 	public void setVocabularyNames(List<String> vocabularyNames) {
 		_vocabularyNames = vocabularyNames;
 	}
@@ -171,14 +178,15 @@ public class AssetCategoriesSearchFacetDisplayContext
 	private final CategoryFacetPortletInstanceConfiguration
 		_categoryFacetPortletInstanceConfiguration;
 	private boolean _cloud;
-	private long _displayStyleGroupId;
-	private final HttpServletRequest _httpServletRequest;
+	private List<String> _groupVocabularyExternalReferenceCodes;
 	private boolean _nothingSelected;
 	private String _paginationStartParameterName;
 	private String _parameterName;
 	private String _parameterValue;
 	private List<String> _parameterValues;
 	private boolean _renderNothing;
+	private final ThemeDisplay _themeDisplay;
+	private List<Long> _vocabularyIds;
 	private List<String> _vocabularyNames;
 
 }

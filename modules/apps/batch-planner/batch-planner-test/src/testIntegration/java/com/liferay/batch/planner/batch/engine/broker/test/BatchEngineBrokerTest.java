@@ -117,6 +117,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.Base64;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
@@ -124,6 +125,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -177,7 +179,11 @@ import org.junit.runner.RunWith;
 /**
  * @author Matija Petanjek
  */
-@FeatureFlags({"LPD-34594", "LPS-135430"})
+@FeatureFlags(
+	featureFlags = {
+		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPS-135430")
+	}
+)
 @RunWith(Arquillian.class)
 public class BatchEngineBrokerTest {
 
@@ -343,7 +349,8 @@ public class BatchEngineBrokerTest {
 		}
 
 		ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
-			_OBJECT_ENTRY_ERC_1, _objectDefinition1.getObjectDefinitionId());
+			_OBJECT_ENTRY_ERC_1, ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertNotNull(objectEntry);
 
@@ -370,6 +377,7 @@ public class BatchEngineBrokerTest {
 		File file = _createJSONImportFile(
 			_addDLFileEntry(
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId()),
+			ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 			_objectDefinition1.getExternalReferenceCode(), _OBJECT_ENTRY_ERC_1,
 			"object_entry_import_template.txt");
 
@@ -381,7 +389,7 @@ public class BatchEngineBrokerTest {
 				_getURIString("json", fileInputStream));
 
 			ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
-				_OBJECT_ENTRY_ERC_1,
+				_OBJECT_ENTRY_ERC_1, ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 				_objectDefinition1.getObjectDefinitionId());
 
 			_addObjectEntryInDifferentCompany("TestObject");
@@ -566,9 +574,8 @@ public class BatchEngineBrokerTest {
 		throws Exception {
 
 		return _objectEntryLocalService.addOrUpdateObjectEntry(
-			externalReferenceCode, userId,
-			_getGroupId(groupId, objectDefinition),
-			objectDefinition.getObjectDefinitionId(),
+			externalReferenceCode, _getGroupId(groupId, objectDefinition),
+			userId, objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			HashMapBuilder.<String, Serializable>put(
 				"testAttachmentField", dlFileEntry.getFileEntryId()
@@ -606,10 +613,8 @@ public class BatchEngineBrokerTest {
 				new BigDecimal(0.1234567891234567, MathContext.DECIMAL64)
 			).put(
 				"testRichTextField",
-				StringBundler.concat(
-					"<p>Test text</p>\n<p>\n",
-					"  <img alt=\"\" height=\"202\" src=\"",
-					"http://localhost:8080/image/company_logo\">\n</p>")
+				"<p>Test text</p>\n<p>\n  <img alt=\"\" height=\"202\" " +
+					"src=\"http://localhost:8080/image/company_logo\">\n</p>"
 			).put(
 				"testTextField", "Lorem Ipsum"
 			).build(),
@@ -714,18 +719,23 @@ public class BatchEngineBrokerTest {
 			_toList(expectedCSVRecords.get(0)),
 			_toList(actualCSVRecords.get(0)));
 
-		List<String> expectedCSVRecordList = _toList(expectedCSVRecords.get(1));
+		List<String> expectedCSVRecordStrings = _toList(
+			expectedCSVRecords.get(1));
 
 		boolean found = false;
 
 		for (int i = 1; i < actualCSVRecords.size(); i++) {
-			List<String> actualCSVRecordList = _toList(actualCSVRecords.get(i));
+			List<String> actualCSVRecordStrings = _toList(
+				actualCSVRecords.get(i));
 
-			if (actualCSVRecordList.contains(externalReferenceCode)) {
-				Assert.assertEquals(expectedCSVRecordList, actualCSVRecordList);
-
-				found = true;
+			if (!actualCSVRecordStrings.contains(externalReferenceCode)) {
+				continue;
 			}
+
+			Assert.assertEquals(
+				expectedCSVRecordStrings, actualCSVRecordStrings);
+
+			found = true;
 		}
 
 		Assert.assertTrue(
@@ -776,7 +786,7 @@ public class BatchEngineBrokerTest {
 	}
 
 	private File _createJSONImportFile(
-			DLFileEntry dlFileEntry, String objectDefinitionERC,
+			DLFileEntry dlFileEntry, long groupId, String objectDefinitionERC,
 			String objectEntryERC, String templateName)
 		throws Exception {
 
@@ -785,8 +795,8 @@ public class BatchEngineBrokerTest {
 		String template = StreamUtil.toString(_getInputStream(templateName));
 
 		Link link = LinkUtil.toLink(
-			_dlAppService, dlFileEntry, _dlURLHelper, objectDefinitionERC,
-			objectEntryERC, _portal);
+			_dlAppService, dlFileEntry, _dlURLHelper, groupId,
+			objectDefinitionERC, objectEntryERC, _portal);
 
 		template = StringUtil.replace(
 			template,
@@ -914,8 +924,9 @@ public class BatchEngineBrokerTest {
 		throws Exception {
 
 		Link link = LinkUtil.toLink(
-			_dlAppService, dlFileEntry, _dlURLHelper, objectDefinitionERC,
-			objectEntryERC, _portal);
+			_dlAppService, dlFileEntry, _dlURLHelper,
+			GetterUtil.getLong(groupId), objectDefinitionERC, objectEntryERC,
+			_portal);
 
 		String scopeKey = null;
 
@@ -1165,6 +1176,7 @@ public class BatchEngineBrokerTest {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				user.getUserId(), 0, null, false, false, true, false, false,
+				false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				name, null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -1480,7 +1492,8 @@ public class BatchEngineBrokerTest {
 		}
 
 		ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
-			objectEntryERC, _objectDefinition1.getObjectDefinitionId());
+			objectEntryERC, groupId,
+			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(objectEntry.getGroupId(), groupId);
 
@@ -1504,8 +1517,8 @@ public class BatchEngineBrokerTest {
 		File file = _createJSONImportFile(
 			_addDLFileEntry(
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId()),
-			_objectDefinition1.getExternalReferenceCode(), objectEntryERC,
-			"object_entry_import_template.txt");
+			groupId, _objectDefinition1.getExternalReferenceCode(),
+			objectEntryERC, "object_entry_import_template.txt");
 
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			_executeImportTask(
@@ -1515,7 +1528,8 @@ public class BatchEngineBrokerTest {
 				_getURIString("json", fileInputStream));
 
 			ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
-				objectEntryERC, _objectDefinition1.getObjectDefinitionId());
+				objectEntryERC, groupId,
+				_objectDefinition1.getObjectDefinitionId());
 
 			Assert.assertEquals(objectEntry.getGroupId(), groupId);
 

@@ -233,6 +233,30 @@ export class PagesAdminPage {
 		await this.saveConfiguration();
 	}
 
+	async changeTheme(themeName: string) {
+		await this.page
+			.getByRole('radio', {name: 'Define a custom theme for'})
+			.click();
+
+		await this.page
+			.getByRole('button', {name: 'Change Current Theme'})
+			.click();
+
+		const themeCard = this.page
+			.frameLocator(
+				'iframe[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_selectTheme_iframe_"]'
+			)
+			.getByText(themeName);
+
+		await themeCard.waitFor();
+
+		await themeCard.click();
+
+		await this.configurationSaveButton.waitFor({state: 'visible'});
+
+		await this.saveConfiguration();
+	}
+
 	async clickOnJavaScriptClientExtensionsTab() {
 		await this.javaScriptClientExtensionsTab.waitFor();
 
@@ -304,21 +328,28 @@ export class PagesAdminPage {
 		parent?: string;
 		template?: string;
 	}) {
+		let trigger: Locator;
 
 		// If no parent specified, just create from toolbar
 
 		if (!parent) {
-			await this.newButton.click();
+			trigger = this.newButton;
 		}
 
 		// If parent is specified, create child page
 
 		else {
-			this.page
+			trigger = this.page
 				.locator('li', {has: this.page.getByText(parent)})
-				.getByTitle('Add Child Page')
-				.click();
+				.getByTitle('Add Child Page');
 		}
+
+		await clickAndExpectToBeVisible({
+			target: this.page.locator('.sheet-title', {
+				hasText: 'Basic Templates',
+			}),
+			trigger,
+		});
 
 		// Select template and fill name
 
@@ -332,6 +363,10 @@ export class PagesAdminPage {
 		if (!draft) {
 			await this.pageEditorPage.publishPage();
 		}
+	}
+
+	async clickOnTab(name: string) {
+		await this.page.getByRole('link', {name}).click();
 	}
 
 	async deletePage(name: string) {
@@ -358,6 +393,12 @@ export class PagesAdminPage {
 			.waitFor();
 	}
 
+	async goToDesignTabConfiguration(pageName: string) {
+		await this.clickOnAction('Configure', pageName);
+
+		await this.clickOnTab('Design');
+	}
+
 	async gotoPagesConfiguration(siteUrl?: Site['friendlyUrlPath']) {
 		await this.goto(siteUrl);
 
@@ -374,12 +415,13 @@ export class PagesAdminPage {
 	}
 
 	async gotoSelectTemplates(templateSetName: string) {
-		await this.newButton.click();
-
-		await this.page
-			.getByRole('menuitem')
-			.getByText(templateSetName, {exact: true})
-			.click();
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page
+				.getByRole('menuitem')
+				.getByText(templateSetName, {exact: true}),
+			trigger: this.newButton,
+		});
 	}
 
 	async saveConfiguration() {
@@ -447,8 +489,6 @@ export class PagesAdminPage {
 	}
 
 	async selectThemeCSSClientExtension(clientExtensionName: string) {
-		await this.gotoPagesConfiguration();
-
 		await this.page
 			.locator(
 				'#_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_themeCSSReplacementExtension'

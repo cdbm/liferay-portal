@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ProductType} from '../../../../../../../enums/ProductType';
+import {ProductType} from '../../../../../../../enums/Product';
 import i18n from '../../../../../../../i18n';
 
 type ProductTypeOption = {
@@ -27,7 +27,7 @@ export const ProductTypeOptions: ProductTypeOption[] = [
 	},
 	{
 		description:
-			'Complex app with multiple parts like i.e. OSGI extentions + CX + low-code applications',
+			'Complex app with multiple parts like i.e. OSGI extentions + CX + low-code applications.',
 		label: i18n.translate('composite-app'),
 		value: ProductType.COMPOSITE_APP,
 	},
@@ -39,8 +39,14 @@ export const ProductTypeOptions: ProductTypeOption[] = [
 	},
 	{
 		description:
-			'Methods for building business applications faster without needing in-depth coding knowledge (i.e.: fragments , data set, object definitions, etc ',
+			'Methods for building business applications faster without needing in-depth coding knowledge (i.e.: fragments , data set, object definitions, etc). ',
 		label: i18n.translate('low-code-configuration'),
 		value: ProductType.LOW_CODE_CONFIGURATION,
+	},
+	{
+		description:
+			'Apps that do not fit into the standard categories. This may include external integrations, legacy solutions, prototypes, or custom deployments.',
+		label: i18n.translate('other'),
+		value: ProductType.OTHER,
 	},
 ];

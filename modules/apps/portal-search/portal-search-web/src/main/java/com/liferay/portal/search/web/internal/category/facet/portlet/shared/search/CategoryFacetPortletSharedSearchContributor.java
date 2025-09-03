@@ -5,6 +5,8 @@
 
 package com.liferay.portal.search.web.internal.category.facet.portlet.shared.search;
 
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -24,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lino Alves
  */
 @Component(
-	property = "javax.portlet.name=" + CategoryFacetPortletKeys.CATEGORY_FACET,
+	property = "jakarta.portlet.name=" + CategoryFacetPortletKeys.CATEGORY_FACET,
 	service = PortletSharedSearchContributor.class
 )
 public class CategoryFacetPortletSharedSearchContributor
@@ -36,6 +38,7 @@ public class CategoryFacetPortletSharedSearchContributor
 
 		CategoryFacetPortletPreferences categoryFacetPortletPreferences =
 			new CategoryFacetPortletPreferencesImpl(
+				_assetVocabularyLocalService, _groupLocalService,
 				portletSharedSearchSettings.getPortletPreferences());
 
 		categoryFacetSearchContributor.contribute(
@@ -66,5 +69,11 @@ public class CategoryFacetPortletSharedSearchContributor
 
 		return new long[0];
 	}
+
+	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

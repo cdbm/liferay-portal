@@ -12,7 +12,7 @@ import {
 
 } from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
-import {openToast} from 'frontend-js-components-web';
+import {ILearnResourceContext, openToast} from 'frontend-js-components-web';
 import {sessionStorage} from 'frontend-js-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
@@ -36,6 +36,7 @@ interface ItemData {
 interface RelationshipsProps extends IFDSTableProps {
 	baseResourceURL: string;
 	isApproved: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: string;
 	objectRelationshipTypes: string[];
@@ -53,6 +54,13 @@ const tableFields = [
 	},
 	{
 		expand: false,
+		fieldName: 'objectDefinitionName2',
+		label: Liferay.Language.get('related-object'),
+		localizeLabel: true,
+		sortable: false,
+	},
+	{
+		expand: false,
 		fieldName: 'type',
 		label: Liferay.Language.get('type'),
 		localizeLabel: true,
@@ -63,13 +71,6 @@ const tableFields = [
 		expand: false,
 		fieldName: 'hierarchy',
 		label: Liferay.Language.get('hierarchy'),
-		localizeLabel: true,
-		sortable: false,
-	},
-	{
-		expand: false,
-		fieldName: 'objectDefinitionName2',
-		label: Liferay.Language.get('related-object'),
 		localizeLabel: true,
 		sortable: false,
 	},
@@ -143,6 +144,7 @@ export default function Relationships({
 	id,
 	isApproved,
 	items,
+	learnResources,
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	parameterRequired,
@@ -295,7 +297,7 @@ export default function Relationships({
 						<ClayLink
 							decoration="underline"
 							href={toastAction.linkHref}
-							style={{color: 'inherit'}}
+							style={{fontWeight: 'bold'}}
 						>
 							{toastAction.linkLabel}
 						</ClayLink>
@@ -319,6 +321,7 @@ export default function Relationships({
 				<ModalAddObjectRelationship
 					baseResourceURL={baseResourceURL}
 					handleOnClose={() => setShowAddModal(false)}
+					learnResources={learnResources}
 					objectDefinitionExternalReferenceCode1={
 						objectDefinitionExternalReferenceCode
 					}

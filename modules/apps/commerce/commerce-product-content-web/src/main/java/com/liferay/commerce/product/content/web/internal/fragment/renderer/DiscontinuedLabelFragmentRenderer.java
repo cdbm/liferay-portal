@@ -8,13 +8,13 @@ package com.liferay.commerce.product.content.web.internal.fragment.renderer;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPWebKeys;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
@@ -34,15 +34,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -145,7 +145,7 @@ public class DiscontinuedLabelFragmentRenderer implements FragmentRenderer {
 				_cpDefinitionHelper.getCPCatalogEntry(
 					_getAccountEntryId(groupId, httpServletRequest), groupId,
 					cpDefinition.getCPDefinitionId(),
-					_portal.getLocale(httpServletRequest)));
+					_portal.getLocale(httpServletRequest), false));
 
 			String namespace = (String)httpServletRequest.getAttribute(
 				"liferay-commerce:discontinued-label:namespace");

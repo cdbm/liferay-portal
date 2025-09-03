@@ -5,9 +5,14 @@
 
 package com.liferay.customer.service;
 
-import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.service.BaseService;
+import com.liferay.customer.exception.TicketAttachmentNotFoundException;
 import com.liferay.customer.model.TicketAttachment;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.Validator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,19 +21,21 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Amos Fong
  */
 @Component
-public class TicketAttachmentService extends BaseRestController {
+public class TicketAttachmentService extends BaseService {
 
 	public TicketAttachment addTicketAttachment(
-			Jwt jwt, String accountKey, String externalReferenceCode,
-			String fileName, String fileSize, String md5Checksum,
-			int statusCode, String type, long zendeskTicketId)
+			String authorization, String accountKey,
+			String externalReferenceCode, String fileName, String fileSize,
+			String jiraIssueKey, String md5Checksum, int statusCode,
+			String type)
 		throws Exception {
 
 		JSONObject requestJSONObject = new JSONObject();
@@ -44,13 +51,13 @@ public class TicketAttachmentService extends BaseRestController {
 		).put(
 			"gcsBucketName", _gcsBucketName
 		).put(
+			"jiraIssueKey", jiraIssueKey
+		).put(
 			"r_accountEntryToTicketAttachment_accountEntryERC", accountKey
 		).put(
 			"storageProvider", TicketAttachment.STORAGE_PROVIDER_GCS
 		).put(
 			"type", type
-		).put(
-			"zendeskTicketId", zendeskTicketId
 		);
 
 		if (!md5Checksum.equals("")) {
@@ -65,14 +72,17 @@ public class TicketAttachmentService extends BaseRestController {
 
 		JSONObject jsonObject = new JSONObject(
 			post(
-				"Bearer " + jwt.getTokenValue(), requestJSONObject.toString(),
-				"/o/c/ticketattachments"));
+				authorization, requestJSONObject.toString(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/ticketattachments"
+				).build(
+				).toUri()));
 
 		return new TicketAttachment(jsonObject);
 	}
 
 	public TicketAttachment approveTicketAttachment(
-			Jwt jwt, long ticketAttachmentId)
+			String authorization, long ticketAttachmentId)
 		throws Exception {
 
 		JSONObject requestJSONObject = new JSONObject();
@@ -85,50 +95,35 @@ public class TicketAttachmentService extends BaseRestController {
 
 		JSONObject jsonObject = new JSONObject(
 			patch(
-				"Bearer " + jwt.getTokenValue(), requestJSONObject.toString(),
-				"/o/c/ticketattachments/" + ticketAttachmentId));
+				authorization, requestJSONObject.toString(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/ticketattachments/" + ticketAttachmentId
+				).build(
+				).toUri()));
 
 		return new TicketAttachment(jsonObject);
 	}
 
-	public void deleteTicketAttachment(Jwt jwt, long ticketAttachmentId)
+	public void deleteTicketAttachment(
+			String authorization, long ticketAttachmentId)
 		throws Exception {
 
 		delete(
-			"Bearer " + jwt.getTokenValue(), null,
-			"/o/c/ticketattachments/" + ticketAttachmentId);
+			authorization, "",
+			UriComponentsBuilder.fromPath(
+				"/o/c/ticketattachments/" + ticketAttachmentId
+			).build(
+			).toUri());
 	}
 
 	public TicketAttachment fetchTicketAttachment(
-		Jwt jwt, long ticketAttachmentId) {
-
-		try {
-			JSONObject jsonObject = new JSONObject(
-				get(
-					"Bearer " + jwt.getTokenValue(),
-					"/o/c/ticketattachments/" + ticketAttachmentId));
-
-			return new TicketAttachment(jsonObject);
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to fetch ticket attachment with ID " +
-						ticketAttachmentId,
-					exception);
-			}
-		}
-
-		return null;
-	}
-
-	public TicketAttachment fetchTicketAttachment(
-			Jwt jwt, String fileName, String md5Checksum, long zendeskTicketId)
+			String authorization, String fileName, String jiraIssueKey,
+			String md5Checksum)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(6);
+		StringBundler sb = new StringBundler(7);
 
-		sb.append("/o/c/ticketattachments?filter=fileName eq '");
+		sb.append("fileName eq '");
 		sb.append(fileName);
 
 		if (!md5Checksum.equals("")) {
@@ -136,11 +131,24 @@ public class TicketAttachmentService extends BaseRestController {
 			sb.append(md5Checksum);
 		}
 
-		sb.append("' and zendeskTicketId eq ");
-		sb.append(zendeskTicketId);
+		sb.append("' and jiraIssueKey eq '");
+		sb.append(jiraIssueKey);
+		sb.append("'");
 
-		JSONObject jsonObject = new JSONObject(
-			get("Bearer " + jwt.getTokenValue(), sb.toString()));
+		String response = get(
+			authorization,
+			UriComponentsBuilder.fromPath(
+				"/o/c/ticketattachments"
+			).queryParam(
+				"filter", sb.toString()
+			).build(
+			).toUri());
+
+		if (Validator.isNull(response)) {
+			return null;
+		}
+
+		JSONObject jsonObject = new JSONObject(response);
 
 		JSONArray jsonArray = jsonObject.getJSONArray("items");
 
@@ -151,16 +159,140 @@ public class TicketAttachmentService extends BaseRestController {
 		return null;
 	}
 
+	public TicketAttachment getTicketAttachment(
+			String authorization, long ticketAttachmentId)
+		throws TicketAttachmentNotFoundException {
+
+		try {
+			JSONObject jsonObject = new JSONObject(
+				get(
+					authorization,
+					UriComponentsBuilder.fromPath(
+						"/o/c/ticketattachments/" + ticketAttachmentId
+					).build(
+					).toUri()));
+
+			if (jsonObject.isNull("id")) {
+				throw new TicketAttachmentNotFoundException();
+			}
+
+			return new TicketAttachment(jsonObject);
+		}
+		catch (HttpClientErrorException.NotFound httpClientErrorException) {
+			throw new TicketAttachmentNotFoundException(
+				httpClientErrorException);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw exception;
+		}
+	}
+
+	public TicketAttachment getTicketAttachment(
+			String authorization, String externalReferenceCode)
+		throws TicketAttachmentNotFoundException {
+
+		try {
+			JSONObject jsonObject = new JSONObject(
+				get(
+					authorization,
+					UriComponentsBuilder.fromPath(
+						"/o/c/ticketattachments/by-external-reference-code/" +
+							externalReferenceCode
+					).build(
+					).toUri()));
+
+			if (jsonObject.isNull("id")) {
+				throw new TicketAttachmentNotFoundException();
+			}
+
+			return new TicketAttachment(jsonObject);
+		}
+		catch (HttpClientErrorException.NotFound httpClientErrorException) {
+			throw new TicketAttachmentNotFoundException(
+				httpClientErrorException);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw exception;
+		}
+	}
+
+	public List<TicketAttachment> search(
+			String authorization, String filter, int page, int pageSize)
+		throws Exception {
+
+		List<TicketAttachment> ticketAttachments = new ArrayList<>();
+
+		JSONObject jsonObject = new JSONObject(
+			get(
+				authorization,
+				UriComponentsBuilder.fromPath(
+					"/o/c/ticketattachments"
+				).queryParam(
+					"filter", filter
+				).queryParam(
+					"page", page
+				).queryParam(
+					"pageSize", pageSize
+				).build(
+				).toUri()));
+
+		JSONArray jsonArray = jsonObject.getJSONArray("items");
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			ticketAttachments.add(
+				new TicketAttachment(jsonArray.getJSONObject(i)));
+		}
+
+		return ticketAttachments;
+	}
+
+	public TicketAttachment updateTicketAttachmentDraftCommentBody(
+			String authorization, long ticketAttachmentId,
+			String draftCommentBody)
+		throws Exception {
+
+		JSONObject requestJSONObject = new JSONObject();
+
+		requestJSONObject.put("draftCommentBody", draftCommentBody);
+
+		JSONObject jsonObject = new JSONObject(
+			patch(
+				authorization, requestJSONObject.toString(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/ticketattachments/" + ticketAttachmentId
+				).build(
+				).toUri()));
+
+		return new TicketAttachment(jsonObject);
+	}
+
+	public TicketAttachment updateTicketAttachmentState(
+			String authorization, long ticketAttachmentId, long state)
+		throws Exception {
+
+		JSONObject requestJSONObject = new JSONObject();
+
+		requestJSONObject.put("state", state);
+
+		JSONObject jsonObject = new JSONObject(
+			patch(
+				authorization, requestJSONObject.toString(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/ticketattachments/" + ticketAttachmentId
+				).build(
+				).toUri()));
+
+		return new TicketAttachment(jsonObject);
+	}
+
 	private static final Log _log = LogFactory.getLog(
 		TicketAttachmentService.class);
 
 	@Value("${liferay.customer.gcs.bucket.name}")
 	private String _gcsBucketName;
-
-	@Value("${com.liferay.lxc.dxp.mainDomain}")
-	private String _lxcDXPMainDomain;
-
-	@Value("${com.liferay.lxc.dxp.server.protocol}")
-	private String _lxcDXPServerProtocol;
 
 }

@@ -7,7 +7,7 @@
 
 <%@ include file="/content/init.jsp" %>
 
-<c:if test="<%= !dataSiteLevelPortlets.isEmpty() %>">
+<c:if test="<%= !portlets.isEmpty() %>">
 	<aui:fieldset cssClass="options-group" markupView="lexicon">
 		<clay:sheet-section>
 			<h3 class="sheet-subtitle"><liferay-ui:message key="content" /></h3>
@@ -77,21 +77,15 @@
 													/>
 												</div>
 
-												<%
-												StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHelper();
-												%>
-
-												<c:if test="<%= !stagingGroupHelper.isCompanyGroup(group) %>">
-													<div class="range-options c-p-4 <%= disableInputs ? "hide" : StringPool.BLANK %>">
-														<clay:link
-															cssClass="modify-link"
-															href="javascript:void(0);"
-															icon="reload"
-															id='<%= liferayPortletResponse.getNamespace() + "rangeLink" %>'
-															label="refresh-counts"
-														/>
-													</div>
-												</c:if>
+												<div class="range-options c-p-4 <%= disableInputs ? "hide" : StringPool.BLANK %>">
+													<clay:link
+														cssClass="modify-link"
+														href="javascript:void(0);"
+														icon="reload"
+														id='<%= liferayPortletResponse.getNamespace() + "rangeLink" %>'
+														label="refresh-counts"
+													/>
+												</div>
 											</div>
 
 											<%
@@ -219,7 +213,7 @@
 							<liferay-staging:portlet-list
 								disableInputs="<%= disableInputs %>"
 								exportImportConfigurationId="<%= exportImportConfigurationId %>"
-								portlets="<%= dataSiteLevelPortlets %>"
+								portlets="<%= portlets %>"
 								showAllPortlets="<%= showAllPortlets %>"
 								type="<%= type %>"
 							/>

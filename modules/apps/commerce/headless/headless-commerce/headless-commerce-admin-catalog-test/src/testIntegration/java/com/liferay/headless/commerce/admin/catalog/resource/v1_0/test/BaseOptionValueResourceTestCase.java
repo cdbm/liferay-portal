@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.OptionValue;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseOptionValueResourceTestCase {
 			testCompany.getCompanyId());
 
 		optionValueResource = OptionValueResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -209,181 +222,6 @@ public abstract class BaseOptionValueResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteOptionValueByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		OptionValue optionValue =
-			testDeleteOptionValueByExternalReferenceCode_addOptionValue();
-
-		assertHttpResponseStatusCode(
-			204,
-			optionValueResource.
-				deleteOptionValueByExternalReferenceCodeHttpResponse(
-					optionValue.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			optionValueResource.
-				getOptionValueByExternalReferenceCodeHttpResponse(
-					optionValue.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			optionValueResource.
-				getOptionValueByExternalReferenceCodeHttpResponse(
-					optionValue.getExternalReferenceCode()));
-	}
-
-	protected OptionValue
-			testDeleteOptionValueByExternalReferenceCode_addOptionValue()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetOptionValueByExternalReferenceCode() throws Exception {
-		OptionValue postOptionValue =
-			testGetOptionValueByExternalReferenceCode_addOptionValue();
-
-		OptionValue getOptionValue =
-			optionValueResource.getOptionValueByExternalReferenceCode(
-				postOptionValue.getExternalReferenceCode());
-
-		assertEquals(postOptionValue, getOptionValue);
-		assertValid(getOptionValue);
-	}
-
-	protected OptionValue
-			testGetOptionValueByExternalReferenceCode_addOptionValue()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetOptionValueByExternalReferenceCode()
-		throws Exception {
-
-		OptionValue optionValue =
-			testGraphQLGetOptionValueByExternalReferenceCode_addOptionValue();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				optionValue,
-				OptionValueSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"optionValueByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												optionValue.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/optionValueByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				optionValue,
-				OptionValueSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"optionValueByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													optionValue.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/optionValueByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetOptionValueByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"optionValueByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"optionValueByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected OptionValue
-			testGraphQLGetOptionValueByExternalReferenceCode_addOptionValue()
-		throws Exception {
-
-		return testGraphQLOptionValue_addOptionValue();
-	}
-
-	@Test
-	public void testPatchOptionValueByExternalReferenceCode() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testDeleteOptionValue() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		OptionValue optionValue = testDeleteOptionValue_addOptionValue();
@@ -397,11 +235,8 @@ public abstract class BaseOptionValueResourceTestCase {
 			404,
 			optionValueResource.getOptionValueHttpResponse(
 				optionValue.getId()));
-
 		assertHttpResponseStatusCode(
-			404,
-			optionValueResource.getOptionValueHttpResponse(
-				optionValue.getId()));
+			404, optionValueResource.getOptionValueHttpResponse(0L));
 	}
 
 	protected OptionValue testDeleteOptionValue_addOptionValue()
@@ -487,6 +322,793 @@ public abstract class BaseOptionValueResourceTestCase {
 		throws Exception {
 
 		return testGraphQLOptionValue_addOptionValue();
+	}
+
+	@Test
+	public void testDeleteOptionValueBatch() throws Exception {
+		OptionValue optionValue1 = testDeleteOptionValueBatch_addOptionValue();
+
+		testDeleteOptionValueBatch_deleteOptionValue(
+			202, optionValue1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+
+		optionValue1 = testDeleteOptionValueBatch_addOptionValue();
+
+		testDeleteOptionValueBatch_deleteOptionValue(
+			202, null, optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+
+		optionValue1 = testDeleteOptionValueBatch_addOptionValue();
+		OptionValue optionValue2 = testDeleteOptionValueBatch_addOptionValue();
+
+		testDeleteOptionValueBatch_deleteOptionValue(
+			202, optionValue2.getExternalReferenceCode(), optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue2.getId()));
+
+		testDeleteOptionValueBatch_deleteOptionValue(
+			202, optionValue2.getExternalReferenceCode(), optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue2.getId()));
+	}
+
+	protected OptionValue testDeleteOptionValueBatch_addOptionValue()
+		throws Exception {
+
+		return testDeleteOptionValue_addOptionValue();
+	}
+
+	protected void testDeleteOptionValueBatch_deleteOptionValue(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			optionValueResource.deleteOptionValueBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteOptionValueByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OptionValue optionValue =
+			testDeleteOptionValueByExternalReferenceCode_addOptionValue();
+
+		assertHttpResponseStatusCode(
+			204,
+			optionValueResource.
+				deleteOptionValueByExternalReferenceCodeHttpResponse(
+					optionValue.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.
+				getOptionValueByExternalReferenceCodeHttpResponse(
+					optionValue.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.
+				getOptionValueByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected OptionValue
+			testDeleteOptionValueByExternalReferenceCode_addOptionValue()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getIrrelevantExternalReferenceCode();
+
+		Page<OptionValue> page =
+			optionValueResource.
+				getOptionByExternalReferenceCodeOptionValuesPage(
+					externalReferenceCode, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			OptionValue irrelevantOptionValue =
+				testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantOptionValue());
+
+			page =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						irrelevantExternalReferenceCode, null,
+						Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOptionValue, (List<OptionValue>)page.getItems());
+			assertValid(
+				page,
+				testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		OptionValue optionValue1 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, randomOptionValue());
+
+		OptionValue optionValue2 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, randomOptionValue());
+
+		page =
+			optionValueResource.
+				getOptionByExternalReferenceCodeOptionValuesPage(
+					externalReferenceCode, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(optionValue1, (List<OptionValue>)page.getItems());
+		assertContains(optionValue2, (List<OptionValue>)page.getItems());
+		assertValid(
+			page,
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
+				externalReferenceCode));
+
+		optionValueResource.deleteOptionValue(optionValue1.getId());
+
+		optionValueResource.deleteOptionValue(optionValue2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
+
+		Page<OptionValue> optionValuesPage =
+			optionValueResource.
+				getOptionByExternalReferenceCodeOptionValuesPage(
+					externalReferenceCode, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			optionValuesPage.getTotalCount());
+
+		OptionValue optionValue1 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, randomOptionValue());
+
+		OptionValue optionValue2 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, randomOptionValue());
+
+		OptionValue optionValue3 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, randomOptionValue());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OptionValue> page1 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(optionValue1, (List<OptionValue>)page1.getItems());
+
+			Page<OptionValue> page2 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(optionValue2, (List<OptionValue>)page2.getItems());
+
+			Page<OptionValue> page3 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
+		}
+		else {
+			Page<OptionValue> page1 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<OptionValue> optionValues1 =
+				(List<OptionValue>)page1.getItems();
+
+			Assert.assertEquals(
+				optionValues1.toString(), totalCount + 2, optionValues1.size());
+
+			Page<OptionValue> page2 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OptionValue> optionValues2 =
+				(List<OptionValue>)page2.getItems();
+
+			Assert.assertEquals(
+				optionValues2.toString(), 1, optionValues2.size());
+
+			Page<OptionValue> page3 =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(optionValue1, (List<OptionValue>)page3.getItems());
+			assertContains(optionValue2, (List<OptionValue>)page3.getItems());
+			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortDateTime()
+		throws Exception {
+
+		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortDouble()
+		throws Exception {
+
+		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					optionValue2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortInteger()
+		throws Exception {
+
+		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					optionValue2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortString()
+		throws Exception {
+
+		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, optionValue1, optionValue2) -> {
+				Class<?> clazz = optionValue1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, OptionValue, OptionValue, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String externalReferenceCode =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
+
+		OptionValue optionValue1 = randomOptionValue();
+		OptionValue optionValue2 = randomOptionValue();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, optionValue1, optionValue2);
+		}
+
+		optionValue1 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, optionValue1);
+
+		optionValue2 =
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				externalReferenceCode, optionValue2);
+
+		Page<OptionValue> page =
+			optionValueResource.
+				getOptionByExternalReferenceCodeOptionValuesPage(
+					externalReferenceCode, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<OptionValue> ascPage =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
+
+			assertContains(optionValue1, (List<OptionValue>)ascPage.getItems());
+			assertContains(optionValue2, (List<OptionValue>)ascPage.getItems());
+
+			Page<OptionValue> descPage =
+				optionValueResource.
+					getOptionByExternalReferenceCodeOptionValuesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
+
+			assertContains(
+				optionValue2, (List<OptionValue>)descPage.getItems());
+			assertContains(
+				optionValue1, (List<OptionValue>)descPage.getItems());
+		}
+	}
+
+	protected OptionValue
+			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
+				String externalReferenceCode, OptionValue optionValue)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOptionByExternalReferenceCodeOptionValuesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPage() throws Exception {
+		Long id = testGetOptionIdOptionValuesPage_getId();
+		Long irrelevantId = testGetOptionIdOptionValuesPage_getIrrelevantId();
+
+		Page<OptionValue> page =
+			optionValueResource.getOptionIdOptionValuesPage(
+				id, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantId != null) {
+			OptionValue irrelevantOptionValue =
+				testGetOptionIdOptionValuesPage_addOptionValue(
+					irrelevantId, randomIrrelevantOptionValue());
+
+			page = optionValueResource.getOptionIdOptionValuesPage(
+				irrelevantId, null, Pagination.of(1, (int)totalCount + 1),
+				null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOptionValue, (List<OptionValue>)page.getItems());
+			assertValid(
+				page,
+				testGetOptionIdOptionValuesPage_getExpectedActions(
+					irrelevantId));
+		}
+
+		OptionValue optionValue1 =
+			testGetOptionIdOptionValuesPage_addOptionValue(
+				id, randomOptionValue());
+
+		OptionValue optionValue2 =
+			testGetOptionIdOptionValuesPage_addOptionValue(
+				id, randomOptionValue());
+
+		page = optionValueResource.getOptionIdOptionValuesPage(
+			id, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(optionValue1, (List<OptionValue>)page.getItems());
+		assertContains(optionValue2, (List<OptionValue>)page.getItems());
+		assertValid(
+			page, testGetOptionIdOptionValuesPage_getExpectedActions(id));
+
+		optionValueResource.deleteOptionValue(optionValue1.getId());
+
+		optionValueResource.deleteOptionValue(optionValue2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOptionIdOptionValuesPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPageWithPagination()
+		throws Exception {
+
+		Long id = testGetOptionIdOptionValuesPage_getId();
+
+		Page<OptionValue> optionValuesPage =
+			optionValueResource.getOptionIdOptionValuesPage(
+				id, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			optionValuesPage.getTotalCount());
+
+		OptionValue optionValue1 =
+			testGetOptionIdOptionValuesPage_addOptionValue(
+				id, randomOptionValue());
+
+		OptionValue optionValue2 =
+			testGetOptionIdOptionValuesPage_addOptionValue(
+				id, randomOptionValue());
+
+		OptionValue optionValue3 =
+			testGetOptionIdOptionValuesPage_addOptionValue(
+				id, randomOptionValue());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OptionValue> page1 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(optionValue1, (List<OptionValue>)page1.getItems());
+
+			Page<OptionValue> page2 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(optionValue2, (List<OptionValue>)page2.getItems());
+
+			Page<OptionValue> page3 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
+		}
+		else {
+			Page<OptionValue> page1 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null, Pagination.of(1, totalCount + 2), null);
+
+			List<OptionValue> optionValues1 =
+				(List<OptionValue>)page1.getItems();
+
+			Assert.assertEquals(
+				optionValues1.toString(), totalCount + 2, optionValues1.size());
+
+			Page<OptionValue> page2 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OptionValue> optionValues2 =
+				(List<OptionValue>)page2.getItems();
+
+			Assert.assertEquals(
+				optionValues2.toString(), 1, optionValues2.size());
+
+			Page<OptionValue> page3 =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(optionValue1, (List<OptionValue>)page3.getItems());
+			assertContains(optionValue2, (List<OptionValue>)page3.getItems());
+			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPageWithSortDateTime()
+		throws Exception {
+
+		testGetOptionIdOptionValuesPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPageWithSortDouble()
+		throws Exception {
+
+		testGetOptionIdOptionValuesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					optionValue2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPageWithSortInteger()
+		throws Exception {
+
+		testGetOptionIdOptionValuesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, optionValue1, optionValue2) -> {
+				BeanTestUtil.setProperty(
+					optionValue1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					optionValue2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetOptionIdOptionValuesPageWithSortString()
+		throws Exception {
+
+		testGetOptionIdOptionValuesPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, optionValue1, optionValue2) -> {
+				Class<?> clazz = optionValue1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						optionValue1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						optionValue2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetOptionIdOptionValuesPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, OptionValue, OptionValue, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long id = testGetOptionIdOptionValuesPage_getId();
+
+		OptionValue optionValue1 = randomOptionValue();
+		OptionValue optionValue2 = randomOptionValue();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, optionValue1, optionValue2);
+		}
+
+		optionValue1 = testGetOptionIdOptionValuesPage_addOptionValue(
+			id, optionValue1);
+
+		optionValue2 = testGetOptionIdOptionValuesPage_addOptionValue(
+			id, optionValue2);
+
+		Page<OptionValue> page =
+			optionValueResource.getOptionIdOptionValuesPage(
+				id, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<OptionValue> ascPage =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(optionValue1, (List<OptionValue>)ascPage.getItems());
+			assertContains(optionValue2, (List<OptionValue>)ascPage.getItems());
+
+			Page<OptionValue> descPage =
+				optionValueResource.getOptionIdOptionValuesPage(
+					id, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(
+				optionValue2, (List<OptionValue>)descPage.getItems());
+			assertContains(
+				optionValue1, (List<OptionValue>)descPage.getItems());
+		}
+	}
+
+	protected OptionValue testGetOptionIdOptionValuesPage_addOptionValue(
+			Long id, OptionValue optionValue)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOptionIdOptionValuesPage_getId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOptionIdOptionValuesPage_getIrrelevantId()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -786,366 +1408,148 @@ public abstract class BaseOptionValueResourceTestCase {
 	}
 
 	@Test
+	public void testGetOptionValueByExternalReferenceCode() throws Exception {
+		OptionValue postOptionValue =
+			testGetOptionValueByExternalReferenceCode_addOptionValue();
+
+		OptionValue getOptionValue =
+			optionValueResource.getOptionValueByExternalReferenceCode(
+				postOptionValue.getExternalReferenceCode());
+
+		assertEquals(postOptionValue, getOptionValue);
+		assertValid(getOptionValue);
+	}
+
+	protected OptionValue
+			testGetOptionValueByExternalReferenceCode_addOptionValue()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOptionValueByExternalReferenceCode()
+		throws Exception {
+
+		OptionValue optionValue =
+			testGraphQLGetOptionValueByExternalReferenceCode_addOptionValue();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				optionValue,
+				OptionValueSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"optionValueByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												optionValue.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/optionValueByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				optionValue,
+				OptionValueSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"optionValueByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													optionValue.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/optionValueByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetOptionValueByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"optionValueByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"optionValueByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected OptionValue
+			testGraphQLGetOptionValueByExternalReferenceCode_addOptionValue()
+		throws Exception {
+
+		return testGraphQLOptionValue_addOptionValue();
+	}
+
+	@Test
 	public void testPatchOptionValue() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPage()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getIrrelevantExternalReferenceCode();
-
-		Page<OptionValue> page =
-			optionValueResource.
-				getOptionByExternalReferenceCodeOptionValuesPage(
-					externalReferenceCode, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			OptionValue irrelevantOptionValue =
-				testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-					irrelevantExternalReferenceCode,
-					randomIrrelevantOptionValue());
-
-			page =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						irrelevantExternalReferenceCode, null,
-						Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantOptionValue, (List<OptionValue>)page.getItems());
-			assertValid(
-				page,
-				testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		OptionValue optionValue1 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, randomOptionValue());
-
-		OptionValue optionValue2 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, randomOptionValue());
-
-		page =
-			optionValueResource.
-				getOptionByExternalReferenceCodeOptionValuesPage(
-					externalReferenceCode, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(optionValue1, (List<OptionValue>)page.getItems());
-		assertContains(optionValue2, (List<OptionValue>)page.getItems());
-		assertValid(
-			page,
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
-				externalReferenceCode));
-
-		optionValueResource.deleteOptionValue(optionValue1.getId());
-
-		optionValueResource.deleteOptionValue(optionValue2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
-
-		Page<OptionValue> optionValuePage =
-			optionValueResource.
-				getOptionByExternalReferenceCodeOptionValuesPage(
-					externalReferenceCode, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(optionValuePage.getTotalCount());
-
-		OptionValue optionValue1 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, randomOptionValue());
-
-		OptionValue optionValue2 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, randomOptionValue());
-
-		OptionValue optionValue3 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, randomOptionValue());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OptionValue> page1 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(optionValue1, (List<OptionValue>)page1.getItems());
-
-			Page<OptionValue> page2 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(optionValue2, (List<OptionValue>)page2.getItems());
-
-			Page<OptionValue> page3 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
-		}
-		else {
-			Page<OptionValue> page1 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(1, totalCount + 2), null);
-
-			List<OptionValue> optionValues1 =
-				(List<OptionValue>)page1.getItems();
-
-			Assert.assertEquals(
-				optionValues1.toString(), totalCount + 2, optionValues1.size());
-
-			Page<OptionValue> page2 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OptionValue> optionValues2 =
-				(List<OptionValue>)page2.getItems();
-
-			Assert.assertEquals(
-				optionValues2.toString(), 1, optionValues2.size());
-
-			Page<OptionValue> page3 =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(optionValue1, (List<OptionValue>)page3.getItems());
-			assertContains(optionValue2, (List<OptionValue>)page3.getItems());
-			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortDateTime()
-		throws Exception {
-
-		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortDouble()
-		throws Exception {
-
-		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					optionValue2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortInteger()
-		throws Exception {
-
-		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(
-					optionValue2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetOptionByExternalReferenceCodeOptionValuesPageWithSortString()
-		throws Exception {
-
-		testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, optionValue1, optionValue2) -> {
-				Class<?> clazz = optionValue1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetOptionByExternalReferenceCodeOptionValuesPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, OptionValue, OptionValue, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String externalReferenceCode =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode();
-
-		OptionValue optionValue1 = randomOptionValue();
-		OptionValue optionValue2 = randomOptionValue();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, optionValue1, optionValue2);
-		}
-
-		optionValue1 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, optionValue1);
-
-		optionValue2 =
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				externalReferenceCode, optionValue2);
-
-		Page<OptionValue> page =
-			optionValueResource.
-				getOptionByExternalReferenceCodeOptionValuesPage(
-					externalReferenceCode, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<OptionValue> ascPage =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":asc");
-
-			assertContains(optionValue1, (List<OptionValue>)ascPage.getItems());
-			assertContains(optionValue2, (List<OptionValue>)ascPage.getItems());
-
-			Page<OptionValue> descPage =
-				optionValueResource.
-					getOptionByExternalReferenceCodeOptionValuesPage(
-						externalReferenceCode, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":desc");
-
-			assertContains(
-				optionValue2, (List<OptionValue>)descPage.getItems());
-			assertContains(
-				optionValue1, (List<OptionValue>)descPage.getItems());
-		}
-	}
-
-	protected OptionValue
-			testGetOptionByExternalReferenceCodeOptionValuesPage_addOptionValue(
-				String externalReferenceCode, OptionValue optionValue)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOptionByExternalReferenceCodeOptionValuesPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
+	public void testPatchOptionValueByExternalReferenceCode() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -1172,327 +1576,6 @@ public abstract class BaseOptionValueResourceTestCase {
 	}
 
 	@Test
-	public void testGetOptionIdOptionValuesPage() throws Exception {
-		Long id = testGetOptionIdOptionValuesPage_getId();
-		Long irrelevantId = testGetOptionIdOptionValuesPage_getIrrelevantId();
-
-		Page<OptionValue> page =
-			optionValueResource.getOptionIdOptionValuesPage(
-				id, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantId != null) {
-			OptionValue irrelevantOptionValue =
-				testGetOptionIdOptionValuesPage_addOptionValue(
-					irrelevantId, randomIrrelevantOptionValue());
-
-			page = optionValueResource.getOptionIdOptionValuesPage(
-				irrelevantId, null, Pagination.of(1, (int)totalCount + 1),
-				null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantOptionValue, (List<OptionValue>)page.getItems());
-			assertValid(
-				page,
-				testGetOptionIdOptionValuesPage_getExpectedActions(
-					irrelevantId));
-		}
-
-		OptionValue optionValue1 =
-			testGetOptionIdOptionValuesPage_addOptionValue(
-				id, randomOptionValue());
-
-		OptionValue optionValue2 =
-			testGetOptionIdOptionValuesPage_addOptionValue(
-				id, randomOptionValue());
-
-		page = optionValueResource.getOptionIdOptionValuesPage(
-			id, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(optionValue1, (List<OptionValue>)page.getItems());
-		assertContains(optionValue2, (List<OptionValue>)page.getItems());
-		assertValid(
-			page, testGetOptionIdOptionValuesPage_getExpectedActions(id));
-
-		optionValueResource.deleteOptionValue(optionValue1.getId());
-
-		optionValueResource.deleteOptionValue(optionValue2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOptionIdOptionValuesPage_getExpectedActions(Long id)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOptionIdOptionValuesPageWithPagination()
-		throws Exception {
-
-		Long id = testGetOptionIdOptionValuesPage_getId();
-
-		Page<OptionValue> optionValuePage =
-			optionValueResource.getOptionIdOptionValuesPage(
-				id, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(optionValuePage.getTotalCount());
-
-		OptionValue optionValue1 =
-			testGetOptionIdOptionValuesPage_addOptionValue(
-				id, randomOptionValue());
-
-		OptionValue optionValue2 =
-			testGetOptionIdOptionValuesPage_addOptionValue(
-				id, randomOptionValue());
-
-		OptionValue optionValue3 =
-			testGetOptionIdOptionValuesPage_addOptionValue(
-				id, randomOptionValue());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OptionValue> page1 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(optionValue1, (List<OptionValue>)page1.getItems());
-
-			Page<OptionValue> page2 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			assertContains(optionValue2, (List<OptionValue>)page2.getItems());
-
-			Page<OptionValue> page3 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit),
-					null);
-
-			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
-		}
-		else {
-			Page<OptionValue> page1 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null, Pagination.of(1, totalCount + 2), null);
-
-			List<OptionValue> optionValues1 =
-				(List<OptionValue>)page1.getItems();
-
-			Assert.assertEquals(
-				optionValues1.toString(), totalCount + 2, optionValues1.size());
-
-			Page<OptionValue> page2 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OptionValue> optionValues2 =
-				(List<OptionValue>)page2.getItems();
-
-			Assert.assertEquals(
-				optionValues2.toString(), 1, optionValues2.size());
-
-			Page<OptionValue> page3 =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(optionValue1, (List<OptionValue>)page3.getItems());
-			assertContains(optionValue2, (List<OptionValue>)page3.getItems());
-			assertContains(optionValue3, (List<OptionValue>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOptionIdOptionValuesPageWithSortDateTime()
-		throws Exception {
-
-		testGetOptionIdOptionValuesPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetOptionIdOptionValuesPageWithSortDouble()
-		throws Exception {
-
-		testGetOptionIdOptionValuesPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					optionValue2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetOptionIdOptionValuesPageWithSortInteger()
-		throws Exception {
-
-		testGetOptionIdOptionValuesPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, optionValue1, optionValue2) -> {
-				BeanTestUtil.setProperty(
-					optionValue1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(
-					optionValue2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetOptionIdOptionValuesPageWithSortString()
-		throws Exception {
-
-		testGetOptionIdOptionValuesPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, optionValue1, optionValue2) -> {
-				Class<?> clazz = optionValue1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						optionValue1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						optionValue2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetOptionIdOptionValuesPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, OptionValue, OptionValue, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long id = testGetOptionIdOptionValuesPage_getId();
-
-		OptionValue optionValue1 = randomOptionValue();
-		OptionValue optionValue2 = randomOptionValue();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, optionValue1, optionValue2);
-		}
-
-		optionValue1 = testGetOptionIdOptionValuesPage_addOptionValue(
-			id, optionValue1);
-
-		optionValue2 = testGetOptionIdOptionValuesPage_addOptionValue(
-			id, optionValue2);
-
-		Page<OptionValue> page =
-			optionValueResource.getOptionIdOptionValuesPage(
-				id, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<OptionValue> ascPage =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":asc");
-
-			assertContains(optionValue1, (List<OptionValue>)ascPage.getItems());
-			assertContains(optionValue2, (List<OptionValue>)ascPage.getItems());
-
-			Page<OptionValue> descPage =
-				optionValueResource.getOptionIdOptionValuesPage(
-					id, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":desc");
-
-			assertContains(
-				optionValue2, (List<OptionValue>)descPage.getItems());
-			assertContains(
-				optionValue1, (List<OptionValue>)descPage.getItems());
-		}
-	}
-
-	protected OptionValue testGetOptionIdOptionValuesPage_addOptionValue(
-			Long id, OptionValue optionValue)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOptionIdOptionValuesPage_getId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOptionIdOptionValuesPage_getIrrelevantId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
 	public void testPostOptionIdOptionValue() throws Exception {
 		OptionValue randomOptionValue = randomOptionValue();
 
@@ -1509,6 +1592,95 @@ public abstract class BaseOptionValueResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OptionValue optionValue1 =
+			testBatchEngineDeleteImportTask_addOptionValue();
+
+		testBatchEngineDeleteImportTask_deleteOptionValue(
+			200, optionValue1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+
+		optionValue1 = testBatchEngineDeleteImportTask_addOptionValue();
+
+		testBatchEngineDeleteImportTask_deleteOptionValue(
+			200, null, optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+
+		optionValue1 = testBatchEngineDeleteImportTask_addOptionValue();
+		OptionValue optionValue2 =
+			testBatchEngineDeleteImportTask_addOptionValue();
+
+		testBatchEngineDeleteImportTask_deleteOptionValue(
+			200, optionValue2.getExternalReferenceCode(), optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteOptionValue(
+			200, optionValue2.getExternalReferenceCode(), optionValue1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			optionValueResource.getOptionValueHttpResponse(
+				optionValue2.getId()));
+	}
+
+	protected OptionValue testBatchEngineDeleteImportTask_addOptionValue()
+		throws Exception {
+
+		return testDeleteOptionValue_addOptionValue();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOptionValue(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected OptionValue testGraphQLOptionValue_addOptionValue()
@@ -2130,7 +2302,30 @@ public abstract class BaseOptionValueResourceTestCase {
 		return randomOptionValue();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OptionValueResource optionValueResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

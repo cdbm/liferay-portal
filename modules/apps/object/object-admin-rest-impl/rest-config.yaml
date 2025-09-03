@@ -1,12 +1,13 @@
-apiDir: "../object-admin-rest-api/src/main/java"
-apiPackagePath: "com.liferay.object.admin.rest"
+apiDir: ../object-admin-rest-api/src/main/java
+apiPackagePath: com.liferay.object.admin.rest
 application:
-    baseURI: "/object-admin"
-    className: "ObjectAdminRESTApplication"
-    name: "Liferay.Object.Admin.REST"
-author: "Javier Gamarra"
-clientDir: "../object-admin-rest-client/src/main/java"
-compatibilityVersion: 7
+    baseURI: /object-admin
+    className: ObjectAdminRESTApplication
+    name: Liferay.Object.Admin.REST
+author: Javier Gamarra
+clientDir: ../object-admin-rest-client/src/main/java
+compatibilityVersion: 11
 forcePredictableOperationId: true
 generateClientJS: true
-testDir: "../object-admin-rest-test/src/testIntegration/java"
+javaEEPackage: jakarta
+testDir: ../object-admin-rest-test/src/testIntegration/java

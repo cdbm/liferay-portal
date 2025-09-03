@@ -77,8 +77,10 @@ public class ObjectEntryFolderModelImpl
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP},
-		{"parentObjectEntryFolderId", Types.BIGINT}, {"label", Types.VARCHAR},
-		{"name", Types.VARCHAR}, {"treePath", Types.VARCHAR}
+		{"parentObjectEntryFolderId", Types.BIGINT},
+		{"description", Types.VARCHAR}, {"label", Types.VARCHAR},
+		{"name", Types.VARCHAR}, {"treePath", Types.VARCHAR},
+		{"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -96,13 +98,15 @@ public class ObjectEntryFolderModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("parentObjectEntryFolderId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("label", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("treePath", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ObjectEntryFolder (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectEntryFolderId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,parentObjectEntryFolderId LONG,label STRING null,name VARCHAR(75) null,treePath STRING null)";
+		"create table ObjectEntryFolder (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectEntryFolderId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,parentObjectEntryFolderId LONG,description STRING null,label STRING null,name VARCHAR(75) null,treePath STRING null,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table ObjectEntryFolder";
 
@@ -304,10 +308,14 @@ public class ObjectEntryFolderModelImpl
 			attributeGetterFunctions.put(
 				"parentObjectEntryFolderId",
 				ObjectEntryFolder::getParentObjectEntryFolderId);
+			attributeGetterFunctions.put(
+				"description", ObjectEntryFolder::getDescription);
 			attributeGetterFunctions.put("label", ObjectEntryFolder::getLabel);
 			attributeGetterFunctions.put("name", ObjectEntryFolder::getName);
 			attributeGetterFunctions.put(
 				"treePath", ObjectEntryFolder::getTreePath);
+			attributeGetterFunctions.put(
+				"status", ObjectEntryFolder::getStatus);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -371,6 +379,10 @@ public class ObjectEntryFolderModelImpl
 				(BiConsumer<ObjectEntryFolder, Long>)
 					ObjectEntryFolder::setParentObjectEntryFolderId);
 			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<ObjectEntryFolder, String>)
+					ObjectEntryFolder::setDescription);
+			attributeSetterBiConsumers.put(
 				"label",
 				(BiConsumer<ObjectEntryFolder, String>)
 					ObjectEntryFolder::setLabel);
@@ -382,6 +394,10 @@ public class ObjectEntryFolderModelImpl
 				"treePath",
 				(BiConsumer<ObjectEntryFolder, String>)
 					ObjectEntryFolder::setTreePath);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<ObjectEntryFolder, Integer>)
+					ObjectEntryFolder::setStatus);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -640,6 +656,26 @@ public class ObjectEntryFolderModelImpl
 
 	@JSON
 	@Override
+	public String getDescription() {
+		if (_description == null) {
+			return "";
+		}
+		else {
+			return _description;
+		}
+	}
+
+	@Override
+	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_description = description;
+	}
+
+	@JSON
+	@Override
 	public String getLabel() {
 		if (_label == null) {
 			return "";
@@ -803,6 +839,21 @@ public class ObjectEntryFolderModelImpl
 	@Deprecated
 	public String getOriginalTreePath() {
 		return getColumnOriginalValue("treePath");
+	}
+
+	@JSON
+	@Override
+	public int getStatus() {
+		return _status;
+	}
+
+	@Override
+	public void setStatus(int status) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_status = status;
 	}
 
 	@Override
@@ -972,9 +1023,11 @@ public class ObjectEntryFolderModelImpl
 		objectEntryFolderImpl.setModifiedDate(getModifiedDate());
 		objectEntryFolderImpl.setParentObjectEntryFolderId(
 			getParentObjectEntryFolderId());
+		objectEntryFolderImpl.setDescription(getDescription());
 		objectEntryFolderImpl.setLabel(getLabel());
 		objectEntryFolderImpl.setName(getName());
 		objectEntryFolderImpl.setTreePath(getTreePath());
+		objectEntryFolderImpl.setStatus(getStatus());
 
 		objectEntryFolderImpl.resetOriginalValues();
 
@@ -1008,12 +1061,16 @@ public class ObjectEntryFolderModelImpl
 			this.<Date>getColumnOriginalValue("modifiedDate"));
 		objectEntryFolderImpl.setParentObjectEntryFolderId(
 			this.<Long>getColumnOriginalValue("parentObjectEntryFolderId"));
+		objectEntryFolderImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
 		objectEntryFolderImpl.setLabel(
 			this.<String>getColumnOriginalValue("label"));
 		objectEntryFolderImpl.setName(
 			this.<String>getColumnOriginalValue("name"));
 		objectEntryFolderImpl.setTreePath(
 			this.<String>getColumnOriginalValue("treePath"));
+		objectEntryFolderImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
 
 		return objectEntryFolderImpl;
 	}
@@ -1152,6 +1209,14 @@ public class ObjectEntryFolderModelImpl
 		objectEntryFolderCacheModel.parentObjectEntryFolderId =
 			getParentObjectEntryFolderId();
 
+		objectEntryFolderCacheModel.description = getDescription();
+
+		String description = objectEntryFolderCacheModel.description;
+
+		if ((description != null) && (description.length() == 0)) {
+			objectEntryFolderCacheModel.description = null;
+		}
+
 		objectEntryFolderCacheModel.label = getLabel();
 
 		String label = objectEntryFolderCacheModel.label;
@@ -1175,6 +1240,8 @@ public class ObjectEntryFolderModelImpl
 		if ((treePath != null) && (treePath.length() == 0)) {
 			objectEntryFolderCacheModel.treePath = null;
 		}
+
+		objectEntryFolderCacheModel.status = getStatus();
 
 		return objectEntryFolderCacheModel;
 	}
@@ -1250,10 +1317,12 @@ public class ObjectEntryFolderModelImpl
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _parentObjectEntryFolderId;
+	private String _description;
 	private String _label;
 	private String _labelCurrentLanguageId;
 	private String _name;
 	private String _treePath;
+	private int _status;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1298,9 +1367,11 @@ public class ObjectEntryFolderModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put(
 			"parentObjectEntryFolderId", _parentObjectEntryFolderId);
+		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put("label", _label);
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("treePath", _treePath);
+		_columnOriginalValues.put("status", _status);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1346,11 +1417,15 @@ public class ObjectEntryFolderModelImpl
 
 		columnBitmasks.put("parentObjectEntryFolderId", 1024L);
 
-		columnBitmasks.put("label", 2048L);
+		columnBitmasks.put("description", 2048L);
 
-		columnBitmasks.put("name", 4096L);
+		columnBitmasks.put("label", 4096L);
 
-		columnBitmasks.put("treePath", 8192L);
+		columnBitmasks.put("name", 8192L);
+
+		columnBitmasks.put("treePath", 16384L);
+
+		columnBitmasks.put("status", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

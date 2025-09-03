@@ -79,140 +79,202 @@ else {
 		}
 	}
 
-	if (Liferay.FeatureFlags['LPD-37927']) {
-		const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+	const defaultLanguageId = themeDisplay.getDefaultLanguageId();
 
-		import('@liferay/fragment-impl').then(
-			({
-				getOrCreateTranslationInput,
-				registerLocalizedInput,
-				registerUnlocalizedInput,
-			}) => {
-				let currentLanguageId = defaultLanguageId;
+	import('@liferay/fragment-impl/api').then(
+		({
+			getTranslationInput,
+			registerLocalizedInput,
+			registerUnlocalizedInput,
+		}) => {
+			let currentLanguageId = defaultLanguageId;
 
-				if (input.localizable) {
-					Object.entries(input.valueI18n).forEach(
-						([languageId, value]) => {
-							const input = getOrCreateTranslationInput(
-								uiInputElement.id,
-								input.name,
-								languageId,
+			if (input.localizable) {
+				Object.entries(input.valueI18n).forEach(
+					([languageId, value]) => {
+						const translationInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId,
+							localizationInputsContainer:
 								uiInputElement.parentNode,
-								fragmentNamespace
-							);
+							namespace: fragmentNamespace,
+						});
 
-							// Set data-label with the option label for each translation input
+						// Set data-label with the option label for each translation input
 
-							input.dataset.label = input.attributes.options.find(
+						translationInput.dataset.label =
+							input.attributes.options.find(
 								(option) => option.value === value
 							).label;
+					}
+				);
+
+				const {onChange} = registerLocalizedInput({
+					customLocaleChangeHandler: true,
+					defaultLanguageId,
+					initialValues: input.valueI18n,
+					inputElement: uiInputElement,
+					inputName: input.name,
+					localizationInputsContainer: uiInputElement.parentNode,
+					namespace: fragmentNamespace,
+					onLocaleChange: ({languageId}) => {
+						currentLanguageId = languageId;
+
+						const translationInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId,
+							localizationInputsContainer:
+								uiInputElement.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						if (translationInput.getAttribute('value') !== null) {
+							uiInputElement.value =
+								translationInput.dataset.label;
 						}
-					);
-
-					const {onChange} = registerLocalizedInput({
-						customLocaleChangeHandler: true,
-						defaultLanguageId,
-						inputElement: uiInputElement,
-						onLocaleChange: ({languageId}) => {
-							currentLanguageId = languageId;
-
-							const translationInput =
-								getOrCreateTranslationInput(
-									uiInputElement.id,
-									input.name,
-									languageId,
+						else {
+							const defaultLanguageInput = getTranslationInput({
+								inputId: uiInputElement.id,
+								inputName: input.name,
+								languageId: defaultLanguageId,
+								localizationInputsContainer:
 									uiInputElement.parentNode,
-									fragmentNamespace
-								);
+								namespace: fragmentNamespace,
+							});
 
-							if (
-								translationInput.getAttribute('value') !== null
-							) {
-								uiInputElement.checked =
-									translationInput.value === 'true';
-							}
-							else {
-								const defaultLanguageInput =
-									getOrCreateTranslationInput(
-										uiInputElement.id,
-										input.name,
-										defaultLanguageId,
-										uiInputElement.parentNode,
-										fragmentNamespace
-									);
-								uiInputElement.value =
-									defaultLanguageInput.dataset.label || '';
-							}
-						},
+							uiInputElement.value =
+								defaultLanguageInput.dataset.label || '';
+						}
+					},
+					onMarkAsTranslated: () => {
+						const defaultLanguageInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId: defaultLanguageId,
+							localizationInputsContainer:
+								uiInputElement.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						const translationInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId: currentLanguageId,
+							localizationInputsContainer:
+								uiInputElement.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						translationInput.dataset.label =
+							defaultLanguageInput.dataset.label;
+
+						translationInput.value = defaultLanguageInput.value;
+
+						uiInputElement.value =
+							defaultLanguageInput.dataset.label;
+					},
+					onResetTranslation: () => {
+						const defaultLanguageInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId: defaultLanguageId,
+							localizationInputsContainer:
+								uiInputElement.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						const translationInput = getTranslationInput({
+							inputId: uiInputElement.id,
+							inputName: input.name,
+							languageId: currentLanguageId,
+							localizationInputsContainer:
+								uiInputElement.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						translationInput.dataset.label = '';
+						translationInput.value = '';
+
+						uiInputElement.value =
+							defaultLanguageInput.dataset.label || '';
+					},
+				});
+
+				uiInputElement.addEventListener('blur', () => {
+					const translationInput = getTranslationInput({
+						inputId: uiInputElement.id,
+						inputName: input.name,
+						languageId: currentLanguageId,
+						localizationInputsContainer: uiInputElement.parentNode,
+						namespace: fragmentNamespace,
 					});
 
-					optionListElement.addEventListener('click', (event) => {
-						const translationInput = getOrCreateTranslationInput(
-							uiInputElement.id,
-							input.name,
-							currentLanguageId,
-							uiInputElement.parentNode,
-							fragmentNamespace
-						);
+					if (!uiInputElement.value) {
+						translationInput.value = null;
+					}
+				});
 
-						handleResultListClick(
-							event,
-							onChange,
-							translationInput
-						);
-					});
-				}
-				else {
-					registerUnlocalizedInput({
-						defaultLanguageId,
-						inputElement: uiInputElement,
-						onLocaleChange: (languageId) => {
-							if (defaultLanguageId === languageId) {
-								uiInputElement.addEventListener(
-									'click',
-									toggleDropdown
-								);
-								uiInputElement.addEventListener(
-									'keydown',
-									handleInputKeyDown
-								);
-
-								buttonElement.classList.remove('d-none');
-							}
-							else {
-								uiInputElement.removeEventListener(
-									'click',
-									toggleDropdown
-								);
-								uiInputElement.removeEventListener(
-									'keydown',
-									handleInputKeyDown
-								);
-
-								buttonElement.classList.add('d-none');
-							}
-						},
-						readOnlyInputLabel: document.getElementById(
-							`${fragmentNamespace}-select-from-list-read-only`
-						),
-						unlocalizedFieldsState:
-							input.attributes.unlocalizedFieldsState,
-						unlocalizedMessageContainer: document.getElementById(
-							`${fragmentNamespace}-unlocalized-info`
-						),
+				optionListElement.addEventListener('click', (event) => {
+					const translationInput = getTranslationInput({
+						inputId: uiInputElement.id,
+						inputName: input.name,
+						languageId: currentLanguageId,
+						localizationInputsContainer: uiInputElement.parentNode,
+						namespace: fragmentNamespace,
 					});
 
-					optionListElement.addEventListener(
-						'click',
-						handleResultListClick
-					);
-				}
+					handleResultListClick(event, onChange, translationInput);
+				});
 			}
-		);
-	}
-	else {
-		optionListElement.addEventListener('click', handleResultListClick);
-	}
+			else {
+				registerUnlocalizedInput({
+					defaultLanguageId,
+					inputElement: uiInputElement,
+					onLocaleChange: (languageId) => {
+						if (defaultLanguageId === languageId) {
+							uiInputElement.addEventListener(
+								'click',
+								toggleDropdown
+							);
+							uiInputElement.addEventListener(
+								'keydown',
+								handleInputKeyDown
+							);
+
+							buttonElement.classList.remove('d-none');
+						}
+						else {
+							uiInputElement.removeEventListener(
+								'click',
+								toggleDropdown
+							);
+							uiInputElement.removeEventListener(
+								'keydown',
+								handleInputKeyDown
+							);
+
+							buttonElement.classList.add('d-none');
+						}
+					},
+					readOnlyInputLabel: document.getElementById(
+						`${fragmentNamespace}-select-from-list-read-only`
+					),
+					unlocalizedFieldsState:
+						input.attributes.unlocalizedFieldsState,
+					unlocalizedMessageContainer: document.getElementById(
+						`${fragmentNamespace}-unlocalized-info`
+					),
+				});
+
+				optionListElement.addEventListener(
+					'click',
+					handleResultListClick
+				);
+			}
+		}
+	);
 }
 
 const KEYS = {
@@ -254,7 +316,13 @@ function handleResultListClick(event, onChange, translationInput) {
 }
 
 function handleInputBlur() {
-	uiInputElement.value = labelInputElement.value;
+	if (!uiInputElement.value) {
+		labelInputElement.value = '';
+		valueInputElement.value = null;
+	}
+	else {
+		uiInputElement.value = labelInputElement.value;
+	}
 
 	if (checkIsOpenDropdown()) {
 		setTimeout(() => closeDropdown(), 500);

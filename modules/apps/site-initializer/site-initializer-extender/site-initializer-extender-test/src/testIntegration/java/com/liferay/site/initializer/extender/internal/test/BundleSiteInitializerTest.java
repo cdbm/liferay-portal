@@ -49,6 +49,7 @@ import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotAppCustomization;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotAppCustomizationLocalService;
@@ -135,10 +136,10 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
@@ -156,6 +157,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -194,7 +196,7 @@ import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -221,6 +223,8 @@ import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.template.model.TemplateEntry;
 import com.liferay.template.service.TemplateEntryLocalService;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -234,8 +238,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.ServletContext;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -390,7 +392,7 @@ public class BundleSiteInitializerTest {
 		}
 	}
 
-	@FeatureFlags("LPD-19870")
+	@FeatureFlag("LPD-19870")
 	@Test
 	public void testSerialize() throws Exception {
 		File tempDir1 = _getTempDir(
@@ -666,10 +668,9 @@ public class BundleSiteInitializerTest {
 				fetchAssetListEntrySegmentsEntryRel(
 					assetListEntry.getAssetListEntryId(), 0);
 
-		Assert.assertTrue(
-			StringUtil.contains(
-				assetListEntrySegmentsEntryRel.getTypeSettings(),
-				"queryValues0=Test Keyword", StringPool.BLANK));
+		String typeSettings = assetListEntrySegmentsEntryRel.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("queryValues0=Test Keyword"));
 
 		assetListEntry = assetListEntries.get(1);
 
@@ -814,8 +815,7 @@ public class BundleSiteInitializerTest {
 					"TESTCOMMERCECATALOG1", _group.getCompanyId());
 
 		Assert.assertNotNull(commerceCatalog);
-		Assert.assertEquals(
-			"Test Commerce Catalog 1", commerceCatalog.getName());
+		Assert.assertEquals(_group.getGroupKey(), commerceCatalog.getName());
 
 		commerceCatalog =
 			_commerceCatalogLocalService.
@@ -825,6 +825,23 @@ public class BundleSiteInitializerTest {
 		Assert.assertNotNull(commerceCatalog);
 		Assert.assertEquals(
 			"Test Commerce Catalog 2", commerceCatalog.getName());
+
+		commerceCatalog =
+			_commerceCatalogLocalService.
+				fetchCommerceCatalogByExternalReferenceCode(
+					"TESTCOMMERCECATALOG3", _group.getCompanyId());
+
+		Assert.assertNotNull(commerceCatalog);
+		Assert.assertEquals(_group.getGroupKey(), commerceCatalog.getName());
+
+		Company company = _companyLocalService.getCompany(
+			_serviceContext.getCompanyId());
+
+		AssetVocabulary assetVocabulary =
+			_assetVocabularyLocalService.fetchGroupVocabulary(
+				company.getGroupId(), _group.getGroupKey());
+
+		Assert.assertNotNull(assetVocabulary);
 
 		_assertCPDefinition();
 		_assertCPOption();
@@ -1152,7 +1169,7 @@ public class BundleSiteInitializerTest {
 			cpDefinitionValuesCount,
 			_cpDefinitionSpecificationOptionValueLocalService.
 				getCPDefinitionSpecificationOptionValuesCount(
-					cpDefinition.getCPDefinitionId()));
+					cpDefinition.getCPDefinitionId(), null));
 	}
 
 	private void _assertCPInstanceProperties() throws Exception {
@@ -1466,7 +1483,8 @@ public class BundleSiteInitializerTest {
 	private void _assertDepotEntries1() throws Exception {
 		List<DepotEntry> depotEntries =
 			_depotEntryLocalService.getGroupConnectedDepotEntries(
-				_group.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				_group.getGroupId(), DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
 
 		Assert.assertEquals(depotEntries.toString(), 2, depotEntries.size());
 
@@ -1496,7 +1514,7 @@ public class BundleSiteInitializerTest {
 	private void _assertDepotEntries2() throws Exception {
 		List<DepotEntry> depotEntries =
 			_depotEntryLocalService.getGroupConnectedDepotEntries(
-				_group.getGroupId(), -1, -1);
+				_group.getGroupId(), DepotConstants.TYPE_ANY, -1, -1);
 
 		Assert.assertEquals(depotEntries.toString(), 3, depotEntries.size());
 
@@ -1537,7 +1555,7 @@ public class BundleSiteInitializerTest {
 	private void _assertDLFileEntry1() throws Exception {
 		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getFileEntry(
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Table of Contents.markdown");
+			"Table of Contents.md");
 
 		String string = new String(
 			StreamUtil.toByteArray(
@@ -1553,7 +1571,7 @@ public class BundleSiteInitializerTest {
 	private void _assertDLFileEntry2() throws Exception {
 		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getFileEntry(
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Table of Contents.markdown");
+			"Table of Contents.md");
 
 		String string = new String(
 			StreamUtil.toByteArray(
@@ -2045,8 +2063,8 @@ public class BundleSiteInitializerTest {
 
 		FragmentEntryLink fragmentEntryLink = fragmentEntryLinks.get(0);
 
-		JSONObject editableValuesJSONObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
 		Assert.assertNotNull(editableValuesJSONObject);
 
@@ -2555,7 +2573,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(4, objectDefinition);
 		_assertObjectEntries(_group.getGroupId(), objectDefinition, 0);
-		_assertObjectFields(objectDefinition, 10);
+		_assertObjectFields(objectDefinition, 13);
 		_assertObjectRelationships1(objectDefinition, _serviceContext);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
@@ -2568,7 +2586,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(2, objectDefinition);
 		_assertObjectEntries(_group.getGroupId(), objectDefinition, 0);
-		_assertObjectFields(objectDefinition, 8);
+		_assertObjectFields(objectDefinition, 11);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
 			_group.getCompanyId(), "C_TestObjectDefinition3");
@@ -2582,7 +2600,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(0, objectDefinition);
 		_assertObjectEntries(0, objectDefinition, 5);
-		_assertObjectFields(objectDefinition, 7);
+		_assertObjectFields(objectDefinition, 10);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
 			_group.getCompanyId(), "C_TestObjectDefinition4");
@@ -2607,7 +2625,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(4, objectDefinition);
 		_assertObjectEntries(_group.getGroupId(), objectDefinition, 0);
-		_assertObjectFields(objectDefinition, 10);
+		_assertObjectFields(objectDefinition, 13);
 		_assertObjectRelationships2(objectDefinition, _serviceContext);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
@@ -2626,7 +2644,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(2, objectDefinition);
 		_assertObjectEntries(_group.getGroupId(), objectDefinition, 0);
-		_assertObjectFields(objectDefinition, 8);
+		_assertObjectFields(objectDefinition, 11);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
 			_group.getCompanyId(), "C_TestObjectDefinition3");
@@ -2641,7 +2659,7 @@ public class BundleSiteInitializerTest {
 
 		_assertObjectActions(0, objectDefinition);
 		_assertObjectEntries(0, objectDefinition, 5);
-		_assertObjectFields(objectDefinition, 7);
+		_assertObjectFields(objectDefinition, 10);
 
 		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
 			_group.getCompanyId(), "C_TestObjectDefinition4");
@@ -3373,6 +3391,9 @@ public class BundleSiteInitializerTest {
 				"[$TestObjectDefinition3#Test_Object_Entry_1$]"));
 		Assert.assertFalse(
 			pageDefinitionString.contains(
+				"[$OBJECT_DEFINITION_CLASS_NAME:TestObjectDefinition1$]"));
+		Assert.assertFalse(
+			pageDefinitionString.contains(
 				"[$OBJECT_DEFINITION_CLASS_NAME:TestObjectDefinition3$]"));
 		Assert.assertFalse(
 			pageDefinitionString.contains(
@@ -3849,10 +3870,10 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.LAYOUT,
 			siteNavigationMenuItem1.getType());
-		Assert.assertFalse(
-			StringUtil.contains(
-				siteNavigationMenuItem1.getTypeSettings(), "useCustomName",
-				StringPool.BLANK));
+
+		String typeSettings = siteNavigationMenuItem1.getTypeSettings();
+
+		Assert.assertFalse(typeSettings.contains("useCustomName"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem2 =
 			siteNavigationMenuItems.get(1);
@@ -3860,10 +3881,10 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.URL,
 			siteNavigationMenuItem2.getType());
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem2.getTypeSettings(), "Test URL",
-				StringPool.BLANK));
+
+		typeSettings = siteNavigationMenuItem2.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("Test URL"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem3 =
 			siteNavigationMenuItems.get(2);
@@ -3871,10 +3892,10 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.NODE,
 			siteNavigationMenuItem3.getType());
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem3.getTypeSettings(), "Other Links",
-				StringPool.BLANK));
+
+		typeSettings = siteNavigationMenuItem3.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("Other Links"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem4 =
 			siteNavigationMenuItems.get(3);
@@ -3930,14 +3951,11 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.LAYOUT,
 			siteNavigationMenuItem1.getType());
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem1.getTypeSettings(), "Test Layout",
-				StringPool.BLANK));
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem1.getTypeSettings(), "useCustomName",
-				StringPool.BLANK));
+
+		String typeSettings = siteNavigationMenuItem1.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("Test Layout"));
+		Assert.assertTrue(typeSettings.contains("useCustomName"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem2 =
 			siteNavigationMenuItems.get(1);
@@ -3945,10 +3963,10 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.URL,
 			siteNavigationMenuItem2.getType());
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem2.getTypeSettings(), "Test URL",
-				StringPool.BLANK));
+
+		typeSettings = siteNavigationMenuItem2.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("Test URL"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem3 =
 			siteNavigationMenuItems.get(2);
@@ -3956,10 +3974,10 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.NODE,
 			siteNavigationMenuItem3.getType());
-		Assert.assertTrue(
-			StringUtil.contains(
-				siteNavigationMenuItem3.getTypeSettings(), "Other Links Update",
-				StringPool.BLANK));
+
+		typeSettings = siteNavigationMenuItem3.getTypeSettings();
+
+		Assert.assertTrue(typeSettings.contains("Other Links Update"));
 
 		SiteNavigationMenuItem siteNavigationMenuItem4 =
 			siteNavigationMenuItems.get(3);
@@ -4175,6 +4193,19 @@ public class BundleSiteInitializerTest {
 		Assert.assertTrue(userAccount.getImageId() == 0);
 
 		_assertUserSiteGroups(userAccount.getId());
+
+		userAccount = userAccountResource.getUserAccountByEmailAddress(
+			"test.user3@liferay.com");
+
+		accountBriefs = userAccount.getAccountBriefs();
+
+		Assert.assertEquals(
+			Arrays.toString(accountBriefs), 0, accountBriefs.length);
+
+		Assert.assertEquals(
+			"testalternatename3", userAccount.getAlternateName());
+		Assert.assertEquals(
+			UserAccount.Status.INACTIVE, userAccount.getStatus());
 	}
 
 	private void _assertUserAccounts2() throws Exception {
@@ -4368,7 +4399,7 @@ public class BundleSiteInitializerTest {
 			workflowDefinitionTest1.getDescription());
 
 		WorkflowDefinitionLink workflowDefinitionLink1 =
-			_workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
+			_workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
 				_group.getCompanyId(), 0, "com.liferay.blogs.model.BlogsEntry",
 				0, 0);
 
@@ -4391,7 +4422,7 @@ public class BundleSiteInitializerTest {
 			workflowDefinitionTest2.getDescription());
 
 		WorkflowDefinitionLink workflowDefinitionLink2 =
-			_workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
+			_workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
 				_group.getCompanyId(), _group.getGroupId(),
 				"com.liferay.search.experiences.model.SXPBlueprint", 0, 0);
 
@@ -4607,6 +4638,9 @@ public class BundleSiteInitializerTest {
 	@Inject
 	private CommerceNotificationTemplateLocalService
 		_commerceNotificationTemplateLocalService;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private CPDefinitionLocalService _cpDefinitionLocalService;

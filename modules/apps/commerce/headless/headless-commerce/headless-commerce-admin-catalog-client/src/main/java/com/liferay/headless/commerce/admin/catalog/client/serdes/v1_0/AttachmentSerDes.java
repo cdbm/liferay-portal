@@ -6,8 +6,9 @@
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Attachment;
-import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -17,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -113,7 +112,7 @@ public class AttachmentSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < attachment.getCustomFields().length; i++) {
-				sb.append(String.valueOf(attachment.getCustomFields()[i]));
+				sb.append(attachment.getCustomFields()[i]);
 
 				if ((i + 1) < attachment.getCustomFields().length) {
 					sb.append(", ");
@@ -605,12 +604,17 @@ public class AttachmentSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.commerce.admin.catalog.client.custom.
+						field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.admin.catalog.client.
+							custom.field.CustomField
+							[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.admin.catalog.client.
+								custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					attachment.setCustomFields(customFieldsArray);

@@ -27,6 +27,12 @@ export class HeadlessCommerceDeliveryCatalogApiHelper {
 		this.basePath = 'headless-commerce-delivery-catalog/v1.0/';
 	}
 
+	async deleteWishList(wishListId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/wishlists/${wishListId}`
+		);
+	}
+
 	async getChannelProductAttachmentsPage(
 		channelId: number,
 		productId: number
@@ -43,6 +49,16 @@ export class HeadlessCommerceDeliveryCatalogApiHelper {
 	) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}/products/${productId}/pins?accountId=${accountId}`
+		);
+	}
+
+	async getChannelProductSkusPage(
+		channelId: number,
+		productId: number,
+		searchParams = new URLSearchParams()
+	) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}/products/${productId}/skus?${searchParams.toString()}`
 		);
 	}
 
@@ -70,11 +86,5 @@ export class HeadlessCommerceDeliveryCatalogApiHelper {
 		}
 
 		return postWishList;
-	}
-
-	async deleteWishList(wishListId: number) {
-		return this.apiHelpers.delete(
-			`${this.apiHelpers.baseUrl}${this.basePath}/wishlists/${wishListId}`
-		);
 	}
 }

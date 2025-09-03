@@ -22,7 +22,9 @@ import org.osgi.service.component.annotations.Component;
 	property = {
 		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.ALL_SECTION,
 		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.CONTENTS_SECTION,
-		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.FILES_SECTION
+		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.FILES_SECTION,
+		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.SHARED_WITH_ME,
+		"frontend.data.set.name=" + CMSSiteInitializerFDSNames.STRUCTURE_USAGES
 	},
 	service = FDSFilter.class
 )

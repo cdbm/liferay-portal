@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
+import com.liferay.portal.kernel.test.portlet.MockActionResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -56,17 +58,15 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionResponse;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.Before;

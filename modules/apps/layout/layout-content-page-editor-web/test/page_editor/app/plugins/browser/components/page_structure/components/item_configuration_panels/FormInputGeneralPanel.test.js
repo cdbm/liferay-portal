@@ -184,6 +184,14 @@ const renderComponent = ({
 };
 
 describe('FormInputGeneralPanel', () => {
+	beforeAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = true;
+	});
+
+	afterAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = false;
+	});
+
 	it('shows an alert instead of field selector when there are no suitable fields for fragment allowed types', () => {
 		renderComponent({fragmentEntryKey: 'dateFragment'});
 
@@ -237,7 +245,7 @@ describe('FormInputGeneralPanel', () => {
 	it('shows configuration fieldset when fragment is mapped', () => {
 		renderComponent({mappedFieldId: 'requiredField'});
 
-		expect(screen.getByText('x-configuration')).toBeInTheDocument();
+		expect(screen.getByText('fragment-configuration')).toBeInTheDocument();
 	});
 
 	it('shows checkbox to set field as required disabled when fragment is mapped to a required field', () => {

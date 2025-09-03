@@ -9,20 +9,27 @@ import {CommerceAccountManagementPage} from '../pages/commerce/commerce-account-
 import {CommerceChannelDefaultsPage} from '../pages/commerce/commerce-account-web/commerceChannelDefaultsPage';
 import {CommerceCartPage} from '../pages/commerce/commerce-cart-content-web/commerceCartPage';
 import {CommerceCartSummaryPage} from '../pages/commerce/commerce-cart-content-web/commerceCartSummaryPage';
+import {CommerceAdminCatalogsPage} from '../pages/commerce/commerce-catalog-web/commerceAdminCatalogsPage';
 import {CommerceAdminChannelDetailsCountriesPage} from '../pages/commerce/commerce-channel-web/commerceAdminChannelDetailsCountriesPage';
 import {CommerceAdminChannelDetailsCurrenciesPage} from '../pages/commerce/commerce-channel-web/commerceAdminChannelDetailsCurrenciesPage';
 import {CommerceAdminChannelDetailsPage} from '../pages/commerce/commerce-channel-web/commerceAdminChannelDetailsPage';
+import {CommerceAdminChannelDetailsTypePage} from '../pages/commerce/commerce-channel-web/commerceAdminChannelDetailsTypePage';
 import {CommerceAdminChannelsPage} from '../pages/commerce/commerce-channel-web/commerceAdminChannelsPage';
 import {CheckoutPage} from '../pages/commerce/commerce-checkout-web/checkoutPage';
 import {CommerceAdminCurrenciesPage} from '../pages/commerce/commerce-currency-web/commerceAdminCurrenciesPage';
 import {CommerceAdminCurrencyDetailsPage} from '../pages/commerce/commerce-currency-web/commerceAdminCurrencyDetailsPage';
+import {CommerceAdminHealthCheckPage} from '../pages/commerce/commerce-health-status-web/commerceAdminHealthCheckPage';
+import {CommerceAdminInventoryPage} from '../pages/commerce/commerce-inventory-web/commerceAdminInventoryPage';
 import {CommerceLayoutsPage} from '../pages/commerce/commerce-order-content-web/commerceLayoutsPage';
 import {PendingOrdersPage} from '../pages/commerce/commerce-order-content-web/pendingOrdersPage';
+import {PlacedOrderPage} from '../pages/commerce/commerce-order-content-web/placedOrderPage';
 import {PlacedOrdersPage} from '../pages/commerce/commerce-order-content-web/placedOrdersPage';
 import {ReturnDetailsPage} from '../pages/commerce/commerce-order-content-web/returnDetailsPage';
 import {ReturnsPage} from '../pages/commerce/commerce-order-content-web/returnsPage';
 import {CommerceAdminOrderDetailsPage} from '../pages/commerce/commerce-order-web/commerceAdminOrderDetailsPage';
 import {CommerceAdminOrderNotesPage} from '../pages/commerce/commerce-order-web/commerceAdminOrderNotesPage';
+import {CommerceAdminOrderTypeDetailsPage} from '../pages/commerce/commerce-order-web/commerceAdminOrderTypeDetailsPage';
+import {CommerceAdminOrderTypesPage} from '../pages/commerce/commerce-order-web/commerceAdminOrderTypesPage';
 import {CommerceAdminOrdersPage} from '../pages/commerce/commerce-order-web/commerceAdminOrdersPage';
 import {CommerceAdminReturnsPage} from '../pages/commerce/commerce-order-web/commerceAdminReturnsPage';
 import {OrganizationManagementPage} from '../pages/commerce/commerce-organization-web/organizationManagementPage';
@@ -48,8 +55,13 @@ import {CommerceAdminProductDetailsVisibilityPage} from '../pages/commerce/comme
 import {CommerceAdminProductPage} from '../pages/commerce/commerce-product-definitions-web/commerceAdminProductPage';
 import {CommerceSpecificationsPage} from '../pages/commerce/commerce-product-options-web/commerceSpecificationsPage';
 import {CommerceAdminShipmentsPage} from '../pages/commerce/commerce-shipment-web/commerceAdminShipmentsPage';
+import {CommerceThemeClassicCatalogPage} from '../pages/commerce/commerce-theme-classic/commerceThemeClassicCatalogPage';
+import {CommerceThemeClassicOrdersPage} from '../pages/commerce/commerce-theme-classic/commerceThemeClassicOrdersPage';
 import {CommerceThemeMiniumCatalogPage} from '../pages/commerce/commerce-theme-minium/commerceThemeMiniumCatalogPage';
 import {CommerceThemeMiniumPage} from '../pages/commerce/commerce-theme-minium/commerceThemeMiniumPage';
+import {CommerceAdminWarehouseDetailsPage} from '../pages/commerce/commerce-warehouse-web/commerceAdminWarehouseDetailsPage';
+import {CommerceAdminWarehouseEligibilityPage} from '../pages/commerce/commerce-warehouse-web/commerceAdminWarehouseEligibilityPage';
+import {CommerceAdminWarehousesPage} from '../pages/commerce/commerce-warehouse-web/commerceAdminWarehousesPage';
 import {CommerceWishListPage} from '../pages/commerce/commerce-wish-list-web/commerceWishListPage';
 import {CommerceCatalogSystemSettingsPage} from '../pages/commerce/commerceCatalogSystemSettingsPage';
 import {CommerceInstanceSettingsPage} from '../pages/commerce/commerceInstanceSettingsPage';
@@ -59,16 +71,22 @@ const commercePagesTest = test.extend<{
 	attachmentsPage: AttachmentsPage;
 	checkoutPage: CheckoutPage;
 	commerceAccountManagementPage: CommerceAccountManagementPage;
+	commerceAdminCatalogsPage: CommerceAdminCatalogsPage;
 	commerceAdminChannelDetailsCountriesPage: CommerceAdminChannelDetailsCountriesPage;
 	commerceAdminChannelDetailsCurrenciesPage: CommerceAdminChannelDetailsCurrenciesPage;
 	commerceAdminChannelDetailsPage: CommerceAdminChannelDetailsPage;
+	commerceAdminChannelDetailsTypePage: CommerceAdminChannelDetailsTypePage;
 	commerceAdminChannelsPage: CommerceAdminChannelsPage;
 	commerceAdminCurrenciesPage: CommerceAdminCurrenciesPage;
 	commerceAdminCurrencyDetailsPage: CommerceAdminCurrencyDetailsPage;
 	commerceAdminDiscountDetailsPage: CommerceAdminDiscountDetailsPage;
 	commerceAdminDiscountsPage: CommerceAdminDiscountsPage;
+	commerceAdminHealthCheckPage: CommerceAdminHealthCheckPage;
+	commerceAdminInventoryPage: CommerceAdminInventoryPage;
 	commerceAdminOrderDetailsPage: CommerceAdminOrderDetailsPage;
 	commerceAdminOrderNotesPage: CommerceAdminOrderNotesPage;
+	commerceAdminOrderTypeDetailsPage: CommerceAdminOrderTypeDetailsPage;
+	commerceAdminOrderTypesPage: CommerceAdminOrderTypesPage;
 	commerceAdminOrdersPage: CommerceAdminOrdersPage;
 	commerceAdminProductConfigurationEntriesPage: CommerceAdminProductConfigurationEntriesPage;
 	commerceAdminProductConfigurationEntryPage: CommerceAdminProductConfigurationEntryPage;
@@ -85,6 +103,9 @@ const commercePagesTest = test.extend<{
 	commerceAdminProductPage: CommerceAdminProductPage;
 	commerceAdminReturnsPage: CommerceAdminReturnsPage;
 	commerceAdminShipmentsPage: CommerceAdminShipmentsPage;
+	commerceAdminWarehouseDetailsPage: CommerceAdminWarehouseDetailsPage;
+	commerceAdminWarehouseEligibilityPage: CommerceAdminWarehouseEligibilityPage;
+	commerceAdminWarehousesPage: CommerceAdminWarehousesPage;
 	commerceCartPage: CommerceCartPage;
 	commerceCartSummaryPage: CommerceCartSummaryPage;
 	commerceCatalogSystemSettingsPage: CommerceCatalogSystemSettingsPage;
@@ -94,11 +115,14 @@ const commercePagesTest = test.extend<{
 	commerceMiniCartPage: CommerceMiniCartPage;
 	commercePaymentsPage: CommercePaymentsPage;
 	commerceSpecificationsPage: CommerceSpecificationsPage;
+	commerceThemeClassicCatalogPage: CommerceThemeClassicCatalogPage;
+	commerceThemeClassicOrdersPage: CommerceThemeClassicOrdersPage;
 	commerceThemeMiniumCatalogPage: CommerceThemeMiniumCatalogPage;
 	commerceThemeMiniumPage: CommerceThemeMiniumPage;
 	commerceWishListPage: CommerceWishListPage;
 	organizationManagementPage: OrganizationManagementPage;
 	pendingOrdersPage: PendingOrdersPage;
+	placedOrderPage: PlacedOrderPage;
 	placedOrdersPage: PlacedOrdersPage;
 	productDetailsPage: ProductDetailsPage;
 	productPublisherPage: ProductPublisherPage;
@@ -115,6 +139,9 @@ const commercePagesTest = test.extend<{
 	commerceAccountManagementPage: async ({page}, use) => {
 		await use(new CommerceAccountManagementPage(page));
 	},
+	commerceAdminCatalogsPage: async ({page}, use) => {
+		await use(new CommerceAdminCatalogsPage(page));
+	},
 	commerceAdminChannelDetailsCountriesPage: async ({page}, use) => {
 		await use(new CommerceAdminChannelDetailsCountriesPage(page));
 	},
@@ -123,6 +150,9 @@ const commercePagesTest = test.extend<{
 	},
 	commerceAdminChannelDetailsPage: async ({page}, use) => {
 		await use(new CommerceAdminChannelDetailsPage(page));
+	},
+	commerceAdminChannelDetailsTypePage: async ({page}, use) => {
+		await use(new CommerceAdminChannelDetailsTypePage(page));
 	},
 	commerceAdminChannelsPage: async ({page}, use) => {
 		await use(new CommerceAdminChannelsPage(page));
@@ -139,11 +169,23 @@ const commercePagesTest = test.extend<{
 	commerceAdminDiscountsPage: async ({page}, use) => {
 		await use(new CommerceAdminDiscountsPage(page));
 	},
+	commerceAdminHealthCheckPage: async ({page}, use) => {
+		await use(new CommerceAdminHealthCheckPage(page));
+	},
+	commerceAdminInventoryPage: async ({page}, use) => {
+		await use(new CommerceAdminInventoryPage(page));
+	},
 	commerceAdminOrderDetailsPage: async ({page}, use) => {
 		await use(new CommerceAdminOrderDetailsPage(page));
 	},
 	commerceAdminOrderNotesPage: async ({page}, user) => {
 		await user(new CommerceAdminOrderNotesPage(page));
+	},
+	commerceAdminOrderTypeDetailsPage: async ({page}, use) => {
+		await use(new CommerceAdminOrderTypeDetailsPage(page));
+	},
+	commerceAdminOrderTypesPage: async ({page}, use) => {
+		await use(new CommerceAdminOrderTypesPage(page));
 	},
 	commerceAdminOrdersPage: async ({page}, use) => {
 		await use(new CommerceAdminOrdersPage(page));
@@ -193,6 +235,15 @@ const commercePagesTest = test.extend<{
 	commerceAdminShipmentsPage: async ({page}, use) => {
 		await use(new CommerceAdminShipmentsPage(page));
 	},
+	commerceAdminWarehouseDetailsPage: async ({page}, use) => {
+		await use(new CommerceAdminWarehouseDetailsPage(page));
+	},
+	commerceAdminWarehouseEligibilityPage: async ({page}, use) => {
+		await use(new CommerceAdminWarehouseEligibilityPage(page));
+	},
+	commerceAdminWarehousesPage: async ({page}, use) => {
+		await use(new CommerceAdminWarehousesPage(page));
+	},
 	commerceCartPage: async ({page}, use) => {
 		await use(new CommerceCartPage(page));
 	},
@@ -220,6 +271,12 @@ const commercePagesTest = test.extend<{
 	commerceSpecificationsPage: async ({page}, use) => {
 		await use(new CommerceSpecificationsPage(page));
 	},
+	commerceThemeClassicCatalogPage: async ({page}, use) => {
+		await use(new CommerceThemeClassicCatalogPage(page));
+	},
+	commerceThemeClassicOrdersPage: async ({page}, use) => {
+		await use(new CommerceThemeClassicOrdersPage(page));
+	},
 	commerceThemeMiniumCatalogPage: async ({page}, use) => {
 		await use(new CommerceThemeMiniumCatalogPage(page));
 	},
@@ -234,6 +291,9 @@ const commercePagesTest = test.extend<{
 	},
 	pendingOrdersPage: async ({page}, use) => {
 		await use(new PendingOrdersPage(page));
+	},
+	placedOrderPage: async ({page}, use) => {
+		await use(new PlacedOrderPage(page));
 	},
 	placedOrdersPage: async ({page}, use) => {
 		await use(new PlacedOrdersPage(page));

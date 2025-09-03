@@ -6,6 +6,7 @@
 package com.liferay.commerce.internal.object.system;
 
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPDefinitionLocalizationTable;
 import com.liferay.commerce.product.model.CPDefinitionTable;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
@@ -59,7 +60,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 
 		setExtendedProperties(Product.class.getName(), product, user, values);
 
-		return product.getId();
+		return product.getProductId();
 	}
 
 	@Override
@@ -129,6 +130,11 @@ public class CPDefinitionSystemObjectDefinitionManager
 	}
 
 	@Override
+	public Table getLocalizationTable() {
+		return CPDefinitionLocalizationTable.INSTANCE;
+	}
+
+	@Override
 	public Class<?> getModelClass() {
 		return CPDefinition.class;
 	}
@@ -159,6 +165,8 @@ public class CPDefinitionSystemObjectDefinitionManager
 			new TextObjectFieldBuilder(
 			).labelMap(
 				createLabelMap("description")
+			).localized(
+				true
 			).name(
 				"description"
 			).system(
@@ -167,6 +175,8 @@ public class CPDefinitionSystemObjectDefinitionManager
 			new TextObjectFieldBuilder(
 			).labelMap(
 				createLabelMap("name")
+			).localized(
+				true
 			).name(
 				"name"
 			).required(
@@ -176,7 +186,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 			).build(),
 			new TextObjectFieldBuilder(
 			).dbColumnName(
-				"CPDefinitionId"
+				"CProductId"
 			).labelMap(
 				createLabelMap("product-id")
 			).name(
@@ -197,6 +207,8 @@ public class CPDefinitionSystemObjectDefinitionManager
 			new TextObjectFieldBuilder(
 			).labelMap(
 				createLabelMap("short-description")
+			).localized(
+				true
 			).name(
 				"shortDescription"
 			).system(
@@ -242,7 +254,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 
 	@Override
 	public Column<?, Long> getPrimaryKeyColumn() {
-		return CPDefinitionTable.INSTANCE.CPDefinitionId;
+		return CPDefinitionTable.INSTANCE.CProductId;
 	}
 
 	@Override
@@ -283,6 +295,11 @@ public class CPDefinitionSystemObjectDefinitionManager
 	@Override
 	public int getVersion() {
 		return 3;
+	}
+
+	@Override
+	public boolean isEnableLocalization() {
+		return true;
 	}
 
 	@Override

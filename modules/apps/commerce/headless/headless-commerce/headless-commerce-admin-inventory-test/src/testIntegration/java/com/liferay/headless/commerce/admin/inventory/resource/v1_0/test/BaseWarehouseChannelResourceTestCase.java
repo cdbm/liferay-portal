@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.inventory.client.dto.v1_0.WarehouseChannel;
 import com.liferay.headless.commerce.admin.inventory.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.inventory.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 			testCompany.getCompanyId());
 
 		warehouseChannelResource = WarehouseChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -187,12 +200,112 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 
 	@Test
 	public void testDeleteWarehouseChannel() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		WarehouseChannel warehouseChannel =
+			testDeleteWarehouseChannel_addWarehouseChannel();
+
+		assertHttpResponseStatusCode(
+			204,
+			warehouseChannelResource.deleteWarehouseChannelHttpResponse(
+				warehouseChannel.getWarehouseChannelId()));
+	}
+
+	protected WarehouseChannel testDeleteWarehouseChannel_addWarehouseChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteWarehouseChannel() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		WarehouseChannel warehouseChannel1 =
+			testGraphQLDeleteWarehouseChannel_addWarehouseChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteWarehouseChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"warehouseChannelId",
+									warehouseChannel1.getWarehouseChannelId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteWarehouseChannel"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		WarehouseChannel warehouseChannel2 =
+			testGraphQLDeleteWarehouseChannel_addWarehouseChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"deleteWarehouseChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"warehouseChannelId",
+										warehouseChannel2.
+											getWarehouseChannelId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminInventory_v1_0",
+				"Object/deleteWarehouseChannel"));
+	}
+
+	protected WarehouseChannel
+			testGraphQLDeleteWarehouseChannel_addWarehouseChannel()
+		throws Exception {
+
+		return testGraphQLWarehouseChannel_addWarehouseChannel();
+	}
+
+	@Test
+	public void testDeleteWarehouseChannelBatch() throws Exception {
+		WarehouseChannel warehouseChannel1 =
+			testDeleteWarehouseChannelBatch_addWarehouseChannel();
+
+		testDeleteWarehouseChannelBatch_deleteWarehouseChannel(
+			202, null, warehouseChannel1.getWarehouseChannelId());
+	}
+
+	protected WarehouseChannel
+			testDeleteWarehouseChannelBatch_addWarehouseChannel()
+		throws Exception {
+
+		return testDeleteWarehouseChannel_addWarehouseChannel();
+	}
+
+	protected void testDeleteWarehouseChannelBatch_deleteWarehouseChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			warehouseChannelResource.deleteWarehouseChannelBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"warehouseChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -257,6 +370,12 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 			page,
 			testGetWarehouseByExternalReferenceCodeWarehouseChannelsPage_getExpectedActions(
 				externalReferenceCode));
+
+		warehouseChannelResource.deleteWarehouseChannel(
+			warehouseChannel1.getWarehouseChannelId());
+
+		warehouseChannelResource.deleteWarehouseChannel(
+			warehouseChannel2.getWarehouseChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -276,13 +395,13 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetWarehouseByExternalReferenceCodeWarehouseChannelsPage_getExternalReferenceCode();
 
-		Page<WarehouseChannel> warehouseChannelPage =
+		Page<WarehouseChannel> warehouseChannelsPage =
 			warehouseChannelResource.
 				getWarehouseByExternalReferenceCodeWarehouseChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			warehouseChannelPage.getTotalCount());
+			warehouseChannelsPage.getTotalCount());
 
 		WarehouseChannel warehouseChannel1 =
 			testGetWarehouseByExternalReferenceCodeWarehouseChannelsPage_addWarehouseChannel(
@@ -404,29 +523,6 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 	}
 
 	@Test
-	public void testPostWarehouseByExternalReferenceCodeWarehouseChannel()
-		throws Exception {
-
-		WarehouseChannel randomWarehouseChannel = randomWarehouseChannel();
-
-		WarehouseChannel postWarehouseChannel =
-			testPostWarehouseByExternalReferenceCodeWarehouseChannel_addWarehouseChannel(
-				randomWarehouseChannel);
-
-		assertEquals(randomWarehouseChannel, postWarehouseChannel);
-		assertValid(postWarehouseChannel);
-	}
-
-	protected WarehouseChannel
-			testPostWarehouseByExternalReferenceCodeWarehouseChannel_addWarehouseChannel(
-				WarehouseChannel warehouseChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetWarehouseIdWarehouseChannelsPage() throws Exception {
 		Long id = testGetWarehouseIdWarehouseChannelsPage_getId();
 		Long irrelevantId =
@@ -478,6 +574,12 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 		assertValid(
 			page,
 			testGetWarehouseIdWarehouseChannelsPage_getExpectedActions(id));
+
+		warehouseChannelResource.deleteWarehouseChannel(
+			warehouseChannel1.getWarehouseChannelId());
+
+		warehouseChannelResource.deleteWarehouseChannel(
+			warehouseChannel2.getWarehouseChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -593,12 +695,12 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 
 		Long id = testGetWarehouseIdWarehouseChannelsPage_getId();
 
-		Page<WarehouseChannel> warehouseChannelPage =
+		Page<WarehouseChannel> warehouseChannelsPage =
 			warehouseChannelResource.getWarehouseIdWarehouseChannelsPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			warehouseChannelPage.getTotalCount());
+			warehouseChannelsPage.getTotalCount());
 
 		WarehouseChannel warehouseChannel1 =
 			testGetWarehouseIdWarehouseChannelsPage_addWarehouseChannel(
@@ -867,6 +969,29 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 	}
 
 	@Test
+	public void testPostWarehouseByExternalReferenceCodeWarehouseChannel()
+		throws Exception {
+
+		WarehouseChannel randomWarehouseChannel = randomWarehouseChannel();
+
+		WarehouseChannel postWarehouseChannel =
+			testPostWarehouseByExternalReferenceCodeWarehouseChannel_addWarehouseChannel(
+				randomWarehouseChannel);
+
+		assertEquals(randomWarehouseChannel, postWarehouseChannel);
+		assertValid(postWarehouseChannel);
+	}
+
+	protected WarehouseChannel
+			testPostWarehouseByExternalReferenceCodeWarehouseChannel_addWarehouseChannel(
+				WarehouseChannel warehouseChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostWarehouseIdWarehouseChannel() throws Exception {
 		WarehouseChannel randomWarehouseChannel = randomWarehouseChannel();
 
@@ -887,8 +1012,66 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		WarehouseChannel warehouseChannel1 =
+			testBatchEngineDeleteImportTask_addWarehouseChannel();
+
+		testBatchEngineDeleteImportTask_deleteWarehouseChannel(
+			200, null, warehouseChannel1.getWarehouseChannelId());
+	}
+
+	protected WarehouseChannel
+			testBatchEngineDeleteImportTask_addWarehouseChannel()
+		throws Exception {
+
+		return testDeleteWarehouseChannel_addWarehouseChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteWarehouseChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"warehouseChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected WarehouseChannel testGraphQLWarehouseChannel_addWarehouseChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		WarehouseChannel warehouseChannel,
@@ -969,6 +1152,10 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (warehouseChannel.getWarehouseChannelId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1543,7 +1730,30 @@ public abstract class BaseWarehouseChannelResourceTestCase {
 		return randomWarehouseChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected WarehouseChannelResource warehouseChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -15,15 +15,15 @@ import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.PriceListAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.PriceListAccountGroupUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.PriceListAccountGroupResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

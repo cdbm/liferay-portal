@@ -1,22 +1,33 @@
 {
-	"@generated": "ff1764a614c95092ebd2809006127f0b97b6a54a",
+	"@generated": "191b6e3f1b4edfbf4cba8df725791ae4dce40866",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
+			"@liferay/fragment-impl/api": [
+				"./js/api/api.ts"
+			],
+			"@liferay/layout-js-components-web": [
+				"../../../../../../../layout/layout-js-components-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"document-library-video": [
+				"../../../../../../../document-library/document-library-video/src/main/resources/META-INF/resources/js/index.d.ts"
+			],
 			"frontend-js-components-web": [
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -35,6 +46,12 @@
 		"../../../../../../../../global.d.ts"
 	],
 	"references": [
+		{
+			"path": "../../../../../../../layout/layout-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../document-library/document-library-video/src/main/resources/META-INF/resources/tsconfig.json"
+		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},

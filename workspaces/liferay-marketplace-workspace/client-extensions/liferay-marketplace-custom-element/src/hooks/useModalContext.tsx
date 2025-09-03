@@ -8,10 +8,10 @@ import {Size} from '@clayui/modal/lib/types';
 import {ReactElement, useContext} from 'react';
 
 export type ModalOptions = {
-	body: ReactElement;
+	body: string | ReactElement;
 	center?: boolean;
 	footer?: (any | ReactElement)[];
-	header?: string;
+	header?: string | ReactElement;
 	size?: Size | 'md';
 	status?: 'danger' | 'info' | 'success' | 'warning';
 };

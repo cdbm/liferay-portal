@@ -20,6 +20,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -27,12 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -360,9 +360,10 @@ public class PageElement implements Serializable {
 
 		COLLECTION("Collection"), COLLECTION_ITEM("CollectionItem"),
 		COLUMN("Column"), DROP_ZONE("DropZone"), FORM("Form"),
-		FORM_STEP("FormStep"), FORM_STEP_CONTAINER("FormStepContainer"),
-		FRAGMENT("Fragment"), FRAGMENT_DROP_ZONE("FragmentDropZone"),
-		ROOT("Root"), ROW("Row"), SECTION("Section"), WIDGET("Widget");
+		FORM_RELATIONSHIP("FormRelationship"), FORM_STEP("FormStep"),
+		FORM_STEP_CONTAINER("FormStepContainer"), FRAGMENT("Fragment"),
+		FRAGMENT_DROP_ZONE("FragmentDropZone"), ROOT("Root"), ROW("Row"),
+		SECTION("Section"), WIDGET("Widget");
 
 		@JsonCreator
 		public static Type create(String value) {

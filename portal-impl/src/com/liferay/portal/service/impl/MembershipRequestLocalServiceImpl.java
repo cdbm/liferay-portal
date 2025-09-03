@@ -6,7 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.mail.kernel.model.MailMessage;
-import com.liferay.mail.kernel.service.MailService;
+import com.liferay.mail.kernel.service.MailServiceUtil;
 import com.liferay.mail.kernel.template.MailTemplate;
 import com.liferay.mail.kernel.template.MailTemplateContext;
 import com.liferay.mail.kernel.template.MailTemplateContextBuilder;
@@ -42,13 +42,14 @@ import com.liferay.portal.kernel.util.EscapableLocalizableFunction;
 import com.liferay.portal.kernel.util.EscapableObject;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.service.base.MembershipRequestLocalServiceBaseImpl;
 import com.liferay.portal.util.ResourcePermissionUtil;
+
+import jakarta.mail.internet.InternetAddress;
 
 import java.io.IOException;
 
@@ -57,8 +58,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.mail.internet.InternetAddress;
 
 /**
  * @author Jorge Ferrer
@@ -144,11 +143,7 @@ public class MembershipRequestLocalServiceImpl
 		List<MembershipRequest> membershipRequests = getMembershipRequests(
 			userId, groupId, statusId);
 
-		if (membershipRequests.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !membershipRequests.isEmpty();
 	}
 
 	@Override
@@ -440,9 +435,6 @@ public class MembershipRequestLocalServiceImpl
 		}
 	}
 
-	@BeanReference(type = MailService.class)
-	protected MailService mailService;
-
 	private void _sendNotificationEmail(
 			String fromAddress, String fromName, String toAddress, User toUser,
 			String subject, String body, MembershipRequest membershipRequest,
@@ -469,11 +461,11 @@ public class MembershipRequestLocalServiceImpl
 				toUser.getCompanyId());
 
 			mailMessage.setMessageId(
-				PortalUtil.getMailId(
+				MailServiceUtil.getMailId(
 					company.getMx(), "membership_request",
 					membershipRequest.getMembershipRequestId()));
 
-			mailService.sendEmail(mailMessage);
+			MailServiceUtil.sendEmail(mailMessage);
 		}
 		catch (IOException ioException) {
 			throw new SystemException(ioException);

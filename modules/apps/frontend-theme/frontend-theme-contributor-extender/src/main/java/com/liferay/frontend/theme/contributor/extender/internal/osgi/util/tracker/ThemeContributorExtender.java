@@ -14,6 +14,8 @@ import com.liferay.portal.kernel.servlet.PortalWebResources;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 
+import jakarta.servlet.ServletContext;
+
 import java.net.URL;
 
 import java.util.AbstractMap;
@@ -23,8 +25,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -97,7 +97,7 @@ public class ThemeContributorExtender
 	@Override
 	public void modifiedService(
 		ServiceReference<ServletContext> serviceReference,
-		Collection<ServiceRegistration<?>> service) {
+		Collection<ServiceRegistration<?>> serviceRegistrations) {
 	}
 
 	@Override

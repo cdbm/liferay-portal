@@ -6,11 +6,15 @@
 package com.liferay.object.tree;
 
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.List;
 
 /**
  * @author Pedro Leite
@@ -35,7 +39,23 @@ public class ObjectDefinitionTreeFactory extends BaseTreeFactory {
 		_objectDefinitionPersistence = objectDefinitionPersistence;
 	}
 
-	public Tree create(boolean excludeDifferentStatus, long objectDefinitionId)
+	public Tree create(
+			boolean excludeDifferentRootObjectDefinitionIds,
+			boolean excludeDifferentStatus, long objectDefinitionId)
+		throws PortalException {
+
+		return create(
+			excludeDifferentRootObjectDefinitionIds, excludeDifferentStatus,
+			objectDefinitionId,
+			pk -> objectRelationshipLocalService.getObjectRelationships(
+				pk, true));
+	}
+
+	public Tree create(
+			boolean excludeDifferentRootObjectDefinitionIds,
+			boolean excludeDifferentStatus, long objectDefinitionId,
+			UnsafeFunction<Long, List<ObjectRelationship>, PortalException>
+				unsafeFunction)
 		throws PortalException {
 
 		ObjectDefinition rootObjectDefinition = _getObjectDefinition(
@@ -44,17 +64,17 @@ public class ObjectDefinitionTreeFactory extends BaseTreeFactory {
 		return apply(
 			objectDefinitionId,
 			node -> TransformUtil.transform(
-				objectRelationshipLocalService.getObjectRelationships(
-					node.getPrimaryKey(), true),
+				unsafeFunction.apply(node.getPrimaryKey()),
 				objectRelationship -> {
 					ObjectDefinition objectDefinition2 = _getObjectDefinition(
 						objectRelationship.getObjectDefinitionId2());
 
-					if ((excludeDifferentStatus &&
+					if ((excludeDifferentRootObjectDefinitionIds &&
+						 !objectDefinition2.isRootDescendantNode(
+							 rootObjectDefinition.getObjectDefinitionId())) ||
+						(excludeDifferentStatus &&
 						 (rootObjectDefinition.getStatus() !=
-							 objectDefinition2.getStatus())) ||
-						(rootObjectDefinition.getObjectDefinitionId() !=
-							objectDefinition2.getRootObjectDefinitionId())) {
+							 objectDefinition2.getStatus()))) {
 
 						return null;
 					}
@@ -66,7 +86,7 @@ public class ObjectDefinitionTreeFactory extends BaseTreeFactory {
 	}
 
 	public Tree create(long objectDefinitionId) throws PortalException {
-		return create(true, objectDefinitionId);
+		return create(true, true, objectDefinitionId);
 	}
 
 	private ObjectDefinition _getObjectDefinition(long objectDefinitionId)

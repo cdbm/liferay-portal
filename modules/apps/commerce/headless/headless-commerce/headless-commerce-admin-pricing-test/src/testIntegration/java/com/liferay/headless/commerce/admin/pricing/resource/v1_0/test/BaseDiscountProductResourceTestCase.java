@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v1_0.DiscountProduct;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -42,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +104,16 @@ public abstract class BaseDiscountProductResourceTestCase {
 			testCompany.getCompanyId());
 
 		discountProductResource = DiscountProductResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -251,6 +264,43 @@ public abstract class BaseDiscountProductResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDiscountProductBatch() throws Exception {
+		DiscountProduct discountProduct1 =
+			testDeleteDiscountProductBatch_addDiscountProduct();
+
+		testDeleteDiscountProductBatch_deleteDiscountProduct(
+			202, null, discountProduct1.getId());
+	}
+
+	protected DiscountProduct
+			testDeleteDiscountProductBatch_addDiscountProduct()
+		throws Exception {
+
+		return testDeleteDiscountProduct_addDiscountProduct();
+	}
+
+	protected void testDeleteDiscountProductBatch_deleteDiscountProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			discountProductResource.deleteDiscountProductBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetDiscountByExternalReferenceCodeDiscountProductsPage()
 		throws Exception {
 
@@ -335,13 +385,13 @@ public abstract class BaseDiscountProductResourceTestCase {
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountProductsPage_getExternalReferenceCode();
 
-		Page<DiscountProduct> discountProductPage =
+		Page<DiscountProduct> discountProductsPage =
 			discountProductResource.
 				getDiscountByExternalReferenceCodeDiscountProductsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountProductPage.getTotalCount());
+			discountProductsPage.getTotalCount());
 
 		DiscountProduct discountProduct1 =
 			testGetDiscountByExternalReferenceCodeDiscountProductsPage_addDiscountProduct(
@@ -463,29 +513,6 @@ public abstract class BaseDiscountProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostDiscountByExternalReferenceCodeDiscountProduct()
-		throws Exception {
-
-		DiscountProduct randomDiscountProduct = randomDiscountProduct();
-
-		DiscountProduct postDiscountProduct =
-			testPostDiscountByExternalReferenceCodeDiscountProduct_addDiscountProduct(
-				randomDiscountProduct);
-
-		assertEquals(randomDiscountProduct, postDiscountProduct);
-		assertValid(postDiscountProduct);
-	}
-
-	protected DiscountProduct
-			testPostDiscountByExternalReferenceCodeDiscountProduct_addDiscountProduct(
-				DiscountProduct discountProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetDiscountIdDiscountProductsPage() throws Exception {
 		Long id = testGetDiscountIdDiscountProductsPage_getId();
 		Long irrelevantId =
@@ -556,11 +583,11 @@ public abstract class BaseDiscountProductResourceTestCase {
 
 		Long id = testGetDiscountIdDiscountProductsPage_getId();
 
-		Page<DiscountProduct> discountProductPage =
+		Page<DiscountProduct> discountProductsPage =
 			discountProductResource.getDiscountIdDiscountProductsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountProductPage.getTotalCount());
+			discountProductsPage.getTotalCount());
 
 		DiscountProduct discountProduct1 =
 			testGetDiscountIdDiscountProductsPage_addDiscountProduct(
@@ -671,6 +698,29 @@ public abstract class BaseDiscountProductResourceTestCase {
 	}
 
 	@Test
+	public void testPostDiscountByExternalReferenceCodeDiscountProduct()
+		throws Exception {
+
+		DiscountProduct randomDiscountProduct = randomDiscountProduct();
+
+		DiscountProduct postDiscountProduct =
+			testPostDiscountByExternalReferenceCodeDiscountProduct_addDiscountProduct(
+				randomDiscountProduct);
+
+		assertEquals(randomDiscountProduct, postDiscountProduct);
+		assertValid(postDiscountProduct);
+	}
+
+	protected DiscountProduct
+			testPostDiscountByExternalReferenceCodeDiscountProduct_addDiscountProduct(
+				DiscountProduct discountProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostDiscountIdDiscountProduct() throws Exception {
 		DiscountProduct randomDiscountProduct = randomDiscountProduct();
 
@@ -689,6 +739,57 @@ public abstract class BaseDiscountProductResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DiscountProduct discountProduct1 =
+			testBatchEngineDeleteImportTask_addDiscountProduct();
+
+		testBatchEngineDeleteImportTask_deleteDiscountProduct(
+			200, null, discountProduct1.getId());
+	}
+
+	protected DiscountProduct
+			testBatchEngineDeleteImportTask_addDiscountProduct()
+		throws Exception {
+
+		return testDeleteDiscountProduct_addDiscountProduct();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDiscountProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountProduct",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DiscountProduct testGraphQLDiscountProduct_addDiscountProduct()
@@ -1286,7 +1387,30 @@ public abstract class BaseDiscountProductResourceTestCase {
 		return randomDiscountProduct();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DiscountProductResource discountProductResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

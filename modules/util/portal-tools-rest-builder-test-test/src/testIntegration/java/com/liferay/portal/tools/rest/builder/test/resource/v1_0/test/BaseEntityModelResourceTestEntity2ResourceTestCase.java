@@ -40,6 +40,10 @@ import com.liferay.portal.tools.rest.builder.test.client.serdes.v1_0.EntityModel
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -213,6 +213,115 @@ public abstract class BaseEntityModelResourceTestEntity2ResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetEntityModelResourceTestEntities2EntityModelResourceTestEntity2()
+		throws Exception {
+
+		EntityModelResourceTestEntity2 entityModelResourceTestEntity2 =
+			testGraphQLGetEntityModelResourceTestEntities2EntityModelResourceTestEntity2_addEntityModelResourceTestEntity2();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				entityModelResourceTestEntity2,
+				EntityModelResourceTestEntity2SerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"entityModelResourceTestEntities2EntityModelResourceTestEntity2",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"entityModelResourceTestEntity2Id",
+											entityModelResourceTestEntity2.
+												getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/entityModelResourceTestEntities2EntityModelResourceTestEntity2"))));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertTrue(
+			equals(
+				entityModelResourceTestEntity2,
+				EntityModelResourceTestEntity2SerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"test_v1_0",
+								new GraphQLField(
+									"entityModelResourceTestEntities2EntityModelResourceTestEntity2",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"entityModelResourceTestEntity2Id",
+												entityModelResourceTestEntity2.
+													getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/test_v1_0",
+						"Object/entityModelResourceTestEntities2EntityModelResourceTestEntity2"))));
+	}
+
+	@Test
+	public void testGraphQLGetEntityModelResourceTestEntities2EntityModelResourceTestEntity2NotFound()
+		throws Exception {
+
+		Long irrelevantEntityModelResourceTestEntity2Id =
+			RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"entityModelResourceTestEntities2EntityModelResourceTestEntity2",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"entityModelResourceTestEntity2Id",
+									irrelevantEntityModelResourceTestEntity2Id);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"entityModelResourceTestEntities2EntityModelResourceTestEntity2",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"entityModelResourceTestEntity2Id",
+										irrelevantEntityModelResourceTestEntity2Id);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected EntityModelResourceTestEntity2
+			testGraphQLGetEntityModelResourceTestEntities2EntityModelResourceTestEntity2_addEntityModelResourceTestEntity2()
+		throws Exception {
+
+		return testGraphQLEntityModelResourceTestEntity2_addEntityModelResourceTestEntity2();
 	}
 
 	protected EntityModelResourceTestEntity2

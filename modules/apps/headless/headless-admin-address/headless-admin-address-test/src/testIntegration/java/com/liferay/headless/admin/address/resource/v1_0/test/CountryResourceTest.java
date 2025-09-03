@@ -25,11 +25,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.rule.Inject;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -369,13 +369,6 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 
 	@Override
 	protected Country testGraphQLDeleteCountry_addCountry() throws Exception {
-		return _addCountry(randomCountry());
-	}
-
-	@Override
-	protected Country testGraphQLGetCountriesPage_addCountry()
-		throws Exception {
-
 		return _addCountry(randomCountry());
 	}
 

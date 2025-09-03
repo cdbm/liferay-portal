@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -27,12 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -278,7 +278,9 @@ public class Organization implements Serializable {
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -288,7 +290,9 @@ public class Organization implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -296,7 +300,9 @@ public class Organization implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -313,10 +319,11 @@ public class Organization implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The organization's creation date."
@@ -535,6 +542,47 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _imageSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getImageBase64() {
+		if (_imageBase64Supplier != null) {
+			imageBase64 = _imageBase64Supplier.get();
+
+			_imageBase64Supplier = null;
+		}
+
+		return imageBase64;
+	}
+
+	public void setImageBase64(String imageBase64) {
+		this.imageBase64 = imageBase64;
+
+		_imageBase64Supplier = null;
+	}
+
+	@JsonIgnore
+	public void setImageBase64(
+		UnsafeSupplier<String, Exception> imageBase64UnsafeSupplier) {
+
+		_imageBase64Supplier = () -> {
+			try {
+				return imageBase64UnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String imageBase64;
+
+	@JsonIgnore
+	private Supplier<String> _imageBase64Supplier;
+
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The organization's image external reference code."
 	)
@@ -666,7 +714,7 @@ public class Organization implements Serializable {
 	@GraphQLField(
 		description = "A list of keywords describing the organization."
 	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String[] keywords;
 
 	@JsonIgnore
@@ -1468,7 +1516,8 @@ public class Organization implements Serializable {
 			sb.append(String.valueOf(creator));
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -1480,7 +1529,7 @@ public class Organization implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1566,6 +1615,22 @@ public class Organization implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(image));
+
+			sb.append("\"");
+		}
+
+		String imageBase64 = getImageBase64();
+
+		if (imageBase64 != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageBase64\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(imageBase64));
 
 			sb.append("\"");
 		}

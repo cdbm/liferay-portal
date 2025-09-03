@@ -138,11 +138,15 @@ public class ObjectEntryFolderPersistenceTest {
 		newObjectEntryFolder.setParentObjectEntryFolderId(
 			RandomTestUtil.nextLong());
 
+		newObjectEntryFolder.setDescription(RandomTestUtil.randomString());
+
 		newObjectEntryFolder.setLabel(RandomTestUtil.randomString());
 
 		newObjectEntryFolder.setName(RandomTestUtil.randomString());
 
 		newObjectEntryFolder.setTreePath(RandomTestUtil.randomString());
+
+		newObjectEntryFolder.setStatus(RandomTestUtil.nextInt());
 
 		_objectEntryFolders.add(_persistence.update(newObjectEntryFolder));
 
@@ -183,6 +187,9 @@ public class ObjectEntryFolderPersistenceTest {
 			existingObjectEntryFolder.getParentObjectEntryFolderId(),
 			newObjectEntryFolder.getParentObjectEntryFolderId());
 		Assert.assertEquals(
+			existingObjectEntryFolder.getDescription(),
+			newObjectEntryFolder.getDescription());
+		Assert.assertEquals(
 			existingObjectEntryFolder.getLabel(),
 			newObjectEntryFolder.getLabel());
 		Assert.assertEquals(
@@ -191,6 +198,9 @@ public class ObjectEntryFolderPersistenceTest {
 		Assert.assertEquals(
 			existingObjectEntryFolder.getTreePath(),
 			newObjectEntryFolder.getTreePath());
+		Assert.assertEquals(
+			existingObjectEntryFolder.getStatus(),
+			newObjectEntryFolder.getStatus());
 	}
 
 	@Test
@@ -289,8 +299,8 @@ public class ObjectEntryFolderPersistenceTest {
 			"externalReferenceCode", true, "objectEntryFolderId", true,
 			"groupId", true, "companyId", true, "userId", true, "userName",
 			true, "createDate", true, "modifiedDate", true,
-			"parentObjectEntryFolderId", true, "label", true, "name", true,
-			"treePath", true);
+			"parentObjectEntryFolderId", true, "description", true, "label",
+			true, "name", true, "treePath", true, "status", true);
 	}
 
 	@Test
@@ -642,11 +652,15 @@ public class ObjectEntryFolderPersistenceTest {
 		objectEntryFolder.setParentObjectEntryFolderId(
 			RandomTestUtil.nextLong());
 
+		objectEntryFolder.setDescription(RandomTestUtil.randomString());
+
 		objectEntryFolder.setLabel(RandomTestUtil.randomString());
 
 		objectEntryFolder.setName(RandomTestUtil.randomString());
 
 		objectEntryFolder.setTreePath(RandomTestUtil.randomString());
+
+		objectEntryFolder.setStatus(RandomTestUtil.nextInt());
 
 		_objectEntryFolders.add(_persistence.update(objectEntryFolder));
 

@@ -15,18 +15,19 @@ import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rubén Pulido
  */
-@FeatureFlags("LPD-35443")
+@FeatureFlag("LPD-35443")
 @RunWith(Arquillian.class)
 public class WidgetPageWidgetInstanceResourceTest
 	extends BaseWidgetPageWidgetInstanceResourceTestCase {
@@ -123,6 +124,26 @@ public class WidgetPageWidgetInstanceResourceTest
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
 			Assert.assertNull(problem.getTitle());
 		}
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeWidgetInstanceWidgetInstanceExternalReferenceCode()
+		throws Exception {
+
+		super.
+			testGraphQLGetSiteSiteByExternalReferenceCodeWidgetInstanceWidgetInstanceExternalReferenceCode();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeWidgetInstanceWidgetInstanceExternalReferenceCodeNotFound()
+		throws Exception {
+
+		super.
+			testGraphQLGetSiteSiteByExternalReferenceCodeWidgetInstanceWidgetInstanceExternalReferenceCodeNotFound();
 	}
 
 	@Override
@@ -232,22 +253,6 @@ public class WidgetPageWidgetInstanceResourceTest
 			postSiteSiteByExternalReferenceCodeSitePageWidgetInstance(
 				siteExternalReferenceCode, sitePageExternalReferenceCode,
 				widgetPageWidgetInstance);
-	}
-
-	@Override
-	protected String
-			testGetSiteSiteByExternalReferenceCodeSitePageWidgetInstancesPage_getIrrelevantSiteExternalReferenceCode()
-		throws Exception {
-
-		return irrelevantGroup.getExternalReferenceCode();
-	}
-
-	@Override
-	protected String
-			testGetSiteSiteByExternalReferenceCodeSitePageWidgetInstancesPage_getSiteExternalReferenceCode()
-		throws Exception {
-
-		return testGroup.getExternalReferenceCode();
 	}
 
 	@Override

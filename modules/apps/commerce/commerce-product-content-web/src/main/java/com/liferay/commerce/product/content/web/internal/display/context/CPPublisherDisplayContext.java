@@ -23,6 +23,7 @@ import com.liferay.commerce.product.content.web.internal.util.CPMediaUtil;
 import com.liferay.commerce.product.data.source.CPDataSource;
 import com.liferay.commerce.product.data.source.CPDataSourceRegistry;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalService;
@@ -30,7 +31,6 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
 import com.liferay.commerce.product.url.CPFriendlyURL;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
@@ -60,6 +60,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.filter.PortletURLWrapper;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -67,11 +72,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
-import javax.portlet.filter.PortletURLWrapper;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo

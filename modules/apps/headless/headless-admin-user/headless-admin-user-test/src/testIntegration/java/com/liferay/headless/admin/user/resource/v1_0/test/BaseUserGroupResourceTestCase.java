@@ -19,6 +19,9 @@ import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.resource.v1_0.UserGroupResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.UserGroupSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseUserGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		userGroupResource = UserGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -212,797 +225,6 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testGetUserUserGroups() throws Exception {
-		Long userAccountId = testGetUserUserGroups_getUserAccountId();
-		Long irrelevantUserAccountId =
-			testGetUserUserGroups_getIrrelevantUserAccountId();
-
-		Page<UserGroup> page = userGroupResource.getUserUserGroups(
-			userAccountId);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantUserAccountId != null) {
-			UserGroup irrelevantUserGroup = testGetUserUserGroups_addUserGroup(
-				irrelevantUserAccountId, randomIrrelevantUserGroup());
-
-			page = userGroupResource.getUserUserGroups(irrelevantUserAccountId);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantUserGroup, (List<UserGroup>)page.getItems());
-			assertValid(
-				page,
-				testGetUserUserGroups_getExpectedActions(
-					irrelevantUserAccountId));
-		}
-
-		UserGroup userGroup1 = testGetUserUserGroups_addUserGroup(
-			userAccountId, randomUserGroup());
-
-		UserGroup userGroup2 = testGetUserUserGroups_addUserGroup(
-			userAccountId, randomUserGroup());
-
-		page = userGroupResource.getUserUserGroups(userAccountId);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(userGroup1, (List<UserGroup>)page.getItems());
-		assertContains(userGroup2, (List<UserGroup>)page.getItems());
-		assertValid(
-			page, testGetUserUserGroups_getExpectedActions(userAccountId));
-
-		userGroupResource.deleteUserGroup(userGroup1.getId());
-
-		userGroupResource.deleteUserGroup(userGroup2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetUserUserGroups_getExpectedActions(Long userAccountId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	protected UserGroup testGetUserUserGroups_addUserGroup(
-			Long userAccountId, UserGroup userGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetUserUserGroups_getUserAccountId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetUserUserGroups_getIrrelevantUserAccountId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testGetUserGroupsPage() throws Exception {
-		Page<UserGroup> page = userGroupResource.getUserGroupsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		page = userGroupResource.getUserGroupsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(userGroup1, (List<UserGroup>)page.getItems());
-		assertContains(userGroup2, (List<UserGroup>)page.getItems());
-		assertValid(page, testGetUserGroupsPage_getExpectedActions());
-
-		userGroupResource.deleteUserGroup(userGroup1.getId());
-
-		userGroupResource.deleteUserGroup(userGroup2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetUserGroupsPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		UserGroup userGroup1 = randomUserGroup();
-
-		userGroup1 = testGetUserGroupsPage_addUserGroup(userGroup1);
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page = userGroupResource.getUserGroupsPage(
-				null, getFilterString(entityField, "between", userGroup1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithFilterDoubleEquals() throws Exception {
-		testGetUserGroupsPageWithFilter("eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetUserGroupsPageWithFilter("contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithFilterStringEquals() throws Exception {
-		testGetUserGroupsPageWithFilter("eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetUserGroupsPageWithFilter("startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetUserGroupsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page = userGroupResource.getUserGroupsPage(
-				null, getFilterString(entityField, operator, userGroup1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithPagination() throws Exception {
-		Page<UserGroup> userGroupPage = userGroupResource.getUserGroupsPage(
-			null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(userGroupPage.getTotalCount());
-
-		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		UserGroup userGroup3 = testGetUserGroupsPage_addUserGroup(
-			randomUserGroup());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<UserGroup> page1 = userGroupResource.getUserGroupsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(userGroup1, (List<UserGroup>)page1.getItems());
-
-			Page<UserGroup> page2 = userGroupResource.getUserGroupsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(userGroup2, (List<UserGroup>)page2.getItems());
-
-			Page<UserGroup> page3 = userGroupResource.getUserGroupsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(userGroup3, (List<UserGroup>)page3.getItems());
-		}
-		else {
-			Page<UserGroup> page1 = userGroupResource.getUserGroupsPage(
-				null, null, Pagination.of(1, totalCount + 2), null);
-
-			List<UserGroup> userGroups1 = (List<UserGroup>)page1.getItems();
-
-			Assert.assertEquals(
-				userGroups1.toString(), totalCount + 2, userGroups1.size());
-
-			Page<UserGroup> page2 = userGroupResource.getUserGroupsPage(
-				null, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<UserGroup> userGroups2 = (List<UserGroup>)page2.getItems();
-
-			Assert.assertEquals(userGroups2.toString(), 1, userGroups2.size());
-
-			Page<UserGroup> page3 = userGroupResource.getUserGroupsPage(
-				null, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(userGroup1, (List<UserGroup>)page3.getItems());
-			assertContains(userGroup2, (List<UserGroup>)page3.getItems());
-			assertContains(userGroup3, (List<UserGroup>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithSortDateTime() throws Exception {
-		testGetUserGroupsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, userGroup1, userGroup2) -> {
-				BeanTestUtil.setProperty(
-					userGroup1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithSortDouble() throws Exception {
-		testGetUserGroupsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, userGroup1, userGroup2) -> {
-				BeanTestUtil.setProperty(
-					userGroup1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					userGroup2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithSortInteger() throws Exception {
-		testGetUserGroupsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, userGroup1, userGroup2) -> {
-				BeanTestUtil.setProperty(userGroup1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(userGroup2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetUserGroupsPageWithSortString() throws Exception {
-		testGetUserGroupsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, userGroup1, userGroup2) -> {
-				Class<?> clazz = userGroup1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						userGroup1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						userGroup2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						userGroup1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						userGroup2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						userGroup1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						userGroup2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetUserGroupsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, UserGroup, UserGroup, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		UserGroup userGroup1 = randomUserGroup();
-		UserGroup userGroup2 = randomUserGroup();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, userGroup1, userGroup2);
-		}
-
-		userGroup1 = testGetUserGroupsPage_addUserGroup(userGroup1);
-
-		userGroup2 = testGetUserGroupsPage_addUserGroup(userGroup2);
-
-		Page<UserGroup> page = userGroupResource.getUserGroupsPage(
-			null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> ascPage = userGroupResource.getUserGroupsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(userGroup1, (List<UserGroup>)ascPage.getItems());
-			assertContains(userGroup2, (List<UserGroup>)ascPage.getItems());
-
-			Page<UserGroup> descPage = userGroupResource.getUserGroupsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":desc");
-
-			assertContains(userGroup2, (List<UserGroup>)descPage.getItems());
-			assertContains(userGroup1, (List<UserGroup>)descPage.getItems());
-		}
-	}
-
-	protected UserGroup testGetUserGroupsPage_addUserGroup(UserGroup userGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupsPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"userGroups",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/userGroups");
-
-		long totalCount = userGroupsJSONObject.getLong("totalCount");
-
-		UserGroup userGroup1 = testGraphQLGetUserGroupsPage_addUserGroup();
-		UserGroup userGroup2 = testGraphQLGetUserGroupsPage_addUserGroup();
-
-		userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/userGroups");
-
-		Assert.assertEquals(
-			totalCount + 2, userGroupsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			userGroup1,
-			Arrays.asList(
-				UserGroupSerDes.toDTOs(
-					userGroupsJSONObject.getString("items"))));
-		assertContains(
-			userGroup2,
-			Arrays.asList(
-				UserGroupSerDes.toDTOs(
-					userGroupsJSONObject.getString("items"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-			"JSONObject/userGroups");
-
-		Assert.assertEquals(
-			totalCount + 2, userGroupsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			userGroup1,
-			Arrays.asList(
-				UserGroupSerDes.toDTOs(
-					userGroupsJSONObject.getString("items"))));
-		assertContains(
-			userGroup2,
-			Arrays.asList(
-				UserGroupSerDes.toDTOs(
-					userGroupsJSONObject.getString("items"))));
-	}
-
-	protected UserGroup testGraphQLGetUserGroupsPage_addUserGroup()
-		throws Exception {
-
-		return testGraphQLUserGroup_addUserGroup();
-	}
-
-	@Test
-	public void testPostUserGroup() throws Exception {
-		UserGroup randomUserGroup = randomUserGroup();
-
-		UserGroup postUserGroup = testPostUserGroup_addUserGroup(
-			randomUserGroup);
-
-		assertEquals(randomUserGroup, postUserGroup);
-		assertValid(postUserGroup);
-	}
-
-	protected UserGroup testPostUserGroup_addUserGroup(UserGroup userGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteUserGroupByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup =
-			testDeleteUserGroupByExternalReferenceCode_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.
-				deleteUserGroupByExternalReferenceCodeHttpResponse(
-					userGroup.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
-				userGroup.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
-				userGroup.getExternalReferenceCode()));
-	}
-
-	protected UserGroup
-			testDeleteUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetUserGroupByExternalReferenceCode() throws Exception {
-		UserGroup postUserGroup =
-			testGetUserGroupByExternalReferenceCode_addUserGroup();
-
-		UserGroup getUserGroup =
-			userGroupResource.getUserGroupByExternalReferenceCode(
-				postUserGroup.getExternalReferenceCode());
-
-		assertEquals(postUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-	}
-
-	protected UserGroup testGetUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupByExternalReferenceCode()
-		throws Exception {
-
-		UserGroup userGroup =
-			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"userGroupByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												userGroup.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/userGroupByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"userGroupByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													userGroup.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/userGroupByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"userGroupByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"userGroupByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected UserGroup
-			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		return testGraphQLUserGroup_addUserGroup();
-	}
-
-	@Test
-	public void testPatchUserGroupByExternalReferenceCode() throws Exception {
-		UserGroup postUserGroup =
-			testPatchUserGroupByExternalReferenceCode_addUserGroup();
-
-		UserGroup randomPatchUserGroup = randomPatchUserGroup();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup patchUserGroup =
-			userGroupResource.patchUserGroupByExternalReferenceCode(
-				postUserGroup.getExternalReferenceCode(), randomPatchUserGroup);
-
-		UserGroup expectedPatchUserGroup = postUserGroup.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchUserGroup, expectedPatchUserGroup);
-
-		UserGroup getUserGroup =
-			userGroupResource.getUserGroupByExternalReferenceCode(
-				patchUserGroup.getExternalReferenceCode());
-
-		assertEquals(expectedPatchUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-	}
-
-	protected UserGroup testPatchUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutUserGroupByExternalReferenceCode() throws Exception {
-		UserGroup postUserGroup =
-			testPutUserGroupByExternalReferenceCode_addUserGroup();
-
-		UserGroup randomUserGroup = randomUserGroup();
-
-		UserGroup putUserGroup =
-			userGroupResource.putUserGroupByExternalReferenceCode(
-				postUserGroup.getExternalReferenceCode(), randomUserGroup);
-
-		assertEquals(randomUserGroup, putUserGroup);
-		assertValid(putUserGroup);
-
-		UserGroup getUserGroup =
-			userGroupResource.getUserGroupByExternalReferenceCode(
-				putUserGroup.getExternalReferenceCode());
-
-		assertEquals(randomUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-
-		UserGroup newUserGroup =
-			testPutUserGroupByExternalReferenceCode_createUserGroup();
-
-		putUserGroup = userGroupResource.putUserGroupByExternalReferenceCode(
-			newUserGroup.getExternalReferenceCode(), newUserGroup);
-
-		assertEquals(newUserGroup, putUserGroup);
-		assertValid(putUserGroup);
-
-		getUserGroup = userGroupResource.getUserGroupByExternalReferenceCode(
-			putUserGroup.getExternalReferenceCode());
-
-		assertEquals(newUserGroup, getUserGroup);
-
-		Assert.assertEquals(
-			newUserGroup.getExternalReferenceCode(),
-			putUserGroup.getExternalReferenceCode());
-	}
-
-	protected UserGroup
-			testPutUserGroupByExternalReferenceCode_createUserGroup()
-		throws Exception {
-
-		return randomUserGroup();
-	}
-
-	protected UserGroup testPutUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteUserGroupByExternalReferenceCodeUsers()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup =
-			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.
-				deleteUserGroupByExternalReferenceCodeUsersHttpResponse(
-					userGroup.getExternalReferenceCode(), null));
-	}
-
-	protected UserGroup
-			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostUserGroupByExternalReferenceCodeUsers()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup =
-			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.
-				postUserGroupByExternalReferenceCodeUsersHttpResponse(
-					userGroup.getExternalReferenceCode(), null));
-
-		assertHttpResponseStatusCode(
-			404,
-			userGroupResource.
-				postUserGroupByExternalReferenceCodeUsersHttpResponse(
-					userGroup.getExternalReferenceCode(), null));
-	}
-
-	protected UserGroup
-			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteUserGroup() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		UserGroup userGroup = testDeleteUserGroup_addUserGroup();
@@ -1013,7 +235,6 @@ public abstract class BaseUserGroupResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, userGroupResource.getUserGroupHttpResponse(userGroup.getId()));
-
 		assertHttpResponseStatusCode(
 			404, userGroupResource.getUserGroupHttpResponse(0L));
 	}
@@ -1096,6 +317,144 @@ public abstract class BaseUserGroupResourceTestCase {
 		throws Exception {
 
 		return testGraphQLUserGroup_addUserGroup();
+	}
+
+	@Test
+	public void testDeleteUserGroupBatch() throws Exception {
+		UserGroup userGroup1 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			202, userGroup1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+
+		userGroup1 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(202, null, userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+
+		userGroup1 = testDeleteUserGroupBatch_addUserGroup();
+		UserGroup userGroup2 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			202, userGroup2.getExternalReferenceCode(), userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			202, userGroup2.getExternalReferenceCode(), userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+	}
+
+	protected UserGroup testDeleteUserGroupBatch_addUserGroup()
+		throws Exception {
+
+		return testDeleteUserGroup_addUserGroup();
+	}
+
+	protected void testDeleteUserGroupBatch_deleteUserGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			userGroupResource.deleteUserGroupBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteUserGroupByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testDeleteUserGroupByExternalReferenceCode_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				deleteUserGroupByExternalReferenceCodeHttpResponse(
+					userGroup.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
+				userGroup.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected UserGroup
+			testDeleteUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteUserGroupByExternalReferenceCodeUsers()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				deleteUserGroupByExternalReferenceCodeUsersHttpResponse(
+					userGroup.getExternalReferenceCode(), null));
+	}
+
+	protected UserGroup
+			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteUserGroupUsers() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup = testDeleteUserGroupUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.deleteUserGroupUsersHttpResponse(
+				userGroup.getId(), null));
+	}
+
+	protected UserGroup testDeleteUserGroupUsers_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1396,6 +755,610 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
+	public void testGetUserGroupByExternalReferenceCode() throws Exception {
+		UserGroup postUserGroup =
+			testGetUserGroupByExternalReferenceCode_addUserGroup();
+
+		UserGroup getUserGroup =
+			userGroupResource.getUserGroupByExternalReferenceCode(
+				postUserGroup.getExternalReferenceCode());
+
+		assertEquals(postUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testGetUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupByExternalReferenceCode()
+		throws Exception {
+
+		UserGroup userGroup =
+			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"userGroupByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												userGroup.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/userGroupByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"userGroupByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													userGroup.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/userGroupByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"userGroupByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"userGroupByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UserGroup
+			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		return testGraphQLUserGroup_addUserGroup();
+	}
+
+	@Test
+	public void testGetUserGroupsPage() throws Exception {
+		Page<UserGroup> page = userGroupResource.getUserGroupsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		page = userGroupResource.getUserGroupsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(userGroup1, (List<UserGroup>)page.getItems());
+		assertContains(userGroup2, (List<UserGroup>)page.getItems());
+		assertValid(page, testGetUserGroupsPage_getExpectedActions());
+
+		userGroupResource.deleteUserGroup(userGroup1.getId());
+
+		userGroupResource.deleteUserGroup(userGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserGroupsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		UserGroup userGroup1 = randomUserGroup();
+
+		userGroup1 = testGetUserGroupsPage_addUserGroup(userGroup1);
+
+		for (EntityField entityField : entityFields) {
+			Page<UserGroup> page = userGroupResource.getUserGroupsPage(
+				null, getFilterString(entityField, "between", userGroup1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(userGroup1),
+				(List<UserGroup>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithFilterDoubleEquals() throws Exception {
+		testGetUserGroupsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetUserGroupsPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithFilterStringEquals() throws Exception {
+		testGetUserGroupsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetUserGroupsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetUserGroupsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		for (EntityField entityField : entityFields) {
+			Page<UserGroup> page = userGroupResource.getUserGroupsPage(
+				null, getFilterString(entityField, operator, userGroup1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(userGroup1),
+				(List<UserGroup>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithPagination() throws Exception {
+		Page<UserGroup> userGroupsPage = userGroupResource.getUserGroupsPage(
+			null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(userGroupsPage.getTotalCount());
+
+		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		UserGroup userGroup2 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		UserGroup userGroup3 = testGetUserGroupsPage_addUserGroup(
+			randomUserGroup());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<UserGroup> page1 = userGroupResource.getUserGroupsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(userGroup1, (List<UserGroup>)page1.getItems());
+
+			Page<UserGroup> page2 = userGroupResource.getUserGroupsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(userGroup2, (List<UserGroup>)page2.getItems());
+
+			Page<UserGroup> page3 = userGroupResource.getUserGroupsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(userGroup3, (List<UserGroup>)page3.getItems());
+		}
+		else {
+			Page<UserGroup> page1 = userGroupResource.getUserGroupsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<UserGroup> userGroups1 = (List<UserGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				userGroups1.toString(), totalCount + 2, userGroups1.size());
+
+			Page<UserGroup> page2 = userGroupResource.getUserGroupsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<UserGroup> userGroups2 = (List<UserGroup>)page2.getItems();
+
+			Assert.assertEquals(userGroups2.toString(), 1, userGroups2.size());
+
+			Page<UserGroup> page3 = userGroupResource.getUserGroupsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(userGroup1, (List<UserGroup>)page3.getItems());
+			assertContains(userGroup2, (List<UserGroup>)page3.getItems());
+			assertContains(userGroup3, (List<UserGroup>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithSortDateTime() throws Exception {
+		testGetUserGroupsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, userGroup1, userGroup2) -> {
+				BeanTestUtil.setProperty(
+					userGroup1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithSortDouble() throws Exception {
+		testGetUserGroupsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, userGroup1, userGroup2) -> {
+				BeanTestUtil.setProperty(
+					userGroup1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userGroup2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithSortInteger() throws Exception {
+		testGetUserGroupsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, userGroup1, userGroup2) -> {
+				BeanTestUtil.setProperty(userGroup1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(userGroup2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetUserGroupsPageWithSortString() throws Exception {
+		testGetUserGroupsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, userGroup1, userGroup2) -> {
+				Class<?> clazz = userGroup1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						userGroup1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						userGroup2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						userGroup1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						userGroup2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						userGroup1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						userGroup2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetUserGroupsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, UserGroup, UserGroup, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		UserGroup userGroup1 = randomUserGroup();
+		UserGroup userGroup2 = randomUserGroup();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, userGroup1, userGroup2);
+		}
+
+		userGroup1 = testGetUserGroupsPage_addUserGroup(userGroup1);
+
+		userGroup2 = testGetUserGroupsPage_addUserGroup(userGroup2);
+
+		Page<UserGroup> page = userGroupResource.getUserGroupsPage(
+			null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<UserGroup> ascPage = userGroupResource.getUserGroupsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(userGroup1, (List<UserGroup>)ascPage.getItems());
+			assertContains(userGroup2, (List<UserGroup>)ascPage.getItems());
+
+			Page<UserGroup> descPage = userGroupResource.getUserGroupsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(userGroup2, (List<UserGroup>)descPage.getItems());
+			assertContains(userGroup1, (List<UserGroup>)descPage.getItems());
+		}
+	}
+
+	protected UserGroup testGetUserGroupsPage_addUserGroup(UserGroup userGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupsPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"userGroups",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/userGroups");
+
+		long totalCount = userGroupsJSONObject.getLong("totalCount");
+
+		UserGroup userGroup1 = testGraphQLGetUserGroupsPage_addUserGroup();
+		UserGroup userGroup2 = testGraphQLGetUserGroupsPage_addUserGroup();
+
+		userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/userGroups");
+
+		Assert.assertEquals(
+			totalCount + 2, userGroupsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			userGroup1,
+			Arrays.asList(
+				UserGroupSerDes.toDTOs(
+					userGroupsJSONObject.getString("items"))));
+		assertContains(
+			userGroup2,
+			Arrays.asList(
+				UserGroupSerDes.toDTOs(
+					userGroupsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		userGroupsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+			"JSONObject/userGroups");
+
+		Assert.assertEquals(
+			totalCount + 2, userGroupsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			userGroup1,
+			Arrays.asList(
+				UserGroupSerDes.toDTOs(
+					userGroupsJSONObject.getString("items"))));
+		assertContains(
+			userGroup2,
+			Arrays.asList(
+				UserGroupSerDes.toDTOs(
+					userGroupsJSONObject.getString("items"))));
+	}
+
+	protected UserGroup testGraphQLGetUserGroupsPage_addUserGroup()
+		throws Exception {
+
+		return testGraphQLUserGroup_addUserGroup();
+	}
+
+	@Test
+	public void testGetUserUserGroups() throws Exception {
+		Long userAccountId = testGetUserUserGroups_getUserAccountId();
+		Long irrelevantUserAccountId =
+			testGetUserUserGroups_getIrrelevantUserAccountId();
+
+		Page<UserGroup> page = userGroupResource.getUserUserGroups(
+			userAccountId);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantUserAccountId != null) {
+			UserGroup irrelevantUserGroup = testGetUserUserGroups_addUserGroup(
+				irrelevantUserAccountId, randomIrrelevantUserGroup());
+
+			page = userGroupResource.getUserUserGroups(irrelevantUserAccountId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantUserGroup, (List<UserGroup>)page.getItems());
+			assertValid(
+				page,
+				testGetUserUserGroups_getExpectedActions(
+					irrelevantUserAccountId));
+		}
+
+		UserGroup userGroup1 = testGetUserUserGroups_addUserGroup(
+			userAccountId, randomUserGroup());
+
+		UserGroup userGroup2 = testGetUserUserGroups_addUserGroup(
+			userAccountId, randomUserGroup());
+
+		page = userGroupResource.getUserUserGroups(userAccountId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(userGroup1, (List<UserGroup>)page.getItems());
+		assertContains(userGroup2, (List<UserGroup>)page.getItems());
+		assertValid(
+			page, testGetUserUserGroups_getExpectedActions(userAccountId));
+
+		userGroupResource.deleteUserGroup(userGroup1.getId());
+
+		userGroupResource.deleteUserGroup(userGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserUserGroups_getExpectedActions(Long userAccountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected UserGroup testGetUserUserGroups_addUserGroup(
+			Long userAccountId, UserGroup userGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetUserUserGroups_getUserAccountId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetUserUserGroups_getIrrelevantUserAccountId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testPatchUserGroup() throws Exception {
 		UserGroup postUserGroup = testPatchUserGroup_addUserGroup();
 
@@ -1418,6 +1381,104 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	protected UserGroup testPatchUserGroup_addUserGroup() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchUserGroupByExternalReferenceCode() throws Exception {
+		UserGroup postUserGroup =
+			testPatchUserGroupByExternalReferenceCode_addUserGroup();
+
+		UserGroup randomPatchUserGroup = randomPatchUserGroup();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup patchUserGroup =
+			userGroupResource.patchUserGroupByExternalReferenceCode(
+				postUserGroup.getExternalReferenceCode(), randomPatchUserGroup);
+
+		UserGroup expectedPatchUserGroup = postUserGroup.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchUserGroup, expectedPatchUserGroup);
+
+		UserGroup getUserGroup =
+			userGroupResource.getUserGroupByExternalReferenceCode(
+				patchUserGroup.getExternalReferenceCode());
+
+		assertEquals(expectedPatchUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testPatchUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroup() throws Exception {
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup postUserGroup = testPostUserGroup_addUserGroup(
+			randomUserGroup);
+
+		assertEquals(randomUserGroup, postUserGroup);
+		assertValid(postUserGroup);
+	}
+
+	protected UserGroup testPostUserGroup_addUserGroup(UserGroup userGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroupByExternalReferenceCodeUsers()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				postUserGroupByExternalReferenceCodeUsersHttpResponse(
+					userGroup.getExternalReferenceCode(), null));
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.
+				postUserGroupByExternalReferenceCodeUsersHttpResponse(
+					"-", null));
+	}
+
+	protected UserGroup
+			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroupUsers() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup = testPostUserGroupUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.postUserGroupUsersHttpResponse(
+				userGroup.getId(), null));
+
+		assertHttpResponseStatusCode(
+			404, userGroupResource.postUserGroupUsersHttpResponse(0L, null));
+	}
+
+	protected UserGroup testPostUserGroupUsers_addUserGroup() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -1447,40 +1508,139 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteUserGroupUsers() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testDeleteUserGroupUsers_addUserGroup();
+	public void testPutUserGroupByExternalReferenceCode() throws Exception {
+		UserGroup postUserGroup =
+			testPutUserGroupByExternalReferenceCode_addUserGroup();
 
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.deleteUserGroupUsersHttpResponse(
-				userGroup.getId(), null));
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup putUserGroup =
+			userGroupResource.putUserGroupByExternalReferenceCode(
+				postUserGroup.getExternalReferenceCode(), randomUserGroup);
+
+		assertEquals(randomUserGroup, putUserGroup);
+		assertValid(putUserGroup);
+
+		UserGroup getUserGroup =
+			userGroupResource.getUserGroupByExternalReferenceCode(
+				putUserGroup.getExternalReferenceCode());
+
+		assertEquals(randomUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+
+		UserGroup newUserGroup =
+			testPutUserGroupByExternalReferenceCode_createUserGroup();
+
+		putUserGroup = userGroupResource.putUserGroupByExternalReferenceCode(
+			newUserGroup.getExternalReferenceCode(), newUserGroup);
+
+		assertEquals(newUserGroup, putUserGroup);
+		assertValid(putUserGroup);
+
+		getUserGroup = userGroupResource.getUserGroupByExternalReferenceCode(
+			putUserGroup.getExternalReferenceCode());
+
+		assertEquals(newUserGroup, getUserGroup);
+
+		Assert.assertEquals(
+			newUserGroup.getExternalReferenceCode(),
+			putUserGroup.getExternalReferenceCode());
 	}
 
-	protected UserGroup testDeleteUserGroupUsers_addUserGroup()
+	protected UserGroup testPutUserGroupByExternalReferenceCode_addUserGroup()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testPostUserGroupUsers() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testPostUserGroupUsers_addUserGroup();
+	protected UserGroup
+			testPutUserGroupByExternalReferenceCode_createUserGroup()
+		throws Exception {
 
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.postUserGroupUsersHttpResponse(
-				userGroup.getId(), null));
-
-		assertHttpResponseStatusCode(
-			404, userGroupResource.postUserGroupUsersHttpResponse(0L, null));
+		return randomUserGroup();
 	}
 
-	protected UserGroup testPostUserGroupUsers_addUserGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		UserGroup userGroup1 = testBatchEngineDeleteImportTask_addUserGroup();
+
+		testBatchEngineDeleteImportTask_deleteUserGroup(
+			200, userGroup1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+
+		userGroup1 = testBatchEngineDeleteImportTask_addUserGroup();
+
+		testBatchEngineDeleteImportTask_deleteUserGroup(
+			200, null, userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+
+		userGroup1 = testBatchEngineDeleteImportTask_addUserGroup();
+		UserGroup userGroup2 = testBatchEngineDeleteImportTask_addUserGroup();
+
+		testBatchEngineDeleteImportTask_deleteUserGroup(
+			200, userGroup2.getExternalReferenceCode(), userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteUserGroup(
+			200, userGroup2.getExternalReferenceCode(), userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+	}
+
+	protected UserGroup testBatchEngineDeleteImportTask_addUserGroup()
+		throws Exception {
+
+		return testDeleteUserGroup_addUserGroup();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteUserGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.user.dto.v1_0.UserGroup", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2306,7 +2466,30 @@ public abstract class BaseUserGroupResourceTestCase {
 		return randomUserGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected UserGroupResource userGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

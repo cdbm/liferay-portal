@@ -7,7 +7,6 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 
 import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountBrief;
-import com.liferay.headless.admin.user.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.user.client.dto.v1_0.Organization;
 import com.liferay.headless.admin.user.client.dto.v1_0.RoleBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.Service;
@@ -15,6 +14,8 @@ import com.liferay.headless.admin.user.client.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccountBrief;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -24,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -147,7 +146,7 @@ public class OrganizationSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < organization.getCustomFields().length; i++) {
-				sb.append(String.valueOf(organization.getCustomFields()[i]));
+				sb.append(organization.getCustomFields()[i]);
 
 				if ((i + 1) < organization.getCustomFields().length) {
 					sb.append(", ");
@@ -225,6 +224,20 @@ public class OrganizationSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(organization.getImage()));
+
+			sb.append("\"");
+		}
+
+		if (organization.getImageBase64() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageBase64\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(organization.getImageBase64()));
 
 			sb.append("\"");
 		}
@@ -623,6 +636,14 @@ public class OrganizationSerDes {
 			map.put("image", String.valueOf(organization.getImage()));
 		}
 
+		if (organization.getImageBase64() == null) {
+			map.put("imageBase64", null);
+		}
+		else {
+			map.put(
+				"imageBase64", String.valueOf(organization.getImageBase64()));
+		}
+
 		if (organization.getImageExternalReferenceCode() == null) {
 			map.put("imageExternalReferenceCode", null);
 		}
@@ -825,6 +846,9 @@ public class OrganizationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "image")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "imageBase64")) {
+				return false;
+			}
 			else if (Objects.equals(
 						jsonParserFieldName, "imageExternalReferenceCode")) {
 
@@ -957,12 +981,16 @@ public class OrganizationSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.admin.user.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.admin.user.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.admin.user.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					organization.setCustomFields(customFieldsArray);
@@ -996,6 +1024,11 @@ public class OrganizationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "image")) {
 				if (jsonParserFieldValue != null) {
 					organization.setImage((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "imageBase64")) {
+				if (jsonParserFieldValue != null) {
+					organization.setImageBase64((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(

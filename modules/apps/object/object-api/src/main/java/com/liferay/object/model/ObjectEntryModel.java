@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 
 import java.util.Date;
@@ -31,7 +32,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectEntryModel
 	extends BaseModel<ObjectEntry>, ExternalReferenceCodeModel, MVCCModel,
-			ShardedModel, StagedGroupedModel, WorkflowedModel {
+			ShardedModel, StagedGroupedModel, TrashedModel, WorkflowedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -288,6 +289,48 @@ public interface ObjectEntryModel
 	public void setDefaultLanguageId(String defaultLanguageId);
 
 	/**
+	 * Returns the display date of this object entry.
+	 *
+	 * @return the display date of this object entry
+	 */
+	public Date getDisplayDate();
+
+	/**
+	 * Sets the display date of this object entry.
+	 *
+	 * @param displayDate the display date of this object entry
+	 */
+	public void setDisplayDate(Date displayDate);
+
+	/**
+	 * Returns the expiration date of this object entry.
+	 *
+	 * @return the expiration date of this object entry
+	 */
+	public Date getExpirationDate();
+
+	/**
+	 * Sets the expiration date of this object entry.
+	 *
+	 * @param expirationDate the expiration date of this object entry
+	 */
+	public void setExpirationDate(Date expirationDate);
+
+	/**
+	 * Returns the review date of this object entry.
+	 *
+	 * @return the review date of this object entry
+	 */
+	public Date getReviewDate();
+
+	/**
+	 * Sets the review date of this object entry.
+	 *
+	 * @param reviewDate the review date of this object entry
+	 */
+	public void setReviewDate(Date reviewDate);
+
+	/**
 	 * Returns the tree path of this object entry.
 	 *
 	 * @return the tree path of this object entry
@@ -412,6 +455,22 @@ public interface ObjectEntryModel
 	 */
 	@Override
 	public void setStatusDate(Date statusDate);
+
+	/**
+	 * Returns the class primary key of the trash entry for this object entry.
+	 *
+	 * @return the class primary key of the trash entry for this object entry
+	 */
+	@Override
+	public long getTrashEntryClassPK();
+
+	/**
+	 * Returns <code>true</code> if this object entry is in the Recycle Bin.
+	 *
+	 * @return <code>true</code> if this object entry is in the Recycle Bin; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isInTrash();
 
 	/**
 	 * Returns <code>true</code> if this object entry is approved.

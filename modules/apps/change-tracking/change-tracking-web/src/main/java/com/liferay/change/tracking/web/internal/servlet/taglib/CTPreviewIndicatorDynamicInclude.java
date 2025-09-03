@@ -35,15 +35,15 @@ import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
 import com.liferay.taglib.util.HtmlTopTag;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Map;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -118,10 +118,10 @@ public class CTPreviewIndicatorDynamicInclude extends BaseDynamicInclude {
 				StringBundler.concat(
 					"<nav aria-label=\"",
 					_language.get(httpServletRequest, "control-menu"),
-					"\" class=\"cadmin control-menu-container\"><div ",
-					"class=\"change-tracking-indicator\"><div>",
-					"<button class=\"change-tracking-indicator-button\">",
-					"<span className=\"change-tracking-indicator-title\">"));
+					"\" class=\"cadmin control-menu-container\"><div class=\"",
+					"change-tracking-indicator\"><div><button class=\"",
+					"change-tracking-indicator-button\"><span className=\"",
+					"change-tracking-indicator-title\">"));
 
 			CTCollection previewCTCollection =
 				_ctCollectionLocalService.fetchCTCollection(

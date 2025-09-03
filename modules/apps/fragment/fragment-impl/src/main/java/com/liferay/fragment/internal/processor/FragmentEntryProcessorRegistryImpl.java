@@ -36,11 +36,11 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -107,7 +107,7 @@ public class FragmentEntryProcessorRegistryImpl
 
 	@Override
 	public JSONObject getDefaultEditableValuesJSONObject(
-		String html, String configuration) {
+		String html, JSONObject configurationJSONObject) {
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
@@ -116,7 +116,7 @@ public class FragmentEntryProcessorRegistryImpl
 
 			JSONObject defaultEditableValuesJSONObject =
 				fragmentEntryProcessor.getDefaultEditableValuesJSONObject(
-					html, configuration);
+					html, configurationJSONObject);
 
 			if ((defaultEditableValuesJSONObject != null) &&
 				(defaultEditableValuesJSONObject.length() > 0)) {
@@ -136,7 +136,8 @@ public class FragmentEntryProcessorRegistryImpl
 
 			JSONObject defaultEditableValuesJSONObject =
 				defaultEditableValuesFragmentEntryProcessor.
-					getDefaultEditableValuesJSONObject(configuration, document);
+					getDefaultEditableValuesJSONObject(
+						configurationJSONObject, document);
 
 			if ((defaultEditableValuesJSONObject != null) &&
 				(defaultEditableValuesJSONObject.length() > 0)) {
@@ -203,7 +204,8 @@ public class FragmentEntryProcessorRegistryImpl
 	}
 
 	@Override
-	public void validateFragmentEntryHTML(String html, String configuration)
+	public void validateFragmentEntryHTML(
+			String html, JSONObject configurationJSONObject)
 		throws PortalException {
 
 		if (CompanyThreadLocal.isInitializingPortalInstance()) {
@@ -220,7 +222,7 @@ public class FragmentEntryProcessorRegistryImpl
 				_fragmentEntryValidators) {
 
 			fragmentEntryValidator.validateFragmentEntryHTML(
-				html, configuration, LocaleUtil.getDefault());
+				html, configurationJSONObject, LocaleUtil.getDefault());
 		}
 
 		Document document = _getDocument(html);
@@ -229,7 +231,7 @@ public class FragmentEntryProcessorRegistryImpl
 				_documentFragmentEntryValidators) {
 
 			documentFragmentEntryValidator.validateFragmentEntryHTML(
-				document, configuration, LocaleUtil.getDefault());
+				document, configurationJSONObject, LocaleUtil.getDefault());
 		}
 
 		validHTMLs.add(html);
@@ -304,8 +306,7 @@ public class FragmentEntryProcessorRegistryImpl
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		String portletId = jsonObject.getString("portletId");
 

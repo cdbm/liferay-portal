@@ -4,31 +4,22 @@
  */
 
 import {ClayInput} from '@clayui/form';
-import {
-	EditingLocale,
-	LocalesDropdown,
-} from 'dynamic-data-mapping-form-field-type';
-import {
-	getEditingLocales,
-	getLocale,
-} from 'dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/localizedObjectFields/util/locales';
-import {
-	FieldChangeEventHandler,
-	LocalizedValue,
-} from 'dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/types';
-import {AvailableLocale} from 'dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/util/localizable/LocalesDropdown';
-import React, {useState} from 'react';
-import {flushSync} from 'react-dom';
+import {useFormState} from 'data-engine-js-components-web';
+import {LocalesDropdown} from 'dynamic-data-mapping-form-field-type';
+import React, {useEffect, useState} from 'react';
 
 import AttachmentBase, {
 	AttachmentBaseProps,
 	AttachmentFile,
 } from './AttachmentBase';
 
+import type {
+	FieldChangeEventHandler,
+	LocalizedValue,
+} from 'dynamic-data-mapping-form-field-type';
+
 export interface AttachmentLocalizedObjectFieldProps
 	extends AttachmentBaseProps<string | LocalizedValue<string>> {
-	availableLocales: AvailableLocale[];
-	defaultLocale: EditingLocale;
 	fieldName: string;
 	fileEntryProperties: LocalizedValue<AttachmentFile>;
 	onChange: FieldChangeEventHandler<LocalizedValue<string>>;
@@ -36,37 +27,24 @@ export interface AttachmentLocalizedObjectFieldProps
 }
 
 export default function AttachmentLocalizedObjectField({
-	availableLocales,
-	defaultLocale,
 	fieldName,
 	fileEntryProperties,
 	onChange,
 	value,
 	...otherProps
 }: AttachmentLocalizedObjectFieldProps) {
-	const initialEditingLocales = getEditingLocales(
-		availableLocales,
-		defaultLocale,
-		value
-	);
-
-	const [editingLocales, setEditingLocales] = useState<EditingLocale[]>(
-		initialEditingLocales
-	);
-
-	const [currentEditingLocale, setCurrentEditingLocale] = useState({
-		...getLocale(editingLocales, defaultLocale, defaultLocale.localeId),
-	});
-
 	const [attachment, setAttachment] =
 		useState<LocalizedValue<AttachmentFile>>(fileEntryProperties);
 
+	const {availableLocales, defaultLanguageId, editingLanguageId} =
+		useFormState();
+
 	const getAttachment = () => {
-		if (!attachment[currentEditingLocale.localeId]) {
+		if (!attachment[editingLanguageId]) {
 			return null;
 		}
 
-		return attachment[currentEditingLocale.localeId] as AttachmentFile;
+		return attachment[editingLanguageId] as AttachmentFile;
 	};
 
 	const handleAttachmentChange = (
@@ -75,7 +53,7 @@ export default function AttachmentLocalizedObjectField({
 	) => {
 		const newValue = {
 			...value,
-			[currentEditingLocale.localeId]: fileId,
+			[editingLanguageId]: fileId,
 		};
 
 		onChange({target: {value: newValue}});
@@ -83,64 +61,37 @@ export default function AttachmentLocalizedObjectField({
 		setAttachment((previous) => {
 			return {
 				...previous,
-				[currentEditingLocale.localeId]: attachmentValue,
+				[editingLanguageId]: attachmentValue,
 			};
 		});
 	};
 
 	const handleDelete = () => {
-		const currentLocaleId = currentEditingLocale.localeId;
-
-		if (Object.hasOwn(attachment, currentLocaleId)) {
-			const newAttachment = {...attachment};
-			delete newAttachment[currentLocaleId];
-			setAttachment(newAttachment);
+		if (Object.hasOwn(attachment, editingLanguageId)) {
+			setAttachment({
+				...attachment,
+				[editingLanguageId]: undefined,
+			});
 		}
 
-		if (Object.hasOwn(value, currentLocaleId)) {
+		if (Object.hasOwn(value, editingLanguageId)) {
 			const newValue = {...value};
-			delete newValue[currentLocaleId];
+			delete newValue[editingLanguageId];
 			onChange({target: {value: newValue}});
 		}
 	};
 
-	const handleTranslationChange = (localeId: Liferay.Language.Locale) => {
-		if (!Object.hasOwn(value, localeId)) {
-			const newValue = {
-				...value,
-				[localeId]: value[defaultLocale.localeId],
+	useEffect(() => {
+		setAttachment((previous) => {
+			return {
+				...previous,
+				...(previous[defaultLanguageId] &&
+					!Object.hasOwn(previous, editingLanguageId) && {
+						[editingLanguageId]: previous[defaultLanguageId],
+					}),
 			};
-
-			flushSync(() => {
-				onChange({target: {value: newValue}});
-			});
-		}
-
-		if (!Object.hasOwn(attachment, localeId)) {
-			setAttachment((previous) => {
-				return {
-					...previous,
-					[localeId]: attachment[defaultLocale.localeId],
-				};
-			});
-		}
-
-		const currentLocale = getLocale(
-			editingLocales,
-			defaultLocale,
-			localeId
-		);
-
-		const updatedLocale = {...currentLocale, isTranslated: true};
-
-		setEditingLocales((previous) =>
-			previous.map((locale) =>
-				locale.localeId === localeId ? updatedLocale : locale
-			)
-		);
-
-		setCurrentEditingLocale(updatedLocale);
-	};
+		});
+	}, [defaultLanguageId, editingLanguageId]);
 
 	return (
 		<ClayInput.Group>
@@ -156,10 +107,9 @@ export default function AttachmentLocalizedObjectField({
 
 			<ClayInput.GroupItem shrink>
 				<LocalesDropdown
-					availableLocales={editingLocales}
-					editingLocale={currentEditingLocale}
+					availableLocales={availableLocales}
 					fieldName={fieldName}
-					onLanguageClicked={handleTranslationChange}
+					value={attachment}
 				/>
 			</ClayInput.GroupItem>
 		</ClayInput.Group>

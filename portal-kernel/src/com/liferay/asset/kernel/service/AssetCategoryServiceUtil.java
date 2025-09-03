@@ -76,6 +76,14 @@ public class AssetCategoryServiceUtil {
 		getService().deleteCategory(categoryId);
 	}
 
+	public static AssetCategory deleteCategoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteCategoryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static AssetCategory fetchCategory(long categoryId)
 		throws PortalException {
 
@@ -181,6 +189,14 @@ public class AssetCategoryServiceUtil {
 		throws PortalException {
 
 		return getService().getChildCategoriesCount(parentCategoryId);
+	}
+
+	public static AssetCategory getOrAddEmptyCategory(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getOrAddEmptyCategory(
+			externalReferenceCode, groupId);
 	}
 
 	/**

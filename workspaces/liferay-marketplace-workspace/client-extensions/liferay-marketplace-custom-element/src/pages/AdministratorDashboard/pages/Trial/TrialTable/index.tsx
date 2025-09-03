@@ -14,14 +14,17 @@ import {DashboardPage} from '../../../../../components/DashBoardPage/DashboardPa
 import {DashboardEmptyTable} from '../../../../../components/DashboardTable/DashboardEmptyTable';
 import Loading from '../../../../../components/Loading';
 import Table from '../../../../../components/Table/Table';
-import {ORDER_WORKFLOW_STATUS_CODE} from '../../../../../enums/Order';
+import {
+	OrderCustomFields,
+	OrderWorkflowStatusCode,
+} from '../../../../../enums/Order';
 import {useConfirmationModal} from '../../../../../hooks/useConfirmationModal';
 import useModalContext from '../../../../../hooks/useModalContext';
 import i18n from '../../../../../i18n';
 import {Liferay} from '../../../../../liferay/liferay';
 import trialOAuth2 from '../../../../../services/oauth/Trial';
-import CommerceSelectAccountImpl from '../../../../../services/rest/CommerceSelectAccount';
-import HeadlessCommerceAdminOrderImpl from '../../../../../services/rest/HeadlessCommerceAdminOrder';
+import CommerceSelectAccount from '../../../../../services/rest/CommerceSelectAccount';
+import HeadlessCommerceAdminOrder from '../../../../../services/rest/HeadlessCommerceAdminOrder';
 import NewTrialModal from './NewTrialModal';
 import TrialDetailsModal, {ORDER_STATUS_LABEL} from './TrialDetailsModal';
 
@@ -48,7 +51,7 @@ const TrialTable: React.FC<TrialTableProps> = ({items, revalidate}) => {
 	const confirmationModal = useConfirmationModal();
 
 	const onDeleteTrial = async (order: Order) => {
-		await safeRunner(HeadlessCommerceAdminOrderImpl.deleteOrder(order.id));
+		await safeRunner(HeadlessCommerceAdminOrder.deleteOrder(order.id));
 		await safeRunner(trialOAuth2.deleteTrial(order.id));
 
 		await revalidate();
@@ -71,7 +74,7 @@ const TrialTable: React.FC<TrialTableProps> = ({items, revalidate}) => {
 					{i18n.translate('close')}
 				</ClayButton>,
 			],
-			header: 'Trial Details',
+			header: i18n.translate('trial-details'),
 			size: 'md',
 		});
 	};
@@ -86,17 +89,20 @@ const TrialTable: React.FC<TrialTableProps> = ({items, revalidate}) => {
 			onClick: (order: Order) =>
 				window.open(
 					`https://${
-						order?.customFields?.['trial-virtualhost'] as string
+						order?.customFields?.[
+							OrderCustomFields.TRIAL_VIRTUAL_HOST
+						]
 					}`
 				),
 		},
 		{
 			name: i18n.translate('customer-dashboard'),
 			onClick: (order: Order) =>
-				CommerceSelectAccountImpl.selectAccount(order?.accountId).then(
+				CommerceSelectAccount.selectAccount(order?.accountId).then(
 					() => {
 						Liferay.CommerceContext.account = {
 							accountId: order?.accountId,
+							accountName: '',
 						};
 
 						Liferay.Util.navigate(
@@ -180,8 +186,8 @@ const TrialTable: React.FC<TrialTableProps> = ({items, revalidate}) => {
 									</ClayLabel>
 
 									{[
-										ORDER_WORKFLOW_STATUS_CODE.ON_HOLD,
-										ORDER_WORKFLOW_STATUS_CODE.PROCESSING,
+										OrderWorkflowStatusCode.ON_HOLD,
+										OrderWorkflowStatusCode.PROCESSING,
 									].includes(orderStatusInfo.code) && (
 										<Loading
 											displayType="primary"

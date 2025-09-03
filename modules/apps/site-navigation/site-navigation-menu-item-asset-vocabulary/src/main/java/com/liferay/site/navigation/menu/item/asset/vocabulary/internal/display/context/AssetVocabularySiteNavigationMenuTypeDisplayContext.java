@@ -33,11 +33,11 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Map;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Lourdes Fernández Besada
@@ -61,7 +61,7 @@ public class AssetVocabularySiteNavigationMenuTypeDisplayContext {
 
 		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE));
+				JavaConstants.JAKARTA_PORTLET_RESPONSE));
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -75,6 +75,9 @@ public class AssetVocabularySiteNavigationMenuTypeDisplayContext {
 				"classPK",
 				GetterUtil.getLong(
 					_typeSettingsUnicodeProperties.get("classPK"))
+			).put(
+				"externalReferenceCode",
+				_typeSettingsUnicodeProperties.get("externalReferenceCode")
 			).put(
 				"groupId",
 				GetterUtil.getLong(

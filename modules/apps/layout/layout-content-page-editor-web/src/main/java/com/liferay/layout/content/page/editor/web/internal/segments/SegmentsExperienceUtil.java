@@ -15,7 +15,6 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -45,13 +44,13 @@ import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsExperienceServiceUtil;
 import com.liferay.segments.service.SegmentsExperimentLocalServiceUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eduardo García
@@ -198,7 +197,7 @@ public class SegmentsExperienceUtil {
 
 		LayoutPageTemplateStructureLocalServiceUtil.
 			updateLayoutPageTemplateStructureData(
-				groupId, layout.getPlid(),
+				userId, groupId, layout.getPlid(),
 				targetSegmentsExperience.getSegmentsExperienceId(),
 				dataJSONObject.toString());
 	}
@@ -281,7 +280,7 @@ public class SegmentsExperienceUtil {
 				portletPreferences.getOwnerId(),
 				portletPreferences.getOwnerType(), plid, newPortletId);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			PortletPreferenceValueLocalServiceUtil.getPreferences(
 				portletPreferences);
 
@@ -357,8 +356,7 @@ public class SegmentsExperienceUtil {
 			String newNamespace = StringUtil.randomId();
 
 			JSONObject editableValuesJSONObject =
-				JSONFactoryUtil.createJSONObject(
-					fragmentEntryLink.getEditableValues());
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			SegmentsExperiment segmentsExperiment =
 				SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(

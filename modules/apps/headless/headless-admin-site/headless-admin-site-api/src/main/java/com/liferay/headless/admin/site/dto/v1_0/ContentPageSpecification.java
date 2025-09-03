@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -24,19 +30,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
 @GraphQLName(
-	description = "A page specification of a content page. A content page will contain 1 page specifications for its draft layout and 1 page specifications for its published layout.",
+	description = "A page specification of a content page. A content page will contain 1 page specification for its draft layout and 1 page specification for its published layout.",
 	value = "ContentPageSpecification"
 )
 @JsonFilter("Liferay.Vulcan")
@@ -220,6 +220,29 @@ public class ContentPageSpecification
 			sb.append("]");
 		}
 
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(customFields[i]);
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		String externalReferenceCode = getExternalReferenceCode();
 
 		if (externalReferenceCode != null) {
@@ -246,6 +269,25 @@ public class ContentPageSpecification
 			sb.append("\"settings\": ");
 
 			sb.append(String.valueOf(settings));
+		}
+
+		String siteTemplatePageSpecificationExternalReferenceCode =
+			getSiteTemplatePageSpecificationExternalReferenceCode();
+
+		if (siteTemplatePageSpecificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"siteTemplatePageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(siteTemplatePageSpecificationExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Status status = getStatus();

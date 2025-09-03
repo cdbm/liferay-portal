@@ -13,6 +13,7 @@ export type ObjectField = {
 	indexedAsKeyword?: boolean;
 	indexedLanguageId?: Liferay.Language.Locale | '';
 	label: Liferay.Language.LocalizedValue<string>;
+	listTypeDefinitionId?: number;
 	localized: boolean;
 	name: string;
 	objectFieldSettings?: {name: string; value: boolean | string | number}[];
@@ -20,17 +21,45 @@ export type ObjectField = {
 	system?: boolean;
 };
 
+export type ObjectRelationship = {
+	deletionType: string;
+	label: Liferay.Language.LocalizedValue<string>;
+	name: string;
+	objectDefinitionExternalReferenceCode1: string;
+	objectDefinitionExternalReferenceCode2: string;
+	type: string;
+};
+
 export type ObjectDefinition = {
+	enableFriendlyURLCustomization: boolean;
+	enableIndexSearch: boolean;
+	enableLocalization: boolean;
 	enableObjectEntryDraft: boolean;
+	enableObjectEntrySchedule: boolean;
+	enableObjectEntryVersioning: boolean;
 	externalReferenceCode: string;
 	id?: number;
 	label: Liferay.Language.LocalizedValue<string>;
 	name?: string;
+	objectDefinitionSettings?: {
+		name: 'acceptedGroupExternalReferenceCodes' | 'acceptAllGroups';
+		value: string;
+	}[];
 	objectFields?: ObjectField[];
-	objectFolderExternalReferenceCode?: string;
+	objectFolderExternalReferenceCode?:
+		| 'L_CMS_CONTENT_STRUCTURES'
+		| 'L_CMS_FILE_TYPES'
+		| 'L_CMS_STRUCTURE_REPEATABLE_GROUPS';
+	objectRelationships?: ObjectRelationship[];
 	pluralLabel: Liferay.Language.LocalizedValue<string>;
-	scope: 'company' | 'site';
+	scope: 'company' | 'depot' | 'site';
 	status?: {
-		label: string;
+		code: number;
 	};
+	titleObjectFieldName?: string;
 };
+
+export type ObjectDefinitions = Record<
+	ObjectDefinition['externalReferenceCode'],
+	ObjectDefinition
+>;

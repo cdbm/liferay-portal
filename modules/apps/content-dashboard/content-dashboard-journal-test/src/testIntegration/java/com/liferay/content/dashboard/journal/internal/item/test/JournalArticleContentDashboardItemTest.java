@@ -71,13 +71,13 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -449,7 +449,7 @@ public class JournalArticleContentDashboardItemTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, _getLiferayPortletConfig());
+			JavaConstants.JAKARTA_PORTLET_CONFIG, _getLiferayPortletConfig());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.CURRENT_URL, "http://localhost:8080");
 		mockHttpServletRequest.setAttribute(
@@ -632,19 +632,17 @@ public class JournalArticleContentDashboardItemTest {
 			_contentDashboardItemFactory.create(
 				journalArticle.getResourcePrimKey());
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
 
 		Assert.assertEquals(
-			specificInformationList.toString(), 3,
-			specificInformationList.size());
+			specificInformations.toString(), 3, specificInformations.size());
 
 		ContentDashboardItem.SpecificInformation<?>
 			displayDateSpecificInformation = null;
 
 		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			if (Objects.equals(specificInformation.getKey(), "display-date")) {
 				displayDateSpecificInformation = specificInformation;
@@ -664,7 +662,7 @@ public class JournalArticleContentDashboardItemTest {
 			expirationDateSpecificInformation = null;
 
 		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			if (Objects.equals(
 					specificInformation.getKey(), "expiration-date")) {
@@ -686,7 +684,7 @@ public class JournalArticleContentDashboardItemTest {
 			reviewDateSpecificInformation = null;
 
 		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			if (Objects.equals(specificInformation.getKey(), "review-date")) {
 				reviewDateSpecificInformation = specificInformation;
@@ -1054,7 +1052,7 @@ public class JournalArticleContentDashboardItemTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(LocaleUtil.US));

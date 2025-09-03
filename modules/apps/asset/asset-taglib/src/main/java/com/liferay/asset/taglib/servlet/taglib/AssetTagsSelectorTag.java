@@ -29,18 +29,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.AUIUtil;
 import com.liferay.taglib.util.IncludeTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Antonio Pol
@@ -326,10 +326,10 @@ public class AssetTagsSelectorTag extends IncludeTag {
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if ((portletRequest == null) || (portletResponse == null)) {
 			_namespace = AUIUtil.getNamespace(httpServletRequest);

@@ -6,7 +6,7 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
-import com.liferay.headless.admin.site.dto.v1_0.PageRowDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.RowPageElementDefinition;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
@@ -38,28 +38,31 @@ public class RowLayoutStructureItemImporter
 						pageElement, layoutStructure),
 					pageElement.getPosition());
 
-		PageRowDefinition pageRowDefinition =
-			(PageRowDefinition)pageElement.getDefinition();
+		RowPageElementDefinition rowPageElementDefinition =
+			(RowPageElementDefinition)pageElement.getPageElementDefinition();
 
-		if (pageRowDefinition == null) {
+		if (rowPageElementDefinition == null) {
 			return rowStyledLayoutStructureItem;
 		}
 
 		rowStyledLayoutStructureItem.setCssClasses(
-			SetUtil.fromArray(pageRowDefinition.getCssClasses()));
+			SetUtil.fromArray(rowPageElementDefinition.getCssClasses()));
 		rowStyledLayoutStructureItem.setCustomCSS(
-			pageRowDefinition.getCustomCSS());
-		rowStyledLayoutStructureItem.setGutters(pageRowDefinition.getGutters());
-		rowStyledLayoutStructureItem.setIndexed(pageRowDefinition.getIndexed());
-		rowStyledLayoutStructureItem.setName(pageRowDefinition.getName());
-		rowStyledLayoutStructureItem.setNumberOfColumns(
-			pageRowDefinition.getNumberOfColumns());
+			rowPageElementDefinition.getCustomCSS());
+		rowStyledLayoutStructureItem.setGutters(
+			rowPageElementDefinition.getGutters());
+		rowStyledLayoutStructureItem.setIndexed(
+			rowPageElementDefinition.getIndexed());
 		rowStyledLayoutStructureItem.setModulesPerRow(
-			pageRowDefinition.getModulesPerRow());
+			rowPageElementDefinition.getModulesPerRow());
+		rowStyledLayoutStructureItem.setName(
+			rowPageElementDefinition.getName());
+		rowStyledLayoutStructureItem.setNumberOfColumns(
+			rowPageElementDefinition.getNumberOfColumns());
 		rowStyledLayoutStructureItem.setReverseOrder(
-			pageRowDefinition.getReverseOrder());
+			rowPageElementDefinition.getReverseOrder());
 		rowStyledLayoutStructureItem.setVerticalAlignment(
-			pageRowDefinition.getVerticalAlignment());
+			rowPageElementDefinition.getVerticalAlignment());
 
 		return rowStyledLayoutStructureItem;
 	}

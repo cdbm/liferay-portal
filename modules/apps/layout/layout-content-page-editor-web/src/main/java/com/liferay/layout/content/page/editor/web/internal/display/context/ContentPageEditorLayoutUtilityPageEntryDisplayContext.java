@@ -22,6 +22,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
@@ -35,12 +36,12 @@ import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Lourdes Fernández Besada
@@ -66,8 +67,9 @@ public class ContentPageEditorLayoutUtilityPageEntryDisplayContext
 		LayoutPageTemplateEntryService layoutPageTemplateEntryService,
 		LayoutPermission layoutPermission,
 		PageEditorConfiguration pageEditorConfiguration, Portal portal,
-		PortletRequest portletRequest, PortletURLFactory portletURLFactory,
-		RenderResponse renderResponse,
+		PortletRequest portletRequest,
+		PortletResourcePermission portletResourcePermission,
+		PortletURLFactory portletURLFactory, RenderResponse renderResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
@@ -86,11 +88,12 @@ public class ContentPageEditorLayoutUtilityPageEntryDisplayContext
 			layoutLocalService, layoutLockManager,
 			layoutPageTemplateEntryLocalService, layoutPageTemplateEntryService,
 			layoutPermission, layoutSetLocalService, pageEditorConfiguration,
-			portal, portletRequest, portletURLFactory, renderResponse,
-			segmentsConfigurationProvider, segmentsExperienceManager,
-			segmentsExperienceLocalService, segmentsExperimentRelLocalService,
-			segmentsEntryService, staging, stagingGroupHelper,
-			styleBookEntryLocalService, workflowDefinitionLinkLocalService);
+			portal, portletRequest, portletResourcePermission,
+			portletURLFactory, renderResponse, segmentsConfigurationProvider,
+			segmentsExperienceManager, segmentsExperienceLocalService,
+			segmentsExperimentRelLocalService, segmentsEntryService, staging,
+			stagingGroupHelper, styleBookEntryLocalService,
+			workflowDefinitionLinkLocalService);
 	}
 
 	@Override

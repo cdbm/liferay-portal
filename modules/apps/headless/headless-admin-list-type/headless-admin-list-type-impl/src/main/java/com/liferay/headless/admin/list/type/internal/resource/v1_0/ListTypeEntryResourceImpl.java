@@ -28,9 +28,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -176,7 +176,8 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 				listTypeEntry.getKey(),
 				LocalizedMapUtil.populateLocalizedMap(
 					serviceBuilderListTypeDefinition.getDefaultLanguageId(),
-					listTypeEntry.getName_i18n(), listTypeEntry.getName())));
+					listTypeEntry.getName_i18n(), listTypeEntry.getName()),
+				GetterUtil.getBoolean(listTypeEntry.getSystem())));
 	}
 
 	@Override
@@ -207,13 +208,7 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
 			() -> {
-				com.liferay.list.type.model.ListTypeDefinition
-					serviceBuilderlistTypeDefinition =
-						_listTypeDefinitionService.getListTypeDefinition(
-							serviceBuilderListTypeEntry.
-								getListTypeDefinitionId());
-
-				if (serviceBuilderlistTypeDefinition.isSystem()) {
+				if (serviceBuilderListTypeEntry.isSystem()) {
 					return null;
 				}
 

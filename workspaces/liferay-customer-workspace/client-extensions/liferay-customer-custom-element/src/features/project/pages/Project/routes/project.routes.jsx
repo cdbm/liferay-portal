@@ -11,7 +11,7 @@ import getKebabCase from '~/utils/getKebabCase';
 import BusinessEventAdd from '~/features/project/pages/Project/BusinessEvents/pages/BusinessEventsAdd';
 import DeactivateKeysTable from '~/features/project/containers/DeactivateKeysTable';
 import GenerateNewKey from '~/features/project/containers/GenerateNewKey';
-import {useCustomerPortal} from '~/features/project/context';
+import {useAppContext} from '~/features/project/context';
 import {actionTypes} from '~/features/project/context/reducer';
 import Layout from '~/features/project/layouts/BaseLayout';
 import {PRODUCT_TYPES} from '~/features/project/utils/constants';
@@ -28,6 +28,7 @@ import Portal from '../Portal';
 import RenewTable from '../RenewTable';
 import TeamMembers from '../TeamMembers';
 import ActivationOutlet from './Outlets/ActivationOutlet';
+import BusinessEventOutlet from './Outlets/BusinessEventOutlet';
 import ProductOutlet from './Outlets/ProductOutlet';
 import ProjectUsage from '../ProjectUsage';
 import useCurrentKoroneikiAccount from '~/hooks/useCurrentKoroneikiAccount';
@@ -40,13 +41,35 @@ import BusinessEventsItemEdit from '../BusinessEvents/pages/BusinessEventsItem/B
 const ProjectRoutes = () => {
 	const [hasComplimentaryKey, setHasComplimentaryKey] = useState(false);
 
-	const [{project, subscriptionGroups}, dispatch] = useCustomerPortal();
+	const [{project, subscriptionGroups}, dispatch] = useAppContext();
 	const {featureFlags} = useAppPropertiesContext();
 
 	const {data: koroneikiData, loading: koroneikiAccountLoading} =
 		useCurrentKoroneikiAccount();
 	const koroneikiAccount =
 		koroneikiData?.koroneikiAccountByExternalReferenceCode;
+
+	if (koroneikiAccount) {
+		const userId = Liferay.ThemeDisplay.getUserId();
+		
+		const cookieKey = `CP_LAST_VIEWED_PROJECT_${userId}`;
+		const cookieValue = encodeURIComponent(koroneikiAccount.accountKey);
+		const expires = new Date();
+
+		expires.setDate(expires.getDate() + 30);
+
+		if (Liferay?.Util?.Cookie) {
+			Liferay.Util.Cookie.set?.(
+				cookieKey,
+				cookieValue,
+				Liferay?.Util?.Cookie?.TYPES?.FUNCTIONAL,
+				{
+					expires,
+					secure: true,
+				}
+			);
+		}
+	}
 
 	const {data: myUserAccountData} =
 		useMyUserAccountByAccountExternalReferenceCode(
@@ -85,36 +108,6 @@ const ProjectRoutes = () => {
 
 				<Route element={<Layout />} path="/:accountKey">
 					<Route element={<Overview />} index />
-
-					{featureFlags.includes('LPS-153478') && (
-						<Route
-							element={
-								<ProductOutlet
-									product={
-										PRODUCT_TYPES.liferayExperienceCloud
-									}
-								/>
-							}
-						>
-							<Route
-								element={<LiferayExperienceCloud />}
-								path={getKebabCase(
-									PRODUCT_TYPES.liferayExperienceCloud
-								)}
-							/>
-						</Route>
-					)}
-
-					<Route
-						element={
-							<ProductOutlet product={PRODUCT_TYPES.dxpCloud} />
-						}
-					>
-						<Route
-							element={<DXPCloud />}
-							path={getKebabCase(PRODUCT_TYPES.dxpCloud)}
-						/>
-					</Route>
 
 					<Route element={<ActivationOutlet />} path="activation">
 						<Route
@@ -232,6 +225,34 @@ const ProjectRoutes = () => {
 
 						<Route
 							element={
+								<ProductOutlet product={PRODUCT_TYPES.dxpCloud} />
+							}
+						>
+							<Route
+								element={<DXPCloud />}
+								path={getKebabCase(PRODUCT_TYPES.dxpCloud)}
+							/>
+						</Route>
+
+						<Route
+							element={
+								<ProductOutlet
+									product={
+										PRODUCT_TYPES.liferayExperienceCloud
+									}
+								/>
+							}
+						>
+							<Route
+								element={<LiferayExperienceCloud />}
+								path={getKebabCase(
+									PRODUCT_TYPES.liferayExperienceCloud
+								)}
+							/>
+						</Route>
+
+						<Route
+							element={
 								<ProductOutlet
 									product={PRODUCT_TYPES.analyticsCloud}
 								/>
@@ -274,7 +295,7 @@ const ProjectRoutes = () => {
 						<Route path="business-events">
 							<Route element={<BusinessEvents />} index />
 							<Route element={<BusinessEventAdd />} path="new"/>
-							<Route path=":id">
+							<Route path=":id" element={<BusinessEventOutlet project={project} skip={!project} />}>
 								<Route element={<BusinessEventsItemDetails />} index />
 								<Route element={<BusinessEventsItemEdit />} path="edit"/>
 								<Route element={<BusinessEventsItemActivityHistory />} path="activity-history"/>

@@ -38,6 +38,13 @@ public class TestPropsValues {
 
 	public static final String COMPANY_WEB_ID;
 
+	public static final boolean DATABASE_PARTITION_COPY = GetterUtil.getBoolean(
+		TestPropsUtil.get("database.partition.copy"));
+
+	public static final boolean DATABASE_PARTITION_EXPORT_AND_IMPORT =
+		GetterUtil.getBoolean(
+			TestPropsUtil.get("database.partition.export.and.import"));
+
 	public static final boolean DL_FILE_ENTRY_PROCESSORS_TRIGGER_SYNCHRONOUSLY =
 		GetterUtil.getBoolean(
 			TestPropsUtil.get(

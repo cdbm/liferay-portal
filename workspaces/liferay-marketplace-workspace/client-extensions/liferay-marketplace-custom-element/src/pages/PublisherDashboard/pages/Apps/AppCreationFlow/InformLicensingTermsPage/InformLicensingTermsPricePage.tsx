@@ -3,20 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useState} from 'react';
+
 import {Header} from '../../../../../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {Section} from '../../../../../../components/Section/Section';
-import {
-	LicensePrice,
-	PriceEntry,
-	useAppContext,
-} from '../AppContext/AppManageState';
-
-import './InformLicensingTermsPage.scss';
-
-import {useState} from 'react';
-
-import {LicenseTier} from '../../../../../../enums/licenseTier';
+import {ProductLicenseTier} from '../../../../../../enums/Product';
 import i18n from '../../../../../../i18n';
 import {
 	getPriceListByCatalogName,
@@ -29,10 +21,16 @@ import {
 } from '../../../../../../utils/api';
 import {isTrialSKU} from '../../../../../../utils/productUtils';
 import {getSkuPrice} from '../../../../../../utils/util';
-import {TYPES} from '../AppContext/actionTypes';
+import {
+	LicensePrice,
+	PriceEntry,
+	useAppContext,
+} from '../AppContext/AppManageState';
+import {ActionTypes} from '../AppContext/actionTypes';
 import IconButton from './components/IconButton/IconButton';
 import LicensePriceCard from './components/LicensePriceCard';
 
+import './InformLicensingTermsPage.scss';
 interface InformLicensingTermsPricePageProps {
 	onClickBack: () => void;
 	onClickContinue: () => void;
@@ -48,23 +46,26 @@ export function InformLicensingTermsPricePage({
 
 	const isDXP = appType.value === 'dxp';
 
-	const handleAddPriceTier = (licenseTier: LicenseTier) =>
+	const handleAddPriceTier = (licenseTier: ProductLicenseTier) =>
 		dispatch({
 			payload: {licenseTier},
-			type: TYPES.ADD_APP_LICENSE_PRICE,
+			type: ActionTypes.ADD_APP_LICENSE_PRICE,
 		});
 
-	const handleDeletePriceTier = (licenseTier: LicenseTier, key: number) =>
+	const handleDeletePriceTier = (
+		licenseTier: ProductLicenseTier,
+		key: number
+	) =>
 		dispatch({
 			payload: {
 				key,
 				licenseTier,
 			},
-			type: TYPES.DELETE_APP_LICENSE_PRICE,
+			type: ActionTypes.DELETE_APP_LICENSE_PRICE,
 		});
 
 	const handleEditPriceTier = (
-		licenseTier: LicenseTier,
+		licenseTier: ProductLicenseTier,
 		index: number,
 		price: LicensePrice
 	) =>
@@ -74,7 +75,7 @@ export function InformLicensingTermsPricePage({
 				licenseTier,
 				price,
 			},
-			type: TYPES.UPDATE_APP_LICENSE_PRICES,
+			type: ActionTypes.UPDATE_APP_LICENSE_PRICES,
 		});
 
 	const processTier = async (priceEntry: PriceEntry) => {
@@ -136,7 +137,7 @@ export function InformLicensingTermsPricePage({
 	const submitLicensePrice = async () => {
 		const skusJSON = await getProductIdSkusPage(appProductId);
 
-		for (const sku of skusJSON?.items) {
+		for (const sku of skusJSON?.items || []) {
 			if (!isTrialSKU(sku)) {
 				await handlePostPriceEntryIdTierPrice(sku);
 				await patchSKUById(sku?.id, {
@@ -167,12 +168,18 @@ export function InformLicensingTermsPricePage({
 			>
 				<LicensePriceCard
 					licensePrices={appLicensePrice.standard}
-					onAdd={() => handleAddPriceTier(LicenseTier.STANDARD)}
+					onAdd={() =>
+						handleAddPriceTier(ProductLicenseTier.STANDARD)
+					}
 					onChange={(index: number, price: LicensePrice) => {
-						handleEditPriceTier(LicenseTier.STANDARD, index, price);
+						handleEditPriceTier(
+							ProductLicenseTier.STANDARD,
+							index,
+							price
+						);
 					}}
 					onDelete={(key: number) =>
-						handleDeletePriceTier(LicenseTier.STANDARD, key)
+						handleDeletePriceTier(ProductLicenseTier.STANDARD, key)
 					}
 				/>
 			</Section>
@@ -189,18 +196,18 @@ export function InformLicensingTermsPricePage({
 						<LicensePriceCard
 							licensePrices={appLicensePrice.developer}
 							onAdd={() =>
-								handleAddPriceTier(LicenseTier.DEVELOPER)
+								handleAddPriceTier(ProductLicenseTier.DEVELOPER)
 							}
 							onChange={(index: number, price: LicensePrice) =>
 								handleEditPriceTier(
-									LicenseTier.DEVELOPER,
+									ProductLicenseTier.DEVELOPER,
 									index,
 									price
 								)
 							}
 							onDelete={(key: number) =>
 								handleDeletePriceTier(
-									LicenseTier.DEVELOPER,
+									ProductLicenseTier.DEVELOPER,
 									key
 								)
 							}
@@ -209,7 +216,7 @@ export function InformLicensingTermsPricePage({
 						<IconButton
 							className="icon-button py-3 w-100"
 							onClick={() =>
-								handleAddPriceTier(LicenseTier.DEVELOPER)
+								handleAddPriceTier(ProductLicenseTier.DEVELOPER)
 							}
 						>
 							{i18n.translate('add-developer-licenses')}

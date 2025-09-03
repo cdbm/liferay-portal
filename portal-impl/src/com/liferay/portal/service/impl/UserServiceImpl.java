@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Role;
@@ -247,7 +248,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 			if (addresses != null) {
 				UsersAdminUtil.updateAddresses(
-					Contact.class.getName(), user.getContactId(), addresses);
+					Contact.class.getName(), user.getContactId(), addresses,
+					ListTypeConstants.CONTACT_ADDRESS);
 			}
 
 			if (emailAddresses != null) {
@@ -866,7 +868,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 				serviceContext);
 
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 
 			UsersAdminUtil.updateEmailAddresses(
 				Contact.class.getName(), user.getContactId(), emailAddresses);
@@ -1087,7 +1090,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 				serviceContext);
 
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 
 			UsersAdminUtil.updateEmailAddresses(
 				Contact.class.getName(), user.getContactId(), emailAddresses);
@@ -1518,27 +1522,6 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		User user = userLocalService.getUserByEmailAddress(
 			companyId, emailAddress);
-
-		UserPermissionUtil.check(
-			getPermissionChecker(), user.getUserId(), ActionKeys.VIEW);
-
-		return user;
-	}
-
-	/**
-	 * Returns the user with the external reference code.
-	 *
-	 * @param  companyId the primary key of the user's company
-	 * @param  externalReferenceCode the user's external reference code
-	 * @return the user with the external reference code
-	 */
-	@Override
-	public User getUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
-		throws PortalException {
-
-		User user = userLocalService.getUserByExternalReferenceCode(
-			externalReferenceCode, companyId);
 
 		UserPermissionUtil.check(
 			getPermissionChecker(), user.getUserId(), ActionKeys.VIEW);
@@ -2594,7 +2577,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 		}
 
 		if (emailAddresses != null) {
@@ -2962,7 +2946,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 		}
 
 		if (emailAddresses != null) {
@@ -3549,6 +3534,14 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
 
+		boolean strictAssignment = false;
+
+		if (PropsValues.ORGANIZATIONS_ASSIGNMENT_STRICT ||
+			!permissionChecker.isCompanyAdmin()) {
+
+			strictAssignment = true;
+		}
+
 		if (userId != CompanyConstants.SYSTEM) {
 
 			// Add back any mandatory organizations or organizations that the
@@ -3568,6 +3561,10 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 					(!OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
 						ActionKeys.ASSIGN_MEMBERS) ||
+					 (strictAssignment &&
+					  !OrganizationPermissionUtil.contains(
+						  permissionChecker, organization,
+						  ActionKeys.MANAGE_USERS)) ||
 					 OrganizationMembershipPolicyUtil.isMembershipProtected(
 						 permissionChecker, userId,
 						 organization.getOrganizationId()) ||
@@ -3597,6 +3594,11 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 			OrganizationPermissionUtil.check(
 				permissionChecker, organization, ActionKeys.ASSIGN_MEMBERS);
+
+			if (strictAssignment) {
+				OrganizationPermissionUtil.check(
+					permissionChecker, organization, ActionKeys.MANAGE_USERS);
+			}
 		}
 
 		return organizationIds;

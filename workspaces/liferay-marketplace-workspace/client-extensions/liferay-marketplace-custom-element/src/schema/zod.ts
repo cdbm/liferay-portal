@@ -12,6 +12,13 @@ import {removeHTMLTags} from '../utils/string';
 
 const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+?\.)+[a-zA-Z]{2,}$/;
 
+const baseAppSchema = {
+	appUsageTermsURL: z.string().url().or(z.literal('')),
+	documentationURL: z.string().url().or(z.literal('')),
+	installationGuideURL: z.string().url().or(z.literal('')),
+	url: z.string().url().or(z.literal('')),
+};
+
 const baseContentSchema = z.object({
 	description: z.string().min(1).refine(removeHTMLTags),
 	title: z.string().min(1),
@@ -34,6 +41,20 @@ const contentMediaTypeImage = z.object({
 const contentMediaTypeVideo = z.object({
 	headerVideoDescription: z.string().optional(),
 	headerVideoUrl: z.string().url().min(1),
+});
+
+const freeApp = z.object({
+	...baseAppSchema,
+	email: z.string().email().or(z.literal('')),
+	phone: z.string().min(8).or(z.literal('')),
+	publisherWebsiteURL: z.string().url().or(z.literal('')),
+});
+
+const paidApp = z.object({
+	...baseAppSchema,
+	email: z.string().email(),
+	phone: z.string().min(8),
+	publisherWebsiteURL: z.string().url(),
 });
 
 const resources = z.object({
@@ -102,21 +123,32 @@ const zodSchema = {
 	}),
 	appPublishing: {
 		build: z.object({
-			cloudCompatible: z.boolean(),
-			compatibleOffering: z.array(z.string()).min(1),
-			liferayPackages: z.array(z.any()).min(1),
+			appType: z.string(),
+			liferayPackages: z
+				.array(
+					z.object({
+						file: z.object({}),
+						versions: z.array(z.string()).min(1),
+					})
+				)
+				.min(1),
 		}),
 		profile: z.object({
-			categories: z.array(z.any()).nonempty(),
+			areas: z.array(z.any()).nonempty(),
+			categories: z.object({label: z.string(), value: z.string().min(1)}),
 			description: z.string().min(3),
 			name: z.string().min(3),
 			tags: z.array(z.any()).nonempty(),
 		}),
 		storefront: z.object({images: z.array(z.any()).min(1).max(10)}),
+		support: {
+			supportForFreeApp: freeApp,
+			supportForPaidApp: paidApp,
+		},
 		termsAndConditions: z.boolean().refine((data) => data === true),
 		version: z.object({
-			notes: z.string(),
-			version: z.string(),
+			notes: z.string().optional(),
+			version: z.string().min(1),
 		}),
 	},
 	becomePublisherForm: z.object({
@@ -157,6 +189,14 @@ const zodSchema = {
 		comments: z.string(),
 		email: z.string().email(i18n.translate('please-fill-in-a-valid-email')),
 		name: z.string().min(3, i18n.sub('x-is-required', 'name')),
+	}),
+	extendSSATrial: z.object({
+		duration: z.coerce
+			.number()
+			.int()
+			.min(1, 'Please enter a valid number (1-60)')
+			.max(60, 'Please enter a valid number (1-60)'),
+		reason: z.string().min(3),
 	}),
 	generateLicenseKey: z.object({
 		description: z.string().max(100, {message: 'Invalid license name'}),
@@ -246,6 +286,40 @@ const zodSchema = {
 		}),
 		termsAndConditions: z.boolean().refine((data) => data === true),
 	},
+	ssaTrialForm: z.object({
+		duration: z.coerce
+			.number()
+			.int()
+			.min(1, 'Please enter a valid number (1-60)')
+			.max(60, 'Please enter a valid number (1-60)'),
+		emailAddress: z
+			.array(
+				z.object({
+					key: z.string(),
+					label: z.string(),
+					value: z.string(),
+				})
+			)
+			.refine(
+				(emails) =>
+					emails.every(
+						(error) =>
+							z.string().email().safeParse(error.value).success
+					),
+				{message: 'One or more email addresses are invalid'}
+			)
+			.optional(),
+		objective: z.string().refine((val) => val, {
+			message: 'Select an Option',
+		}),
+		projectId: z
+			.string()
+			.min(3, {message: 'Project ID must have at least 3 characters'})
+			.regex(/^[a-zA-Z0-9-]*$/, {
+				message: 'Only letters, numbers, and hyphens are allowed',
+			}),
+		siteInitializerKey: z.string(),
+	}),
 	trialForm: z.object({
 		accountId: z.string().optional(),
 		consoleInviteEmailAddresses: z.array(z.string().email()),

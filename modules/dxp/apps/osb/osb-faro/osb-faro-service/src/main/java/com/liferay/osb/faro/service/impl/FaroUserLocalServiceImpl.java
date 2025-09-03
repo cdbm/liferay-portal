@@ -37,13 +37,13 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
+import jakarta.mail.internet.InternetAddress;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import javax.mail.internet.InternetAddress;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -415,7 +415,17 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 		FaroProject faroProject = _faroProjectPersistence.findByGroupId(
 			groupId);
 
-		User receiverUser = _userLocalService.getUser(faroProject.getUserId());
+		FaroUser faroUser = fetchOwnerFaroUser(groupId);
+
+		User receiverUser = null;
+
+		if (faroUser == null) {
+			receiverUser = _userLocalService.getUser(faroProject.getUserId());
+		}
+		else {
+			receiverUser = _userLocalService.getUserByEmailAddress(
+				_portal.getDefaultCompanyId(), faroUser.getEmailAddress());
+		}
 
 		InternetAddress to = new InternetAddress(
 			receiverUser.getEmailAddress(), receiverUser.getFullName());

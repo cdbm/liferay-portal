@@ -81,12 +81,14 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -105,8 +107,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.Assert;
 
@@ -140,7 +140,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		_objectDefinition = _addObjectDefinition();
 
 		_objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			_objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -209,7 +209,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 			"_c_customObjectDefinitionId");
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -370,7 +370,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		}
 	}
 
-	@FeatureFlags({"LPD-32050", "LPD-37927"})
+	@FeatureFlag("LPD-32050")
 	@Test
 	public void testToInputTemplateNodeLocalizedInputValue() throws Exception {
 		ObjectDefinition objectDefinition =
@@ -471,7 +471,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		Timestamp esTimestamp = new Timestamp(esDate.getTime());
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
@@ -749,7 +749,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, null, false, false, true, true,
-				true,
+				true, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"CustomObjectDefinition", null, "control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),

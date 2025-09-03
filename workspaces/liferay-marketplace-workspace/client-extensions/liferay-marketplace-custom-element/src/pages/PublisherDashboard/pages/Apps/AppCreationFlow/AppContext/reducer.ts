@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {LicenseTier} from '../../../../../../enums/licenseTier';
+import {ProductLicenseTier} from '../../../../../../enums/Product';
 import {InitialStateProps, LicensePrice} from './AppManageState';
-import {TYPES} from './actionTypes';
+import {ActionTypes} from './actionTypes';
 
 export type TAction = {
 	payload?: any;
-	type: TYPES;
+	type: ActionTypes;
 };
 
 const sortLicenses = (
@@ -21,10 +21,10 @@ const sortLicenses = (
 
 export function appReducer(state: InitialStateProps, action: TAction) {
 	switch (action.type) {
-		case TYPES.SUBMIT_APP: {
+		case ActionTypes.SUBMIT_APP: {
 			return state;
 		}
-		case TYPES.SUBMIT_APP_PROFILE: {
+		case ActionTypes.SUBMIT_APP_PROFILE: {
 			const {
 				appERC,
 				appId,
@@ -43,25 +43,29 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_BUILD: {
+		case ActionTypes.UPDATE_APP_BUILD: {
 			const appBuild = action.payload.value;
 
 			return {...state, appBuild};
 		}
 
-		case TYPES.UPDATE_APP_CATEGORIES: {
-			const appCategories = action.payload.value;
+		case ActionTypes.UPDATE_APP_AREAS: {
+			const appAreas = action.payload.value;
 
-			return {...state, appCategories};
+			return {...state, appAreas};
 		}
 
-		case TYPES.UPDATE_APP_DESCRIPTION: {
+		case ActionTypes.UPDATE_APP_CATEGORIES: {
+			return {...state, appCategory: action.payload.value};
+		}
+
+		case ActionTypes.UPDATE_APP_DESCRIPTION: {
 			const appDescription = action.payload.value;
 
 			return {...state, appDescription};
 		}
 
-		case TYPES.UPDATE_APP_DOCUMENTATION_URL: {
+		case ActionTypes.UPDATE_APP_DOCUMENTATION_URL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -73,13 +77,13 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL: {
+		case ActionTypes.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL: {
 			const {id, value} = action.payload;
 
 			return {...state, appInstallationGuideURL: {id, value}};
 		}
 
-		case TYPES.UPDATE_APP_LICENSE: {
+		case ActionTypes.UPDATE_APP_LICENSE: {
 			const {id, value} = action.payload;
 
 			return {
@@ -91,12 +95,12 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.ADD_APP_LICENSE_PRICE: {
-			const licenseTier: LicenseTier = action.payload.licenseTier;
+		case ActionTypes.ADD_APP_LICENSE_PRICE: {
+			const licenseTier: ProductLicenseTier = action.payload.licenseTier;
 			const sortedOldLicensePrice = {
 				developer: state.appLicensePrice.developer.sort(sortLicenses),
 				standard: state.appLicensePrice.standard.sort(sortLicenses),
-			};
+			} as any;
 
 			if (!sortedOldLicensePrice[licenseTier].length) {
 				return {
@@ -124,12 +128,12 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.DELETE_APP_LICENSE_PRICE: {
-			const licenseTier: LicenseTier = action.payload.licenseTier;
+		case ActionTypes.DELETE_APP_LICENSE_PRICE: {
+			const licenseTier: ProductLicenseTier = action.payload.licenseTier;
 			const sortedOldLicensePrice = {
 				developer: state.appLicensePrice.developer.sort(sortLicenses),
 				standard: state.appLicensePrice.standard.sort(sortLicenses),
-			};
+			} as any;
 
 			const filteredLicensePriceTier = sortedOldLicensePrice[
 				licenseTier
@@ -146,8 +150,8 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_LICENSE_PRICES: {
-			const licenseTier: LicenseTier = action.payload.licenseTier;
+		case ActionTypes.UPDATE_APP_LICENSE_PRICES: {
+			const licenseTier: ProductLicenseTier = action.payload.licenseTier;
 			const oldLicensePrice = state.appLicensePrice;
 
 			const newLicensePrices = [...(oldLicensePrice[licenseTier] ?? [])];
@@ -162,26 +166,26 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_LOGO: {
+		case ActionTypes.UPDATE_APP_LOGO: {
 			const appLogo = action.payload.file;
 
 			return {...state, appLogo};
 		}
 
-		case TYPES.UPDATE_CATALOG_ID: {
+		case ActionTypes.UPDATE_CATALOG_ID: {
 			const catalogId = action.payload.value;
 
 			return {...state, catalogId};
 		}
 
-		case TYPES.UPDATE_BUILD_PACKAGE_FILES: {
+		case ActionTypes.UPDATE_BUILD_PACKAGE_FILES: {
 			return {
 				...state,
 				buildAppPackages: action.payload,
 			};
 		}
 
-		case TYPES.UPLOAD_BUILD_PACKAGE_FILES: {
+		case ActionTypes.UPLOAD_BUILD_PACKAGE_FILES: {
 			const {files, isRemoved, versionName} = action.payload;
 
 			if (isRemoved) {
@@ -195,12 +199,12 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 				...state,
 				buildAppPackages: {
 					...state.buildAppPackages,
-					[versionName]: files,
+					[versionName]: files ?? state.buildAppPackages[versionName],
 				},
 			};
 		}
 
-		case TYPES.UPDATE_APP_LXC_COMPATIBILITY: {
+		case ActionTypes.UPDATE_APP_TYPE: {
 			const {id, value} = action.payload;
 
 			return {
@@ -212,13 +216,13 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_NAME: {
+		case ActionTypes.UPDATE_APP_NAME: {
 			const appName = action.payload.value;
 
 			return {...state, appName};
 		}
 
-		case TYPES.UPDATE_APP_NOTES: {
+		case ActionTypes.UPDATE_APP_NOTES: {
 			const {value} = action.payload;
 
 			return {
@@ -227,7 +231,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_PRICE_MODEL: {
+		case ActionTypes.UPDATE_APP_PRICE_MODEL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -239,7 +243,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_PUBLISHER_WEBSITE_URL: {
+		case ActionTypes.UPDATE_APP_PUBLISHER_WEBSITE_URL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -251,13 +255,13 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPLOAD_APP_STOREFRONT_IMAGES: {
+		case ActionTypes.UPLOAD_APP_STOREFRONT_IMAGES: {
 			const appStorefrontImages = action.payload.files;
 
 			return {...state, appStorefrontImages};
 		}
 
-		case TYPES.UPDATE_APP_SUPPORT_EMAIL: {
+		case ActionTypes.UPDATE_APP_SUPPORT_EMAIL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -269,7 +273,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_SUPPORT_PHONE: {
+		case ActionTypes.UPDATE_APP_SUPPORT_PHONE: {
 			const {id, value} = action.payload;
 
 			return {
@@ -281,7 +285,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_SUPPORT_URL: {
+		case ActionTypes.UPDATE_APP_SUPPORT_URL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -293,19 +297,19 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_TAGS: {
+		case ActionTypes.UPDATE_APP_TAGS: {
 			const appTags = action.payload.value;
 
 			return {...state, appTags};
 		}
 
-		case TYPES.UPDATE_APP_TRIAL_INFO: {
+		case ActionTypes.UPDATE_APP_TRIAL_INFO: {
 			const dayTrial = action.payload.value;
 
 			return {...state, dayTrial};
 		}
 
-		case TYPES.UPDATE_APP_USAGE_TERMS_URL: {
+		case ActionTypes.UPDATE_APP_USAGE_TERMS_URL: {
 			const {id, value} = action.payload;
 
 			return {
@@ -317,7 +321,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_APP_VERSION: {
+		case ActionTypes.UPDATE_APP_VERSION: {
 			const {value} = action.payload;
 
 			return {
@@ -326,35 +330,35 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.UPDATE_OPTION_ID: {
+		case ActionTypes.UPDATE_OPTION_ID: {
 			const optionId = action.payload.value;
 
 			return {...state, optionId};
 		}
 
-		case TYPES.UPDATE_PRODUCT_OPTION_ID: {
+		case ActionTypes.UPDATE_PRODUCT_OPTION_ID: {
 			const productOptionId = action.payload.value;
 
 			return {...state, productOptionId};
 		}
 
-		case TYPES.UPDATE_PRODUCT_OPTION_VALUES_ID: {
+		case ActionTypes.UPDATE_PRODUCT_OPTION_VALUES_ID: {
 			return {...state, optionValuesId: action.payload};
 		}
 
-		case TYPES.UPDATE_SKU_TRIAL_ID: {
+		case ActionTypes.UPDATE_SKU_TRIAL_ID: {
 			const skuTrialId = action.payload.value;
 
 			return {...state, skuTrialId};
 		}
 
-		case TYPES.UPDATE_SKU_VERSION_ID: {
+		case ActionTypes.UPDATE_SKU_VERSION_ID: {
 			const skuVersionId = action.payload.value;
 
 			return {...state, skuVersionId};
 		}
 
-		case TYPES.UPDATE_RESOURCE_REQUIREMENTS: {
+		case ActionTypes.UPDATE_RESOURCE_REQUIREMENTS: {
 			const {key, value} = action.payload;
 
 			return {
@@ -366,7 +370,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			};
 		}
 
-		case TYPES.RESET_APP_PACKAGES: {
+		case ActionTypes.RESET_APP_PACKAGES: {
 			return {
 				...state,
 				buildAppPackages: {},

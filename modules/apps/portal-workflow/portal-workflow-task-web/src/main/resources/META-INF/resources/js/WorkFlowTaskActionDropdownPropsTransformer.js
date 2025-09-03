@@ -7,35 +7,29 @@ import {openSimpleInputModal} from 'frontend-js-components-web';
 
 const ACTIONS = {
 	taskAssign({assignURL, namespace, title}) {
-		Liferay.Util.openWindow({
-			dialog: {
-				destroyOnHide: true,
-				height: 430,
-				resizable: false,
-				width: 896,
-			},
-			dialogIframe: {
-				bodyCssClass: 'task-dialog',
-			},
+		Liferay.Util.openModal({
+			center: true,
+			className: 'workflow-tasks-modal',
+			containerProps: {},
+			height: 370,
 			id: namespace + 'assignToDialog',
+			iframeBodyCssClass: 'task-dialog',
+			size: 'lg',
 			title,
-			uri: assignURL,
+			url: assignURL,
 		});
 	},
 	taskAssignToMe({assignToMeURL, namespace, title}) {
-		Liferay.Util.openWindow({
-			dialog: {
-				destroyOnHide: true,
-				height: 340,
-				resizable: false,
-				width: 896,
-			},
-			dialogIframe: {
-				bodyCssClass: 'task-dialog',
-			},
+		Liferay.Util.openModal({
+			center: true,
+			className: 'workflow-tasks-modal',
+			containerProps: {},
+			height: 280,
 			id: namespace + 'assignToDialog',
+			iframeBodyCssClass: 'task-dialog',
+			size: 'lg',
 			title,
-			uri: assignToMeURL,
+			url: assignToMeURL,
 		});
 	},
 	taskEditWorkflowTask({formSubmitURL, namespace, title}) {
@@ -55,19 +49,16 @@ const ACTIONS = {
 		});
 	},
 	updateDueDate({namespace, title, updateDueDateURL}) {
-		Liferay.Util.openWindow({
-			dialog: {
-				destroyOnHide: true,
-				height: 430,
-				resizable: false,
-				width: 896,
-			},
-			dialogIframe: {
-				bodyCssClass: 'task-dialog',
-			},
+		Liferay.Util.openModal({
+			center: true,
+			className: 'workflow-tasks-modal',
+			containerProps: {},
+			height: 370,
 			id: namespace + 'updateDialog',
+			iframeBodyCssClass: 'task-dialog',
+			size: 'lg',
 			title,
-			uri: updateDueDateURL,
+			url: updateDueDateURL,
 		});
 	},
 };

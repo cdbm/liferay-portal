@@ -72,22 +72,45 @@ public abstract class BaseTestResult implements TestResult {
 	}
 
 	@Override
+	public JSONObject getTestReportJSONObject() {
+		JSONObject testResultJSONObject = new JSONObject();
+
+		testResultJSONObject.put("duration", getDuration());
+
+		String errorDetails = getErrorDetails();
+
+		if (errorDetails != null) {
+			if (errorDetails.contains("\n")) {
+				int index = errorDetails.indexOf("\n");
+
+				errorDetails = errorDetails.substring(0, index);
+			}
+
+			if (errorDetails.length() > 200) {
+				errorDetails = errorDetails.substring(0, 200);
+			}
+
+			testResultJSONObject.put("errorDetails", errorDetails);
+		}
+
+		if (isFailing()) {
+			testResultJSONObject.put("errorStackTrace", getErrorStackTrace());
+		}
+
+		testResultJSONObject.put(
+			"name", getDisplayName()
+		).put(
+			"status", getStatus()
+		).put(
+			"testTaskName", getTestTaskName()
+		);
+
+		return testResultJSONObject;
+	}
+
+	@Override
 	public boolean isFailing() {
 		String status = getStatus();
-
-		Build build = getBuild();
-
-		if (status.equals("PASSED") && build.isFailing()) {
-			JSONObject testReportJSONObject = build.getTestReportJSONObject(
-				false);
-
-			int failCount = testReportJSONObject.getInt("failCount");
-			int passCount = testReportJSONObject.getInt("passCount");
-
-			if ((failCount == 0) && (passCount == 1)) {
-				return true;
-			}
-		}
 
 		if (status.equals("FIXED") || status.equals("PASSED") ||
 			status.equals("SKIPPED")) {
@@ -102,11 +125,7 @@ public abstract class BaseTestResult implements TestResult {
 	public boolean isSkipped() {
 		String status = getStatus();
 
-		if (status.equals("SKIPPED")) {
-			return true;
-		}
-
-		return false;
+		return status.equals("SKIPPED");
 	}
 
 	@Override
@@ -220,6 +239,10 @@ public abstract class BaseTestResult implements TestResult {
 			startPropertiesTempMap.get("TOP_LEVEL_JOB_NAME"), "/",
 			startPropertiesTempMap.get("TOP_LEVEL_BUILD_NUMBER"), "/",
 			build.getJobVariant(), "/", getAxisNumber());
+	}
+
+	protected String getTestTaskName() {
+		return null;
 	}
 
 	protected boolean hasLiferayLog() {

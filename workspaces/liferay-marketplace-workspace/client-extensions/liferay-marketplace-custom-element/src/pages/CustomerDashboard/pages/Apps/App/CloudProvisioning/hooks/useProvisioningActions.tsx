@@ -7,7 +7,6 @@ import ClayButton from '@clayui/button';
 import {useModal} from '@clayui/modal';
 import {useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {KeyedMutator} from 'swr';
 
 import {useMarketplaceContext} from '../../../../../../../context/MarketplaceContext';
 import useModalContext from '../../../../../../../hooks/useModalContext';
@@ -20,10 +19,7 @@ import {InstallStatus} from '../types';
 import useProvisioningData, {ProvisioningRow} from './useProvisioningData';
 
 type UseProvisioningActionsProps = {
-	mutateOrder: KeyedMutator<{
-		placedOrder: PlacedOrder;
-		product: DeliveryProduct;
-	}>;
+	mutateOrder: ReturnType<typeof useProvisioningData>['mutateOrder'];
 	order: PlacedOrder;
 	resourceRequirements: ReturnType<
 		typeof useProvisioningData
@@ -51,44 +47,15 @@ const useProvisioningActions = ({
 	const [loading, setLoading] = useState(false);
 	const [selectedProvisioningRow, setSelectedProvisioningRow] =
 		useState<ProvisioningRow>();
+	const installAlertModal = useModal();
 	const navigate = useNavigate();
 	const uninstallModal = useModal();
 
-	const onClickInstall = () => {
+	const onClickInstall = (provisioningRow: ProvisioningRow) => {
+		setSelectedProvisioningRow(provisioningRow);
+
 		if (!resourceRequirements.resourceRequest?.userProjects?.length) {
-			return onOpenModal({
-				body: (
-					<p>
-						{`${i18n.translate(
-							'you-do-not-have-access-to-cloud-project'
-						)} ${i18n.translate('this-may-restrict-the-functionality-available-to-you')}`}
-					</p>
-				),
-				center: true,
-				footer: [
-					<ClayButton
-						className="ml-2 rounded-lg"
-						displayType="unstyled"
-						key="install-cancel-footer"
-						onClick={onClose}
-						size="sm"
-					>
-						{i18n.translate('cancel')}
-					</ClayButton>,
-					undefined,
-					<ClayButton
-						className="ml-2 rounded-lg"
-						displayType="primary"
-						key="install-done-footer"
-						onClick={onClose}
-						size="sm"
-					>
-						{i18n.translate('done')}
-					</ClayButton>,
-				],
-				header: i18n.translate('no-cloud-projects-available'),
-				size: 'md' as any,
-			});
+			return installAlertModal.onOpenChange(true);
 		}
 
 		navigate(`/order/${order?.id}/cloud-provisioning/install`);
@@ -158,7 +125,7 @@ const useProvisioningActions = ({
 							onClick={() => {
 								onClose();
 
-								onClickInstall();
+								onClickInstall(provisioningRow);
 							}}
 							size="sm"
 						>
@@ -197,7 +164,8 @@ const useProvisioningActions = ({
 
 	const provisioningRef = useRef([
 		{
-			action: () => onClickInstall(),
+			action: (provisioningRow: ProvisioningRow) =>
+				onClickInstall(provisioningRow),
 			show: (provisioningRow: ProvisioningRow) =>
 				provisioningRow.status === InstallStatus.READY_TO_INSTALL,
 			title: i18n.translate('install'),
@@ -234,6 +202,7 @@ const useProvisioningActions = ({
 
 	return {
 		actions: provisioningRef.current,
+		installAlertModal,
 		loading,
 		onOpenDetailsModal,
 		selectedProvisioningRow,

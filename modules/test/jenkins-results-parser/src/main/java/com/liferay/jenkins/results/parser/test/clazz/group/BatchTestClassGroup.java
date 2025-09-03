@@ -8,6 +8,11 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 import com.google.common.collect.Lists;
 
 import com.liferay.jenkins.results.parser.BatchHistory;
+import com.liferay.jenkins.results.parser.BuildDatabase;
+import com.liferay.jenkins.results.parser.BuildDatabaseUtil;
+import com.liferay.jenkins.results.parser.BuildReportFactory;
+import com.liferay.jenkins.results.parser.CloudBucketUtil;
+import com.liferay.jenkins.results.parser.DownstreamBuildReport;
 import com.liferay.jenkins.results.parser.GitWorkingDirectory;
 import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
@@ -19,6 +24,8 @@ import com.liferay.jenkins.results.parser.RootCauseAnalysisToolJob;
 import com.liferay.jenkins.results.parser.TestHistory;
 import com.liferay.jenkins.results.parser.TestSuiteJob;
 import com.liferay.jenkins.results.parser.TestTaskHistory;
+import com.liferay.jenkins.results.parser.Workspace;
+import com.liferay.jenkins.results.parser.WorkspaceGitRepository;
 import com.liferay.jenkins.results.parser.job.property.GlobJobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
@@ -46,6 +53,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -140,9 +148,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			return Integer.parseInt(jobPropertyValue);
 		}
 
-		int testClassCount = testClasses.size();
-
-		if (testClassCount == 0) {
+		if (!containsTestClasses()) {
 			return 0;
 		}
 
@@ -153,7 +159,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 				"'test.batch.axis.max.size' cannot be 0 or less");
 		}
 
-		return (int)Math.ceil((double)testClassCount / axisMaxSize);
+		return (int)Math.ceil((double)getTestClassCount() / axisMaxSize);
 	}
 
 	public AxisTestClassGroup getAxisTestClassGroup(int axisId) {
@@ -189,12 +195,6 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		String batchJobSuffix = "-batch";
 
-		String slaveLabel = getSlaveLabel();
-
-		if (slaveLabel.contains("win")) {
-			batchJobSuffix = "-windows-batch";
-		}
-
 		if (jobNameMatcher.find()) {
 			return JenkinsResultsParserUtil.combine(
 				jobNameMatcher.group("jobBaseName"), batchJobSuffix,
@@ -206,6 +206,96 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 	public String getBatchName() {
 		return batchName;
+	}
+
+	public List<DownstreamBuildReport> getCachedDownstreamBuildReports() {
+		List<DownstreamBuildReport> cachedDownstreamBuildReports =
+			new ArrayList<>();
+
+		if (!isBuildCachingEnabled() ||
+			!JenkinsResultsParserUtil.isCloudCINode()) {
+
+			return cachedDownstreamBuildReports;
+		}
+
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+		List<Workspace> workspaces = buildDatabase.getWorkspaces();
+
+		if (workspaces.isEmpty()) {
+			return cachedDownstreamBuildReports;
+		}
+
+		Workspace workspace = workspaces.get(0);
+
+		WorkspaceGitRepository workspaceGitRepository =
+			workspace.getPrimaryWorkspaceGitRepository();
+
+		String path = JenkinsResultsParserUtil.combine(
+			workspaceGitRepository.getName(), "/",
+			workspaceGitRepository.getBaseBranchSHA(), "/",
+			workspaceGitRepository.getSenderBranchSHA(), "/", getBatchName());
+
+		File baseDir = new File(
+			System.getProperty("java.io.tmpdir"),
+			"cached-build-report-files/" + path);
+
+		if (!baseDir.exists()) {
+			baseDir.mkdirs();
+
+			StringBuilder sb = new StringBuilder();
+
+			try {
+				sb.append(
+					JenkinsResultsParserUtil.getBuildProperty(
+						"cloud.ci.s3.bucket.build.reports.path"));
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+
+			sb.append("/");
+			sb.append(path);
+
+			CloudBucketUtil.syncS3Files(
+				JenkinsResultsParserUtil.getCanonicalPath(baseDir),
+				sb.toString());
+		}
+
+		File[] buildReportFiles = baseDir.listFiles();
+
+		if (buildReportFiles == null) {
+			return cachedDownstreamBuildReports;
+		}
+
+		for (File buildReportFile : buildReportFiles) {
+			try {
+				String buildReportFileName = buildReportFile.getName();
+
+				if (buildReportFileName.endsWith(".sha512")) {
+					continue;
+				}
+
+				String buildReportFileContent = JenkinsResultsParserUtil.read(
+					buildReportFile);
+
+				if (JenkinsResultsParserUtil.isNullOrEmpty(
+						buildReportFileContent)) {
+
+					continue;
+				}
+
+				cachedDownstreamBuildReports.add(
+					BuildReportFactory.newDownstreamBuildReport(
+						getBatchName(), new JSONObject(buildReportFileContent),
+						null));
+			}
+			catch (IOException | JSONException exception) {
+				System.out.println("WARNING: " + exception.getMessage());
+			}
+		}
+
+		return cachedDownstreamBuildReports;
 	}
 
 	public String getCohortName() {
@@ -248,6 +338,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		}
 
 		return topLevelJobName + batchJobSuffix;
+	}
+
+	public Map<String, List<String>> getGlobTestClassMethodNamesMap() {
+		return _globTestClassMethodNamesMap;
 	}
 
 	@Override
@@ -359,21 +453,39 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			return jobPropertyValue;
 		}
 
-		if (JenkinsResultsParserUtil.isCloudCINode()) {
-			try {
-				Properties buildProperties =
-					JenkinsResultsParserUtil.getBuildProperties();
+		if (!JenkinsResultsParserUtil.isCloudCINode()) {
+			return SLAVE_LABEL_DEFAULT;
+		}
 
-				if (buildProperties.containsKey(
-						"master.auto.scaling.group.name")) {
+		String slaveLabel = null;
 
-					return buildProperties.getProperty(
-						"master.auto.scaling.group.name");
-				}
+		try {
+			slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label", getBatchJobName(),
+				getTestSuiteName());
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.osb.jenkins.web.slave.label.minimum.ram",
+					String.valueOf(getMinimumSlaveRAM()));
 			}
-			catch (IOException ioException) {
-				throw new RuntimeException(ioException);
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"cloud.fleet.primary.label");
 			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"master.auto.scaling.group.name");
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
 		}
 
 		return SLAVE_LABEL_DEFAULT;
@@ -402,7 +514,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return testTaskHistory.getTestTaskName();
 	}
 
-	public boolean testAnalyticsCloud() {
+	public boolean isBuildCachingEnabled() {
+		Job job = getJob();
+
+		return job.isBuildCachingEnabled();
+	}
+
+	public boolean isTestAnalyticsCloud() {
 		if (_testAnalyticsCloud != null) {
 			return _testAnalyticsCloud;
 		}
@@ -410,7 +528,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		for (SegmentTestClassGroup segmentTestClassGroup :
 				getSegmentTestClassGroups()) {
 
-			if (segmentTestClassGroup.testAnalyticsCloud()) {
+			if (segmentTestClassGroup.isTestAnalyticsCloud()) {
 				_testAnalyticsCloud = true;
 
 				return _testAnalyticsCloud;
@@ -496,6 +614,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		_setIncludeStableTestSuite();
 	}
 
+	@Override
+	protected void addTestClass(TestClass testClass) {
+		super.addTestClass(testClass);
+
+		testClass.setBatchTestClassGroup(this);
+	}
+
 	protected int getAxisMaxSize() {
 		JobProperty jobProperty = getJobProperty("test.batch.axis.max.size");
 
@@ -532,6 +657,49 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		Collections.sort(globs);
 
 		return globs;
+	}
+
+	protected List<PathMatcher> getIncludePathMatchers(
+		List<JobProperty> jobProperties) {
+
+		List<PathMatcher> pathMatchers = new ArrayList<>();
+
+		for (JobProperty jobProperty : jobProperties) {
+			if (!(jobProperty instanceof GlobJobProperty)) {
+				continue;
+			}
+
+			GlobJobProperty globJobProperty = (GlobJobProperty)jobProperty;
+
+			List<PathMatcher> globPathMatchers =
+				globJobProperty.getPathMatchers();
+
+			if (globPathMatchers == null) {
+				continue;
+			}
+
+			Map<String, List<String>> globTestClassMethodNamesMap =
+				globJobProperty.getGlobTestClassMethodNamesMap();
+
+			if ((globTestClassMethodNamesMap != null) &&
+				!globTestClassMethodNamesMap.isEmpty()) {
+
+				_globTestClassMethodNamesMap.putAll(
+					globTestClassMethodNamesMap);
+			}
+
+			for (PathMatcher globPathMatcher : globPathMatchers) {
+				if ((globPathMatcher == null) ||
+					pathMatchers.contains(globPathMatcher)) {
+
+					continue;
+				}
+
+				pathMatchers.add(globPathMatcher);
+			}
+		}
+
+		return pathMatchers;
 	}
 
 	protected List<JobProperty> getJobProperties(
@@ -833,11 +1001,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			Collections.addAll(testBatchNames, jobPropertyValue.split(","));
 		}
 
-		if (testBatchNames.contains(batchName)) {
-			return true;
-		}
-
-		return false;
+		return testBatchNames.contains(batchName);
 	}
 
 	protected void recordJobProperties(List<JobProperty> jobProperties) {
@@ -857,15 +1021,15 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	}
 
 	protected void setAxisTestClassGroups() {
-		int testClassCount = testClasses.size();
-
-		if (testClassCount == 0) {
+		if (!containsTestClasses()) {
 			return;
 		}
 
 		int axisCount = getAxisCount();
 
-		int axisSize = (int)Math.ceil((double)testClassCount / axisCount);
+		int axisSize = (int)Math.ceil((double)getTestClassCount() / axisCount);
+
+		List<TestClass> testClasses = getTestClasses();
 
 		for (List<TestClass> axisTestClasses :
 				Lists.partition(testClasses, axisSize)) {
@@ -1382,25 +1546,25 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	private void _setTestHotfixChanges() {
 		Job job = getJob();
 
-		testHotfixChanges = job.testHotfixChanges();
+		testHotfixChanges = job.isTestHotfixChanges();
 	}
 
 	private void _setTestReleaseBundle() {
 		Job job = getJob();
 
-		testReleaseBundle = job.testReleaseBundle();
+		testReleaseBundle = job.isTestReleaseBundle();
 	}
 
 	private void _setTestRelevantChanges() {
 		Job job = getJob();
 
-		testRelevantChanges = job.testRelevantChanges();
+		testRelevantChanges = job.isTestRelevantChanges();
 	}
 
 	private void _setTestRelevantChangesInStable() {
 		Job job = getJob();
 
-		testRelevantChangesInStable = job.testRelevantChangesInStable();
+		testRelevantChangesInStable = job.isTestRelevantChangesInStable();
 	}
 
 	private void _setTestRelevantJUnitTestsOnly() {
@@ -1436,6 +1600,8 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	private final Map<String, Long> _averageTestOverheadDurations =
 		new HashMap<>();
 	private BatchHistory _batchHistory;
+	private final Map<String, List<String>> _globTestClassMethodNamesMap =
+		new HashMap<>();
 	private final List<JobProperty> _jobProperties = new ArrayList<>();
 	private final List<SegmentTestClassGroup> _segmentTestClassGroups =
 		new ArrayList<>();

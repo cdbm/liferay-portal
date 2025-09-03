@@ -19,11 +19,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/move_changes"
 	},
 	service = MVCActionCommand.class
@@ -60,13 +60,14 @@ public class MoveChangesMVCActionCommand extends BaseMVCActionCommand {
 			(toCTCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
 
 			try {
-				if ((modelClassNameId > 0) && (modelClassPK > 0)) {
-					_ctCollectionService.moveCTEntry(
-						fromCTCollectionId, toCTCollectionId, modelClassNameId,
-						modelClassPK);
-				}
-
 				List<CTEntry> ctEntries = new ArrayList<>();
+
+				if ((modelClassNameId > 0) && (modelClassPK > 0)) {
+					CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+						fromCTCollectionId, modelClassNameId, modelClassPK);
+
+					ctEntries.add(ctEntry);
+				}
 
 				for (long ctEntryId : ctEntryIds) {
 					CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(

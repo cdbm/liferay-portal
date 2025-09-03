@@ -12,13 +12,13 @@ import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.definitions.web.internal.constants.CommerceProductFDSNames;
 import com.liferay.commerce.product.definitions.web.internal.model.Sku;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
@@ -38,12 +38,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

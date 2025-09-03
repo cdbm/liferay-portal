@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,26 +31,33 @@ import com.liferay.portal.kernel.module.util.ServiceLatch;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceComponentLocalServiceUtil;
+import com.liferay.portal.kernel.service.configuration.ServiceComponentConfiguration;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.transaction.TransactionsUtil;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
+import com.liferay.portal.upgrade.data.cleanup.DataCleanupPreupgradeProcessSuite;
 import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalClassPathUtil;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.verify.PreupgradeVerifyProcessSuite;
+import com.liferay.portal.verify.VerifyException;
 import com.liferay.portal.verify.VerifyProcessSuite;
-import com.liferay.portal.verify.VerifyProperties;
 import com.liferay.util.dao.orm.CustomSQLUtil;
 
+import java.io.InputStream;
+
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import java.util.Collection;
 
@@ -172,7 +180,7 @@ public class DBUpgrader {
 
 			InitUtil.registerContext();
 
-			upgradeModules();
+			upgradeModules(() -> StartupHelperUtil.setUpgrading(false));
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -189,8 +197,6 @@ public class DBUpgrader {
 			result = "Failed";
 		}
 		finally {
-			StartupHelperUtil.setUpgrading(false);
-
 			System.out.println(
 				StringBundler.concat(
 					"\n", result, " Liferay upgrade process in ",
@@ -201,16 +207,13 @@ public class DBUpgrader {
 	}
 
 	public static void startUpgradeLogAppender() {
-		if (_stopWatch == null) {
-			_initUpgradeStopwatch();
-		}
+		_initUpgradeStopwatch();
 
 		ServiceLatch serviceLatch = SystemBundleUtil.newServiceLatch();
 
 		serviceLatch.<Appender>waitFor(
-			StringBundler.concat(
-				"(&(appender.name=UpgradeLogAppender)(objectClass=",
-				Appender.class.getName(), "))"),
+			"(&(appender.name=UpgradeLogAppender)(objectClass=" +
+				Appender.class.getName() + "))",
 			appender -> {
 				_appender = appender;
 
@@ -229,7 +232,68 @@ public class DBUpgrader {
 		}
 	}
 
-	public static void upgradeModules() {
+	public static void updatePortalServiceComponent()
+		throws PortalException, SQLException {
+
+		ServiceComponentConfiguration portalServiceComponentConfiguration =
+			new ServiceComponentConfiguration() {
+
+				@Override
+				public InputStream getHibernateInputStream() {
+					return null;
+				}
+
+				@Override
+				public InputStream getModelHintsExtInputStream() {
+					return null;
+				}
+
+				@Override
+				public InputStream getModelHintsInputStream() {
+					return null;
+				}
+
+				@Override
+				public String getServletContextName() {
+					return ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME;
+				}
+
+				@Override
+				public InputStream getSQLIndexesInputStream() {
+					return _classLoader.getResourceAsStream(
+						"com/liferay/portal/tools/sql/dependencies" +
+							"/indexes.sql");
+				}
+
+				@Override
+				public InputStream getSQLSequencesInputStream() {
+					return _classLoader.getResourceAsStream(
+						"com/liferay/portal/tools/sql/dependencies" +
+							"/sequences.sql");
+				}
+
+				@Override
+				public InputStream getSQLTablesInputStream() {
+					return _classLoader.getResourceAsStream(
+						"com/liferay/portal/tools/sql/dependencies" +
+							"/portal-tables.sql");
+				}
+
+				private final ClassLoader _classLoader =
+					ServiceComponentConfiguration.class.getClassLoader();
+
+			};
+
+		ServiceComponentLocalServiceUtil.initServiceComponent(
+			portalServiceComponentConfiguration,
+			DBUpgrader.class.getClassLoader(),
+			ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME,
+			ReleaseInfo.getBuildNumber(),
+			ReleaseInfo.getBuildDate(
+			).getTime());
+	}
+
+	public static void upgradeModules(Runnable upgradeModulesCallbackRunnable) {
 		_registerModuleServiceLifecycle(
 			moduleServiceLifecyclePortalInitialized);
 
@@ -240,12 +304,14 @@ public class DBUpgrader {
 		PortalCacheHelperUtil.clearPortalCaches(
 			PortalCacheManagerNames.MULTI_VM);
 
-		_registerModuleServiceLifecycle(
-			moduleServiceLifecyclePortletsInitialized);
-
 		if (_upgradeClient || StartupHelperUtil.isNewRelease()) {
 			IndexUpdaterUtil.updateAllIndexes();
 		}
+
+		upgradeModulesCallbackRunnable.run();
+
+		_registerModuleServiceLifecycle(
+			moduleServiceLifecyclePortletsInitialized);
 	}
 
 	public static void upgradePortal() throws Exception {
@@ -256,7 +322,46 @@ public class DBUpgrader {
 			UpgradeLogContext.setContext(
 				ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
 
-			VerifyProperties.verify();
+			if (PropsValues.UPGRADE_DATABASE_PREUPGRADE_VERIFY_ENABLED) {
+				PreupgradeVerifyProcessSuite preupgradeVerifyProcessSuite =
+					new PreupgradeVerifyProcessSuite();
+
+				try {
+					preupgradeVerifyProcessSuite.verify();
+				}
+				catch (VerifyException verifyException) {
+					_log.error(
+						StringBundler.concat(
+							"Stopping the server because a preupgrade ",
+							"verification process has failed. No changes have ",
+							"been made to the system. Please fix the reported ",
+							"issues and rerun the upgrade: ",
+							verifyException.getMessage()));
+
+					StartupHelperUtil.setUpgrading(false);
+
+					System.exit(1);
+				}
+			}
+
+			if (PropsValues.UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_ENABLED) {
+				DataCleanupPreupgradeProcessSuite
+					dataCleanupPreupgradeProcessSuite =
+						new DataCleanupPreupgradeProcessSuite();
+
+				try {
+					dataCleanupPreupgradeProcessSuite.cleanUp();
+				}
+				catch (Exception exception) {
+					_log.error(
+						"Unable to execute preupgrade data cleanup process",
+						exception);
+
+					StartupHelperUtil.setUpgrading(false);
+
+					throw exception;
+				}
+			}
 
 			if (FeatureFlagManagerUtil.isEnabled("LPS-157670")) {
 				checkRequiredBuildNumber(
@@ -323,7 +428,12 @@ public class DBUpgrader {
 			IndexUpdaterUtil.updatePortalIndexes();
 
 			try (Connection connection = DataAccess.getConnection()) {
+				if (PortalUpgradeProcess.isInLatestSchemaVersion(connection)) {
+					updatePortalServiceComponent();
+				}
+
 				PortalUpgradeProcess.updateBuildInfo(connection);
+				PortalUpgradeProcess.updateVersionDisplayName(connection);
 			}
 
 			CustomSQLUtil.reloadCustomSQL();

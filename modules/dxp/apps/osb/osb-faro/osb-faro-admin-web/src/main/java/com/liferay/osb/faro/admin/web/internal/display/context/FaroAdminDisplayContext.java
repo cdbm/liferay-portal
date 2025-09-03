@@ -27,14 +27,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Shinn Lok
@@ -247,59 +247,31 @@ public class FaroAdminDisplayContext {
 	}
 
 	private boolean _isBasic() {
-		if (StringUtil.equals(_getNavigation(), "basic")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "basic");
 	}
 
 	private boolean _isBusiness() {
-		if (StringUtil.equals(_getNavigation(), "business")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "business");
 	}
 
 	private boolean _isEnterprise() {
-		if (StringUtil.equals(_getNavigation(), "enterprise")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "enterprise");
 	}
 
 	private boolean _isInactive() {
-		if (StringUtil.equals(_getNavigation(), "inactive")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "inactive");
 	}
 
 	private boolean _isNavigationUsageLimitApproaching() {
-		if (StringUtil.equals(_getNavigation(), "usage-limit-approaching")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "usage-limit-approaching");
 	}
 
 	private boolean _isNavigationUsageLimitExceeded() {
-		if (StringUtil.equals(_getNavigation(), "usage-limit-exceeded")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "usage-limit-exceeded");
 	}
 
 	private boolean _isOffline() {
-		if (StringUtil.equals(_getNavigation(), "offline")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "offline");
 	}
 
 	private final HttpServletRequest _httpServletRequest;

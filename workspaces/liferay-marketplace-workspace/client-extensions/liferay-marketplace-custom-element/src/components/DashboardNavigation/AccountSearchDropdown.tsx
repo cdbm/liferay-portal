@@ -10,7 +10,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import useAccounts from '../../hooks/data/useAccounts';
 import {Liferay} from '../../liferay/liferay';
-import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
+import CommerceSelectAccount from '../../services/rest/CommerceSelectAccount';
 import {getAccountImage} from '../../utils/util';
 import Search from './Search';
 
@@ -22,11 +22,11 @@ type AccountSearchDropdownProps = {
 };
 
 const DropdownItems: React.FC<{
-	accounts: UserAccount[];
+	accounts: Account[];
 }> = ({accounts = []}) => {
 	return (
 		<ClayDropDown.ItemList>
-			{accounts.map((_account: UserAccount) => {
+			{accounts.map((_account) => {
 				const account = _account;
 				const isActive =
 					account.id === Liferay.CommerceContext.account?.accountId;
@@ -38,11 +38,12 @@ const DropdownItems: React.FC<{
 						className="mb-1"
 						key={account.id}
 						onClick={() =>
-							CommerceSelectAccountImpl.selectAccount(
+							CommerceSelectAccount.selectAccount(
 								account.id
 							).then(() => {
 								Liferay.CommerceContext.account = {
 									accountId: account.id,
+									accountName: account.name,
 								};
 
 								window.location.reload();

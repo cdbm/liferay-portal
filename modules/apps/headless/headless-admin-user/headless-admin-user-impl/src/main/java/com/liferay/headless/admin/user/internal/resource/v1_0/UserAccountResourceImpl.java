@@ -13,7 +13,8 @@ import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
-import com.liferay.captcha.util.CaptchaUtil;
+import com.liferay.captcha.rest.dto.v1_0.Captcha;
+import com.liferay.captcha.rest.resource.v1_0.CaptchaResource;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
@@ -28,7 +29,6 @@ import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderEmailAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderListTypeUtil;
@@ -42,6 +42,7 @@ import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.captcha.CaptchaSettings;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
@@ -105,6 +106,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -119,6 +121,13 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 import com.liferay.user.associated.data.anonymizer.UADAnonymousUserProvider;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -128,13 +137,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -280,8 +282,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	@NestedField(parentClass = Account.class, value = "accountUserAccounts")
 	@Override
 	public Page<UserAccount> getAccountUserAccountsPage(
-			Long accountId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			@NestedFieldId(value = "id") Long accountId, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		Map<String, Map<String, String>> actions = _getModelActions(
@@ -483,7 +485,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 		return _toUserAccount(
 			_userService.getUserByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode));
+				externalReferenceCode, contextCompany.getCompanyId()));
 	}
 
 	@Override
@@ -797,7 +799,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 		throws Exception {
 
 		User user = _userService.getUserByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		return patchUserAccount(user.getUserId(), userAccount);
 	}
@@ -880,7 +882,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 		UsersAdminUtil.updateAddresses(
 			Contact.class.getName(), user.getContactId(),
-			_getAddresses(null, userAccount));
+			_getAddresses(null, userAccount),
+			ListTypeConstants.CONTACT_ADDRESS);
 		UsersAdminUtil.updateEmailAddresses(
 			Contact.class.getName(), user.getContactId(),
 			_getServiceBuilderEmailAddresses(null, userAccount));
@@ -989,7 +992,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	}
 
 	@Override
-	public UserAccount postUserAccount(UserAccount userAccount)
+	public UserAccount postUserAccount(
+			String captchaAnswer, String captchaToken, UserAccount userAccount)
 		throws Exception {
 
 		User user = null;
@@ -1022,7 +1026,21 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 		if (contextUser.isGuestUser()) {
 			if (_captchaSettings.isCreateAccountCaptchaEnabled()) {
-				CaptchaUtil.check(contextHttpServletRequest);
+				try {
+					_captchaResource.setContextCompany(contextCompany);
+					_captchaResource.setContextUser(contextUser);
+
+					_captchaResource.postCaptchaResponse(
+						new Captcha() {
+							{
+								setAnswer(() -> captchaAnswer);
+								setToken(() -> captchaToken);
+							}
+						});
+				}
+				catch (Exception exception) {
+					throw new CaptchaException(exception);
+				}
 			}
 
 			user = _userService.addUserWithWorkflow(
@@ -1044,7 +1062,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 			UsersAdminUtil.updateAddresses(
 				Contact.class.getName(), user.getContactId(),
-				_getAddresses(null, userAccount));
+				_getAddresses(null, userAccount),
+				ListTypeConstants.CONTACT_ADDRESS);
 			UsersAdminUtil.updateEmailAddresses(
 				Contact.class.getName(), user.getContactId(),
 				_getServiceBuilderEmailAddresses(null, userAccount));
@@ -1215,7 +1234,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			externalReferenceCode, contextCompany.getCompanyId());
 
 		if (user == null) {
-			return postUserAccount(userAccount);
+			return postUserAccount(null, null, userAccount);
 		}
 
 		return putUserAccount(user.getUserId(), userAccount);
@@ -1890,6 +1909,9 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	@Reference
 	private AnnouncementsDeliveryLocalService
 		_announcementsDeliveryLocalService;
+
+	@Reference
+	private CaptchaResource _captchaResource;
 
 	@Reference
 	private CaptchaSettings _captchaSettings;

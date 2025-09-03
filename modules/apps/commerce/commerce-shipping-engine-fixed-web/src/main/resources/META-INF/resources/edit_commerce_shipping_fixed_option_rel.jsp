@@ -44,7 +44,7 @@ if (commerceShippingFixedOptionRel != null) {
 			title='<%= LanguageUtil.get(request, "details") %>'
 		>
 			<div class="row">
-				<div class="col-md-6">
+				<div class="col-md-12">
 					<aui:select bean="<%= commerceShippingFixedOptionRel %>" label="shipping-option" model="<%= CommerceShippingFixedOptionRel.class %>" name="commerceShippingFixedOptionId" required="<%= true %>">
 
 						<%
@@ -52,22 +52,6 @@ if (commerceShippingFixedOptionRel != null) {
 						%>
 
 							<aui:option label="<%= commerceShippingFixedOption.getName(languageId) %>" value="<%= commerceShippingFixedOption.getCommerceShippingFixedOptionId() %>" />
-
-						<%
-						}
-						%>
-
-					</aui:select>
-				</div>
-
-				<div class="col-md-6">
-					<aui:select bean="<%= commerceShippingFixedOptionRel %>" label="warehouse" model="<%= CommerceShippingFixedOptionRel.class %>" name="commerceInventoryWarehouseId" showEmptyOption="<%= true %>">
-
-						<%
-						for (CommerceInventoryWarehouse commerceInventoryWarehouse : commerceShippingFixedOptionRelsDisplayContext.getCommerceInventoryWarehouses()) {
-						%>
-
-							<aui:option label="<%= commerceInventoryWarehouse.getName(locale) %>" value="<%= commerceInventoryWarehouse.getCommerceInventoryWarehouseId() %>" />
 
 						<%
 						}
@@ -146,7 +130,7 @@ if (commerceShippingFixedOptionRel != null) {
 	</aui:form>
 </liferay-frontend:side-panel-content>
 
-<aui:script use="aui-base,liferay-dynamic-select">
+<aui:script use="aui-base">
 	new Liferay.DynamicSelect([
 		{
 			select: '<portlet:namespace />countryId',

@@ -61,14 +61,14 @@ import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -123,22 +123,28 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			return _collectionItemType;
 		}
 
+		String collectionItemType = StringPool.BLANK;
+
 		JSONObject collectionJSONObject =
 			_collectionStyledLayoutStructureItem.getCollectionJSONObject();
 
-		String collectionItemType = StringPool.BLANK;
-
-		if ((collectionJSONObject != null) &&
-			collectionJSONObject.has("itemType")) {
-
+		if (collectionJSONObject != null) {
 			collectionItemType = collectionJSONObject.getString("itemType");
 		}
 
-		if (Objects.equals(
+		if ((collectionJSONObject != null) &&
+			Objects.equals(
 				collectionJSONObject.getString("key"),
 				RepeatableFieldInfoItemCollectionProvider.class.getName())) {
 
 			collectionItemType = RepeatableInfoFieldValue.class.getName();
+		}
+		else {
+			ListObjectReference listObjectReference = getListObjectReference();
+
+			if (listObjectReference != null) {
+				collectionItemType = listObjectReference.getItemType();
+			}
 		}
 
 		_collectionItemType = collectionItemType;
@@ -523,7 +529,7 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			JSONArray targetCollectionsJSONArray =
 				(JSONArray)
 					fragmentEntryConfigurationParser.getConfigurationFieldValue(
-						fragmentEntryLink.getEditableValues(),
+						fragmentEntryLink.getEditableValuesJSONObject(),
 						"targetCollections",
 						FragmentConfigurationFieldDataType.ARRAY);
 

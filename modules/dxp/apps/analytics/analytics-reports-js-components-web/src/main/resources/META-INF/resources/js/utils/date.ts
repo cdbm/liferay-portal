@@ -5,26 +5,15 @@
 
 import {dateUtils} from 'frontend-js-web';
 
-import {RangeSelectors} from '../types/global';
-
-export function formatDate(date: Date) {
-	const options: Intl.DateTimeFormatOptions = {
-		day: 'numeric',
-		month: 'short',
-	};
-
-	return date.toLocaleDateString('en-US', options).toLowerCase();
-}
+import {RangeSelectors} from '../components/RangeSelectorsDropdown';
 
 export function toUnix(str: string) {
-	const date = new Date(str);
-
-	return Math.floor(date.getTime() / 1000) || null;
+	return new Date(str).getTime();
 }
 
-export function formatTooltipDate(date: Date, rangeSelectors: RangeSelectors) {
-	if (rangeSelectors === RangeSelectors.Last24Hours) {
-		return dateUtils.format(date, 'MMM D, h A');
+export function formatDate(date: Date, rangeSelector: RangeSelectors) {
+	if (rangeSelector === RangeSelectors.Last24Hours) {
+		return dateUtils.format(date, 'MMM d, h a');
 	}
 
 	return dateUtils.format(date, 'YYYY MMM D');

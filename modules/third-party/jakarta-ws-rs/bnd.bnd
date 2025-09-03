@@ -1,20 +1,17 @@
 Bundle-SymbolicName: jakarta.ws.rs
-Bundle-Version: 2.1.6.LIFERAY-PATCHED-2
-Export-Package: javax.ws.rs.*
-Provide-Capability:\
-	osgi.contract;\
-		osgi.contract=JavaJAXRS;\
-		uses:="javax.ws.rs,javax.ws.rs.client,javax.ws.rs.ext,javax.ws.rs.sse,javax.ws.rs.container,javax.ws.rs.core";\
-		version:Version=2.1
+Bundle-Version: 3.1.0.LIFERAY-PATCHED-2
+Export-Package: jakarta.ws.rs.*
 Require-Capability:\
+	osgi.ee;\
+		filter:="(&(osgi.ee=JavaSE)(version=1.8))",\
 	osgi.extender;\
 		filter:="(osgi.extender=osgi.serviceloader.processor)",\
 	osgi.serviceloader;\
 		cardinality:=multiple;\
-		filter:="(osgi.serviceloader=javax.ws.rs.client.ClientBuilder)",\
+		filter:="(osgi.serviceloader=jakarta.ws.rs.client.ClientBuilder)",\
 	osgi.serviceloader;\
 		cardinality:=multiple;\
-		filter:="(osgi.serviceloader=javax.ws.rs.ext.RuntimeDelegate)",\
+		filter:="(osgi.serviceloader=jakarta.ws.rs.ext.RuntimeDelegate)",\
 	osgi.serviceloader;\
 		cardinality:=multiple;\
-		filter:="(osgi.serviceloader=javax.ws.rs.sse.SseEventSource.Builder)"
+		filter:="(osgi.serviceloader=jakarta.ws.rs.sse.SseEventSource.Builder)"

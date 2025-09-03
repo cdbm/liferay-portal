@@ -32,7 +32,6 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -62,15 +61,15 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -251,8 +250,8 @@ public class FragmentEntryLinkManagerTest {
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 				iterator.next());
 
-		JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject freeMarkerEntryProcessorJSONObject =
 			editableValuesJSONObject.getJSONObject(
@@ -362,9 +361,6 @@ public class FragmentEntryLinkManagerTest {
 
 	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
-
-	@Inject
-	private JSONFactory _jsonFactory;
 
 	@Inject
 	private LayoutPageTemplateStructureLocalService

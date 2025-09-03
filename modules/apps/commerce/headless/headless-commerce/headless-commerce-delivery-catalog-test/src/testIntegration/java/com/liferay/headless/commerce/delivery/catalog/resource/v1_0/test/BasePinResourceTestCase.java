@@ -44,6 +44,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -273,13 +273,13 @@ public abstract class BasePinResourceTestCase {
 		String productExternalReferenceCode =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getProductExternalReferenceCode();
 
-		Page<Pin> pinPage =
+		Page<Pin> pinsPage =
 			pinResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
 					null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(pinsPage.getTotalCount());
 
 		Pin pin1 =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
@@ -639,10 +639,10 @@ public abstract class BasePinResourceTestCase {
 		Long channelId = testGetChannelProductPinsPage_getChannelId();
 		Long productId = testGetChannelProductPinsPage_getProductId();
 
-		Page<Pin> pinPage = pinResource.getChannelProductPinsPage(
+		Page<Pin> pinsPage = pinResource.getChannelProductPinsPage(
 			channelId, productId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(pinsPage.getTotalCount());
 
 		Pin pin1 = testGetChannelProductPinsPage_addPin(
 			channelId, productId, randomPin());
@@ -884,9 +884,9 @@ public abstract class BasePinResourceTestCase {
 		return null;
 	}
 
-	protected Pin testGraphQLPin_addPin() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(Pin pin, List<Pin> pins) {

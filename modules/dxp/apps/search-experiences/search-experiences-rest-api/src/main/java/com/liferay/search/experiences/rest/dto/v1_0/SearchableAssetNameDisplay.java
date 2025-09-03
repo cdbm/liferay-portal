@@ -16,6 +16,10 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Brian Wing Shun Chan
@@ -130,6 +130,47 @@ public class SearchableAssetNameDisplay implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _displayNameSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getHasSubtype() {
+		if (_hasSubtypeSupplier != null) {
+			hasSubtype = _hasSubtypeSupplier.get();
+
+			_hasSubtypeSupplier = null;
+		}
+
+		return hasSubtype;
+	}
+
+	public void setHasSubtype(Boolean hasSubtype) {
+		this.hasSubtype = hasSubtype;
+
+		_hasSubtypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setHasSubtype(
+		UnsafeSupplier<Boolean, Exception> hasSubtypeUnsafeSupplier) {
+
+		_hasSubtypeSupplier = () -> {
+			try {
+				return hasSubtypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean hasSubtype;
+
+	@JsonIgnore
+	private Supplier<Boolean> _hasSubtypeSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -189,6 +230,18 @@ public class SearchableAssetNameDisplay implements Serializable {
 			sb.append(_escape(displayName));
 
 			sb.append("\"");
+		}
+
+		Boolean hasSubtype = getHasSubtype();
+
+		if (hasSubtype != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"hasSubtype\": ");
+
+			sb.append(hasSubtype);
 		}
 
 		sb.append("}");

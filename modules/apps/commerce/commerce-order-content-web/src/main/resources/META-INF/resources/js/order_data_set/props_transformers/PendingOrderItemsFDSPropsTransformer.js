@@ -6,11 +6,11 @@
 import {
 	CommerceServiceProvider,
 	MiniCartUtils,
+	ProductOptionsDataRenderer,
 	commerceEvents,
 } from 'commerce-frontend-js';
 import {openToast} from 'frontend-js-components-web';
 
-import ProductOptionsDataRenderer from '../data_renderers/ProductOptionsDataRenderer';
 import ProductURLDataRenderer from '../data_renderers/ProductURLDataRenderer';
 
 const DeliveryCartAPI = CommerceServiceProvider.DeliveryCartAPI('v1');
@@ -70,7 +70,12 @@ const PendingOrderItemsFDSPropsTransformer = (props) => {
 						});
 
 						Liferay.fire(commerceEvents.CURRENT_ORDER_UPDATED, {
-							order: {id: props.additionalProps.commerceOrderId},
+							order: {
+								id: parseInt(
+									props.additionalProps.commerceOrderId,
+									10
+								),
+							},
 						});
 					})
 					.catch((error) => {

@@ -17,6 +17,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -28,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -726,6 +726,141 @@ public class ObjectDefinition implements Serializable {
 	private Supplier<Boolean> _enableObjectEntryHistorySupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getEnableObjectEntrySchedule() {
+		if (_enableObjectEntryScheduleSupplier != null) {
+			enableObjectEntrySchedule =
+				_enableObjectEntryScheduleSupplier.get();
+
+			_enableObjectEntryScheduleSupplier = null;
+		}
+
+		return enableObjectEntrySchedule;
+	}
+
+	public void setEnableObjectEntrySchedule(
+		Boolean enableObjectEntrySchedule) {
+
+		this.enableObjectEntrySchedule = enableObjectEntrySchedule;
+
+		_enableObjectEntryScheduleSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEnableObjectEntrySchedule(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryScheduleUnsafeSupplier) {
+
+		_enableObjectEntryScheduleSupplier = () -> {
+			try {
+				return enableObjectEntryScheduleUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableObjectEntrySchedule;
+
+	@JsonIgnore
+	private Supplier<Boolean> _enableObjectEntryScheduleSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getEnableObjectEntrySubscription() {
+		if (_enableObjectEntrySubscriptionSupplier != null) {
+			enableObjectEntrySubscription =
+				_enableObjectEntrySubscriptionSupplier.get();
+
+			_enableObjectEntrySubscriptionSupplier = null;
+		}
+
+		return enableObjectEntrySubscription;
+	}
+
+	public void setEnableObjectEntrySubscription(
+		Boolean enableObjectEntrySubscription) {
+
+		this.enableObjectEntrySubscription = enableObjectEntrySubscription;
+
+		_enableObjectEntrySubscriptionSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEnableObjectEntrySubscription(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntrySubscriptionUnsafeSupplier) {
+
+		_enableObjectEntrySubscriptionSupplier = () -> {
+			try {
+				return enableObjectEntrySubscriptionUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableObjectEntrySubscription;
+
+	@JsonIgnore
+	private Supplier<Boolean> _enableObjectEntrySubscriptionSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getEnableObjectEntryVersioning() {
+		if (_enableObjectEntryVersioningSupplier != null) {
+			enableObjectEntryVersioning =
+				_enableObjectEntryVersioningSupplier.get();
+
+			_enableObjectEntryVersioningSupplier = null;
+		}
+
+		return enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		Boolean enableObjectEntryVersioning) {
+
+		this.enableObjectEntryVersioning = enableObjectEntryVersioning;
+
+		_enableObjectEntryVersioningSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEnableObjectEntryVersioning(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryVersioningUnsafeSupplier) {
+
+		_enableObjectEntryVersioningSupplier = () -> {
+			try {
+				return enableObjectEntryVersioningUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableObjectEntryVersioning;
+
+	@JsonIgnore
+	private Supplier<Boolean> _enableObjectEntryVersioningSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -765,6 +900,47 @@ public class ObjectDefinition implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getFriendlyURLSeparator() {
+		if (_friendlyURLSeparatorSupplier != null) {
+			friendlyURLSeparator = _friendlyURLSeparatorSupplier.get();
+
+			_friendlyURLSeparatorSupplier = null;
+		}
+
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+
+		_friendlyURLSeparatorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		_friendlyURLSeparatorSupplier = () -> {
+			try {
+				return friendlyURLSeparatorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String friendlyURLSeparator;
+
+	@JsonIgnore
+	private Supplier<String> _friendlyURLSeparatorSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
@@ -1778,6 +1954,51 @@ public class ObjectDefinition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _titleObjectFieldNameSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public WorkflowDefinitionLink[] getWorkflowDefinitionLinks() {
+		if (_workflowDefinitionLinksSupplier != null) {
+			workflowDefinitionLinks = _workflowDefinitionLinksSupplier.get();
+
+			_workflowDefinitionLinksSupplier = null;
+		}
+
+		return workflowDefinitionLinks;
+	}
+
+	public void setWorkflowDefinitionLinks(
+		WorkflowDefinitionLink[] workflowDefinitionLinks) {
+
+		this.workflowDefinitionLinks = workflowDefinitionLinks;
+
+		_workflowDefinitionLinksSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setWorkflowDefinitionLinks(
+		UnsafeSupplier<WorkflowDefinitionLink[], Exception>
+			workflowDefinitionLinksUnsafeSupplier) {
+
+		_workflowDefinitionLinksSupplier = () -> {
+			try {
+				return workflowDefinitionLinksUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected WorkflowDefinitionLink[] workflowDefinitionLinks;
+
+	@JsonIgnore
+	private Supplier<WorkflowDefinitionLink[]> _workflowDefinitionLinksSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -2022,6 +2243,43 @@ public class ObjectDefinition implements Serializable {
 			sb.append(enableObjectEntryHistory);
 		}
 
+		Boolean enableObjectEntrySchedule = getEnableObjectEntrySchedule();
+
+		if (enableObjectEntrySchedule != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableObjectEntrySchedule\": ");
+
+			sb.append(enableObjectEntrySchedule);
+		}
+
+		Boolean enableObjectEntrySubscription =
+			getEnableObjectEntrySubscription();
+
+		if (enableObjectEntrySubscription != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableObjectEntrySubscription\": ");
+
+			sb.append(enableObjectEntrySubscription);
+		}
+
+		Boolean enableObjectEntryVersioning = getEnableObjectEntryVersioning();
+
+		if (enableObjectEntryVersioning != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableObjectEntryVersioning\": ");
+
+			sb.append(enableObjectEntryVersioning);
+		}
+
 		String externalReferenceCode = getExternalReferenceCode();
 
 		if (externalReferenceCode != null) {
@@ -2034,6 +2292,22 @@ public class ObjectDefinition implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		String friendlyURLSeparator = getFriendlyURLSeparator();
+
+		if (friendlyURLSeparator != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(friendlyURLSeparator));
 
 			sb.append("\"");
 		}
@@ -2434,6 +2708,29 @@ public class ObjectDefinition implements Serializable {
 			sb.append(_escape(titleObjectFieldName));
 
 			sb.append("\"");
+		}
+
+		WorkflowDefinitionLink[] workflowDefinitionLinks =
+			getWorkflowDefinitionLinks();
+
+		if (workflowDefinitionLinks != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"workflowDefinitionLinks\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < workflowDefinitionLinks.length; i++) {
+				sb.append(String.valueOf(workflowDefinitionLinks[i]));
+
+				if ((i + 1) < workflowDefinitionLinks.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");

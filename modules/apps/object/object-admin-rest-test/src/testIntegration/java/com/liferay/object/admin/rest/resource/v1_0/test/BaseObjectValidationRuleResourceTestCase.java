@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRule;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 			testCompany.getCompanyId());
 
 		objectValidationRuleResource = ObjectValidationRuleResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -222,6 +235,165 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteObjectValidationRule() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectValidationRule objectValidationRule =
+			testDeleteObjectValidationRule_addObjectValidationRule();
+
+		assertHttpResponseStatusCode(
+			204,
+			objectValidationRuleResource.deleteObjectValidationRuleHttpResponse(
+				objectValidationRule.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
+				objectValidationRule.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
+				0L));
+	}
+
+	protected ObjectValidationRule
+			testDeleteObjectValidationRule_addObjectValidationRule()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteObjectValidationRule() throws Exception {
+
+		// No namespace
+
+		ObjectValidationRule objectValidationRule1 =
+			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteObjectValidationRule",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectValidationRuleId",
+									objectValidationRule1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteObjectValidationRule"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectValidationRule",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"objectValidationRuleId",
+								objectValidationRule1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectValidationRule objectValidationRule2 =
+			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectValidationRule",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectValidationRuleId",
+										objectValidationRule2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectValidationRule"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectValidationRule",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectValidationRuleId",
+									objectValidationRule2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ObjectValidationRule
+			testGraphQLDeleteObjectValidationRule_addObjectValidationRule()
+		throws Exception {
+
+		return testGraphQLObjectValidationRule_addObjectValidationRule();
+	}
+
+	@Test
+	public void testDeleteObjectValidationRuleBatch() throws Exception {
+		ObjectValidationRule objectValidationRule1 =
+			testDeleteObjectValidationRuleBatch_addObjectValidationRule();
+
+		testDeleteObjectValidationRuleBatch_deleteObjectValidationRule(
+			202, null, objectValidationRule1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
+				objectValidationRule1.getId()));
+	}
+
+	protected ObjectValidationRule
+			testDeleteObjectValidationRuleBatch_addObjectValidationRule()
+		throws Exception {
+
+		return testDeleteObjectValidationRule_addObjectValidationRule();
+	}
+
+	protected void
+			testDeleteObjectValidationRuleBatch_deleteObjectValidationRule(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectValidationRuleResource.
+				deleteObjectValidationRuleBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage()
 		throws Exception {
 
@@ -308,13 +480,13 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage_getExternalReferenceCode();
 
-		Page<ObjectValidationRule> objectValidationRulePage =
+		Page<ObjectValidationRule> objectValidationRulesPage =
 			objectValidationRuleResource.
 				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
 					externalReferenceCode, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectValidationRulePage.getTotalCount());
+			objectValidationRulesPage.getTotalCount());
 
 		ObjectValidationRule objectValidationRule1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage_addObjectValidationRule(
@@ -612,30 +784,6 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 	}
 
 	@Test
-	public void testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule()
-		throws Exception {
-
-		ObjectValidationRule randomObjectValidationRule =
-			randomObjectValidationRule();
-
-		ObjectValidationRule postObjectValidationRule =
-			testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule_addObjectValidationRule(
-				randomObjectValidationRule);
-
-		assertEquals(randomObjectValidationRule, postObjectValidationRule);
-		assertValid(postObjectValidationRule);
-	}
-
-	protected ObjectValidationRule
-			testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule_addObjectValidationRule(
-				ObjectValidationRule objectValidationRule)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetObjectDefinitionObjectValidationRulesPage()
 		throws Exception {
 
@@ -733,13 +881,13 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectValidationRulesPage_getObjectDefinitionId();
 
-		Page<ObjectValidationRule> objectValidationRulePage =
+		Page<ObjectValidationRule> objectValidationRulesPage =
 			objectValidationRuleResource.
 				getObjectDefinitionObjectValidationRulesPage(
 					objectDefinitionId, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectValidationRulePage.getTotalCount());
+			objectValidationRulesPage.getTotalCount());
 
 		ObjectValidationRule objectValidationRule1 =
 			testGetObjectDefinitionObjectValidationRulesPage_addObjectValidationRule(
@@ -1034,148 +1182,6 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostObjectDefinitionObjectValidationRule()
-		throws Exception {
-
-		ObjectValidationRule randomObjectValidationRule =
-			randomObjectValidationRule();
-
-		ObjectValidationRule postObjectValidationRule =
-			testPostObjectDefinitionObjectValidationRule_addObjectValidationRule(
-				randomObjectValidationRule);
-
-		assertEquals(randomObjectValidationRule, postObjectValidationRule);
-		assertValid(postObjectValidationRule);
-	}
-
-	protected ObjectValidationRule
-			testPostObjectDefinitionObjectValidationRule_addObjectValidationRule(
-				ObjectValidationRule objectValidationRule)
-		throws Exception {
-
-		return objectValidationRuleResource.
-			postObjectDefinitionObjectValidationRule(
-				testGetObjectDefinitionObjectValidationRulesPage_getObjectDefinitionId(),
-				objectValidationRule);
-	}
-
-	@Test
-	public void testDeleteObjectValidationRule() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectValidationRule objectValidationRule =
-			testDeleteObjectValidationRule_addObjectValidationRule();
-
-		assertHttpResponseStatusCode(
-			204,
-			objectValidationRuleResource.deleteObjectValidationRuleHttpResponse(
-				objectValidationRule.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
-				objectValidationRule.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
-				0L));
-	}
-
-	protected ObjectValidationRule
-			testDeleteObjectValidationRule_addObjectValidationRule()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteObjectValidationRule() throws Exception {
-
-		// No namespace
-
-		ObjectValidationRule objectValidationRule1 =
-			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteObjectValidationRule",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"objectValidationRuleId",
-									objectValidationRule1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteObjectValidationRule"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectValidationRule",
-					new HashMap<String, Object>() {
-						{
-							put(
-								"objectValidationRuleId",
-								objectValidationRule1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace objectAdmin_v1_0
-
-		ObjectValidationRule objectValidationRule2 =
-			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"deleteObjectValidationRule",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"objectValidationRuleId",
-										objectValidationRule2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-				"Object/deleteObjectValidationRule"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectAdmin_v1_0",
-					new GraphQLField(
-						"objectValidationRule",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"objectValidationRuleId",
-									objectValidationRule2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ObjectValidationRule
-			testGraphQLDeleteObjectValidationRule_addObjectValidationRule()
-		throws Exception {
-
-		return testGraphQLObjectValidationRule_addObjectValidationRule();
 	}
 
 	@Test
@@ -1531,6 +1537,56 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 	}
 
 	@Test
+	public void testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule()
+		throws Exception {
+
+		ObjectValidationRule randomObjectValidationRule =
+			randomObjectValidationRule();
+
+		ObjectValidationRule postObjectValidationRule =
+			testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule_addObjectValidationRule(
+				randomObjectValidationRule);
+
+		assertEquals(randomObjectValidationRule, postObjectValidationRule);
+		assertValid(postObjectValidationRule);
+	}
+
+	protected ObjectValidationRule
+			testPostObjectDefinitionByExternalReferenceCodeObjectValidationRule_addObjectValidationRule(
+				ObjectValidationRule objectValidationRule)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostObjectDefinitionObjectValidationRule()
+		throws Exception {
+
+		ObjectValidationRule randomObjectValidationRule =
+			randomObjectValidationRule();
+
+		ObjectValidationRule postObjectValidationRule =
+			testPostObjectDefinitionObjectValidationRule_addObjectValidationRule(
+				randomObjectValidationRule);
+
+		assertEquals(randomObjectValidationRule, postObjectValidationRule);
+		assertValid(postObjectValidationRule);
+	}
+
+	protected ObjectValidationRule
+			testPostObjectDefinitionObjectValidationRule_addObjectValidationRule(
+				ObjectValidationRule objectValidationRule)
+		throws Exception {
+
+		return objectValidationRuleResource.
+			postObjectDefinitionObjectValidationRule(
+				testGetObjectDefinitionObjectValidationRulesPage_getObjectDefinitionId(),
+				objectValidationRule);
+	}
+
+	@Test
 	public void testPutObjectValidationRule() throws Exception {
 		ObjectValidationRule postObjectValidationRule =
 			testPutObjectValidationRule_addObjectValidationRule();
@@ -1559,6 +1615,62 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ObjectValidationRule objectValidationRule1 =
+			testBatchEngineDeleteImportTask_addObjectValidationRule();
+
+		testBatchEngineDeleteImportTask_deleteObjectValidationRule(
+			200, null, objectValidationRule1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectValidationRuleResource.getObjectValidationRuleHttpResponse(
+				objectValidationRule1.getId()));
+	}
+
+	protected ObjectValidationRule
+			testBatchEngineDeleteImportTask_addObjectValidationRule()
+		throws Exception {
+
+		return testDeleteObjectValidationRule_addObjectValidationRule();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteObjectValidationRule(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ObjectValidationRule
@@ -2623,7 +2735,30 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 		return randomObjectValidationRule();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectValidationRuleResource objectValidationRuleResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

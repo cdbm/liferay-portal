@@ -10,8 +10,10 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceModel;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
@@ -31,6 +33,8 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -953,12 +957,12 @@ public class DDMFormInstanceModelImpl
 	}
 
 	public com.liferay.dynamic.data.mapping.storage.DDMFormValues
-		getDDMFormValues() {
+		getSettingsDDMFormValues() {
 
 		return null;
 	}
 
-	public void setDDMFormValues(
+	public void setSettingsDDMFormValues(
 		com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues) {
 	}
 
@@ -1246,7 +1250,7 @@ public class DDMFormInstanceModelImpl
 
 		_setModifiedDate = false;
 
-		setDDMFormValues(null);
+		setSettingsDDMFormValues(null);
 
 		_columnBitmask = 0;
 	}
@@ -1356,9 +1360,17 @@ public class DDMFormInstanceModelImpl
 			ddmFormInstanceCacheModel.lastPublishDate = Long.MIN_VALUE;
 		}
 
-		setDDMFormValues(null);
+		try {
+			setSettingsDDMFormValues(null);
 
-		ddmFormInstanceCacheModel._ddmFormValues = getDDMFormValues();
+			ddmFormInstanceCacheModel.ddmFormValues =
+				(com.liferay.dynamic.data.mapping.storage.DDMFormValues)
+					_ddmFormValuesMethodHandle.invokeExact(
+						(DDMFormInstanceImpl)this);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return ddmFormInstanceCacheModel;
 	}
@@ -1555,6 +1567,41 @@ public class DDMFormInstanceModelImpl
 	}
 
 	private long _columnBitmask;
+
+	protected static final BiConsumer
+		<DDMFormInstance,
+		 com.liferay.dynamic.data.mapping.storage.DDMFormValues>
+			ddmFormValuesUpdateEntityCacheBiConsumer =
+				(ddmFormInstance, ddmFormValues) -> {
+					DDMFormInstanceCacheModel ddmFormInstanceCacheModel =
+						EntityCacheUtil.fetchCacheModel(
+							DDMFormInstanceImpl.class,
+							ddmFormInstance.getPrimaryKey(),
+							DDMFormInstanceCacheModel.class);
+
+					if ((ddmFormInstanceCacheModel != null) &&
+						(ddmFormInstanceCacheModel.getMvccVersion() ==
+							ddmFormInstance.getMvccVersion())) {
+
+						ddmFormInstanceCacheModel.ddmFormValues = ddmFormValues;
+					}
+				};
+
+	private static final MethodHandle _ddmFormValuesMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_ddmFormValuesMethodHandle = lookup.findGetter(
+				DDMFormInstanceImpl.class, "_ddmFormValues",
+				com.liferay.dynamic.data.mapping.storage.DDMFormValues.class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
+
 	private DDMFormInstance _escapedModel;
 
 }

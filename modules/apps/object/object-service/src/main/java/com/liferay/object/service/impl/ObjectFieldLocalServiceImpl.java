@@ -421,9 +421,6 @@ public class ObjectFieldLocalServiceImpl
 
 			if (Objects.equals(
 					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) ||
-				Objects.equals(
-					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
 
 				throw new UnsupportedOperationException(
@@ -456,6 +453,14 @@ public class ObjectFieldLocalServiceImpl
 	@Override
 	public List<ObjectField> getLocalizedObjectFields(long objectDefinitionId) {
 		return objectFieldPersistence.findByODI_L(objectDefinitionId, true);
+	}
+
+	@Override
+	public List<ObjectField> getLocalizedObjectFields(
+		long objectDefinitionId, boolean system) {
+
+		return objectFieldPersistence.findByODI_L_S(
+			objectDefinitionId, true, system);
 	}
 
 	@Override
@@ -568,10 +573,25 @@ public class ObjectFieldLocalServiceImpl
 			return ObjectEntryTable.INSTANCE;
 		}
 
+		SystemObjectDefinitionManager systemObjectDefinitionManager = null;
+
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId);
 
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
+						objectDefinition.getName());
+		}
+
 		if (objectField.isLocalized()) {
+			if (objectDefinition.isUnmodifiableSystemObject() &&
+				objectField.isSystem()) {
+
+				return systemObjectDefinitionManager.getLocalizationTable();
+			}
+
 			return DynamicObjectDefinitionLocalizationTableFactory.create(
 				objectDefinition, this);
 		}
@@ -581,11 +601,6 @@ public class ObjectFieldLocalServiceImpl
 				objectDefinition.getDBTableName())) {
 
 			if (objectDefinition.isUnmodifiableSystemObject()) {
-				SystemObjectDefinitionManager systemObjectDefinitionManager =
-					_systemObjectDefinitionManagerRegistry.
-						getSystemObjectDefinitionManager(
-							objectDefinition.getName());
-
 				return systemObjectDefinitionManager.getTable();
 			}
 
@@ -770,16 +785,6 @@ public class ObjectFieldLocalServiceImpl
 				businessType,
 				ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
 
-			ObjectRelationship objectRelationship =
-				_objectRelationshipPersistence.fetchByObjectFieldId2(
-					oldObjectField.getObjectFieldId());
-
-			if ((objectRelationship != null) && objectRelationship.isEdge() &&
-				!required) {
-
-				throw new ObjectFieldRequiredException();
-			}
-
 			_validateObjectRelationshipDeletionType(
 				oldObjectField.getObjectFieldId(), required);
 		}
@@ -856,7 +861,8 @@ public class ObjectFieldLocalServiceImpl
 				objectField.getBusinessType());
 
 		_validateLocalized(
-			localized, objectDefinition, objectFieldBusinessType, required);
+			localized, objectDefinition, objectField, objectFieldBusinessType,
+			required);
 
 		User user = _userLocalService.getUser(userId);
 
@@ -891,17 +897,14 @@ public class ObjectFieldLocalServiceImpl
 
 		objectField = objectFieldPersistence.update(objectField);
 
-		if (ObjectFieldUtil.isMetadata(name) ||
-			(system && objectDefinition.isUnmodifiableSystemObject())) {
-
-			return objectField;
-		}
-
 		_addOrUpdateObjectFieldSettings(
 			objectField, objectDefinition, objectFieldBusinessType,
 			objectFieldSettings, null);
 
-		if (!objectDefinition.isApproved()) {
+		if (!objectDefinition.isApproved() ||
+			ObjectFieldUtil.isMetadata(name) ||
+			(system && objectDefinition.isUnmodifiableSystemObject())) {
+
 			return objectField;
 		}
 
@@ -964,6 +967,14 @@ public class ObjectFieldLocalServiceImpl
 			List<ObjectFieldSetting> objectFieldSettings,
 			ObjectField oldObjectField)
 		throws PortalException {
+
+		if (ListUtil.isEmpty(objectFieldSettings) &&
+			(ObjectFieldUtil.isMetadata(newObjectField.getName()) ||
+			 (newObjectField.isSystem() &&
+			  objectDefinition.isUnmodifiableSystemObject()))) {
+
+			return;
+		}
 
 		objectFieldBusinessType.validateObjectFieldSettings(
 			newObjectField, objectFieldSettings);
@@ -1404,7 +1415,7 @@ public class ObjectFieldLocalServiceImpl
 				businessType);
 
 		_validateLocalized(
-			localized, oldObjectField.getObjectDefinition(),
+			localized, oldObjectField.getObjectDefinition(), newObjectField,
 			objectFieldBusinessType, required);
 
 		ObjectDefinition objectDefinition =
@@ -1648,6 +1659,7 @@ public class ObjectFieldLocalServiceImpl
 
 	private void _validateLocalized(
 			boolean localized, ObjectDefinition objectDefinition,
+			ObjectField objectField,
 			ObjectFieldBusinessType objectFieldBusinessType, boolean required)
 		throws PortalException {
 
@@ -1667,7 +1679,7 @@ public class ObjectFieldLocalServiceImpl
 				 ObjectFieldConstants.BUSINESS_TYPE_TEXT)) ||
 			(FeatureFlagManagerUtil.isEnabled(
 				objectDefinition.getCompanyId(), "LPD-32050") &&
-			 !objectFieldBusinessType.isLocalizable())) {
+			 !objectFieldBusinessType.isLocalizationSupported(objectField))) {
 
 			if (FeatureFlagManagerUtil.isEnabled(
 					objectDefinition.getCompanyId(), "LPD-32050")) {
@@ -1718,7 +1730,7 @@ public class ObjectFieldLocalServiceImpl
 
 		if (!FeatureFlagManagerUtil.isEnabled(
 				objectDefinition.getCompanyId(), "LPD-32050") &&
-			required) {
+			!objectDefinition.isUnmodifiableSystemObject() && required) {
 
 			throw new ObjectFieldLocalizedException(
 				"Localized object fields must not be required");
@@ -1916,8 +1928,9 @@ public class ObjectFieldLocalServiceImpl
 		"createDate", "creator", "id", "modifiedDate", "status");
 	private final Set<String> _reservedNames = SetUtil.fromArray(
 		"actions", "companyid", "createdate", "creator", "currentdate",
-		"datecreated", "datemodified", "externalreferencecode", "groupid", "id",
-		"lastpublishdate", "modifieddate", "status", "statusbyuserid",
+		"datecreated", "datemodified", "displaydate", "expirationdate",
+		"externalreferencecode", "groupid", "id", "lastpublishdate",
+		"modifieddate", "reviewdate", "status", "statusbyuserid",
 		"statusbyusername", "statusdate", "userid", "username");
 
 	@Reference

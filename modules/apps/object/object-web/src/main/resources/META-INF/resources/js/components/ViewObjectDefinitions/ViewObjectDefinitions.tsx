@@ -31,7 +31,10 @@ import {
 import './ViewObjectDefinitions.scss';
 import {ViewObjectDefinitionsModals} from './ViewObjectDefinitionsModals';
 
-import type {IItemsActions} from '@liferay/frontend-data-set-web';
+import type {
+	ICreationActionItem,
+	IItemsActions,
+} from '@liferay/frontend-data-set-web';
 
 import type {FDSItem, IFDSTableProps} from '../../utils/fds';
 
@@ -52,7 +55,7 @@ interface ViewObjectDefinitionsProps extends IFDSTableProps {
 	modelBuilderURL: string;
 	nameMaxLength: string;
 	objectDefinitionsCreationMenu: {
-		primaryItems?: any[];
+		primaryItems: Array<ICreationActionItem>;
 		secondaryItems?: any[];
 	};
 	objectDefinitionsFDSActionDropdownItems: IItemsActions[];
@@ -232,7 +235,11 @@ export default function ViewObjectDefinitions({
 
 			if (action.data.id === 'deleteObjectDefinition') {
 				if (
-					itemData.rootObjectDefinitionExternalReferenceCode &&
+					itemData.objectDefinitionSettings?.some(
+						(setting) =>
+							setting.name ===
+							'rootObjectDefinitionExternalReferenceCodes'
+					) &&
 					Liferay.FeatureFlags['LPD-34594']
 				) {
 					setSelectedObjectDefinition(itemData);

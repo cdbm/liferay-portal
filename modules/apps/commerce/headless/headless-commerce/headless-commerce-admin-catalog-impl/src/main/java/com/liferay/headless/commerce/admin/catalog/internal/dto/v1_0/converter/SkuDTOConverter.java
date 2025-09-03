@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter;
 
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
@@ -14,16 +15,15 @@ import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;

@@ -9,6 +9,9 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.Status;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.web.internal.BaseExportImportTestCase;
 import com.liferay.petra.lang.SafeCloseable;
@@ -29,6 +32,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -46,7 +50,11 @@ import org.junit.runner.RunWith;
 /**
  * @author Gabriel Albuquerque
  */
-@FeatureFlags("LPD-34594")
+@FeatureFlags(
+	featureFlags = {
+		@FeatureFlag(value = "LPD-17564"), @FeatureFlag(value = "LPD-34594")
+	}
+)
 @RunWith(Arquillian.class)
 public class ObjectDefinitionExportImportTest extends BaseExportImportTestCase {
 
@@ -179,6 +187,10 @@ public class ObjectDefinitionExportImportTest extends BaseExportImportTestCase {
 				)
 			);
 
+		String objectFieldName = "r_testAccountRelationship_accountEntryId";
+		String objectRelationshipExternalReferenceCode =
+			RandomTestUtil.randomString();
+
 		accountRestrictedObjectDefinitionJSONObject.put(
 			"objectFields",
 			JSONUtil.concat(
@@ -188,18 +200,32 @@ public class ObjectDefinitionExportImportTest extends BaseExportImportTestCase {
 					JSONUtil.put(
 						"businessType", "Relationship"
 					).put(
-						"name", "r_testAccountRelationship_accountEntryId"
+						"name", objectFieldName
 					).put(
 						"objectDefinitionExternalReferenceCode1", "L_ACCOUNT"
 					).put(
 						"objectRelationshipExternalReferenceCode",
-						"OBJECTRELATIONSHIPERC"
+						objectRelationshipExternalReferenceCode
 					))));
 
 		testExportImportJSON(
 			accountRestrictedObjectDefinitionJSONObject.toString(),
 			accountRestrictedObjectDefinitionJSONObject.toString(),
 			externalReferenceCode, name);
+
+		ObjectDefinition accountObjectDefinition =
+			objectDefinitionResource.getObjectDefinitionByExternalReferenceCode(
+				"L_ACCOUNT");
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.
+				getObjectRelationshipByExternalReferenceCode(
+					objectRelationshipExternalReferenceCode,
+					user.getCompanyId(), accountObjectDefinition.getId());
+
+		Assert.assertEquals(
+			objectRelationship.getName(),
+			objectFieldName.split(StringPool.UNDERLINE)[1]);
 
 		ObjectDefinition accountRestrictedObjectDefinition =
 			objectDefinitionResource.getObjectDefinitionByExternalReferenceCode(
@@ -403,5 +429,11 @@ public class ObjectDefinitionExportImportTest extends BaseExportImportTestCase {
 		filter = "mvc.command.name=/object_definitions/export_object_definition"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
+
+	@Inject
+	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

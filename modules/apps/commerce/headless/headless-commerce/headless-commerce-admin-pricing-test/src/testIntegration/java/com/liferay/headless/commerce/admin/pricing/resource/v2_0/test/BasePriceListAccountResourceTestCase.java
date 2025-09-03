@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListAccount;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BasePriceListAccountResourceTestCase {
 			testCompany.getCompanyId());
 
 		priceListAccountResource = PriceListAccountResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -187,12 +200,112 @@ public abstract class BasePriceListAccountResourceTestCase {
 
 	@Test
 	public void testDeletePriceListAccount() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PriceListAccount priceListAccount =
+			testDeletePriceListAccount_addPriceListAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			priceListAccountResource.deletePriceListAccountHttpResponse(
+				priceListAccount.getPriceListAccountId()));
+	}
+
+	protected PriceListAccount testDeletePriceListAccount_addPriceListAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeletePriceListAccount() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		PriceListAccount priceListAccount1 =
+			testGraphQLDeletePriceListAccount_addPriceListAccount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deletePriceListAccount",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"priceListAccountId",
+									priceListAccount1.getPriceListAccountId());
+							}
+						})),
+				"JSONObject/data", "Object/deletePriceListAccount"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		PriceListAccount priceListAccount2 =
+			testGraphQLDeletePriceListAccount_addPriceListAccount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deletePriceListAccount",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"priceListAccountId",
+										priceListAccount2.
+											getPriceListAccountId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deletePriceListAccount"));
+	}
+
+	protected PriceListAccount
+			testGraphQLDeletePriceListAccount_addPriceListAccount()
+		throws Exception {
+
+		return testGraphQLPriceListAccount_addPriceListAccount();
+	}
+
+	@Test
+	public void testDeletePriceListAccountBatch() throws Exception {
+		PriceListAccount priceListAccount1 =
+			testDeletePriceListAccountBatch_addPriceListAccount();
+
+		testDeletePriceListAccountBatch_deletePriceListAccount(
+			202, null, priceListAccount1.getPriceListAccountId());
+	}
+
+	protected PriceListAccount
+			testDeletePriceListAccountBatch_addPriceListAccount()
+		throws Exception {
+
+		return testDeletePriceListAccount_addPriceListAccount();
+	}
+
+	protected void testDeletePriceListAccountBatch_deletePriceListAccount(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			priceListAccountResource.deletePriceListAccountBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"priceListAccountId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -257,6 +370,12 @@ public abstract class BasePriceListAccountResourceTestCase {
 			page,
 			testGetPriceListByExternalReferenceCodePriceListAccountsPage_getExpectedActions(
 				externalReferenceCode));
+
+		priceListAccountResource.deletePriceListAccount(
+			priceListAccount1.getPriceListAccountId());
+
+		priceListAccountResource.deletePriceListAccount(
+			priceListAccount2.getPriceListAccountId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -276,13 +395,13 @@ public abstract class BasePriceListAccountResourceTestCase {
 		String externalReferenceCode =
 			testGetPriceListByExternalReferenceCodePriceListAccountsPage_getExternalReferenceCode();
 
-		Page<PriceListAccount> priceListAccountPage =
+		Page<PriceListAccount> priceListAccountsPage =
 			priceListAccountResource.
 				getPriceListByExternalReferenceCodePriceListAccountsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceListAccountPage.getTotalCount());
+			priceListAccountsPage.getTotalCount());
 
 		PriceListAccount priceListAccount1 =
 			testGetPriceListByExternalReferenceCodePriceListAccountsPage_addPriceListAccount(
@@ -404,29 +523,6 @@ public abstract class BasePriceListAccountResourceTestCase {
 	}
 
 	@Test
-	public void testPostPriceListByExternalReferenceCodePriceListAccount()
-		throws Exception {
-
-		PriceListAccount randomPriceListAccount = randomPriceListAccount();
-
-		PriceListAccount postPriceListAccount =
-			testPostPriceListByExternalReferenceCodePriceListAccount_addPriceListAccount(
-				randomPriceListAccount);
-
-		assertEquals(randomPriceListAccount, postPriceListAccount);
-		assertValid(postPriceListAccount);
-	}
-
-	protected PriceListAccount
-			testPostPriceListByExternalReferenceCodePriceListAccount_addPriceListAccount(
-				PriceListAccount priceListAccount)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetPriceListIdPriceListAccountsPage() throws Exception {
 		Long id = testGetPriceListIdPriceListAccountsPage_getId();
 		Long irrelevantId =
@@ -478,6 +574,12 @@ public abstract class BasePriceListAccountResourceTestCase {
 		assertValid(
 			page,
 			testGetPriceListIdPriceListAccountsPage_getExpectedActions(id));
+
+		priceListAccountResource.deletePriceListAccount(
+			priceListAccount1.getPriceListAccountId());
+
+		priceListAccountResource.deletePriceListAccount(
+			priceListAccount2.getPriceListAccountId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -593,12 +695,12 @@ public abstract class BasePriceListAccountResourceTestCase {
 
 		Long id = testGetPriceListIdPriceListAccountsPage_getId();
 
-		Page<PriceListAccount> priceListAccountPage =
+		Page<PriceListAccount> priceListAccountsPage =
 			priceListAccountResource.getPriceListIdPriceListAccountsPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceListAccountPage.getTotalCount());
+			priceListAccountsPage.getTotalCount());
 
 		PriceListAccount priceListAccount1 =
 			testGetPriceListIdPriceListAccountsPage_addPriceListAccount(
@@ -867,6 +969,29 @@ public abstract class BasePriceListAccountResourceTestCase {
 	}
 
 	@Test
+	public void testPostPriceListByExternalReferenceCodePriceListAccount()
+		throws Exception {
+
+		PriceListAccount randomPriceListAccount = randomPriceListAccount();
+
+		PriceListAccount postPriceListAccount =
+			testPostPriceListByExternalReferenceCodePriceListAccount_addPriceListAccount(
+				randomPriceListAccount);
+
+		assertEquals(randomPriceListAccount, postPriceListAccount);
+		assertValid(postPriceListAccount);
+	}
+
+	protected PriceListAccount
+			testPostPriceListByExternalReferenceCodePriceListAccount_addPriceListAccount(
+				PriceListAccount priceListAccount)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostPriceListIdPriceListAccount() throws Exception {
 		PriceListAccount randomPriceListAccount = randomPriceListAccount();
 
@@ -887,8 +1012,66 @@ public abstract class BasePriceListAccountResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		PriceListAccount priceListAccount1 =
+			testBatchEngineDeleteImportTask_addPriceListAccount();
+
+		testBatchEngineDeleteImportTask_deletePriceListAccount(
+			200, null, priceListAccount1.getPriceListAccountId());
+	}
+
+	protected PriceListAccount
+			testBatchEngineDeleteImportTask_addPriceListAccount()
+		throws Exception {
+
+		return testDeletePriceListAccount_addPriceListAccount();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePriceListAccount(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"priceListAccountId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected PriceListAccount testGraphQLPriceListAccount_addPriceListAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		PriceListAccount priceListAccount,
@@ -969,6 +1152,10 @@ public abstract class BasePriceListAccountResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (priceListAccount.getPriceListAccountId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1569,7 +1756,30 @@ public abstract class BasePriceListAccountResourceTestCase {
 		return randomPriceListAccount();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PriceListAccountResource priceListAccountResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

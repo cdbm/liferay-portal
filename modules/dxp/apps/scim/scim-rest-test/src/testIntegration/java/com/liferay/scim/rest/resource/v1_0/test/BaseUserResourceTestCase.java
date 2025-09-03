@@ -41,6 +41,10 @@ import com.liferay.scim.rest.client.pagination.Page;
 import com.liferay.scim.rest.client.resource.v1_0.UserResource;
 import com.liferay.scim.rest.client.serdes.v1_0.UserSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -200,21 +200,6 @@ public abstract class BaseUserResourceTestCase {
 	}
 
 	@Test
-	public void testGetV2Users() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostV2User() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostV2UserSearch() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testDeleteV2User() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		User user = testDeleteV2User_addUser();
@@ -234,18 +219,28 @@ public abstract class BaseUserResourceTestCase {
 	}
 
 	@Test
+	public void testGetV2Users() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPatchV2User() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostV2User() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostV2UserSearch() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
 	public void testPutV2User() throws Exception {
 		Assert.assertTrue(false);
-	}
-
-	protected User testGraphQLUser_addUser() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	protected void assertContains(User user, List<User> users) {

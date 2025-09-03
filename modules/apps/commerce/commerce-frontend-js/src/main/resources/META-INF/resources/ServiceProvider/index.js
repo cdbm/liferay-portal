@@ -4,6 +4,7 @@
  */
 
 import AdminAddressAPI from './admin-address/index';
+import AdminListTypeAPI from './admin-list-type/index';
 import AdminUserAPI from './admin-user/index';
 import AdminAccountAPI from './commerce-admin-account/index';
 import AdminCatalogAPI from './commerce-admin-catalog/index';
@@ -16,6 +17,7 @@ import DeliveryCatalogAPI from './commerce-delivery-catalog/index';
 import DeliveryOrderAPI from './commerce-delivery-order/index';
 import ReturnItemAPI from './commerce-return-items/ReturnItem';
 import ReturnAPI from './commerce-returns/Return';
+import BatchEngineAPI from './headless-batch-engine/index';
 
 const ServiceProvider = {
 	AdminAccountAPI,
@@ -23,9 +25,11 @@ const ServiceProvider = {
 	AdminCatalogAPI,
 	AdminChannelAPI,
 	AdminInventoryAPI,
+	AdminListTypeAPI,
 	AdminOrderAPI,
 	AdminPricingAPI,
 	AdminUserAPI,
+	BatchEngineAPI,
 	DeliveryCartAPI,
 	DeliveryCatalogAPI,
 	DeliveryOrderAPI,

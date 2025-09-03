@@ -6,24 +6,31 @@
 package com.liferay.portal.osgi.web.portlet.container.test;
 
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.AssumeTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+
+import jakarta.portlet.Portlet;
 
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.portlet.Portlet;
-
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -34,6 +41,16 @@ import org.osgi.framework.ServiceRegistration;
  * @author Raymond Augé
  */
 public abstract class BasePortletContainerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new AssumeTestRule("assume"), new LiferayIntegrationTestRule());
+
+	public static void assume() {
+		Assume.assumeFalse(DBPartition.isPartitionEnabled());
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -90,7 +107,7 @@ public abstract class BasePortletContainerTestCase {
 			String portletName, boolean addToLayout)
 		throws Exception {
 
-		properties.put("javax.portlet.name", portletName);
+		properties.put("jakarta.portlet.name", portletName);
 
 		registerService(Portlet.class, portlet, properties);
 

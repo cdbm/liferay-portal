@@ -39,18 +39,6 @@ jest.mock(
 	})
 );
 
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
-	sub: jest.fn((key, args) => {
-		if (typeof args === 'object') {
-			return args.reduce((key, arg) => key.replace('x', arg), key);
-		}
-		else {
-			return key.replace('x', args);
-		}
-	}),
-}));
-
 const SpacingBoxTest = ({
 	itemConfig = {},
 	canSetCustomValue = true,
@@ -259,7 +247,7 @@ describe('SpacingBox', () => {
 		expect(screen.getByText('111px')).toBeInTheDocument();
 	});
 
-	describe('LenghtInput inside SpacingBox', () => {
+	describe('LengthInput inside SpacingBox', () => {
 		it('does not render the input when user does not have update permission', () => {
 			render(<SpacingBoxTest canSetCustomValue={false} />);
 

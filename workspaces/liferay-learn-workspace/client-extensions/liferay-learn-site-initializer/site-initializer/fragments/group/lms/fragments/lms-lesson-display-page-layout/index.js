@@ -12,12 +12,11 @@ copyToClipboardButtons.forEach((button) => {
 		const codeToolbar = button.closest('.code-toolbar');
 
 		if (codeToolbar) {
-			if (codeToolbar.querySelector('code.language-bash').innerText) {
+			const code = codeToolbar.querySelector('code');
+
+			if (code) {
 				navigator.clipboard
-					.writeText(
-						codeToolbar.querySelector('code.language-bash')
-							.innerText
-					)
+					.writeText(code.innerText)
 					.then(() => {
 						button.setAttribute('data-copy-state', 'copy-success');
 					})

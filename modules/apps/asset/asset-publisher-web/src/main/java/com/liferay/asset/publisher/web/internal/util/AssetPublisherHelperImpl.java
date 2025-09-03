@@ -30,6 +30,7 @@ import com.liferay.info.pagination.Pagination;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -73,6 +74,10 @@ import com.liferay.segments.SegmentsEntryRetriever;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.context.RequestContextMapper;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -85,10 +90,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -159,10 +160,10 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 		assetEntryQuery.setEnd(end);
 		assetEntryQuery.setStart(start);
 
-		List<AssetEntry> results = _assetEntryService.getEntries(
+		List<AssetEntry> assetEntries = _assetEntryService.getEntries(
 			assetEntryQuery);
 
-		return new BaseModelSearchResult<>(results, total);
+		return new BaseModelSearchResult<>(assetEntries, total);
 	}
 
 	@Override
@@ -407,8 +408,13 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 				AssetRendererFactoryRegistryUtil.getClassNameIds(
 					layout.getCompanyId());
 
-			assetEntryQuery.setClassNameIds(
-				getClassNameIds(portletPreferences, availableClassNameIds));
+			try (SafeCloseable safeCloseable =
+					FF_LPD_39304_CompanyTemporarySwapper.
+						setCompanyIdWithSafeCloseable(layout.getCompanyId())) {
+
+				assetEntryQuery.setClassNameIds(
+					getClassNameIds(portletPreferences, availableClassNameIds));
+			}
 		}
 
 		assetEntryQuery.setClassTypeIds(
@@ -991,7 +997,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 	}
 
 	private long[] _filterAssetCategoryIds(long[] assetCategoryIds) {
-		List<Long> assetCategoryIdsList = new ArrayList<>();
+		List<Long> filteredAssetCategoryIdsList = new ArrayList<>();
 
 		for (long assetCategoryId : assetCategoryIds) {
 			AssetCategory category =
@@ -1001,10 +1007,11 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 				continue;
 			}
 
-			assetCategoryIdsList.add(assetCategoryId);
+			filteredAssetCategoryIdsList.add(assetCategoryId);
 		}
 
-		return ArrayUtil.toArray(assetCategoryIdsList.toArray(new Long[0]));
+		return ArrayUtil.toArray(
+			filteredAssetCategoryIdsList.toArray(new Long[0]));
 	}
 
 	private List<AssetEntry> _filterAssetTagNamesAssetEntries(
@@ -1290,12 +1297,10 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 			return;
 		}
 
-		String[] assetEntryXmls = portletPreferences.getValues(
-			"assetEntryXml", new String[0]);
+		List<String> assetEntryXmls = ListUtil.fromArray(
+			portletPreferences.getValues("assetEntryXml", new String[0]));
 
-		List<String> assetEntryXmlsList = ListUtil.fromArray(assetEntryXmls);
-
-		Iterator<String> iterator = assetEntryXmlsList.iterator();
+		Iterator<String> iterator = assetEntryXmls.iterator();
 
 		while (iterator.hasNext()) {
 			String assetEntryXml = iterator.next();
@@ -1312,7 +1317,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 		}
 
 		portletPreferences.setValues(
-			"assetEntryXml", assetEntryXmlsList.toArray(new String[0]));
+			"assetEntryXml", assetEntryXmls.toArray(new String[0]));
 
 		portletPreferences.store();
 	}

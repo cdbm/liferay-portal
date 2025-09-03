@@ -35,9 +35,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Objects;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -135,9 +135,7 @@ public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
 				LocalizedMapUtil.populateLocalizedMap(objectField.getLabel()),
-				GetterUtil.getBoolean(
-					objectField.getLocalized(),
-					objectDefinition.isEnableLocalization()),
+				GetterUtil.getBoolean(objectField.getLocalized()),
 				objectField.getName(), objectField.getReadOnlyAsString(),
 				objectField.getReadOnlyConditionExpression(),
 				objectField.getRequired(),

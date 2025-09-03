@@ -168,15 +168,12 @@ public class AttachmentObjectFieldBusinessType
 
 	@Override
 	public Object getValue(
-			ObjectField objectField, long userId, Map<String, Object> values)
+			Long groupId, ObjectField objectField, long userId,
+			Map<String, Object> values)
 		throws PortalException {
 
-		return _getFileEntryId(super.getValue(objectField, userId, values));
-	}
-
-	@Override
-	public boolean isLocalizable() {
-		return true;
+		return _getFileEntryId(
+			super.getValue(groupId, objectField, userId, values));
 	}
 
 	@Override

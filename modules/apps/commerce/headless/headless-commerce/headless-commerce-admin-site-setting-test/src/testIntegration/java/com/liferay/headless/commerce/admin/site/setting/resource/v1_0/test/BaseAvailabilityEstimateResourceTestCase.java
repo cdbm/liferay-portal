@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.site.setting.client.dto.v1_0.AvailabilityEstimate;
 import com.liferay.headless.commerce.admin.site.setting.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.site.setting.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 			testCompany.getCompanyId());
 
 		availabilityEstimateResource = AvailabilityEstimateResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -219,11 +232,10 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 			404,
 			availabilityEstimateResource.getAvailabilityEstimateHttpResponse(
 				availabilityEstimate.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			availabilityEstimateResource.getAvailabilityEstimateHttpResponse(
-				availabilityEstimate.getId()));
+				0L));
 	}
 
 	protected AvailabilityEstimate
@@ -311,6 +323,50 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		throws Exception {
 
 		return testGraphQLAvailabilityEstimate_addAvailabilityEstimate();
+	}
+
+	@Test
+	public void testDeleteAvailabilityEstimateBatch() throws Exception {
+		AvailabilityEstimate availabilityEstimate1 =
+			testDeleteAvailabilityEstimateBatch_addAvailabilityEstimate();
+
+		testDeleteAvailabilityEstimateBatch_deleteAvailabilityEstimate(
+			202, null, availabilityEstimate1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			availabilityEstimateResource.getAvailabilityEstimateHttpResponse(
+				availabilityEstimate1.getId()));
+	}
+
+	protected AvailabilityEstimate
+			testDeleteAvailabilityEstimateBatch_addAvailabilityEstimate()
+		throws Exception {
+
+		return testDeleteAvailabilityEstimate_addAvailabilityEstimate();
+	}
+
+	protected void
+			testDeleteAvailabilityEstimateBatch_deleteAvailabilityEstimate(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			availabilityEstimateResource.
+				deleteAvailabilityEstimateBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -624,11 +680,6 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 	}
 
 	@Test
-	public void testPutAvailabilityEstimate() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage()
 		throws Exception {
 
@@ -714,13 +765,13 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		Long groupId =
 			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_getGroupId();
 
-		Page<AvailabilityEstimate> availabilityEstimatePage =
+		Page<AvailabilityEstimate> availabilityEstimatesPage =
 			availabilityEstimateResource.
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
 					groupId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			availabilityEstimatePage.getTotalCount());
+			availabilityEstimatesPage.getTotalCount());
 
 		AvailabilityEstimate availabilityEstimate1 =
 			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_addAvailabilityEstimate(
@@ -867,6 +918,67 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAvailabilityEstimate() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		AvailabilityEstimate availabilityEstimate1 =
+			testBatchEngineDeleteImportTask_addAvailabilityEstimate();
+
+		testBatchEngineDeleteImportTask_deleteAvailabilityEstimate(
+			200, null, availabilityEstimate1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			availabilityEstimateResource.getAvailabilityEstimateHttpResponse(
+				availabilityEstimate1.getId()));
+	}
+
+	protected AvailabilityEstimate
+			testBatchEngineDeleteImportTask_addAvailabilityEstimate()
+		throws Exception {
+
+		return testDeleteAvailabilityEstimate_addAvailabilityEstimate();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteAvailabilityEstimate(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.site.setting.dto.v1_0.AvailabilityEstimate",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected AvailabilityEstimate
@@ -1358,7 +1470,30 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		return randomAvailabilityEstimate();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AvailabilityEstimateResource availabilityEstimateResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

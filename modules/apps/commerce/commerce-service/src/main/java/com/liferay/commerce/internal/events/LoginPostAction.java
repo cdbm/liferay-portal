@@ -17,10 +17,10 @@ import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.service.CommerceOrderLocalService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
@@ -43,13 +43,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -170,9 +170,10 @@ public class LoginPostAction extends Action {
 		serviceContext.setUserId(user.getUserId());
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			user.getUserId(), AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
-			name, null, null, user.getEmailAddress(), null, StringPool.BLANK,
-			type, WorkflowConstants.STATUS_APPROVED, serviceContext);
+			StringPool.BLANK, user.getUserId(),
+			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, name, null, null,
+			user.getEmailAddress(), null, StringPool.BLANK, type,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntry.getAccountEntryId(), user.getUserId());
@@ -403,6 +404,13 @@ public class LoginPostAction extends Action {
 					_COOKIE_NAME_PREFIX_COMMERCE_ORDER +
 						commerceOrder.getGroupId(),
 					commerceOrder.getUuid());
+			}
+			else {
+				CookiesManagerUtil.deleteCookies(
+					CookiesManagerUtil.getDomain(httpServletRequest),
+					httpServletRequest, httpServletResponse,
+					_COOKIE_NAME_PREFIX_COMMERCE_ORDER +
+						commerceOrder.getGroupId());
 			}
 		}
 

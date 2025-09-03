@@ -5,18 +5,21 @@
 
 package com.liferay.portal.vulcan.internal.jaxrs.exception.mapper;
 
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Providers;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Providers;
 
 /**
  * Converts any {@code PrincipalException} to a {@code 404} error in case it is
@@ -45,9 +48,17 @@ public class PrincipalExceptionMapper
 
 	@Override
 	protected Problem getProblem(PrincipalException principalException) {
+		if (_log.isWarnEnabled()) {
+			_log.warn(principalException);
+		}
+
 		return new Problem(
-			Response.Status.FORBIDDEN, principalException.getMessage());
+			Response.Status.FORBIDDEN,
+			LanguageUtil.get(_httpServletRequest.getLocale(), "forbidden"));
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PrincipalExceptionMapper.class);
 
 	@Context
 	private HttpServletRequest _httpServletRequest;

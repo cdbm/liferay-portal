@@ -21,7 +21,6 @@ import com.liferay.headless.commerce.delivery.cart.resource.v1_0.PaymentMethodRe
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.ShippingMethodResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -30,15 +29,15 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -106,18 +105,18 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Attachment createCartByExternalReferenceCodeAttachmentByBase64(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("attachmentBase64") AttachmentBase64 attachmentBase64)
+	public boolean deleteCartAttachment(
+			@GraphQLName("attachmentId") Long attachmentId,
+			@GraphQLName("cartId") Long cartId)
 		throws Exception {
 
-		return _applyComponentServiceObjects(
+		_applyVoidComponentServiceObjects(
 			_attachmentResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			attachmentResource ->
-				attachmentResource.
-					postCartByExternalReferenceCodeAttachmentByBase64(
-						externalReferenceCode, attachmentBase64));
+			attachmentResource -> attachmentResource.deleteCartAttachment(
+				attachmentId, cartId));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -142,6 +141,19 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Attachment createCartAttachmentByBase64(
+			@GraphQLName("cartId") Long cartId,
+			@GraphQLName("attachmentBase64") AttachmentBase64 attachmentBase64)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_attachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			attachmentResource -> attachmentResource.postCartAttachmentByBase64(
+				cartId, attachmentBase64));
+	}
+
+	@GraphQLField
 	public Response createCartAttachmentsPageExportBatch(
 			@GraphQLName("cartId") Long cartId,
 			@GraphQLName("callbackURL") String callbackURL,
@@ -158,31 +170,40 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Attachment createCartAttachmentByBase64(
-			@GraphQLName("cartId") Long cartId,
+	public Attachment createCartByExternalReferenceCodeAttachmentByBase64(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("attachmentBase64") AttachmentBase64 attachmentBase64)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_attachmentResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			attachmentResource -> attachmentResource.postCartAttachmentByBase64(
-				cartId, attachmentBase64));
+			attachmentResource ->
+				attachmentResource.
+					postCartByExternalReferenceCodeAttachmentByBase64(
+						externalReferenceCode, attachmentBase64));
 	}
 
 	@GraphQLField
-	public boolean deleteCartAttachment(
-			@GraphQLName("attachmentId") Long attachmentId,
-			@GraphQLName("cartId") Long cartId)
+	public Response deleteCart(@GraphQLName("cartId") Long cartId)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
-			_attachmentResourceComponentServiceObjects,
+		return _applyComponentServiceObjects(
+			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			attachmentResource -> attachmentResource.deleteCartAttachment(
-				attachmentId, cartId));
+			cartResource -> cartResource.deleteCart(cartId));
+	}
 
-		return true;
+	@GraphQLField
+	public Response deleteCartBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartResource -> cartResource.deleteCartBatch(callbackURL, object));
 	}
 
 	@GraphQLField
@@ -198,6 +219,17 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Cart patchCart(
+			@GraphQLName("cartId") Long cartId, @GraphQLName("cart") Cart cart)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartResource -> cartResource.patchCart(cartId, cart));
+	}
+
+	@GraphQLField
 	public Cart patchCartByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("cart") Cart cart)
@@ -207,19 +239,6 @@ public class Mutation {
 			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			cartResource -> cartResource.patchCartByExternalReferenceCode(
-				externalReferenceCode, cart));
-	}
-
-	@GraphQLField
-	public Cart updateCartByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("cart") Cart cart)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartResource -> cartResource.putCartByExternalReferenceCode(
 				externalReferenceCode, cart));
 	}
 
@@ -253,36 +272,53 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response deleteCart(@GraphQLName("cartId") Long cartId)
+	public Cart createCartCheckout(@GraphQLName("cartId") Long cartId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartResource -> cartResource.deleteCart(cartId));
+			cartResource -> cartResource.postCartCheckout(cartId));
+	}
+
+	@GraphQLField(
+		description = "Add a coupon code to a Cart, return the whole Cart updated."
+	)
+	public Cart createCartCouponCode(
+			@GraphQLName("cartId") Long cartId,
+			@GraphQLName("couponCode") CouponCode couponCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartResource -> cartResource.postCartCouponCode(
+				cartId, couponCode));
 	}
 
 	@GraphQLField
-	public Response deleteCartBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
+	public Cart createChannelCart(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("cart") Cart cart)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartResource -> cartResource.deleteCartBatch(callbackURL, object));
+			cartResource -> cartResource.postChannelCart(channelId, cart));
 	}
 
-	@GraphQLField
-	public Cart patchCart(
-			@GraphQLName("cartId") Long cartId, @GraphQLName("cart") Cart cart)
+	@GraphQLField(description = "Creates a Cart.")
+	public Cart createChannelCartByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("cart") Cart cart)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartResource -> cartResource.patchCart(cartId, cart));
+			cartResource -> cartResource.postChannelCartByExternalReferenceCode(
+				externalReferenceCode, cart));
 	}
 
 	@GraphQLField
@@ -309,32 +345,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Cart createCartCheckout(@GraphQLName("cartId") Long cartId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartResource -> cartResource.postCartCheckout(cartId));
-	}
-
-	@GraphQLField(
-		description = "Add a coupon code to a Cart, return the whole Cart updated."
-	)
-	public Cart createCartCouponCode(
-			@GraphQLName("cartId") Long cartId,
-			@GraphQLName("couponCode") CouponCode couponCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartResource -> cartResource.postCartCouponCode(
-				cartId, couponCode));
-	}
-
-	@GraphQLField(description = "Creates a Cart.")
-	public Cart createChannelCartByExternalReferenceCode(
+	public Cart updateCartByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("cart") Cart cart)
 		throws Exception {
@@ -342,69 +353,8 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_cartResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartResource -> cartResource.postChannelCartByExternalReferenceCode(
+			cartResource -> cartResource.putCartByExternalReferenceCode(
 				externalReferenceCode, cart));
-	}
-
-	@GraphQLField
-	public Cart createChannelCart(
-			@GraphQLName("channelId") Long channelId,
-			@GraphQLName("cart") Cart cart)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartResource -> cartResource.postChannelCart(channelId, cart));
-	}
-
-	@GraphQLField(
-		description = "Deletes a Cart Comment by external reference code."
-	)
-	public boolean deleteCartCommentByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_cartCommentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartCommentResource ->
-				cartCommentResource.deleteCartCommentByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField(
-		description = "Update the provided Cart Comment by external reference code."
-	)
-	public CartComment patchCartCommentByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("cartComment") CartComment cartComment)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartCommentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartCommentResource ->
-				cartCommentResource.patchCartCommentByExternalReferenceCode(
-					externalReferenceCode, cartComment));
-	}
-
-	@GraphQLField(
-		description = "Update the provided Cart Comment by external reference code."
-	)
-	public CartComment updateCartCommentByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("cartComment") CartComment cartComment)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartCommentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartCommentResource ->
-				cartCommentResource.putCartCommentByExternalReferenceCode(
-					externalReferenceCode, cartComment));
 	}
 
 	@GraphQLField
@@ -434,6 +384,23 @@ public class Mutation {
 				callbackURL, object));
 	}
 
+	@GraphQLField(
+		description = "Deletes a Cart Comment by external reference code."
+	)
+	public boolean deleteCartCommentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_cartCommentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartCommentResource ->
+				cartCommentResource.deleteCartCommentByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
 	@GraphQLField
 	public CartComment patchCartComment(
 			@GraphQLName("cartCommentId") Long cartCommentId,
@@ -447,30 +414,20 @@ public class Mutation {
 				cartCommentId, cartComment));
 	}
 
-	@GraphQLField
-	public CartComment updateCartComment(
-			@GraphQLName("cartCommentId") Long cartCommentId,
+	@GraphQLField(
+		description = "Update the provided Cart Comment by external reference code."
+	)
+	public CartComment patchCartCommentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("cartComment") CartComment cartComment)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_cartCommentResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartCommentResource -> cartCommentResource.putCartComment(
-				cartCommentId, cartComment));
-	}
-
-	@GraphQLField
-	public Response updateCartCommentBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartCommentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartCommentResource -> cartCommentResource.putCartCommentBatch(
-				callbackURL, object));
+			cartCommentResource ->
+				cartCommentResource.patchCartCommentByExternalReferenceCode(
+					externalReferenceCode, cartComment));
 	}
 
 	@GraphQLField
@@ -500,53 +457,46 @@ public class Mutation {
 				cartId, cartComment));
 	}
 
-	@GraphQLField(
-		description = "Deletes a Cart Item by external reference code."
-	)
-	public boolean deleteCartItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_cartItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartItemResource ->
-				cartItemResource.deleteCartItemByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField(
-		description = "Update the provided Cart Item by external reference code."
-	)
-	public CartItem patchCartItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("cartItem") CartItem cartItem)
+	@GraphQLField
+	public CartComment updateCartComment(
+			@GraphQLName("cartCommentId") Long cartCommentId,
+			@GraphQLName("cartComment") CartComment cartComment)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_cartItemResourceComponentServiceObjects,
+			_cartCommentResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartItemResource ->
-				cartItemResource.patchCartItemByExternalReferenceCode(
-					externalReferenceCode, cartItem));
+			cartCommentResource -> cartCommentResource.putCartComment(
+				cartCommentId, cartComment));
 	}
 
-	@GraphQLField(
-		description = "Update the provided Cart Item by external reference code."
-	)
-	public CartItem updateCartItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("cartItem") CartItem cartItem)
+	@GraphQLField
+	public Response updateCartCommentBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_cartItemResourceComponentServiceObjects,
+			_cartCommentResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartItemResource ->
-				cartItemResource.putCartItemByExternalReferenceCode(
-					externalReferenceCode, cartItem));
+			cartCommentResource -> cartCommentResource.putCartCommentBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Update the provided Cart Comment by external reference code."
+	)
+	public CartComment updateCartCommentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("cartComment") CartComment cartComment)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartCommentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartCommentResource ->
+				cartCommentResource.putCartCommentByExternalReferenceCode(
+					externalReferenceCode, cartComment));
 	}
 
 	@GraphQLField(description = "Deletes an Cart Item by ID.")
@@ -574,6 +524,23 @@ public class Mutation {
 				callbackURL, object));
 	}
 
+	@GraphQLField(
+		description = "Deletes a Cart Item by external reference code."
+	)
+	public boolean deleteCartItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_cartItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartItemResource ->
+				cartItemResource.deleteCartItemByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
 	@GraphQLField(description = "Retrieve information of the given Cart.")
 	public CartItem patchCartItem(
 			@GraphQLName("cartItemId") Long cartItemId,
@@ -587,30 +554,20 @@ public class Mutation {
 				cartItemId, cartItem));
 	}
 
-	@GraphQLField(description = "update the given Cart.")
-	public CartItem updateCartItem(
-			@GraphQLName("cartItemId") Long cartItemId,
+	@GraphQLField(
+		description = "Update the provided Cart Item by external reference code."
+	)
+	public CartItem patchCartItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("cartItem") CartItem cartItem)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_cartItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartItemResource -> cartItemResource.putCartItem(
-				cartItemId, cartItem));
-	}
-
-	@GraphQLField
-	public Response updateCartItemBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_cartItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			cartItemResource -> cartItemResource.putCartItemBatch(
-				callbackURL, object));
+			cartItemResource ->
+				cartItemResource.patchCartItemByExternalReferenceCode(
+					externalReferenceCode, cartItem));
 	}
 
 	@GraphQLField(
@@ -644,20 +601,46 @@ public class Mutation {
 				cartId, cartItem));
 	}
 
-	@GraphQLField
-	public Response createCartCartTransitionsPageExportBatch(
-			@GraphQLName("cartId") Long cartId,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+	@GraphQLField(description = "update the given Cart.")
+	public CartItem updateCartItem(
+			@GraphQLName("cartItemId") Long cartItemId,
+			@GraphQLName("cartItem") CartItem cartItem)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_cartTransitionResourceComponentServiceObjects,
+			_cartItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			cartTransitionResource ->
-				cartTransitionResource.postCartCartTransitionsPageExportBatch(
-					cartId, callbackURL, contentType, fieldNames));
+			cartItemResource -> cartItemResource.putCartItem(
+				cartItemId, cartItem));
+	}
+
+	@GraphQLField
+	public Response updateCartItemBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartItemResource -> cartItemResource.putCartItemBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Update the provided Cart Item by external reference code."
+	)
+	public CartItem updateCartItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("cartItem") CartItem cartItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartItemResource ->
+				cartItemResource.putCartItemByExternalReferenceCode(
+					externalReferenceCode, cartItem));
 	}
 
 	@GraphQLField
@@ -687,6 +670,22 @@ public class Mutation {
 			cartTransitionResource ->
 				cartTransitionResource.postCartCartTransitionBatch(
 					cartId, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createCartCartTransitionsPageExportBatch(
+			@GraphQLName("cartId") Long cartId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_cartTransitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			cartTransitionResource ->
+				cartTransitionResource.postCartCartTransitionsPageExportBatch(
+					cartId, callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -922,7 +921,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

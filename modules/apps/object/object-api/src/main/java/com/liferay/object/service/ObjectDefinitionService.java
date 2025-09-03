@@ -50,6 +50,9 @@ public interface ObjectDefinitionService extends BaseService {
 			long objectFolderId, String className, boolean enableComments,
 			boolean enableFriendlyURLCustomization, boolean enableIndexSearch,
 			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
 			Map<Locale, String> labelMap, String name, String panelAppOrder,
 			String panelCategoryKey, Map<Locale, String> pluralLabelMap,
 			boolean portlet, String scope, String storageType,
@@ -64,11 +67,15 @@ public interface ObjectDefinitionService extends BaseService {
 
 	public ObjectDefinition addSystemObjectDefinition(
 			String externalReferenceCode, long userId, long objectFolderId,
-			boolean enableComments, boolean enableFriendlyURLCustomization,
-			boolean enableIndexSearch, boolean enableLocalization,
-			boolean enableObjectEntryDraft, Map<Locale, String> labelMap,
-			String name, String panelAppOrder, String panelCategoryKey,
-			Map<Locale, String> pluralLabelMap, boolean portlet, String scope,
+			String className, boolean enableComments,
+			boolean enableFriendlyURLCustomization, boolean enableIndexSearch,
+			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
+			Map<Locale, String> labelMap, String name, String panelAppOrder,
+			String panelCategoryKey, Map<Locale, String> pluralLabelMap,
+			boolean portlet, String scope,
 			List<ObjectDefinitionSetting> objectDefinitionSettings,
 			List<ObjectField> objectFields)
 		throws PortalException;
@@ -131,6 +138,9 @@ public interface ObjectDefinitionService extends BaseService {
 			boolean enableComments, boolean enableFriendlyURLCustomization,
 			boolean enableIndexSearch, boolean enableLocalization,
 			boolean enableObjectEntryDraft, boolean enableObjectEntryHistory,
+			boolean enableObjectEntrySchedule,
+			boolean enableObjectEntrySubscription,
+			boolean enableObjectEntryVersioning, String friendlyURLSeparator,
 			Map<Locale, String> labelMap, String name, String panelAppOrder,
 			String panelCategoryKey, boolean portlet,
 			Map<Locale, String> pluralLabelMap, String scope, int status,
@@ -139,10 +149,6 @@ public interface ObjectDefinitionService extends BaseService {
 
 	public ObjectDefinition updateExternalReferenceCode(
 			long objectDefinitionId, String externalReferenceCode)
-		throws PortalException;
-
-	public ObjectDefinition updateRootObjectDefinitionId(
-			long objectDefinitionId, long rootObjectDefinitionId)
 		throws PortalException;
 
 	public ObjectDefinition updateSystemObjectDefinition(

@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.math.BigDecimal;
 
@@ -328,6 +329,32 @@ public class CommerceOrderItemServiceImpl
 	}
 
 	@Override
+	public List<CommerceOrderItem> getParentCommerceOrderItems(
+			long commerceOrderId, long parentCommerceOrderItemId, int start,
+			int end, OrderByComparator<CommerceOrderItem> orderByComparator)
+		throws PortalException {
+
+		_commerceOrderModelResourcePermission.check(
+			getPermissionChecker(), commerceOrderId, ActionKeys.VIEW);
+
+		return commerceOrderItemLocalService.getParentCommerceOrderItems(
+			commerceOrderId, parentCommerceOrderItemId, start, end,
+			orderByComparator);
+	}
+
+	@Override
+	public int getParentCommerceOrderItemsCount(
+			long commerceOrderId, long parentCommerceOrderItemId)
+		throws PortalException {
+
+		_commerceOrderModelResourcePermission.check(
+			getPermissionChecker(), commerceOrderId, ActionKeys.VIEW);
+
+		return commerceOrderItemLocalService.getParentCommerceOrderItemsCount(
+			commerceOrderId, parentCommerceOrderItemId);
+	}
+
+	@Override
 	public List<CommerceOrderItem> getSupplierCommerceOrderItems(
 			long customerCommerceOrderItemId, int start, int end)
 		throws PortalException {
@@ -352,7 +379,7 @@ public class CommerceOrderItemServiceImpl
 	public CommerceOrderItem importCommerceOrderItem(
 			String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, BigDecimal quantity,
+			String cpMeasurementUnitKey, String json, BigDecimal quantity,
 			BigDecimal shippedQuantity,
 			BigDecimal unitOfMeasureIncrementalOrderQuantity,
 			String unitOfMeasureKey, ServiceContext serviceContext)
@@ -363,7 +390,7 @@ public class CommerceOrderItemServiceImpl
 
 		return commerceOrderItemLocalService.importCommerceOrderItem(
 			getUserId(), externalReferenceCode, commerceOrderItemId,
-			commerceOrderId, cpInstanceId, cpMeasurementUnitKey, quantity,
+			commerceOrderId, cpInstanceId, cpMeasurementUnitKey, json, quantity,
 			shippedQuantity, unitOfMeasureIncrementalOrderQuantity,
 			unitOfMeasureKey, serviceContext);
 	}

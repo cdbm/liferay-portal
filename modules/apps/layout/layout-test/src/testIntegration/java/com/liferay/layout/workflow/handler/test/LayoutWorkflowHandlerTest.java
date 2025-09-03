@@ -22,7 +22,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -52,7 +51,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -72,6 +70,8 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Collections;
@@ -80,8 +80,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -254,8 +252,7 @@ public class LayoutWorkflowHandlerTest {
 		String content = document.get(
 			Field.getLocalizedName(locale, Field.CONTENT));
 
-		Assert.assertTrue(
-			content, StringUtil.contains(content, keywords, StringPool.BLANK));
+		Assert.assertTrue(content, content.contains(keywords));
 
 		Assert.assertEquals(
 			document.get(Field.ENTRY_CLASS_PK),
@@ -623,8 +620,7 @@ public class LayoutWorkflowHandlerTest {
 
 		Assert.assertNotNull(fragmentEntryLink);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject editableJSONObject = jsonObject.getJSONObject(
 			FragmentEntryProcessorConstants.
@@ -646,7 +642,7 @@ public class LayoutWorkflowHandlerTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		Company company = _companyLocalService.getCompany(

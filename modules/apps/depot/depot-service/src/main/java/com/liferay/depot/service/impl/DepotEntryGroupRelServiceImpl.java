@@ -78,14 +78,27 @@ public class DepotEntryGroupRelServiceImpl
 
 	@Override
 	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
-			long groupId, int start, int end)
+			DepotEntry depotEntry, int start, int end)
+		throws PortalException {
+
+		_depotEntryModelResourcePermission.check(
+			getPermissionChecker(), depotEntry.getDepotEntryId(),
+			ActionKeys.VIEW);
+
+		return depotEntryGroupRelLocalService.getDepotEntryGroupRels(
+			depotEntry, start, end);
+	}
+
+	@Override
+	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
+			long groupId, int type, int start, int end)
 		throws PortalException {
 
 		GroupPermissionUtil.check(
 			getPermissionChecker(), groupId, ActionKeys.VIEW);
 
 		return depotEntryGroupRelLocalService.getDepotEntryGroupRels(
-			groupId, start, end);
+			groupId, type, start, end);
 	}
 
 	@Override
@@ -101,14 +114,14 @@ public class DepotEntryGroupRelServiceImpl
 	}
 
 	@Override
-	public int getDepotEntryGroupRelsCount(long groupId)
+	public int getDepotEntryGroupRelsCount(long groupId, int type)
 		throws PortalException {
 
 		GroupPermissionUtil.check(
 			getPermissionChecker(), groupId, ActionKeys.VIEW);
 
 		return depotEntryGroupRelLocalService.getDepotEntryGroupRelsCount(
-			groupId);
+			groupId, type);
 	}
 
 	@Override

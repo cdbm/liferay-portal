@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.framework.ThrowableCollector;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -313,6 +314,29 @@ public abstract class BaseDB implements DB {
 		}
 
 		addIndexes(connection, indexMetadatas);
+	}
+
+	@Override
+	public void dropIndexes(
+			Connection connection, List<String> indexNames, String tableName)
+		throws Exception {
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		for (String indexName : indexNames) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					String.format(
+						"Dropping index %s from table %s", indexName,
+						tableName));
+			}
+
+			if (dbInspector.hasIndex(tableName, indexName)) {
+				runSQL(
+					StringBundler.concat(
+						"drop index ", indexName, " on ", tableName));
+			}
+		}
 	}
 
 	@Override
@@ -942,6 +966,59 @@ public abstract class BaseDB implements DB {
 			validIndexNames);
 	}
 
+	public void updatePrimaryKey(
+			Connection connection, String tableName,
+			String[] primaryKeyColumnNames)
+		throws Exception {
+
+		if (_isSkipIndexOperation(connection, tableName)) {
+			return;
+		}
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		if (!dbInspector.hasTable(tableName)) {
+			return;
+		}
+
+		for (String columnName : primaryKeyColumnNames) {
+			if (!dbInspector.hasColumn(tableName, columnName)) {
+				if (StringUtil.equalsIgnoreCase(columnName, "ctCollectionId")) {
+					primaryKeyColumnNames = ArrayUtil.filter(
+						primaryKeyColumnNames,
+						name -> !StringUtil.equalsIgnoreCase(
+							name, "ctCollectionId"));
+				}
+				else {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							StringBundler.concat(
+								"Unable to recreate primary key for table ",
+								tableName, " because column ", columnName,
+								" does not exist"));
+					}
+
+					return;
+				}
+			}
+		}
+
+		String[] actualPrimaryKeyColumns = getPrimaryKeyColumnNames(
+			connection, tableName);
+
+		if (ArrayUtil.equalsIgnoreCase(
+				actualPrimaryKeyColumns, primaryKeyColumnNames)) {
+
+			return;
+		}
+
+		if (ArrayUtil.isNotEmpty(actualPrimaryKeyColumns)) {
+			removePrimaryKey(connection, tableName);
+		}
+
+		addPrimaryKey(connection, tableName, primaryKeyColumnNames);
+	}
+
 	protected BaseDB(DBType dbType, int majorVersion, int minorVersion) {
 		_dbType = dbType;
 		_majorVersion = majorVersion;
@@ -1514,6 +1591,8 @@ public abstract class BaseDB implements DB {
 
 			String sql = null;
 
+			ThrowableCollector throwableCollector = new ThrowableCollector();
+
 			while ((sql = unsyncBufferedReader.readLine()) != null) {
 				if (Validator.isNull(sql)) {
 					continue;
@@ -1536,12 +1615,21 @@ public abstract class BaseDB implements DB {
 				try {
 					runSQL(connection, sql);
 				}
+				catch (SQLException sqlException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(sqlException.getMessage() + ": " + sql);
+					}
+
+					throwableCollector.collect(sqlException);
+				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(exception.getMessage() + ": " + sql);
 					}
 				}
 			}
+
+			throwableCollector.rethrow();
 		}
 	}
 

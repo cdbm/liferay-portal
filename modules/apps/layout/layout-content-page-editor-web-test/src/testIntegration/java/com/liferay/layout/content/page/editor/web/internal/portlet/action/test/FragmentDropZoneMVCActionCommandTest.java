@@ -56,12 +56,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -378,7 +378,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			_readFileToString("drop_zone_fragment_entry.html"),
 			RandomTestUtil.randomString(), false,
 			_readFileToString("drop_zone_fragment_entry_configuration.json"),
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -389,7 +389,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));

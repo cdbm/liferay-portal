@@ -46,12 +46,12 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -89,7 +89,7 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 			ObjectDefinitionTestUtil.publishObjectDefinition();
 
 		ObjectEntry objectEntry1 = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			objectDefinition1.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null, Collections.emptyMap(),
@@ -111,7 +111,7 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 			String.valueOf(objectRelationship.getObjectRelationshipId()));
 
 		ObjectEntry objectEntry2 = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			objectDefinition2.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null, Collections.emptyMap(),
@@ -163,7 +163,7 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 				bundleContext.getServiceReferences(
 					MVCActionCommand.class,
 					StringBundler.concat(
-						"(&(javax.portlet.name=",
+						"(&(jakarta.portlet.name=",
 						objectDefinition2.getPortletId(),
 						")(mvc.command.name=/object_entries",
 						"/edit_object_entry_related_model))")));

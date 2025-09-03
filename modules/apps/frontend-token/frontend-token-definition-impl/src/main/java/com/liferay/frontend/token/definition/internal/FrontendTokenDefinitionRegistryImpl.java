@@ -18,6 +18,7 @@ import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.validator.JSONValidatorException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.model.PortletConstants;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.URLUtil;
@@ -68,27 +68,29 @@ public class FrontendTokenDefinitionRegistryImpl
 	implements FrontendTokenDefinitionRegistry {
 
 	@Override
-	public FrontendTokenDefinition getFrontendTokenDefinition(Layout layout)
-		throws PortalException {
+	public FrontendTokenDefinition getFrontendTokenDefinition(Layout layout) {
+		String cetExternalReferenceCode = null;
 
-		String cetExternalReferenceCode = _getCETExternalReferenceCode(
-			layout.getClassNameId(), layout.getClassPK());
-
-		if (cetExternalReferenceCode != null) {
-			return _getThemeCSSCETFrontendTokenDefinition(
-				layout.getCompanyId(), cetExternalReferenceCode);
-		}
-
-		if (layout.getMasterLayoutPlid() > 0) {
-			Layout masterLayout = _layoutLocalService.getLayout(
-				layout.getMasterLayoutPlid());
+		if (FeatureFlagManagerUtil.isEnabled(
+				layout.getCompanyId(), "LPD-30204")) {
 
 			cetExternalReferenceCode = _getCETExternalReferenceCode(
-				masterLayout.getClassNameId(), masterLayout.getClassPK());
+				layout.getClassNameId(), layout.getPlid());
 
 			if (cetExternalReferenceCode != null) {
 				return _getThemeCSSCETFrontendTokenDefinition(
-					masterLayout.getCompanyId(), cetExternalReferenceCode);
+					layout.getCompanyId(), cetExternalReferenceCode);
+			}
+
+			if (layout.getMasterLayoutPlid() > 0) {
+				cetExternalReferenceCode = _getCETExternalReferenceCode(
+					_portal.getClassNameId(Layout.class),
+					layout.getMasterLayoutPlid());
+
+				if (cetExternalReferenceCode != null) {
+					return _getThemeCSSCETFrontendTokenDefinition(
+						layout.getCompanyId(), cetExternalReferenceCode);
+				}
 			}
 		}
 
@@ -103,9 +105,21 @@ public class FrontendTokenDefinitionRegistryImpl
 				layoutSet.getCompanyId(), cetExternalReferenceCode);
 		}
 
-		Theme theme = layout.getTheme();
+		Theme theme = null;
 
-		return _getBundleFrontendTokenDefinition(theme.getThemeId());
+		try {
+			theme = layout.getTheme();
+
+			return _getBundleFrontendTokenDefinition(theme.getThemeId());
+		}
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to get the theme for layout with layout ID " +
+					layout.getLayoutId(),
+				portalException);
+		}
+
+		return null;
 	}
 
 	public FrontendTokenDefinition getFrontendTokenDefinition(
@@ -144,18 +158,18 @@ public class FrontendTokenDefinitionRegistryImpl
 	public List<FrontendTokenDefinition> getFrontendTokenDefinitions(
 		long companyId) {
 
-		List<FrontendTokenDefinition> frontendTokenDefinitionsList =
+		List<FrontendTokenDefinition> frontendTokenDefinitions =
 			new ArrayList<>(_frontendTokenDefinitions.values());
 
-		Map<String, FrontendTokenDefinition> frontendTokenDefinitions =
+		Map<String, FrontendTokenDefinition> frontendTokenDefinitionsMap =
 			_frontendTokenDefinitionsMap.get(companyId);
 
-		if (frontendTokenDefinitions != null) {
-			frontendTokenDefinitionsList.addAll(
-				frontendTokenDefinitions.values());
+		if (frontendTokenDefinitionsMap != null) {
+			frontendTokenDefinitions.addAll(
+				frontendTokenDefinitionsMap.values());
 		}
 
-		return frontendTokenDefinitionsList;
+		return frontendTokenDefinitions;
 	}
 
 	@Activate
@@ -508,9 +522,6 @@ public class FrontendTokenDefinitionRegistryImpl
 		_frontendTokenDefinitionsDCLSingleton = new DCLSingleton<>();
 	private final Map<Long, Map<String, FrontendTokenDefinition>>
 		_frontendTokenDefinitionsMap = new ConcurrentHashMap<>();
-
-	@Reference
-	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;

@@ -81,7 +81,7 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 				objectRelationship.getObjectFieldId2());
 
 			for (ObjectEntry objectEntry : relatedModels) {
-				_objectEntryService.updateObjectEntry(
+				_objectEntryService.partialUpdateObjectEntry(
 					objectEntry.getObjectEntryId(),
 					HashMapBuilder.<String, Serializable>put(
 						objectField.getName(), 0
@@ -103,14 +103,9 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 			long primaryKey2)
 		throws PortalException {
 
-		ObjectEntry objectEntry = _objectEntryService.getObjectEntry(
-			primaryKey2);
-
-		_objectEntryService.updateObjectEntry(
+		_objectEntryService.partialUpdateObjectEntry(
 			primaryKey2,
-			HashMapBuilder.<String, Serializable>putAll(
-				objectEntry.getValues()
-			).put(
+			HashMapBuilder.<String, Serializable>put(
 				() -> {
 					ObjectRelationship objectRelationship =
 						_objectRelationshipLocalService.getObjectRelationship(
@@ -192,6 +187,68 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 
 		return _objectEntryService.getOneToManyObjectEntriesCount(
 			groupId, objectRelationshipId, objectEntryId, false, search);
+	}
+
+	@Override
+	public void moveRelatedModelToTrash(
+			long userId, long groupId, long objectRelationshipId,
+			long primaryKey, String deletionType)
+		throws PortalException {
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.getObjectRelationship(
+				objectRelationshipId);
+
+		List<ObjectEntry> relatedModels = getRelatedModels(
+			groupId, objectRelationshipId, primaryKey, null, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		if (relatedModels.isEmpty()) {
+			return;
+		}
+
+		if (Objects.equals(
+				deletionType,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE)) {
+
+			for (ObjectEntry objectEntry : relatedModels) {
+				_objectEntryService.moveObjectEntryToTrash(
+					userId, objectEntry, new ServiceContext());
+			}
+		}
+		else if (Objects.equals(
+					deletionType,
+					ObjectRelationshipConstants.DELETION_TYPE_PREVENT)) {
+
+			throw new RequiredObjectRelationshipException(objectRelationship);
+		}
+	}
+
+	@Override
+	public void restoreRelatedModelsFromTrash(
+			long userId, long groupId, long objectRelationshipId,
+			long primaryKey, String deletionType)
+		throws PortalException {
+
+		if (!Objects.equals(
+				deletionType,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE)) {
+
+			return;
+		}
+
+		for (ObjectEntry objectEntry :
+				getRelatedModels(
+					groupId, objectRelationshipId, primaryKey, null,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+			if (!objectEntry.isInTrash()) {
+				continue;
+			}
+
+			_objectEntryService.restoreObjectEntryFromTrash(
+				userId, objectEntry, new ServiceContext());
+		}
 	}
 
 	private final String _className;

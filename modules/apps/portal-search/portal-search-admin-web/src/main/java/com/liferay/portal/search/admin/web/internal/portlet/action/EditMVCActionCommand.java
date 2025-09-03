@@ -10,7 +10,6 @@ import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstant
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
@@ -33,15 +32,15 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.search.admin.web.internal.constants.SearchAdminPortletKeys;
 import com.liferay.portal.search.admin.web.internal.util.DictionaryReindexer;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletSession;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletSession;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -54,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SearchAdminPortletKeys.SEARCH_ADMIN,
+		"jakarta.portlet.name=" + SearchAdminPortletKeys.SEARCH_ADMIN,
 		"mvc.command.name=/portal_search_admin/edit"
 	},
 	service = MVCActionCommand.class
@@ -215,7 +214,7 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 		throws Exception {
 
 		_backgroundTaskManager.addBackgroundTask(
-			themeDisplay.getUserId(), CompanyConstants.SYSTEM,
+			themeDisplay.getUserId(), BackgroundTaskConstants.GROUP_ID_DEFAULT,
 			"reindexIndexReindexer",
 			_CLASS_NAME_REINDEX_INDEX_REINDEXER_BACKGROUND_TASK_EXECUTOR,
 			HashMapBuilder.<String, Serializable>put(

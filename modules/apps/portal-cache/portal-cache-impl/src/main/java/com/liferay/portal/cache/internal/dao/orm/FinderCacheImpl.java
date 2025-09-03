@@ -38,8 +38,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LRUMap;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.servlet.filters.threadlocal.ThreadLocalFilterThreadLocal;
@@ -159,6 +159,8 @@ public class FinderCacheImpl
 		}
 
 		if (cacheValue == null) {
+			finderPath.touch();
+
 			PortalCache<Serializable, Serializable> portalCache =
 				_getPortalCache(finderPath.getCacheName());
 
@@ -246,7 +248,7 @@ public class FinderCacheImpl
 	@Override
 	public void putResult(FinderPath finderPath, Object[] args, Object result) {
 		if (!_valueObjectFinderCacheEnabled || !CacheRegistryUtil.isActive() ||
-			(result == null)) {
+			(result == null) || !finderPath.isTouched()) {
 
 			return;
 		}
@@ -474,16 +476,16 @@ public class FinderCacheImpl
 		_bundleContext = bundleContext;
 
 		_valueObjectFinderCacheEnabled = GetterUtil.getBoolean(
-			_props.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_ENABLED));
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_ENABLED));
 		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
-			_props.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		if (_valueObjectFinderCacheListThreshold == 0) {
 			_valueObjectFinderCacheEnabled = false;
 		}
 
 		int localCacheMaxSize = GetterUtil.getInteger(
-			_props.get(
+			PropsUtil.get(
 				PropsKeys.VALUE_OBJECT_FINDER_THREAD_LOCAL_CACHE_MAX_SIZE));
 
 		if (!DBPartition.isPartitionEnabled() && (localCacheMaxSize > 0)) {
@@ -661,7 +663,7 @@ public class FinderCacheImpl
 		}
 
 		boolean ctAware = false;
-		boolean sharded = false;
+		boolean sharded = DBPartition.isPartitionEnabled();
 
 		ArgumentsResolverHolder argumentsResolverHolder =
 			_serviceTrackerMap.getService(modelImplClassName);
@@ -726,6 +728,11 @@ public class FinderCacheImpl
 						argumentsResolver.getClassName());
 
 					ctAware = CTModel.class.isAssignableFrom(modelImplClass);
+
+					if (DBPartition.isPartitionEnabled()) {
+						sharded = DBPartition.isPartitionedModel(
+							modelImplClass);
+					}
 
 					if (ctAware) {
 						break;
@@ -818,10 +825,6 @@ public class FinderCacheImpl
 
 	private final ConcurrentMap<String, PortalCache<Serializable, Serializable>>
 		_portalCaches = new ConcurrentHashMap<>();
-
-	@Reference
-	private Props _props;
-
 	private ServiceRegistration<CacheRegistryItem> _serviceRegistration;
 	private ServiceTrackerMap<String, ArgumentsResolverHolder>
 		_serviceTrackerMap;

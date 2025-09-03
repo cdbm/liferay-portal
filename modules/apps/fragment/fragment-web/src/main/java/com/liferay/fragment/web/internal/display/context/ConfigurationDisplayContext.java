@@ -14,6 +14,7 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
@@ -32,11 +33,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Víctor Galán
@@ -164,10 +165,11 @@ public class ConfigurationDisplayContext {
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, DateInfoFieldType.INSTANCE,
 		DateTimeInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
-		FormButtonInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
-		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
-		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
-		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
+		FormButtonInfoFieldType.INSTANCE, FriendlyURLInfoFieldType.INSTANCE,
+		HTMLInfoFieldType.INSTANCE, LongTextInfoFieldType.INSTANCE,
+		MultiselectInfoFieldType.INSTANCE, NumberInfoFieldType.INSTANCE,
+		RelationshipInfoFieldType.INSTANCE, SelectInfoFieldType.INSTANCE,
+		TextInfoFieldType.INSTANCE
 	};
 
 	private final DefaultInputFragmentEntryConfigurationProvider

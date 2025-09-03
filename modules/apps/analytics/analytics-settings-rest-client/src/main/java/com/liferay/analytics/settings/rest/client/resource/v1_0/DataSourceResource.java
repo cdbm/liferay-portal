@@ -5,9 +5,13 @@
 
 package com.liferay.analytics.settings.rest.client.resource.v1_0;
 
+import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceLiferayAnalyticsURL;
 import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceToken;
 import com.liferay.analytics.settings.rest.client.http.HttpInvoker;
 import com.liferay.analytics.settings.rest.client.problem.Problem;
+import com.liferay.analytics.settings.rest.client.serdes.v1_0.DataSourceLiferayAnalyticsURLSerDes;
+
+import jakarta.annotation.Generated;
 
 import java.net.URL;
 
@@ -17,8 +21,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Generated;
 
 /**
  * @author Riccardo Ferrari
@@ -36,7 +38,8 @@ public interface DataSourceResource {
 	public HttpInvoker.HttpResponse deleteDataSourceHttpResponse()
 		throws Exception;
 
-	public void postDataSource(DataSourceToken dataSourceToken)
+	public DataSourceLiferayAnalyticsURL postDataSource(
+			DataSourceToken dataSourceToken)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postDataSourceHttpResponse(
@@ -251,7 +254,8 @@ public interface DataSourceResource {
 			return httpInvoker.invoke();
 		}
 
-		public void postDataSource(DataSourceToken dataSourceToken)
+		public DataSourceLiferayAnalyticsURL postDataSource(
+				DataSourceToken dataSourceToken)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = postDataSourceHttpResponse(
@@ -305,7 +309,7 @@ public interface DataSourceResource {
 			}
 
 			try {
-				return;
+				return DataSourceLiferayAnalyticsURLSerDes.toDTO(content);
 			}
 			catch (Exception e) {
 				_logger.log(

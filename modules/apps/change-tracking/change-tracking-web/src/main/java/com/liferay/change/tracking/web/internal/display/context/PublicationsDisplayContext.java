@@ -38,15 +38,15 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -269,14 +269,14 @@ public class PublicationsDisplayContext {
 					"longDescription",
 					_language.get(
 						_httpServletRequest,
-						"administrators-can-view,-edit,-publish,-and-invite-" +
-							"other-users")
+						"administrators-can-view,-edit,-delete,-publish,-and-" +
+							"invite-other-users")
 				).put(
 					"shortDescription",
 					_language.get(
 						_httpServletRequest,
-						"administrators-can-view,-edit,-publish,-and-invite-" +
-							"other-users")
+						"administrators-can-view,-edit,-delete,-publish,-and-" +
+							"invite-other-users")
 				).put(
 					"value", PublicationRoleConstants.ROLE_ADMIN
 				))

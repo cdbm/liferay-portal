@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import {PageProvider} from 'data-engine-js-components-web';
 import React from 'react';
 
-import Text from '../../../src/main/resources/META-INF/resources/Text/Text.es';
+import Text from '../../../src/main/resources/META-INF/resources/js/Text/Text.es';
 
 const globalLanguageDirection = Liferay.Language.direction;
 
@@ -471,7 +471,7 @@ describe('Field Text', () => {
 		expect(queryByText('4/10 characters')).not.toBeInTheDocument();
 	});
 
-	it('renders a counter when show counter is true, there is a maxLength and value length is greater than the maximum lenght', () => {
+	it('renders a counter when show counter is true, there is a maxLength and value length is greater than the maximum length', () => {
 		render(
 			<TextWithProvider
 				{...defaultTextConfig}

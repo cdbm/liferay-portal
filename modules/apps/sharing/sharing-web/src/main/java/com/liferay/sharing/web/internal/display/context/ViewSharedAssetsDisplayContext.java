@@ -43,13 +43,13 @@ import com.liferay.sharing.web.internal.constants.SharingPortletKeys;
 import com.liferay.sharing.web.internal.filter.SharedAssetsFilterItemRegistry;
 import com.liferay.sharing.web.internal.servlet.taglib.ui.SharingEntryDropdownItemContributorRegistry;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Sergio González
@@ -301,11 +301,7 @@ public class ViewSharedAssetsDisplayContext {
 			_sharingConfigurationFactory.getGroupSharingConfiguration(
 				_groupLocalService.getGroup(sharingEntry.getGroupId()));
 
-		if (!groupSharingConfiguration.isEnabled()) {
-			return false;
-		}
-
-		return true;
+		return groupSharingConfiguration.isEnabled();
 	}
 
 	private PortletURL _getURLEdit(

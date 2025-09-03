@@ -10,8 +10,14 @@ export class FormBuilderFieldSettingsSidePanelPage {
 	readonly advancedTabButton: Locator;
 	readonly allowMultipleSelectionsSettingToggle: Locator;
 	readonly createListSettingSelect: Locator;
+	readonly inlineToggle: Locator;
 	readonly optionDisplayNameInputField: Locator;
+	readonly optionReferenceInputField: Locator;
 	readonly page: Page;
+	readonly repeatableToggle: Locator;
+	readonly requiredFieldToggle: Locator;
+	readonly showAsSwitchToggle: Locator;
+	readonly showLabelToggle: Locator;
 
 	constructor(page: Page) {
 		this.addOptionButton = page.getByRole('button', {name: 'Add Option'});
@@ -22,8 +28,16 @@ export class FormBuilderFieldSettingsSidePanelPage {
 			'Allow Multiple Selections'
 		);
 		this.createListSettingSelect = page.getByLabel('Create List');
+		this.inlineToggle = page.getByText('Inline');
 		this.optionDisplayNameInputField = page.getByPlaceholder('Option');
+		this.optionReferenceInputField = page.getByLabel('Option Reference', {
+			exact: true,
+		});
 		this.page = page;
+		this.repeatableToggle = page.getByText('Repeatable');
+		this.requiredFieldToggle = page.getByLabel('Required Field');
+		this.showAsSwitchToggle = page.getByText('Show as a Switch');
+		this.showLabelToggle = page.getByLabel('Show Label');
 	}
 
 	async addOptions(numberOfOptions: number, optionsSufix: string = 'Option') {
@@ -36,7 +50,7 @@ export class FormBuilderFieldSettingsSidePanelPage {
 
 			await this.page.waitForTimeout(2000);
 
-			if (index < numberOfOptions) {
+			if (index < numberOfOptions - 1) {
 				await this.addOptionButton.click();
 			}
 		}
@@ -46,6 +60,15 @@ export class FormBuilderFieldSettingsSidePanelPage {
 		await this.allowMultipleSelectionsSettingToggle.check();
 
 		await this.page.waitForTimeout(2000);
+	}
+
+	async fillMultiplePredefinedValues(values: string[]) {
+		for (const value of values) {
+			await this.page
+				.getByRole('combobox', {name: 'Predefined Value'})
+				.click();
+			await this.page.getByRole('option', {name: value}).click();
+		}
 	}
 
 	async selectCreateListSetting(

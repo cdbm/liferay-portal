@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectFolder;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
@@ -55,6 +58,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -72,16 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -128,6 +131,16 @@ public abstract class BaseObjectFolderResourceTestCase {
 			testCompany.getCompanyId());
 
 		objectFolderResource = ObjectFolderResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -208,419 +221,6 @@ public abstract class BaseObjectFolderResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectFoldersPage() throws Exception {
-		Page<ObjectFolder> page = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		ObjectFolder objectFolder1 = testGetObjectFoldersPage_addObjectFolder(
-			randomObjectFolder());
-
-		ObjectFolder objectFolder2 = testGetObjectFoldersPage_addObjectFolder(
-			randomObjectFolder());
-
-		page = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(objectFolder1, (List<ObjectFolder>)page.getItems());
-		assertContains(objectFolder2, (List<ObjectFolder>)page.getItems());
-		assertValid(page, testGetObjectFoldersPage_getExpectedActions());
-
-		objectFolderResource.deleteObjectFolder(objectFolder1.getId());
-
-		objectFolderResource.deleteObjectFolder(objectFolder2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetObjectFoldersPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetObjectFoldersPageWithPagination() throws Exception {
-		Page<ObjectFolder> objectFolderPage =
-			objectFolderResource.getObjectFoldersPage(null, null);
-
-		int totalCount = GetterUtil.getInteger(
-			objectFolderPage.getTotalCount());
-
-		ObjectFolder objectFolder1 = testGetObjectFoldersPage_addObjectFolder(
-			randomObjectFolder());
-
-		ObjectFolder objectFolder2 = testGetObjectFoldersPage_addObjectFolder(
-			randomObjectFolder());
-
-		ObjectFolder objectFolder3 = testGetObjectFoldersPage_addObjectFolder(
-			randomObjectFolder());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<ObjectFolder> page1 =
-				objectFolderResource.getObjectFoldersPage(
-					null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(objectFolder1, (List<ObjectFolder>)page1.getItems());
-
-			Page<ObjectFolder> page2 =
-				objectFolderResource.getObjectFoldersPage(
-					null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(objectFolder2, (List<ObjectFolder>)page2.getItems());
-
-			Page<ObjectFolder> page3 =
-				objectFolderResource.getObjectFoldersPage(
-					null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
-		}
-		else {
-			Page<ObjectFolder> page1 =
-				objectFolderResource.getObjectFoldersPage(
-					null, Pagination.of(1, totalCount + 2));
-
-			List<ObjectFolder> objectFolders1 =
-				(List<ObjectFolder>)page1.getItems();
-
-			Assert.assertEquals(
-				objectFolders1.toString(), totalCount + 2,
-				objectFolders1.size());
-
-			Page<ObjectFolder> page2 =
-				objectFolderResource.getObjectFoldersPage(
-					null, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<ObjectFolder> objectFolders2 =
-				(List<ObjectFolder>)page2.getItems();
-
-			Assert.assertEquals(
-				objectFolders2.toString(), 1, objectFolders2.size());
-
-			Page<ObjectFolder> page3 =
-				objectFolderResource.getObjectFoldersPage(
-					null, Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
-			assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
-			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
-		}
-	}
-
-	protected ObjectFolder testGetObjectFoldersPage_addObjectFolder(
-			ObjectFolder objectFolder)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetObjectFoldersPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"objectFolders",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/objectFolders");
-
-		long totalCount = objectFoldersJSONObject.getLong("totalCount");
-
-		ObjectFolder objectFolder1 =
-			testGraphQLGetObjectFoldersPage_addObjectFolder();
-		ObjectFolder objectFolder2 =
-			testGraphQLGetObjectFoldersPage_addObjectFolder();
-
-		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/objectFolders");
-
-		Assert.assertEquals(
-			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
-
-		assertContains(
-			objectFolder1,
-			Arrays.asList(
-				ObjectFolderSerDes.toDTOs(
-					objectFoldersJSONObject.getString("items"))));
-		assertContains(
-			objectFolder2,
-			Arrays.asList(
-				ObjectFolderSerDes.toDTOs(
-					objectFoldersJSONObject.getString("items"))));
-
-		// Using the namespace objectAdmin_v1_0
-
-		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("objectAdmin_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-			"JSONObject/objectFolders");
-
-		Assert.assertEquals(
-			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
-
-		assertContains(
-			objectFolder1,
-			Arrays.asList(
-				ObjectFolderSerDes.toDTOs(
-					objectFoldersJSONObject.getString("items"))));
-		assertContains(
-			objectFolder2,
-			Arrays.asList(
-				ObjectFolderSerDes.toDTOs(
-					objectFoldersJSONObject.getString("items"))));
-	}
-
-	protected ObjectFolder testGraphQLGetObjectFoldersPage_addObjectFolder()
-		throws Exception {
-
-		return testGraphQLObjectFolder_addObjectFolder();
-	}
-
-	@Test
-	public void testPostObjectFolder() throws Exception {
-		ObjectFolder randomObjectFolder = randomObjectFolder();
-
-		ObjectFolder postObjectFolder = testPostObjectFolder_addObjectFolder(
-			randomObjectFolder);
-
-		assertEquals(randomObjectFolder, postObjectFolder);
-		assertValid(postObjectFolder);
-	}
-
-	protected ObjectFolder testPostObjectFolder_addObjectFolder(
-			ObjectFolder objectFolder)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetObjectFolderByExternalReferenceCode() throws Exception {
-		ObjectFolder postObjectFolder =
-			testGetObjectFolderByExternalReferenceCode_addObjectFolder();
-
-		ObjectFolder getObjectFolder =
-			objectFolderResource.getObjectFolderByExternalReferenceCode(
-				postObjectFolder.getExternalReferenceCode());
-
-		assertEquals(postObjectFolder, getObjectFolder);
-		assertValid(getObjectFolder);
-	}
-
-	protected ObjectFolder
-			testGetObjectFolderByExternalReferenceCode_addObjectFolder()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetObjectFolderByExternalReferenceCode()
-		throws Exception {
-
-		ObjectFolder objectFolder =
-			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				objectFolder,
-				ObjectFolderSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectFolderByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												objectFolder.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/objectFolderByExternalReferenceCode"))));
-
-		// Using the namespace objectAdmin_v1_0
-
-		Assert.assertTrue(
-			equals(
-				objectFolder,
-				ObjectFolderSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectAdmin_v1_0",
-								new GraphQLField(
-									"objectFolderByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													objectFolder.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-						"Object/objectFolderByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetObjectFolderByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectFolderByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace objectAdmin_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"objectFolderByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ObjectFolder
-			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder()
-		throws Exception {
-
-		return testGraphQLObjectFolder_addObjectFolder();
-	}
-
-	@Test
-	public void testPutObjectFolderByExternalReferenceCode() throws Exception {
-		ObjectFolder postObjectFolder =
-			testPutObjectFolderByExternalReferenceCode_addObjectFolder();
-
-		ObjectFolder randomObjectFolder = randomObjectFolder();
-
-		ObjectFolder putObjectFolder =
-			objectFolderResource.putObjectFolderByExternalReferenceCode(
-				postObjectFolder.getExternalReferenceCode(),
-				randomObjectFolder);
-
-		assertEquals(randomObjectFolder, putObjectFolder);
-		assertValid(putObjectFolder);
-
-		ObjectFolder getObjectFolder =
-			objectFolderResource.getObjectFolderByExternalReferenceCode(
-				putObjectFolder.getExternalReferenceCode());
-
-		assertEquals(randomObjectFolder, getObjectFolder);
-		assertValid(getObjectFolder);
-
-		ObjectFolder newObjectFolder =
-			testPutObjectFolderByExternalReferenceCode_createObjectFolder();
-
-		putObjectFolder =
-			objectFolderResource.putObjectFolderByExternalReferenceCode(
-				newObjectFolder.getExternalReferenceCode(), newObjectFolder);
-
-		assertEquals(newObjectFolder, putObjectFolder);
-		assertValid(putObjectFolder);
-
-		getObjectFolder =
-			objectFolderResource.getObjectFolderByExternalReferenceCode(
-				putObjectFolder.getExternalReferenceCode());
-
-		assertEquals(newObjectFolder, getObjectFolder);
-
-		Assert.assertEquals(
-			newObjectFolder.getExternalReferenceCode(),
-			putObjectFolder.getExternalReferenceCode());
-	}
-
-	protected ObjectFolder
-			testPutObjectFolderByExternalReferenceCode_createObjectFolder()
-		throws Exception {
-
-		return randomObjectFolder();
-	}
-
-	protected ObjectFolder
-			testPutObjectFolderByExternalReferenceCode_addObjectFolder()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteObjectFolder() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		ObjectFolder objectFolder = testDeleteObjectFolder_addObjectFolder();
@@ -634,7 +234,6 @@ public abstract class BaseObjectFolderResourceTestCase {
 			404,
 			objectFolderResource.getObjectFolderHttpResponse(
 				objectFolder.getId()));
-
 		assertHttpResponseStatusCode(
 			404, objectFolderResource.getObjectFolderHttpResponse(0L));
 	}
@@ -723,6 +322,47 @@ public abstract class BaseObjectFolderResourceTestCase {
 		throws Exception {
 
 		return testGraphQLObjectFolder_addObjectFolder();
+	}
+
+	@Test
+	public void testDeleteObjectFolderBatch() throws Exception {
+		ObjectFolder objectFolder1 =
+			testDeleteObjectFolderBatch_addObjectFolder();
+
+		testDeleteObjectFolderBatch_deleteObjectFolder(
+			202, null, objectFolder1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectFolderResource.getObjectFolderHttpResponse(
+				objectFolder1.getId()));
+	}
+
+	protected ObjectFolder testDeleteObjectFolderBatch_addObjectFolder()
+		throws Exception {
+
+		return testDeleteObjectFolder_addObjectFolder();
+	}
+
+	protected void testDeleteObjectFolderBatch_deleteObjectFolder(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectFolderResource.deleteObjectFolderBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -1031,6 +671,342 @@ public abstract class BaseObjectFolderResourceTestCase {
 	}
 
 	@Test
+	public void testGetObjectFolderByExternalReferenceCode() throws Exception {
+		ObjectFolder postObjectFolder =
+			testGetObjectFolderByExternalReferenceCode_addObjectFolder();
+
+		ObjectFolder getObjectFolder =
+			objectFolderResource.getObjectFolderByExternalReferenceCode(
+				postObjectFolder.getExternalReferenceCode());
+
+		assertEquals(postObjectFolder, getObjectFolder);
+		assertValid(getObjectFolder);
+	}
+
+	protected ObjectFolder
+			testGetObjectFolderByExternalReferenceCode_addObjectFolder()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetObjectFolderByExternalReferenceCode()
+		throws Exception {
+
+		ObjectFolder objectFolder =
+			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectFolderByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												objectFolder.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/objectFolderByExternalReferenceCode"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectFolderByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													objectFolder.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectFolderByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetObjectFolderByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectFolderByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectFolderByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ObjectFolder
+			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder()
+		throws Exception {
+
+		return testGraphQLObjectFolder_addObjectFolder();
+	}
+
+	@Test
+	public void testGetObjectFoldersPage() throws Exception {
+		Page<ObjectFolder> page = objectFolderResource.getObjectFoldersPage(
+			null, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		ObjectFolder objectFolder1 = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		ObjectFolder objectFolder2 = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		page = objectFolderResource.getObjectFoldersPage(
+			null, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(objectFolder1, (List<ObjectFolder>)page.getItems());
+		assertContains(objectFolder2, (List<ObjectFolder>)page.getItems());
+		assertValid(page, testGetObjectFoldersPage_getExpectedActions());
+
+		objectFolderResource.deleteObjectFolder(objectFolder1.getId());
+
+		objectFolderResource.deleteObjectFolder(objectFolder2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetObjectFoldersPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetObjectFoldersPageWithPagination() throws Exception {
+		Page<ObjectFolder> objectFoldersPage =
+			objectFolderResource.getObjectFoldersPage(null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			objectFoldersPage.getTotalCount());
+
+		ObjectFolder objectFolder1 = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		ObjectFolder objectFolder2 = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		ObjectFolder objectFolder3 = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(objectFolder1, (List<ObjectFolder>)page1.getItems());
+
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(objectFolder2, (List<ObjectFolder>)page2.getItems());
+
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
+		else {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, totalCount + 2));
+
+			List<ObjectFolder> objectFolders1 =
+				(List<ObjectFolder>)page1.getItems();
+
+			Assert.assertEquals(
+				objectFolders1.toString(), totalCount + 2,
+				objectFolders1.size());
+
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectFolder> objectFolders2 =
+				(List<ObjectFolder>)page2.getItems();
+
+			Assert.assertEquals(
+				objectFolders2.toString(), 1, objectFolders2.size());
+
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
+	}
+
+	protected ObjectFolder testGetObjectFoldersPage_addObjectFolder(
+			ObjectFolder objectFolder)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetObjectFoldersPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"objectFolders",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/objectFolders");
+
+		long totalCount = objectFoldersJSONObject.getLong("totalCount");
+
+		ObjectFolder objectFolder1 =
+			testGraphQLGetObjectFoldersPage_addObjectFolder();
+		ObjectFolder objectFolder2 =
+			testGraphQLGetObjectFoldersPage_addObjectFolder();
+
+		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/objectFolders");
+
+		Assert.assertEquals(
+			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			objectFolder1,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+		assertContains(
+			objectFolder2,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("objectAdmin_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+			"JSONObject/objectFolders");
+
+		Assert.assertEquals(
+			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			objectFolder1,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+		assertContains(
+			objectFolder2,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+	}
+
+	protected ObjectFolder testGraphQLGetObjectFoldersPage_addObjectFolder()
+		throws Exception {
+
+		return testGraphQLObjectFolder_addObjectFolder();
+	}
+
+	@Test
 	public void testPatchObjectFolder() throws Exception {
 		ObjectFolder postObjectFolder = testPatchObjectFolder_addObjectFolder();
 
@@ -1053,6 +1029,25 @@ public abstract class BaseObjectFolderResourceTestCase {
 	}
 
 	protected ObjectFolder testPatchObjectFolder_addObjectFolder()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostObjectFolder() throws Exception {
+		ObjectFolder randomObjectFolder = randomObjectFolder();
+
+		ObjectFolder postObjectFolder = testPostObjectFolder_addObjectFolder(
+			randomObjectFolder);
+
+		assertEquals(randomObjectFolder, postObjectFolder);
+		assertValid(postObjectFolder);
+	}
+
+	protected ObjectFolder testPostObjectFolder_addObjectFolder(
+			ObjectFolder objectFolder)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1083,6 +1078,119 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutObjectFolderByExternalReferenceCode() throws Exception {
+		ObjectFolder postObjectFolder =
+			testPutObjectFolderByExternalReferenceCode_addObjectFolder();
+
+		ObjectFolder randomObjectFolder = randomObjectFolder();
+
+		ObjectFolder putObjectFolder =
+			objectFolderResource.putObjectFolderByExternalReferenceCode(
+				postObjectFolder.getExternalReferenceCode(),
+				randomObjectFolder);
+
+		assertEquals(randomObjectFolder, putObjectFolder);
+		assertValid(putObjectFolder);
+
+		ObjectFolder getObjectFolder =
+			objectFolderResource.getObjectFolderByExternalReferenceCode(
+				putObjectFolder.getExternalReferenceCode());
+
+		assertEquals(randomObjectFolder, getObjectFolder);
+		assertValid(getObjectFolder);
+
+		ObjectFolder newObjectFolder =
+			testPutObjectFolderByExternalReferenceCode_createObjectFolder();
+
+		putObjectFolder =
+			objectFolderResource.putObjectFolderByExternalReferenceCode(
+				newObjectFolder.getExternalReferenceCode(), newObjectFolder);
+
+		assertEquals(newObjectFolder, putObjectFolder);
+		assertValid(putObjectFolder);
+
+		getObjectFolder =
+			objectFolderResource.getObjectFolderByExternalReferenceCode(
+				putObjectFolder.getExternalReferenceCode());
+
+		assertEquals(newObjectFolder, getObjectFolder);
+
+		Assert.assertEquals(
+			newObjectFolder.getExternalReferenceCode(),
+			putObjectFolder.getExternalReferenceCode());
+	}
+
+	protected ObjectFolder
+			testPutObjectFolderByExternalReferenceCode_addObjectFolder()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ObjectFolder
+			testPutObjectFolderByExternalReferenceCode_createObjectFolder()
+		throws Exception {
+
+		return randomObjectFolder();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ObjectFolder objectFolder1 =
+			testBatchEngineDeleteImportTask_addObjectFolder();
+
+		testBatchEngineDeleteImportTask_deleteObjectFolder(
+			200, null, objectFolder1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectFolderResource.getObjectFolderHttpResponse(
+				objectFolder1.getId()));
+	}
+
+	protected ObjectFolder testBatchEngineDeleteImportTask_addObjectFolder()
+		throws Exception {
+
+		return testDeleteObjectFolder_addObjectFolder();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteObjectFolder(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectFolder", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ObjectFolder testGraphQLObjectFolder_addObjectFolder()
@@ -1773,7 +1881,30 @@ public abstract class BaseObjectFolderResourceTestCase {
 		return randomObjectFolder();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectFolderResource objectFolderResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

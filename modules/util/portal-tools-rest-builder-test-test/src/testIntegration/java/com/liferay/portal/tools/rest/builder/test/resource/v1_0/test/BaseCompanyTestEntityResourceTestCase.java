@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -55,6 +58,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -72,16 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -128,6 +131,16 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 			testCompany.getCompanyId());
 
 		companyTestEntityResource = CompanyTestEntityResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -223,6 +236,39 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteCompanyTestEntityByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CompanyTestEntity companyTestEntity =
+			testDeleteCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
+
+		assertHttpResponseStatusCode(
+			204,
+			companyTestEntityResource.
+				deleteCompanyTestEntityByExternalReferenceCodeHttpResponse(
+					companyTestEntity.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			companyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCodeHttpResponse(
+					companyTestEntity.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			companyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected CompanyTestEntity
+			testDeleteCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetCompanyTestEntitiesPage() throws Exception {
 		Page<CompanyTestEntity> page =
 			companyTestEntityResource.getCompanyTestEntitiesPage();
@@ -278,173 +324,77 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 	}
 
 	@Test
-	public void testPostCompanyTestEntity() throws Exception {
-		CompanyTestEntity randomCompanyTestEntity = randomCompanyTestEntity();
+	public void testGraphQLGetCompanyTestEntitiesPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"companyTestEntities",
+			new HashMap<String, Object>() {
+				{
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
 
-		CompanyTestEntity postCompanyTestEntity =
-			testPostCompanyTestEntity_addCompanyTestEntity(
-				randomCompanyTestEntity);
+		// No namespace
 
-		assertEquals(randomCompanyTestEntity, postCompanyTestEntity);
-		assertValid(postCompanyTestEntity);
+		JSONObject companyTestEntitiesJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/companyTestEntities");
 
-		CompanyTestEntity randomPermissionsCompanyTestEntity1 =
-			randomPermissionsCompanyTestEntity();
+		long totalCount = companyTestEntitiesJSONObject.getLong("totalCount");
 
-		CompanyTestEntity postPermissionsCompanyTestEntity1 =
-			testPostCompanyTestEntity_addCompanyTestEntity(
-				randomPermissionsCompanyTestEntity1);
+		CompanyTestEntity companyTestEntity1 =
+			testGraphQLGetCompanyTestEntitiesPage_addCompanyTestEntity();
+		CompanyTestEntity companyTestEntity2 =
+			testGraphQLGetCompanyTestEntitiesPage_addCompanyTestEntity();
 
-		Assert.assertNull(postPermissionsCompanyTestEntity1.getPermissions());
-
-		CompanyTestEntity randomPermissionsCompanyTestEntity2 =
-			randomPermissionsCompanyTestEntity();
-
-		CompanyTestEntity postPermissionsCompanyTestEntity2 =
-			testPostCompanyTestEntity_addPermissionsCompanyTestEntity(
-				randomPermissionsCompanyTestEntity2);
-
-		Assert.assertNotNull(
-			postPermissionsCompanyTestEntity2.getPermissions());
-	}
-
-	protected CompanyTestEntity testPostCompanyTestEntity_addCompanyTestEntity(
-			CompanyTestEntity companyTestEntity)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected CompanyTestEntity
-			testPostCompanyTestEntity_addPermissionsCompanyTestEntity(
-				CompanyTestEntity companyTestEntity)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetCompanyTestEntityByExternalReferenceCode()
-		throws Exception {
-
-		CompanyTestEntity postCompanyTestEntity =
-			testGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
-
-		CompanyTestEntity getCompanyTestEntity =
-			companyTestEntityResource.
-				getCompanyTestEntityByExternalReferenceCode(
-					postCompanyTestEntity.getExternalReferenceCode());
-
-		assertEquals(postCompanyTestEntity, getCompanyTestEntity);
-		assertValid(getCompanyTestEntity);
-
-		Assert.assertNull(getCompanyTestEntity.getPermissions());
-
-		getCompanyTestEntity =
-			permissionsCompanyTestEntityResource.
-				getCompanyTestEntityByExternalReferenceCode(
-					postCompanyTestEntity.getExternalReferenceCode());
-
-		Assert.assertNotNull(getCompanyTestEntity.getPermissions());
-	}
-
-	protected CompanyTestEntity
-			testGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutCompanyTestEntityByExternalReferenceCode()
-		throws Exception {
-
-		CompanyTestEntity postCompanyTestEntity =
-			testPutCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
-
-		CompanyTestEntity randomCompanyTestEntity = randomCompanyTestEntity();
-
-		CompanyTestEntity putCompanyTestEntity =
-			companyTestEntityResource.
-				putCompanyTestEntityByExternalReferenceCode(
-					postCompanyTestEntity.getExternalReferenceCode(),
-					randomCompanyTestEntity);
-
-		assertEquals(randomCompanyTestEntity, putCompanyTestEntity);
-		assertValid(putCompanyTestEntity);
-
-		Assert.assertNull(putCompanyTestEntity.getPermissions());
-
-		CompanyTestEntity getCompanyTestEntity =
-			companyTestEntityResource.
-				getCompanyTestEntityByExternalReferenceCode(
-					putCompanyTestEntity.getExternalReferenceCode());
-
-		assertEquals(randomCompanyTestEntity, getCompanyTestEntity);
-		assertValid(getCompanyTestEntity);
-
-		CompanyTestEntity randomPermissionsCompanyTestEntity =
-			randomPermissionsCompanyTestEntity();
-
-		putCompanyTestEntity =
-			companyTestEntityResource.
-				putCompanyTestEntityByExternalReferenceCode(
-					postCompanyTestEntity.getExternalReferenceCode(),
-					randomPermissionsCompanyTestEntity);
-
-		assertEquals(randomPermissionsCompanyTestEntity, putCompanyTestEntity);
-		assertValid(putCompanyTestEntity);
-
-		Assert.assertNull(putCompanyTestEntity.getPermissions());
-
-		putCompanyTestEntity =
-			permissionsCompanyTestEntityResource.
-				putCompanyTestEntityByExternalReferenceCode(
-					postCompanyTestEntity.getExternalReferenceCode(),
-					randomPermissionsCompanyTestEntity);
-
-		Assert.assertNotNull(putCompanyTestEntity.getPermissions());
-
-		CompanyTestEntity newCompanyTestEntity =
-			testPutCompanyTestEntityByExternalReferenceCode_createCompanyTestEntity();
-
-		putCompanyTestEntity =
-			companyTestEntityResource.
-				putCompanyTestEntityByExternalReferenceCode(
-					newCompanyTestEntity.getExternalReferenceCode(),
-					newCompanyTestEntity);
-
-		assertEquals(newCompanyTestEntity, putCompanyTestEntity);
-		assertValid(putCompanyTestEntity);
-
-		getCompanyTestEntity =
-			companyTestEntityResource.
-				getCompanyTestEntityByExternalReferenceCode(
-					putCompanyTestEntity.getExternalReferenceCode());
-
-		assertEquals(newCompanyTestEntity, getCompanyTestEntity);
+		companyTestEntitiesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/companyTestEntities");
 
 		Assert.assertEquals(
-			newCompanyTestEntity.getExternalReferenceCode(),
-			putCompanyTestEntity.getExternalReferenceCode());
+			totalCount + 2,
+			companyTestEntitiesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			companyTestEntity1,
+			Arrays.asList(
+				CompanyTestEntitySerDes.toDTOs(
+					companyTestEntitiesJSONObject.getString("items"))));
+		assertContains(
+			companyTestEntity2,
+			Arrays.asList(
+				CompanyTestEntitySerDes.toDTOs(
+					companyTestEntitiesJSONObject.getString("items"))));
+
+		// Using the namespace test_v1_0
+
+		companyTestEntitiesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(new GraphQLField("test_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/test_v1_0",
+			"JSONObject/companyTestEntities");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			companyTestEntitiesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			companyTestEntity1,
+			Arrays.asList(
+				CompanyTestEntitySerDes.toDTOs(
+					companyTestEntitiesJSONObject.getString("items"))));
+		assertContains(
+			companyTestEntity2,
+			Arrays.asList(
+				CompanyTestEntitySerDes.toDTOs(
+					companyTestEntitiesJSONObject.getString("items"))));
 	}
 
 	protected CompanyTestEntity
-			testPutCompanyTestEntityByExternalReferenceCode_createCompanyTestEntity()
+			testGraphQLGetCompanyTestEntitiesPage_addCompanyTestEntity()
 		throws Exception {
 
-		return randomCompanyTestEntity();
-	}
-
-	protected CompanyTestEntity
-			testPutCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGraphQLCompanyTestEntity_addCompanyTestEntity();
 	}
 
 	@Test
@@ -669,6 +619,357 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 	}
 
 	@Test
+	public void testGraphQLGetCompanyTestEntity() throws Exception {
+		CompanyTestEntity companyTestEntity =
+			testGraphQLGetCompanyTestEntity_addCompanyTestEntity();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				companyTestEntity,
+				CompanyTestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"companyTestEntity",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"companyTestEntityId",
+											companyTestEntity.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/companyTestEntity"))));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertTrue(
+			equals(
+				companyTestEntity,
+				CompanyTestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"test_v1_0",
+								new GraphQLField(
+									"companyTestEntity",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"companyTestEntityId",
+												companyTestEntity.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/test_v1_0",
+						"Object/companyTestEntity"))));
+	}
+
+	@Test
+	public void testGraphQLGetCompanyTestEntityNotFound() throws Exception {
+		Long irrelevantCompanyTestEntityId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"companyTestEntity",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"companyTestEntityId",
+									irrelevantCompanyTestEntityId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"companyTestEntity",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"companyTestEntityId",
+										irrelevantCompanyTestEntityId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected CompanyTestEntity
+			testGraphQLGetCompanyTestEntity_addCompanyTestEntity()
+		throws Exception {
+
+		return testGraphQLCompanyTestEntity_addCompanyTestEntity();
+	}
+
+	@Test
+	public void testGetCompanyTestEntityByExternalReferenceCode()
+		throws Exception {
+
+		CompanyTestEntity postCompanyTestEntity =
+			testGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
+
+		CompanyTestEntity getCompanyTestEntity =
+			companyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCode(
+					postCompanyTestEntity.getExternalReferenceCode());
+
+		assertEquals(postCompanyTestEntity, getCompanyTestEntity);
+		assertValid(getCompanyTestEntity);
+
+		Assert.assertNull(getCompanyTestEntity.getPermissions());
+
+		getCompanyTestEntity =
+			permissionsCompanyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCode(
+					postCompanyTestEntity.getExternalReferenceCode());
+
+		Assert.assertNotNull(getCompanyTestEntity.getPermissions());
+	}
+
+	protected CompanyTestEntity
+			testGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetCompanyTestEntityByExternalReferenceCode()
+		throws Exception {
+
+		CompanyTestEntity companyTestEntity =
+			testGraphQLGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				companyTestEntity,
+				CompanyTestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"companyTestEntityByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												companyTestEntity.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/companyTestEntityByExternalReferenceCode"))));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertTrue(
+			equals(
+				companyTestEntity,
+				CompanyTestEntitySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"test_v1_0",
+								new GraphQLField(
+									"companyTestEntityByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													companyTestEntity.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/test_v1_0",
+						"Object/companyTestEntityByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetCompanyTestEntityByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"companyTestEntityByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace test_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"test_v1_0",
+						new GraphQLField(
+							"companyTestEntityByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected CompanyTestEntity
+			testGraphQLGetCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
+		throws Exception {
+
+		return testGraphQLCompanyTestEntity_addCompanyTestEntity();
+	}
+
+	@Test
+	public void testGetCompanyTestEntityPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CompanyTestEntity postCompanyTestEntity =
+			testGetCompanyTestEntityPermissionsPage_addCompanyTestEntity();
+
+		Page<Permission> page =
+			companyTestEntityResource.getCompanyTestEntityPermissionsPage(
+				postCompanyTestEntity.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected CompanyTestEntity
+			testGetCompanyTestEntityPermissionsPage_addCompanyTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchCompanyTestEntity() throws Exception {
+		CompanyTestEntity postCompanyTestEntity =
+			testPatchCompanyTestEntity_addCompanyTestEntity();
+
+		CompanyTestEntity randomPatchCompanyTestEntity =
+			randomPatchCompanyTestEntity();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CompanyTestEntity patchCompanyTestEntity =
+			companyTestEntityResource.patchCompanyTestEntity(
+				postCompanyTestEntity.getId(), randomPatchCompanyTestEntity);
+
+		CompanyTestEntity expectedPatchCompanyTestEntity =
+			postCompanyTestEntity.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchCompanyTestEntity, expectedPatchCompanyTestEntity);
+
+		CompanyTestEntity getCompanyTestEntity =
+			companyTestEntityResource.getCompanyTestEntity(
+				patchCompanyTestEntity.getId());
+
+		assertEquals(expectedPatchCompanyTestEntity, getCompanyTestEntity);
+		assertValid(getCompanyTestEntity);
+	}
+
+	protected CompanyTestEntity
+			testPatchCompanyTestEntity_addCompanyTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostCompanyTestEntity() throws Exception {
+		CompanyTestEntity randomCompanyTestEntity = randomCompanyTestEntity();
+
+		CompanyTestEntity postCompanyTestEntity =
+			testPostCompanyTestEntity_addCompanyTestEntity(
+				randomCompanyTestEntity);
+
+		assertEquals(randomCompanyTestEntity, postCompanyTestEntity);
+		assertValid(postCompanyTestEntity);
+
+		CompanyTestEntity randomPermissionsCompanyTestEntity1 =
+			randomPermissionsCompanyTestEntity();
+
+		CompanyTestEntity postPermissionsCompanyTestEntity1 =
+			testPostCompanyTestEntity_addCompanyTestEntity(
+				randomPermissionsCompanyTestEntity1);
+
+		Assert.assertNull(postPermissionsCompanyTestEntity1.getPermissions());
+
+		CompanyTestEntity randomPermissionsCompanyTestEntity2 =
+			randomPermissionsCompanyTestEntity();
+
+		CompanyTestEntity postPermissionsCompanyTestEntity2 =
+			testPostCompanyTestEntity_addPermissionsCompanyTestEntity(
+				randomPermissionsCompanyTestEntity2);
+
+		Assert.assertNotNull(
+			postPermissionsCompanyTestEntity2.getPermissions());
+	}
+
+	protected CompanyTestEntity testPostCompanyTestEntity_addCompanyTestEntity(
+			CompanyTestEntity companyTestEntity)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected CompanyTestEntity
+			testPostCompanyTestEntity_addPermissionsCompanyTestEntity(
+				CompanyTestEntity companyTestEntity)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutCompanyTestEntity() throws Exception {
 		CompanyTestEntity postCompanyTestEntity =
 			testPutCompanyTestEntity_addCompanyTestEntity();
@@ -718,23 +1019,92 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 	}
 
 	@Test
-	public void testGetCompanyTestEntityPermissionsPage() throws Exception {
+	public void testPutCompanyTestEntityByExternalReferenceCode()
+		throws Exception {
+
 		CompanyTestEntity postCompanyTestEntity =
-			testGetCompanyTestEntityPermissionsPage_addCompanyTestEntity();
+			testPutCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity();
 
-		Page<Permission> page =
-			companyTestEntityResource.getCompanyTestEntityPermissionsPage(
-				postCompanyTestEntity.getId(), RoleConstants.GUEST);
+		CompanyTestEntity randomCompanyTestEntity = randomCompanyTestEntity();
 
-		Assert.assertNotNull(page);
+		CompanyTestEntity putCompanyTestEntity =
+			companyTestEntityResource.
+				putCompanyTestEntityByExternalReferenceCode(
+					postCompanyTestEntity.getExternalReferenceCode(),
+					randomCompanyTestEntity);
+
+		assertEquals(randomCompanyTestEntity, putCompanyTestEntity);
+		assertValid(putCompanyTestEntity);
+
+		Assert.assertNull(putCompanyTestEntity.getPermissions());
+
+		CompanyTestEntity getCompanyTestEntity =
+			companyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCode(
+					putCompanyTestEntity.getExternalReferenceCode());
+
+		assertEquals(randomCompanyTestEntity, getCompanyTestEntity);
+		assertValid(getCompanyTestEntity);
+
+		CompanyTestEntity randomPermissionsCompanyTestEntity =
+			randomPermissionsCompanyTestEntity();
+
+		putCompanyTestEntity =
+			companyTestEntityResource.
+				putCompanyTestEntityByExternalReferenceCode(
+					postCompanyTestEntity.getExternalReferenceCode(),
+					randomPermissionsCompanyTestEntity);
+
+		assertEquals(randomPermissionsCompanyTestEntity, putCompanyTestEntity);
+		assertValid(putCompanyTestEntity);
+
+		Assert.assertNull(putCompanyTestEntity.getPermissions());
+
+		putCompanyTestEntity =
+			permissionsCompanyTestEntityResource.
+				putCompanyTestEntityByExternalReferenceCode(
+					postCompanyTestEntity.getExternalReferenceCode(),
+					randomPermissionsCompanyTestEntity);
+
+		Assert.assertNotNull(putCompanyTestEntity.getPermissions());
+
+		CompanyTestEntity newCompanyTestEntity =
+			testPutCompanyTestEntityByExternalReferenceCode_createCompanyTestEntity();
+
+		putCompanyTestEntity =
+			companyTestEntityResource.
+				putCompanyTestEntityByExternalReferenceCode(
+					newCompanyTestEntity.getExternalReferenceCode(),
+					newCompanyTestEntity);
+
+		assertEquals(newCompanyTestEntity, putCompanyTestEntity);
+		assertValid(putCompanyTestEntity);
+
+		getCompanyTestEntity =
+			companyTestEntityResource.
+				getCompanyTestEntityByExternalReferenceCode(
+					putCompanyTestEntity.getExternalReferenceCode());
+
+		assertEquals(newCompanyTestEntity, getCompanyTestEntity);
+
+		Assert.assertEquals(
+			newCompanyTestEntity.getExternalReferenceCode(),
+			putCompanyTestEntity.getExternalReferenceCode());
 	}
 
 	protected CompanyTestEntity
-			testGetCompanyTestEntityPermissionsPage_addCompanyTestEntity()
+			testPutCompanyTestEntityByExternalReferenceCode_addCompanyTestEntity()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected CompanyTestEntity
+			testPutCompanyTestEntityByExternalReferenceCode_createCompanyTestEntity()
+		throws Exception {
+
+		return randomCompanyTestEntity();
 	}
 
 	@Test
@@ -782,6 +1152,60 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		CompanyTestEntity companyTestEntity1 =
+			testBatchEngineDeleteImportTask_addCompanyTestEntity();
+
+		testBatchEngineDeleteImportTask_deleteCompanyTestEntity(
+			200, companyTestEntity1.getExternalReferenceCode());
+
+		assertHttpResponseStatusCode(
+			404,
+			companyTestEntityResource.getCompanyTestEntityHttpResponse(
+				companyTestEntity1.getId()));
+	}
+
+	protected CompanyTestEntity
+			testBatchEngineDeleteImportTask_addCompanyTestEntity()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteCompanyTestEntity(
+			int expectedStatusCode, String externalReferenceCode,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.portal.tools.rest.builder.test.dto.v1_0.CompanyTestEntity",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected CompanyTestEntity
@@ -1463,9 +1887,32 @@ public abstract class BaseCompanyTestEntityResourceTestCase {
 		return companyTestEntity;
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CompanyTestEntityResource companyTestEntityResource;
-	protected CompanyTestEntityResource permissionsCompanyTestEntityResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected CompanyTestEntityResource permissionsCompanyTestEntityResource;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 

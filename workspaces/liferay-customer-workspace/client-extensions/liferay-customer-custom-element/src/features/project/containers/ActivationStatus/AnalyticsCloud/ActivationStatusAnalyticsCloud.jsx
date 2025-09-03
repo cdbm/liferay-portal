@@ -20,7 +20,7 @@ import {
 } from '~/services/liferay/graphql/queries';
 import getActivationStatusDateRange from '~/utils/getActivationStatusDateRange';
 import {ALERT_UPDATE_ANALYTICS_CLOUD_STATUS} from '~/features/project/containers/ActivationKeysTable/utils/constants/alertUpdateAnalyticsCloudStatus';
-import {useCustomerPortal} from '~/features/project/context';
+import {useAppContext} from '~/features/project/context';
 import {actionTypes} from '~/features/project/context/reducer';
 import {
 	AUTO_CLOSE_ALERT_TIME,
@@ -29,14 +29,13 @@ import {
 	STATUS_TAG_TYPE_NAMES,
 } from '~/features/project/utils/constants';
 import AnalyticsCloudModal from '../../AnalyticsCloudModal';
-import PopoverIcon from '../DXPCloud/components/PopoverIcon';
 import ActivationStatusLayout from '../Layout';
 import AnalyticsCloudStatusModal from './AnalyticsCloudStatusModal';
-import ActivationCardLink from '../index';
+import ActivationCardLink from '../ActivationCardLink';
 
 const ActivationStatusAnalyticsCloud = () => {
 	const [{project, subscriptionGroups, userAccount}, dispatch] =
-		useCustomerPortal();
+		useAppContext();
 
 	const {client} = useAppPropertiesContext();
 	const [activationStatusDate, setActivationStatusDate] = useState('');
@@ -112,15 +111,17 @@ const ActivationStatusAnalyticsCloud = () => {
 			title: i18n.translate('analytics-cloud-activation'),
 		},
 		[STATUS_TAG_TYPE_NAMES.inProgress]: {
-			dropdownIcon: (userAccount.isStaff ||
+			dropdownIcon: (userAccount.isStaff &&
 				userAccount.isProvisioning) && (
 				<ButtonDropDown
 					align={Align.BottomRight}
 					customDropDownButton={
 						<ButtonWithIcon
 							aria-label={i18n.translate('set-to-active')}
-							displayType="null"
+							className="text-secondary"
+    						displayType="unstyled"
 							small
+							spritemap={Liferay.Icons.spritemap}
 							symbol="caret-bottom"
 						/>
 					}

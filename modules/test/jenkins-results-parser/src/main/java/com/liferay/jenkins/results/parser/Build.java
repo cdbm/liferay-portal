@@ -26,6 +26,8 @@ public interface Build {
 
 	public void addInvocation(Invocation invocation);
 
+	public void addTestrayAttachmentURL(URL testrayAttachmentURL);
+
 	public void addTimelineData(TimelineData timelineData);
 
 	public void archive();
@@ -66,6 +68,8 @@ public interface Build {
 
 	public Job.BuildProfile getBuildProfile();
 
+	public JSONObject getBuildReportJSONObject();
+
 	public String getBuildURL();
 
 	public String getBuildURLRegex();
@@ -87,8 +91,6 @@ public interface Build {
 	public Element getGitHubMessageBuildAnchorElement();
 
 	public Element getGitHubMessageElement();
-
-	public Element getGitHubMessageUpstreamJobFailureElement();
 
 	public Map<String, String> getInjectedEnvironmentVariablesMap()
 		throws IOException;
@@ -153,8 +155,6 @@ public interface Build {
 
 	public String getTestrayBuildDateString();
 
-	public List<URL> getTestrayS3AttachmentURLs();
-
 	public JSONObject getTestReportJSONObject(boolean checkCache);
 
 	public List<TestResult> getTestResults();
@@ -176,6 +176,8 @@ public interface Build {
 	public boolean hasGenericCIFailure();
 
 	public boolean hasMaximumInvocationCount();
+
+	public boolean isBuildCachingEnabled();
 
 	public boolean isBuildModified();
 
@@ -283,6 +285,10 @@ public interface Build {
 			return _queueId;
 		}
 
+		public ReinvokeRule getReinvokeRule() {
+			return _reinvokeRule;
+		}
+
 		public void setBuildURL(String buildURL) {
 			_buildURL = buildURL;
 		}
@@ -295,10 +301,15 @@ public interface Build {
 			_queueId = queueId;
 		}
 
+		public void setReinvokeRule(ReinvokeRule reinvokeRule) {
+			_reinvokeRule = reinvokeRule;
+		}
+
 		private final Build _build;
 		private String _buildURL;
 		private JenkinsMaster _jenkinsMaster;
 		private long _queueId;
+		private ReinvokeRule _reinvokeRule;
 
 	}
 

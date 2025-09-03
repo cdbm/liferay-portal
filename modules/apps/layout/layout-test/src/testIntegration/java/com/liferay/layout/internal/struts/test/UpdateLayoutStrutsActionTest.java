@@ -6,6 +6,7 @@
 package com.liferay.layout.internal.struts.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
@@ -15,22 +16,37 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import jakarta.portlet.Portlet;
 
 import java.util.List;
 
@@ -40,6 +56,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -68,7 +89,7 @@ public class UpdateLayoutStrutsActionTest {
 	@TestInfo("LPD-49304")
 	public void testExecute() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
-			_getMockHttpServletRequest();
+			_getMockHttpServletRequest(TestPropsValues.getUser());
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
 
@@ -115,7 +136,98 @@ public class UpdateLayoutStrutsActionTest {
 		}
 	}
 
-	private MockHttpServletRequest _getMockHttpServletRequest()
+	@Test
+	@TestInfo("LPD-52276")
+	public void testExecuteAddPortletWithNestedPortletCategory()
+		throws Exception {
+
+		Bundle bundle = FrameworkUtil.getBundle(
+			UpdateLayoutStrutsActionTest.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		String portletId = RandomTestUtil.randomString();
+
+		ServiceRegistration<Portlet> portletServiceRegistration =
+			bundleContext.registerService(
+				Portlet.class, new MVCPortlet(),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"com.liferay.portlet.display-category",
+					"root//category.sample//category.nested"
+				).put(
+					"com.liferay.portlet.instanceable", true
+				).put(
+					"jakarta.portlet.name", portletId
+				).build());
+
+		try {
+			MockHttpServletRequest mockHttpServletRequest =
+				_getMockHttpServletRequest(TestPropsValues.getUser());
+			MockHttpServletResponse mockHttpServletResponse =
+				new MockHttpServletResponse();
+
+			mockHttpServletRequest.setParameter("p_p_id", portletId);
+
+			LayoutTypePortlet layoutTypePortlet =
+				(LayoutTypePortlet)_layout.getLayoutType();
+
+			List<String> portletIds = layoutTypePortlet.getPortletIds();
+
+			int count = portletIds.size();
+
+			_updateLayoutStrutsAction.execute(
+				mockHttpServletRequest, mockHttpServletResponse);
+
+			portletIds = layoutTypePortlet.getPortletIds();
+
+			Assert.assertEquals(
+				portletIds.toString(), count + 1, portletIds.size());
+		}
+		finally {
+			portletServiceRegistration.unregister();
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-59351")
+	public void testExecuteWithScopedSitePermissions() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		Role siteRole = RoleTestUtil.addRole(RoleConstants.TYPE_SITE);
+
+		RoleTestUtil.addResourcePermission(
+			siteRole, AssetPublisherPortletKeys.ASSET_PUBLISHER,
+			ResourceConstants.SCOPE_GROUP, String.valueOf(_group.getGroupId()),
+			ActionKeys.ADD_TO_PAGE);
+
+		_roleLocalService.addUserRole(user.getUserId(), siteRole);
+
+		RoleTestUtil.removeResourcePermission(
+			RoleConstants.USER, AssetPublisherPortletKeys.ASSET_PUBLISHER,
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()),
+			ActionKeys.ADD_TO_PAGE);
+
+		try {
+			MockHttpServletRequest mockHttpServletRequest =
+				_getMockHttpServletRequest(user);
+
+			mockHttpServletRequest.setParameter(
+				"p_p_id", AssetPublisherPortletKeys.ASSET_PUBLISHER);
+
+			_updateLayoutStrutsAction.execute(
+				mockHttpServletRequest, new MockHttpServletResponse());
+		}
+		finally {
+			RoleTestUtil.addResourcePermission(
+				RoleConstants.USER, AssetPublisherPortletKeys.ASSET_PUBLISHER,
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(TestPropsValues.getCompanyId()),
+				ActionKeys.ADD_TO_PAGE);
+		}
+	}
+
+	private MockHttpServletRequest _getMockHttpServletRequest(User user)
 		throws Exception {
 
 		MockHttpServletRequest mockHttpServletRequest =
@@ -128,7 +240,8 @@ public class UpdateLayoutStrutsActionTest {
 			_layout);
 
 		themeDisplay.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
+			PermissionCheckerFactoryUtil.create(user));
+		themeDisplay.setUser(user);
 
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
@@ -172,7 +285,16 @@ public class UpdateLayoutStrutsActionTest {
 	private Layout _layout;
 
 	@Inject
+	private PortletLocalService _portletLocalService;
+
+	@Inject
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Inject
+	private ResourcePermissionService _resourcePermissionService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 	@Inject(filter = "path=/portal/update_layout")
 	private StrutsAction _updateLayoutStrutsAction;

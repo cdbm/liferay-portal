@@ -7,6 +7,7 @@ package com.liferay.exportimport.internal.lar;
 
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.exportimport.constants.ExportImportBackgroundTaskContextMapConstants;
+import com.liferay.exportimport.kernel.lar.DataLevel;
 import com.liferay.exportimport.kernel.lar.DefaultConfigurationPortletDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
@@ -68,7 +69,6 @@ import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -91,7 +91,11 @@ import com.liferay.portal.kernel.zip.ZipReaderFactory;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
 import com.liferay.portal.model.impl.LayoutImpl;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.staging.configuration.StagingConfiguration;
+
+import jakarta.portlet.PortletRequest;
 
 import java.io.File;
 import java.io.InputStream;
@@ -107,8 +111,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.portlet.PortletRequest;
-
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -122,6 +124,7 @@ import org.xml.sax.XMLReader;
  * @author Levente Hudák
  * @author Julio Camarero
  * @author Máté Thurzó
+ * @author Petteri Karttunen
  */
 @Component(
 	configurationPid = "com.liferay.staging.configuration.StagingConfiguration",
@@ -164,43 +167,10 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			long companyId, boolean excludeDataAlwaysStaged)
 		throws Exception {
 
-		List<Portlet> dataSiteAndInstanceLevelPortlets = new ArrayList<>();
-
-		Map<Integer, List<Portlet>> rankedPortletsMap = new TreeMap<>();
-
-		for (Portlet portlet : _portletLocalService.getPortlets(companyId)) {
-			if (!portlet.isActive()) {
-				continue;
-			}
-
-			PortletDataHandler portletDataHandler =
-				portlet.getPortletDataHandlerInstance();
-
-			if ((portletDataHandler == null) ||
-				portletDataHandler.isDataPortalLevel() ||
-				(excludeDataAlwaysStaged &&
-				 portletDataHandler.isDataAlwaysStaged())) {
-
-				continue;
-			}
-
-			List<Portlet> rankedPortlets = rankedPortletsMap.get(
-				portletDataHandler.getRank());
-
-			if (rankedPortlets == null) {
-				rankedPortlets = new ArrayList<>();
-			}
-
-			rankedPortlets.add(portlet);
-
-			rankedPortletsMap.put(portletDataHandler.getRank(), rankedPortlets);
-		}
-
-		for (List<Portlet> rankedPortlets : rankedPortletsMap.values()) {
-			dataSiteAndInstanceLevelPortlets.addAll(rankedPortlets);
-		}
-
-		return dataSiteAndInstanceLevelPortlets;
+		return _getPortlets(
+			companyId,
+			new DataLevel[] {DataLevel.PORTLET_INSTANCE, DataLevel.SITE},
+			excludeDataAlwaysStaged);
 	}
 
 	@Override
@@ -215,43 +185,27 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			long companyId, boolean excludeDataAlwaysStaged)
 		throws Exception {
 
-		List<Portlet> dataSiteLevelPortlets = new ArrayList<>();
+		return _getPortlets(
+			companyId, new DataLevel[] {DataLevel.SITE},
+			excludeDataAlwaysStaged);
+	}
 
-		Map<Integer, List<Portlet>> rankedPortletsMap = new TreeMap<>();
+	@Override
+	public List<Portlet> getExportablePortlets(
+		long companyId, boolean excludeDataAlwaysStaged, long groupId) {
 
-		for (Portlet portlet : _portletLocalService.getPortlets(companyId)) {
-			if (!portlet.isActive()) {
-				continue;
-			}
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
 
-			PortletDataHandler portletDataHandler =
-				portlet.getPortletDataHandlerInstance();
-
-			if ((portletDataHandler == null) ||
-				!portletDataHandler.isDataSiteLevel() ||
-				(excludeDataAlwaysStaged &&
-				 portletDataHandler.isDataAlwaysStaged())) {
-
-				continue;
-			}
-
-			List<Portlet> rankedPortlets = rankedPortletsMap.get(
-				portletDataHandler.getRank());
-
-			if (rankedPortlets == null) {
-				rankedPortlets = new ArrayList<>();
-			}
-
-			rankedPortlets.add(portlet);
-
-			rankedPortletsMap.put(portletDataHandler.getRank(), rankedPortlets);
+		if (stagingGroupHelper.isCompanyGroup(companyId, groupId)) {
+			return _getPortlets(
+				companyId, new DataLevel[] {DataLevel.PORTAL},
+				excludeDataAlwaysStaged);
 		}
 
-		for (List<Portlet> rankedPortlets : rankedPortletsMap.values()) {
-			dataSiteLevelPortlets.addAll(rankedPortlets);
-		}
-
-		return dataSiteLevelPortlets;
+		return _getPortlets(
+			companyId, new DataLevel[] {DataLevel.SITE},
+			excludeDataAlwaysStaged);
 	}
 
 	@Override
@@ -359,9 +313,9 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 		List<Layout> layouts = new ArrayList<>();
 
-		Set<Map.Entry<Long, Boolean>> entrySet = layoutIdMap.entrySet();
+		Set<Map.Entry<Long, Boolean>> entries = layoutIdMap.entrySet();
 
-		for (Map.Entry<Long, Boolean> entry : entrySet) {
+		for (Map.Entry<Long, Boolean> entry : entries) {
 			long plid = GetterUtil.getLong(String.valueOf(entry.getKey()));
 
 			Layout layout = null;
@@ -380,7 +334,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 					_log.debug(noSuchLayoutException);
 				}
 
-				entrySet.remove(plid);
+				entries.remove(plid);
 
 				continue;
 			}
@@ -428,11 +382,13 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 			boolean includeChildren = entry.getValue();
 
-			if (includeChildren) {
-				for (Layout childLayout : layout.getAllChildren()) {
-					if (!layouts.contains(childLayout)) {
-						layouts.add(childLayout);
-					}
+			if (!includeChildren) {
+				continue;
+			}
+
+			for (Layout childLayout : layout.getAllChildren()) {
+				if (!layouts.contains(childLayout)) {
+					layouts.add(childLayout);
 				}
 			}
 		}
@@ -684,7 +640,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 		return TempFileEntryUtil.getTempFileEntry(
 			groupId, userId,
-			DigesterUtil.digestHex(Digester.SHA_256, folderName),
+			DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName),
 			tempFileNames[0]);
 	}
 
@@ -1310,7 +1266,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			return false;
 		}
 
-		if (exportPortletDataAll || !portletDataHandler.isDataSiteLevel()) {
+		if (exportPortletDataAll) {
 			return true;
 		}
 
@@ -1402,6 +1358,52 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 		return importPortletSetupControlsMap;
 	}
 
+	private List<Portlet> _getPortlets(
+		long companyId, DataLevel[] dataLevels,
+		boolean excludeDataAlwaysStaged) {
+
+		List<Portlet> portlets = new ArrayList<>();
+
+		Map<Integer, List<Portlet>> rankedPortletsMap = new TreeMap<>();
+
+		for (Portlet portlet : _portletLocalService.getPortlets(companyId)) {
+			if (!portlet.isActive()) {
+				continue;
+			}
+
+			PortletDataHandler portletDataHandler =
+				portlet.getPortletDataHandlerInstance();
+
+			if ((portletDataHandler == null) ||
+				!ArrayUtil.contains(
+					dataLevels, portletDataHandler.getDataLevel()) ||
+				(!portletDataHandler.isBatch() &&
+				 portletDataHandler.isDataPortalLevel()) ||
+				(excludeDataAlwaysStaged &&
+				 portletDataHandler.isDataAlwaysStaged())) {
+
+				continue;
+			}
+
+			List<Portlet> rankedPortlets = rankedPortletsMap.get(
+				portletDataHandler.getRank());
+
+			if (rankedPortlets == null) {
+				rankedPortlets = new ArrayList<>();
+			}
+
+			rankedPortlets.add(portlet);
+
+			rankedPortletsMap.put(portletDataHandler.getRank(), rankedPortlets);
+		}
+
+		for (List<Portlet> rankedPortlets : rankedPortletsMap.values()) {
+			portlets.addAll(rankedPortlets);
+		}
+
+		return portlets;
+	}
+
 	private String _getZipWriterFileName(String id) {
 		return StringBundler.concat(
 			id, StringPool.DASH, Time.getTimestamp(), ".lar");
@@ -1436,7 +1438,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			return false;
 		}
 
-		if (importPortletDataAll || !portletDataHandler.isDataSiteLevel()) {
+		if (importPortletDataAll) {
 			return true;
 		}
 
@@ -1639,7 +1641,9 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 				if (!(portletDataHandler instanceof
 						DefaultConfigurationPortletDataHandler) &&
-					portletDataHandler.isDataSiteLevel() &&
+					((portletDataHandler.isBatch() &&
+					  portletDataHandler.isDataPortalLevel()) ||
+					 portletDataHandler.isDataSiteLevel()) &&
 					GetterUtil.getBoolean(
 						element.attributeValue("portlet-data"))) {
 

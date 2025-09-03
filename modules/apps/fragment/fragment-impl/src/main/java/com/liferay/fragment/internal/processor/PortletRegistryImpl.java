@@ -9,7 +9,6 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,6 +23,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,9 +35,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -57,25 +56,23 @@ public class PortletRegistryImpl implements PortletRegistry {
 		List<String> portletIds = new ArrayList<>();
 
 		if (fragmentEntryLink.isTypePortlet()) {
-			try {
-				JSONObject jsonObject = _jsonFactory.createJSONObject(
-					fragmentEntryLink.getEditableValues());
+			JSONObject jsonObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
-				String portletId = jsonObject.getString("portletId");
-
-				if (Validator.isNotNull(portletId)) {
-					String instanceId = jsonObject.getString("instanceId");
-
-					if (Objects.equals(instanceId, "0")) {
-						instanceId = StringPool.BLANK;
-					}
-
-					portletIds.add(
-						PortletIdCodec.encode(portletId, instanceId));
-				}
+			if (jsonObject == null) {
+				return portletIds;
 			}
-			catch (PortalException portalException) {
-				_log.error("Unable to get portlet IDs", portalException);
+
+			String portletId = jsonObject.getString("portletId");
+
+			if (Validator.isNotNull(portletId)) {
+				String instanceId = jsonObject.getString("instanceId");
+
+				if (Objects.equals(instanceId, "0")) {
+					instanceId = StringPool.BLANK;
+				}
+
+				portletIds.add(PortletIdCodec.encode(portletId, instanceId));
 			}
 
 			return portletIds;
@@ -267,9 +264,6 @@ public class PortletRegistryImpl implements PortletRegistry {
 
 	private final Map<String, String> _aliasPortletNames =
 		new ConcurrentHashMap<>();
-
-	@Reference
-	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Portal _portal;

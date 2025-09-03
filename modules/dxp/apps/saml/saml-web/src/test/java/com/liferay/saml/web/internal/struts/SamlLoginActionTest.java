@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Props;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
@@ -30,13 +30,13 @@ import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -144,13 +144,7 @@ public class SamlLoginActionTest {
 	}
 
 	private static void _setUpProps() throws Exception {
-		_props = Mockito.mock(Props.class);
-
-		Mockito.when(
-			_props.get("saml.idp.redirect.message.enabled")
-		).thenReturn(
-			"false"
-		);
+		PropsUtil.set("saml.idp.redirect.message.enabled", "false");
 	}
 
 	private static void _setUpSamlLoginAction() throws Exception {
@@ -161,7 +155,7 @@ public class SamlLoginActionTest {
 		ReflectionTestUtil.setFieldValue(
 			_samlLoginAction, "_layoutSEOLinkManager", _layoutSEOLinkManager);
 		ReflectionTestUtil.setFieldValue(_samlLoginAction, "_portal", _portal);
-		ReflectionTestUtil.setFieldValue(_samlLoginAction, "_props", _props);
+
 		ReflectionTestUtil.setFieldValue(
 			_samlLoginAction, "_samlProviderConfigurationHelper",
 			_samlProviderConfigurationHelper);
@@ -262,7 +256,6 @@ public class SamlLoginActionTest {
 	private static final MockedStatic<ListUtil> _listUtilMockedStatic =
 		Mockito.mockStatic(ListUtil.class);
 	private static Portal _portal;
-	private static Props _props;
 	private static SamlLoginAction _samlLoginAction;
 	private static SamlProviderConfigurationHelper
 		_samlProviderConfigurationHelper;

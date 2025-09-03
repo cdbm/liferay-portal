@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -72,13 +73,12 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.Collections;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -428,7 +428,7 @@ public class DisplayPageLayoutTypeControllerTest {
 				"<h1 data-lfr-editable-id=\"element-text\" " +
 					"data-lfr-editable-type=\"text\">Heading Example</h1>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(

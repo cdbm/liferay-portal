@@ -18,9 +18,9 @@ import com.liferay.commerce.product.content.search.web.internal.configuration.CP
 import com.liferay.commerce.product.content.search.web.internal.constants.CPSearchResultsConstants;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -40,15 +40,15 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo

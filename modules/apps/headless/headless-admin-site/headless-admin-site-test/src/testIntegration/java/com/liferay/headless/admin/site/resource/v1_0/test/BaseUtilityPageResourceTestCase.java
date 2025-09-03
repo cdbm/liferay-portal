@@ -49,6 +49,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -63,10 +67,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -190,6 +190,225 @@ public abstract class BaseUtilityPageResourceTestCase {
 		Assert.assertEquals(regex, utilityPage.getExternalReferenceCode());
 		Assert.assertEquals(regex, utilityPage.getName());
 		Assert.assertEquals(regex, utilityPage.getUuid());
+	}
+
+	@Test
+	public void testDeleteSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UtilityPage utilityPage =
+			testDeleteSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage();
+
+		assertHttpResponseStatusCode(
+			204,
+			utilityPageResource.
+				deleteSiteSiteByExternalReferenceCodeUtilityPageHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+					utilityPage.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			utilityPageResource.
+				getSiteSiteByExternalReferenceCodeUtilityPageHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+					utilityPage.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			utilityPageResource.
+				getSiteSiteByExternalReferenceCodeUtilityPageHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+					"-"));
+	}
+
+	protected UtilityPage
+			testDeleteSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		UtilityPage postUtilityPage =
+			testGetSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage();
+
+		UtilityPage getUtilityPage =
+			utilityPageResource.getSiteSiteByExternalReferenceCodeUtilityPage(
+				testGetSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+				postUtilityPage.getExternalReferenceCode());
+
+		assertEquals(postUtilityPage, getUtilityPage);
+		assertValid(getUtilityPage);
+	}
+
+	protected UtilityPage
+			testGetSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		UtilityPage utilityPage =
+			testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				utilityPage,
+				UtilityPageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"siteByExternalReferenceCodeUtilityPage",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteExternalReferenceCode",
+											"\"" +
+												testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode() +
+													"\"");
+										put(
+											"utilityPageExternalReferenceCode",
+											"\"" +
+												utilityPage.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/siteByExternalReferenceCodeUtilityPage"))));
+
+		// Using the namespace headlessAdminSite_v1_0
+
+		Assert.assertTrue(
+			equals(
+				utilityPage,
+				UtilityPageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminSite_v1_0",
+								new GraphQLField(
+									"siteByExternalReferenceCodeUtilityPage",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteExternalReferenceCode",
+												"\"" +
+													testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode() +
+														"\"");
+											put(
+												"utilityPageExternalReferenceCode",
+												"\"" +
+													utilityPage.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminSite_v1_0",
+						"Object/siteByExternalReferenceCodeUtilityPage"))));
+	}
+
+	protected String
+			testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPageNotFound()
+		throws Exception {
+
+		String irrelevantUtilityPageExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"siteByExternalReferenceCodeUtilityPage",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteExternalReferenceCode",
+									"\"" +
+										irrelevantGroup.
+											getExternalReferenceCode() + "\"");
+								put(
+									"utilityPageExternalReferenceCode",
+									irrelevantUtilityPageExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminSite_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminSite_v1_0",
+						new GraphQLField(
+							"siteByExternalReferenceCodeUtilityPage",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteExternalReferenceCode",
+										"\"" +
+											irrelevantGroup.
+												getExternalReferenceCode() +
+													"\"");
+									put(
+										"utilityPageExternalReferenceCode",
+										irrelevantUtilityPageExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UtilityPage
+			testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage()
+		throws Exception {
+
+		return testGraphQLUtilityPage_addUtilityPage();
 	}
 
 	@Test
@@ -375,12 +594,13 @@ public abstract class BaseUtilityPageResourceTestCase {
 		String siteExternalReferenceCode =
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_getSiteExternalReferenceCode();
 
-		Page<UtilityPage> utilityPagePage =
+		Page<UtilityPage> utilityPagesPage =
 			utilityPageResource.
 				getSiteSiteByExternalReferenceCodeUtilityPagesPage(
 					siteExternalReferenceCode, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(utilityPagePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			utilityPagesPage.getTotalCount());
 
 		UtilityPage utilityPage1 =
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_addUtilityPage(
@@ -642,15 +862,72 @@ public abstract class BaseUtilityPageResourceTestCase {
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_getSiteExternalReferenceCode()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGroup.getExternalReferenceCode();
 	}
 
 	protected String
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_getIrrelevantSiteExternalReferenceCode()
 		throws Exception {
 
-		return null;
+		return irrelevantGroup.getExternalReferenceCode();
+	}
+
+	@Test
+	public void testGetSiteUtilityPagePermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UtilityPage postUtilityPage =
+			testGetSiteUtilityPagePermissionsPage_addUtilityPage();
+
+		Page<Permission> page =
+			utilityPageResource.getSiteUtilityPagePermissionsPage(
+				testGroup.getExternalReferenceCode(),
+				postUtilityPage.getExternalReferenceCode(),
+				RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected UtilityPage testGetSiteUtilityPagePermissionsPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		UtilityPage postUtilityPage =
+			testPatchSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage();
+
+		UtilityPage randomPatchUtilityPage = randomPatchUtilityPage();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UtilityPage patchUtilityPage =
+			utilityPageResource.patchSiteSiteByExternalReferenceCodeUtilityPage(
+				null, postUtilityPage.getExternalReferenceCode(),
+				randomPatchUtilityPage);
+
+		UtilityPage expectedPatchUtilityPage = postUtilityPage.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchUtilityPage, expectedPatchUtilityPage);
+
+		UtilityPage getUtilityPage =
+			utilityPageResource.getSiteSiteByExternalReferenceCodeUtilityPage(
+				null, patchUtilityPage.getExternalReferenceCode());
+
+		assertEquals(expectedPatchUtilityPage, getUtilityPage);
+		assertValid(getUtilityPage);
+	}
+
+	protected UtilityPage
+			testPatchSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -677,138 +954,41 @@ public abstract class BaseUtilityPageResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
-		UtilityPage postUtilityPage =
-			testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
-
-		Page<Permission> page =
-			utilityPageResource.
-				getSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage(
-					testGroup.getExternalReferenceCode(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected UtilityPage
-			testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UtilityPage utilityPage =
-			testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			utilityPageResource.
-				putSiteSiteByExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null,
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			utilityPageResource.
-				putSiteSiteByExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null,
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected UtilityPage
-			testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPageNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testPutSiteSiteByExternalReferenceCodeUtilityPage()
 		throws Exception {
 
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
 		UtilityPage postUtilityPage =
-			testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
+			testPutSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage();
 
-		Page<Permission> page =
-			utilityPageResource.
-				getSiteSiteExternalReferenceCodeUtilityPagePermissionsPage(
-					testGroup.getExternalReferenceCode(),
-					postUtilityPage.getExternalReferenceCode(),
-					RoleConstants.GUEST);
+		UtilityPage randomUtilityPage = randomUtilityPage();
 
-		Assert.assertNotNull(page);
+		UtilityPage putUtilityPage =
+			utilityPageResource.putSiteSiteByExternalReferenceCodeUtilityPage(
+				testPutSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+				postUtilityPage.getExternalReferenceCode(), randomUtilityPage);
+
+		assertEquals(randomUtilityPage, putUtilityPage);
+		assertValid(putUtilityPage);
+
+		UtilityPage getUtilityPage =
+			utilityPageResource.getSiteSiteByExternalReferenceCodeUtilityPage(
+				testPutSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode(),
+				putUtilityPage.getExternalReferenceCode());
+
+		assertEquals(randomUtilityPage, getUtilityPage);
+		assertValid(getUtilityPage);
 	}
 
 	protected UtilityPage
-			testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
+			testPutSiteSiteByExternalReferenceCodeUtilityPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteSiteByExternalReferenceCodeUtilityPage_getSiteExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -816,12 +996,10 @@ public abstract class BaseUtilityPageResourceTestCase {
 	}
 
 	@Test
-	public void testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
+	public void testPutSiteUtilityPagePermissionsPage() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		UtilityPage utilityPage =
-			testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
+			testPutSiteUtilityPagePermissionsPage_addUtilityPage();
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
@@ -829,23 +1007,41 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			200,
-			utilityPageResource.
-				putSiteSiteExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null, null));
+			utilityPageResource.putSiteUtilityPagePermissionsPageHttpResponse(
+				testGroup.getExternalReferenceCode(), null,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"PERMISSIONS"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
 
 		assertHttpResponseStatusCode(
 			404,
-			utilityPageResource.
-				putSiteSiteExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null, null));
+			utilityPageResource.putSiteUtilityPagePermissionsPageHttpResponse(
+				testGroup.getExternalReferenceCode(), null,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
 	}
 
-	protected UtilityPage
-			testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
+	protected UtilityPage testPutSiteUtilityPagePermissionsPage_addUtilityPage()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule
@@ -856,6 +1052,13 @@ public abstract class BaseUtilityPageResourceTestCase {
 		throws Exception {
 
 		Assert.assertTrue(true);
+	}
+
+	protected UtilityPage testGraphQLUtilityPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertContains(

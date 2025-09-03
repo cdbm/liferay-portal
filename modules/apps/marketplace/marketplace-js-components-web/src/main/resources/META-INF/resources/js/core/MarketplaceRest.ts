@@ -58,6 +58,7 @@ async function getBaseFetch<T = any>(url: string, options?: FetchOptions) {
 	return response.json() as unknown as T;
 }
 
+const removeEdgesUnderscoresRegEx = /^_+|_+$/g;
 const sessionKey = '@marketplace/token';
 
 export class MarketplaceRest {
@@ -121,10 +122,48 @@ export class MarketplaceRest {
 
 	public async checkoutCart(cart: Cart) {
 		return this.fetchMarketplace<Cart>(
-			`/o/headless-commerce-delivery-cart/v1.0/carts/${cart.id}/checkout?nestedFields=cartItems`,
+			`/o/headless-commerce-delivery-cart/v1.0/carts/${cart.id}/checkout`,
 			{
 				method: 'POST',
 			}
+		);
+	}
+
+	static getBaseResourceURL(portletId?: string) {
+		if (!portletId) {
+			return `/group/guest/~/control_panel/manage?p_p_id=${Liferay.PortletKeys.INSTANCE_SETTINGS}`;
+		}
+
+		const currentURL = new URL(window.location.href);
+
+		if (!currentURL.searchParams.get('p_p_id')) {
+			const cleanPortletId = portletId.replace(
+				removeEdgesUnderscoresRegEx,
+				''
+			);
+			currentURL.searchParams.set('p_p_id', cleanPortletId);
+		}
+
+		return currentURL.href;
+	}
+
+	private static async getMarketplaceConfiguration() {
+		const configuration = await getBaseFetch<{
+			authorized: boolean;
+			data: MarketplaceConfiguration;
+		}>(
+			createResourceURL(this.getBaseResourceURL(), {
+				p_p_resource_id: '/marketplace_settings/get_configuration',
+			}).toString()
+		);
+
+		return configuration.data;
+	}
+
+	public static async getMarketplaceRestWithConfiguration() {
+		return new MarketplaceRest(
+			this.getBaseResourceURL(),
+			await this.getMarketplaceConfiguration()
 		);
 	}
 
@@ -164,30 +203,6 @@ export class MarketplaceRest {
 				'Content-Type': 'application/json',
 			},
 		});
-	}
-
-	public static getBaseResourceURL() {
-		return `/group/guest/~/control_panel/manage?p_p_id=${Liferay.PortletKeys.INSTANCE_SETTINGS}`;
-	}
-
-	private static async getMarketplaceConfiguration() {
-		const configuration = await getBaseFetch<{
-			authorized: boolean;
-			data: MarketplaceConfiguration;
-		}>(
-			createResourceURL(this.getBaseResourceURL(), {
-				p_p_resource_id: '/marketplace_settings/get_configuration',
-			}).toString()
-		);
-
-		return configuration.data;
-	}
-
-	public static async getMarketplaceRestWithConfiguration() {
-		return new MarketplaceRest(
-			this.getBaseResourceURL(),
-			await this.getMarketplaceConfiguration()
-		);
 	}
 
 	public async getMarketplaceToken() {

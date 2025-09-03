@@ -14,13 +14,16 @@ import ViewsContext from '../../views/ViewsContext';
 import ActiveViewSelector from './ActiveViewSelector';
 import CreationMenu from './CreationMenu';
 import CustomViewsControls from './CustomViewsControls';
+import InfoPanelToggleButton from './InfoPanelToggleButton';
 import MainSearch from './MainSearch';
 import SelectionCheckbox from './SelectionCheckbox';
 import SortDropdown from './SortDropdown';
 import FiltersDropdown from './filters/FiltersDropdown';
 
 function NavBar({creationMenu, handleCheckboxClick, items, showSearch}) {
-	const {selectable} = useContext(FrontendDataSetContext);
+	const {selectable, selectionType, showInfoPanel} = useContext(
+		FrontendDataSetContext
+	);
 
 	const [{customViewsEnabled, filters, sorts, views}] =
 		useContext(ViewsContext);
@@ -30,20 +33,20 @@ function NavBar({creationMenu, handleCheckboxClick, items, showSearch}) {
 	return (
 		<ManagementToolbar.Container
 			className="justify-content-space-between"
-			data-qa-id="management-toolbar"
+			data-qa-id="managementToolbar"
 		>
 			<ManagementToolbar.ItemList>
-				{!!items.length && selectable && (
-					<ManagementToolbar.Item>
-						{Liferay.FeatureFlags['LPD-42570'] && (
+				{!!items.length &&
+					selectable &&
+					selectionType === 'multiple' && (
+						<ManagementToolbar.Item>
 							<SelectionCheckbox
 								handleCheckboxClick={handleCheckboxClick}
 								items={items}
 								selectedItemsValue={[]}
 							/>
-						)}
-					</ManagementToolbar.Item>
-				)}
+						</ManagementToolbar.Item>
+					)}
 
 				{!!filters.length && (
 					<ManagementToolbar.Item>
@@ -100,6 +103,12 @@ function NavBar({creationMenu, handleCheckboxClick, items, showSearch}) {
 				{creationMenu && (
 					<ManagementToolbar.Item>
 						<CreationMenu {...creationMenu} />
+					</ManagementToolbar.Item>
+				)}
+
+				{showInfoPanel && (
+					<ManagementToolbar.Item>
+						<InfoPanelToggleButton symbol="info-panel-closed" />
 					</ManagementToolbar.Item>
 				)}
 			</ManagementToolbar.ItemList>

@@ -12,8 +12,9 @@ import {PORTLET_URLS} from '../../utils/portletUrls';
 import {waitForAlert} from '../../utils/waitForAlert';
 import {InstanceSettingsPage} from '../configuration-admin-web/InstanceSettingsPage';
 
+type CTCollection = {body: any; response?: Response};
+
 export class ChangeTrackingPage {
-	readonly bulkDeleteButton: Locator;
 	readonly frontendDataSetEntries: Locator;
 	readonly instanceSettingsPage: InstanceSettingsPage;
 	readonly page: Page;
@@ -21,11 +22,6 @@ export class ChangeTrackingPage {
 	readonly tabsContainer: Locator;
 
 	constructor(page: Page) {
-		this.bulkDeleteButton = page
-			.locator('[data-testid="visualization-mode-table"]')
-			.locator('.bulk-actions')
-			.getByRole('button')
-			.nth(1);
 		this.frontendDataSetEntries = page.locator(
 			'[data-testid="visualization-mode-table"]'
 		);
@@ -199,11 +195,22 @@ export class ChangeTrackingPage {
 	}
 
 	async enablePublications(check: boolean) {
-		await this.page.getByLabel('Open Applications MenuCtrl+Alt+A').click();
+		await this.goToPublicationsViaApplicationMenu();
 
-		await this.page.getByRole('menuitem', {name: 'Publications'}).click();
+		if (
+			await this.page
+				.getByTestId('headerTitle')
+				.filter({hasText: 'Publications'})
+				.isVisible()
+		) {
+			await this.page.getByLabel('Options').click();
 
-		await expect(this.page.getByText('Enable Publications')).toBeVisible();
+			await this.page.getByRole('menuitem', {name: 'Settings'}).click();
+
+			await expect(
+				this.page.getByText('Enable Publications')
+			).toBeVisible();
+		}
 
 		const checkBox = this.page.getByRole('checkbox', {
 			name: 'Enable Publications',
@@ -227,8 +234,12 @@ export class ChangeTrackingPage {
 		}
 	}
 
-	async goto() {
-		await this.page.goto(`/group/guest${PORTLET_URLS.publications}`);
+	async goto(languageCode?: string) {
+		const languageUrlPath = languageCode ? `/${languageCode}` : '';
+
+		await this.page.goto(
+			`${languageUrlPath}/group/guest${PORTLET_URLS.publications}`
+		);
 
 		const changeTrackingIndicatorButton = this.page.locator(
 			'.change-tracking-indicator-button'
@@ -239,14 +250,76 @@ export class ChangeTrackingPage {
 		}
 	}
 
+	async goToPublicationsViaApplicationMenu() {
+		await this.page.getByLabel('Open Applications MenuCtrl+Alt+A').click();
+
+		await this.page.getByRole('menuitem', {name: 'Publications'}).click();
+
+		const enablePublications = this.page.getByText('Enable Publications');
+
+		const publicationsHeader = this.page
+			.getByTestId('headerTitle')
+			.filter({hasText: 'Publications'});
+
+		await expect(enablePublications.or(publicationsHeader)).toBeVisible();
+	}
+
 	async goToPublicationHistory() {
 		await this.goto();
 
 		await this.selectTab('History');
 	}
 
-	async goToReviewChanges(title: string) {
+	async gotoPublicationsPermissions() {
 		await this.goto();
+
+		await this.page.getByLabel('Options').click();
+
+		await this.page.getByRole('menuitem', {name: 'Settings'}).click();
+
+		await expect(
+			this.page.getByRole('heading', {name: 'Permissions'})
+		).toBeVisible();
+
+		await expect(this.page.getByRole('alert')).toBeVisible();
+
+		await this.page.getByRole('button', {name: 'Edit Permissions'}).click();
+	}
+
+	async goToReviewChanges(title: string, languageCode?: string) {
+		if (languageCode) {
+			await this.goto(languageCode);
+		}
+		else {
+			await this.goto();
+		}
+
+		await this.page
+			.locator('#fnsd___table-id  .table-list-title')
+			.filter({hasText: title})
+			.first()
+			.waitFor();
+
+		await this.page.getByRole('link', {exact: true, name: title}).click();
+
+		if (!languageCode) {
+			await this.page
+				.locator(
+					'#_com_liferay_change_tracking_web_portlet_PublicationsPortlet_controlMenu'
+				)
+				.filter({hasText: 'Review Changes'})
+				.waitFor();
+		}
+	}
+
+	async goToReviewChangesHistory(title: string) {
+		await this.goto();
+
+		await this.page
+			.locator('li[data-nav-item-index="2"] a span')
+			.filter({hasText: 'History'})
+			.first()
+			.click();
 
 		await this.page
 			.locator('#fnsd___table-id div')
@@ -264,14 +337,10 @@ export class ChangeTrackingPage {
 			.waitFor();
 	}
 
-	async goToReviewChangesHistory(title: string) {
+	async goToReviewChangesScheduled(title: string) {
 		await this.goto();
 
-		await this.page
-			.locator('li[data-nav-item-index="2"] a span')
-			.filter({hasText: 'History'})
-			.first()
-			.click();
+		await this.selectTab('Scheduled');
 
 		await this.page
 			.locator('#fnsd___table-id div')
@@ -307,7 +376,7 @@ export class ChangeTrackingPage {
 		await this.page.reload();
 	}
 
-	async workOnPublication(ctCollection) {
+	async workOnPublication(ctCollection: CTCollection) {
 		const apiHelpers = new ApiHelpers(this.page);
 
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(
@@ -408,12 +477,14 @@ export class ChangeTrackingPage {
 
 	async viewChanges({
 		changed,
+		click,
 		isVisible,
 		site,
 		title,
 		type,
 	}: {
 		changed?: string;
+		click?: boolean;
 		isVisible?: boolean;
 		site?: string;
 		title: string;
@@ -445,6 +516,10 @@ export class ChangeTrackingPage {
 		}
 		else if (isVisible === false) {
 			await expect(fdsRow).toBeHidden();
+		}
+
+		if (click === true) {
+			await fdsRow.getByRole('link', {name: title}).first().click();
 		}
 	}
 

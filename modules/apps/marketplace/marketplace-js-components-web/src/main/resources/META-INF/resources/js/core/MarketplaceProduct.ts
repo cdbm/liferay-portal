@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {CloudUserProject, Product} from '../types';
+import {AppsPermissions, CloudUserProject, Product} from '../types';
 
 export const Specifications = {
 	CPU: 'cpu',
@@ -30,6 +30,24 @@ export enum Vocabularies {
 const productTypeIcons = {
 	cloud: 'cloud',
 	dxp: 'site-template',
+};
+
+const appTypes = {
+	'client-extension': 'Client Extension',
+	'cloud': 'Cloud App',
+	'composite-app': 'Composite App',
+	'dxp': 'DXP App',
+	'low-code-configuration': 'Low Code',
+} as const;
+
+const normalizeProductImage = (imageUrl: string) => {
+
+	// eslint-disable-next-line @liferay/portal/no-localhost-reference
+	if (imageUrl.includes('localhost')) {
+		return imageUrl.replace('https', 'http');
+	}
+
+	return imageUrl;
 };
 
 export class MarketplaceProduct {
@@ -74,13 +92,11 @@ export class MarketplaceProduct {
 	public getProductImages() {
 		return this.product.images
 			.filter((image) => image.priority !== 0)
-			.map((image) => image.src);
+			.map((image) => normalizeProductImage(image.src));
 	}
 
 	public getPrice() {
-		const priceModel = this.getPriceModel();
-
-		if (priceModel.toLowerCase() === PriceModel.FREE.toLowerCase()) {
+		if (this.isPriceModelFree()) {
 			return PriceModel.FREE;
 		}
 
@@ -148,6 +164,18 @@ export class MarketplaceProduct {
 		return true;
 	}
 
+	public hasPermissionToInstall(permissions: AppsPermissions) {
+		if (permissions.purchaseAndInstallPaidApps) {
+			return true;
+		}
+
+		if (this.isPriceModelFree()) {
+			return permissions.installFreeApps;
+		}
+
+		return false;
+	}
+
 	public getPlatformOfferings() {
 		return this.getCategories(Vocabularies.PLATFORM_OFFERING);
 	}
@@ -156,8 +184,11 @@ export class MarketplaceProduct {
 		const type = this.getSpecificationValue(Specifications.TYPE);
 
 		return {
-			icon: (productTypeIcons as any)[type] || 'cog',
-			label: `${type} App`,
+			icon:
+				productTypeIcons[type as keyof typeof productTypeIcons] ||
+				'cog',
+			label:
+				appTypes[type.toLowerCase() as keyof typeof appTypes] || type,
 			type,
 		};
 	}
@@ -181,7 +212,7 @@ export class MarketplaceProduct {
 	}
 
 	public get productImage() {
-		return this.product.urlImage;
+		return normalizeProductImage(this.product.urlImage);
 	}
 
 	public getProductResourceLabel() {
@@ -196,5 +227,11 @@ export class MarketplaceProduct {
 		);
 
 		return `${cpuSpecification}CPUs, ${ramSpecification}GB RAM`;
+	}
+
+	private isPriceModelFree() {
+		return (
+			this.getPriceModel().toLowerCase() === PriceModel.FREE.toLowerCase()
+		);
 	}
 }

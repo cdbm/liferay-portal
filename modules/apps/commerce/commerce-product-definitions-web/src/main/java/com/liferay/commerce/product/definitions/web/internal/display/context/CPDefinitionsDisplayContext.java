@@ -8,12 +8,12 @@ package com.liferay.commerce.product.definitions.web.internal.display.context;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.service.AccountGroupRelLocalService;
-import com.liferay.commerce.account.item.selector.criterion.CommerceAccountGroupItemSelectorCriterion;
+import com.liferay.commerce.account.item.selector.CommerceAccountGroupItemSelectorCriterion;
 import com.liferay.commerce.frontend.model.HeaderActionModel;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPActionKeys;
 import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayContext;
-import com.liferay.commerce.product.item.selector.criterion.CommerceChannelItemSelectorCriterion;
+import com.liferay.commerce.product.item.selector.CommerceChannelItemSelectorCriterion;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
@@ -51,7 +51,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
-import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -63,14 +63,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.CustomAttributesUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -448,10 +448,12 @@ public class CPDefinitionsDisplayContext
 		List<HeaderActionModel> headerActionModels = new ArrayList<>();
 
 		CPDefinition cpDefinition = getCPDefinition();
+
 		CProductVersionConfiguration cProductVersionConfiguration =
 			_configurationProvider.getConfiguration(
 				CProductVersionConfiguration.class,
-				new SystemSettingsLocator(
+				new CompanyServiceSettingsLocator(
+					cpDefinition.getCompanyId(),
 					CProductVersionConfiguration.class.getName()));
 
 		if (((cpDefinition != null) && cpDefinition.isDraft()) ||
@@ -583,7 +585,8 @@ public class CPDefinitionsDisplayContext
 		CProductVersionConfiguration cProductVersionConfiguration =
 			ConfigurationProviderUtil.getConfiguration(
 				CProductVersionConfiguration.class,
-				new SystemSettingsLocator(
+				new CompanyServiceSettingsLocator(
+					cpRequestHelper.getCompanyId(),
 					CProductVersionConfiguration.class.getName()));
 
 		return cProductVersionConfiguration.enabled();

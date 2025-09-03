@@ -48,7 +48,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.InfoFormException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -62,6 +61,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -69,15 +69,16 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.SegmentsEntryRetriever;
+import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.context.RequestContextMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Rubén Pulido
@@ -126,11 +127,8 @@ public class RenderLayoutStructureDisplayContext {
 
 		StringBundler sb = new StringBundler(4);
 
-		JSONObject itemConfigJSONObject =
-			styledLayoutStructureItem.getItemConfigJSONObject();
-
-		JSONObject stylesJSONObject = itemConfigJSONObject.getJSONObject(
-			"styles");
+		JSONObject stylesJSONObject =
+			styledLayoutStructureItem.getStylesJSONObject();
 
 		String backgroundColorCssClass = stylesJSONObject.getString(
 			"backgroundColor");
@@ -663,16 +661,16 @@ public class RenderLayoutStructureDisplayContext {
 			JSONObject messageJSONObject =
 				successMessageJSONObject.getJSONObject("message");
 
-			successMessage = messageJSONObject.getString(
-				_themeDisplay.getLanguageId());
+			successMessage = HtmlUtil.escape(
+				messageJSONObject.getString(_themeDisplay.getLanguageId()));
 
 			if (Validator.isNull(successMessage)) {
 				String siteDefaultLanguageId = LanguageUtil.getLanguageId(
 					PortalUtil.getSiteDefaultLocale(
 						_themeDisplay.getScopeGroupId()));
 
-				successMessage = messageJSONObject.getString(
-					siteDefaultLanguageId);
+				successMessage = HtmlUtil.escape(
+					messageJSONObject.getString(siteDefaultLanguageId));
 			}
 		}
 
@@ -697,8 +695,7 @@ public class RenderLayoutStructureDisplayContext {
 			return false;
 		}
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			editableValues);
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject stylesFragmentEntryEntryProcessorJSONObject =
 			jsonObject.getJSONObject(
@@ -916,7 +913,7 @@ public class RenderLayoutStructureDisplayContext {
 
 			String inputFieldId = GetterUtil.getString(
 				fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					new FragmentConfigurationField(
 						"inputFieldId", "string", StringPool.BLANK, false,
 						"text"),
@@ -928,7 +925,7 @@ public class RenderLayoutStructureDisplayContext {
 
 			return GetterUtil.getString(
 				fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					new FragmentConfigurationField(
 						"inputLabel", "string", StringPool.BLANK, true, "text"),
 					_themeDisplay.getLocale()));
@@ -1087,15 +1084,23 @@ public class RenderLayoutStructureDisplayContext {
 			return _segmentsEntryIds;
 		}
 
-		SegmentsEntryRetriever segmentsEntryRetriever =
-			ServletContextUtil.getSegmentsEntryRetriever();
+		long[] segmentEntryIds = (long[])_httpServletRequest.getAttribute(
+			SegmentsWebKeys.SEGMENTS_ENTRY_IDS);
 
-		RequestContextMapper requestContextMapper =
-			ServletContextUtil.getRequestContextMapper();
+		if (segmentEntryIds != null) {
+			_segmentsEntryIds = segmentEntryIds;
+		}
+		else {
+			SegmentsEntryRetriever segmentsEntryRetriever =
+				ServletContextUtil.getSegmentsEntryRetriever();
 
-		_segmentsEntryIds = segmentsEntryRetriever.getSegmentsEntryIds(
-			_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
-			requestContextMapper.map(_httpServletRequest), new long[0]);
+			RequestContextMapper requestContextMapper =
+				ServletContextUtil.getRequestContextMapper();
+
+			_segmentsEntryIds = segmentsEntryRetriever.getSegmentsEntryIds(
+				_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
+				requestContextMapper.map(_httpServletRequest), new long[0]);
+		}
 
 		return _segmentsEntryIds;
 	}
@@ -1123,9 +1128,15 @@ public class RenderLayoutStructureDisplayContext {
 			return StringPool.BLANK;
 		}
 
+		Object infoItemObject = _getInfoItem(infoItemReference);
+
+		if (infoItemObject == null) {
+			return StringPool.BLANK;
+		}
+
 		return _parseInfoFieldValue(
 			infoItemFieldValuesProvider.getInfoFieldValue(
-				_getInfoItem(infoItemReference), fieldId));
+				infoItemObject, fieldId));
 	}
 
 	private String _parseInfoFieldValue(InfoFieldValue<?> infoFieldValue) {

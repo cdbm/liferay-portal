@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.order.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.constants.CommerceOrderConstants;
@@ -35,23 +34,21 @@ import com.liferay.headless.commerce.admin.order.dto.v1_0.BillingAddress;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.ShippingAddress;
-import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.order.internal.odata.entity.v1_0.OrderEntityModel;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.BillingAddressUtil;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.OrderItemUtil;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.ShippingAddressUtil;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ActionUtil;
 import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -65,12 +62,18 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
+
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.io.Serializable;
 
@@ -83,11 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -317,13 +315,9 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 			Validator.isNotNull(order.getAccountExternalReferenceCode())) {
 
 			accountEntry =
-				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					commerceChannel.getCompanyId(),
-					order.getAccountExternalReferenceCode());
-		}
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException();
+				_accountEntryService.getAccountEntryByExternalReferenceCode(
+					order.getAccountExternalReferenceCode(),
+					commerceChannel.getCompanyId());
 		}
 
 		CommerceCurrency commerceCurrency =
@@ -471,12 +465,12 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		// Expando
 
-		Map<String, ?> expandoAttributes = _getExpandoBridgeAttributes(order);
+		Map<String, ?> customFields = order.getCustomFields();
 
-		if (MapUtil.isNotEmpty(expandoAttributes)) {
+		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
 				contextCompany.getCompanyId(), CommerceOrder.class,
-				commerceOrder.getPrimaryKey(), expandoAttributes);
+				commerceOrder.getPrimaryKey(), customFields);
 		}
 
 		// Update nested resources
@@ -526,13 +520,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		}
 
 		return commerceOrderType.getCommerceOrderTypeId();
-	}
-
-	private Map<String, Serializable> _getExpandoBridgeAttributes(Order order) {
-		return CustomFieldsUtil.toMap(
-			CommerceOrder.class.getName(), contextCompany.getCompanyId(),
-			order.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	private Map<String, Serializable> _getExpandoBridgeAttributes(
@@ -598,9 +585,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 			CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			object -> {
-				SearchContext searchContext = (SearchContext)object;
-
+			searchContext -> {
 				searchContext.setAttribute(
 					"useSearchResultPermissionFilter",
 					useSearchResultPermissionFilter);
@@ -982,12 +967,12 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				paymentTermId, contextAcceptLanguage.getPreferredLanguageId());
 		}
 
-		Map<String, ?> expandoAttributes = _getExpandoBridgeAttributes(order);
+		Map<String, ?> customFields = order.getCustomFields();
 
-		if (MapUtil.isNotEmpty(expandoAttributes)) {
+		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
 				contextCompany.getCompanyId(), CommerceOrder.class,
-				commerceOrder.getPrimaryKey(), expandoAttributes);
+				commerceOrder.getPrimaryKey(), customFields);
 		}
 
 		commerceOrder = _updateNestedResources(

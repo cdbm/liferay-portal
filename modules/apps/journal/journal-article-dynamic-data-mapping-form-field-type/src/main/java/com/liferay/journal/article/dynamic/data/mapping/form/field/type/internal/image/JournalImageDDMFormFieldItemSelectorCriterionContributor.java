@@ -10,15 +10,15 @@ import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.journal.item.selector.criterion.JournalItemSelectorCriterion;
+import com.liferay.journal.item.selector.JournalItemSelectorCriterion;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

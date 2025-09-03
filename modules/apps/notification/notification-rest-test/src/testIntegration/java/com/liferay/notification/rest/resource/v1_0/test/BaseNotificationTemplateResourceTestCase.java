@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.notification.rest.client.dto.v1_0.NotificationTemplate;
 import com.liferay.notification.rest.client.http.HttpInvoker;
 import com.liferay.notification.rest.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 			testCompany.getCompanyId());
 
 		notificationTemplateResource = NotificationTemplateResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -224,6 +237,617 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 		Assert.assertEquals(regex, notificationTemplate.getRecipientType());
 		Assert.assertEquals(regex, notificationTemplate.getType());
 		Assert.assertEquals(regex, notificationTemplate.getTypeLabel());
+	}
+
+	@Test
+	public void testDeleteNotificationTemplate() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NotificationTemplate notificationTemplate =
+			testDeleteNotificationTemplate_addNotificationTemplate();
+
+		assertHttpResponseStatusCode(
+			204,
+			notificationTemplateResource.deleteNotificationTemplateHttpResponse(
+				notificationTemplate.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			notificationTemplateResource.getNotificationTemplateHttpResponse(
+				notificationTemplate.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			notificationTemplateResource.getNotificationTemplateHttpResponse(
+				0L));
+	}
+
+	protected NotificationTemplate
+			testDeleteNotificationTemplate_addNotificationTemplate()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteNotificationTemplate() throws Exception {
+
+		// No namespace
+
+		NotificationTemplate notificationTemplate1 =
+			testGraphQLDeleteNotificationTemplate_addNotificationTemplate();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteNotificationTemplate",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"notificationTemplateId",
+									notificationTemplate1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteNotificationTemplate"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"notificationTemplate",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"notificationTemplateId",
+								notificationTemplate1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace notification_v1_0
+
+		NotificationTemplate notificationTemplate2 =
+			testGraphQLDeleteNotificationTemplate_addNotificationTemplate();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"notification_v1_0",
+						new GraphQLField(
+							"deleteNotificationTemplate",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"notificationTemplateId",
+										notificationTemplate2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/notification_v1_0",
+				"Object/deleteNotificationTemplate"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"notification_v1_0",
+					new GraphQLField(
+						"notificationTemplate",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"notificationTemplateId",
+									notificationTemplate2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected NotificationTemplate
+			testGraphQLDeleteNotificationTemplate_addNotificationTemplate()
+		throws Exception {
+
+		return testGraphQLNotificationTemplate_addNotificationTemplate();
+	}
+
+	@Test
+	public void testDeleteNotificationTemplateBatch() throws Exception {
+		NotificationTemplate notificationTemplate1 =
+			testDeleteNotificationTemplateBatch_addNotificationTemplate();
+
+		testDeleteNotificationTemplateBatch_deleteNotificationTemplate(
+			202, null, notificationTemplate1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			notificationTemplateResource.getNotificationTemplateHttpResponse(
+				notificationTemplate1.getId()));
+	}
+
+	protected NotificationTemplate
+			testDeleteNotificationTemplateBatch_addNotificationTemplate()
+		throws Exception {
+
+		return testDeleteNotificationTemplate_addNotificationTemplate();
+	}
+
+	protected void
+			testDeleteNotificationTemplateBatch_deleteNotificationTemplate(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			notificationTemplateResource.
+				deleteNotificationTemplateBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetNotificationTemplate() throws Exception {
+		NotificationTemplate postNotificationTemplate =
+			testGetNotificationTemplate_addNotificationTemplate();
+
+		NotificationTemplate getNotificationTemplate =
+			notificationTemplateResource.getNotificationTemplate(
+				postNotificationTemplate.getId());
+
+		assertEquals(postNotificationTemplate, getNotificationTemplate);
+		assertValid(getNotificationTemplate);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		NotificationTemplate postNotificationTemplate =
+			testGetNotificationTemplate_addNotificationTemplate();
+
+		NotificationTemplate getNotificationTemplate =
+			notificationTemplateResource.getNotificationTemplate(
+				postNotificationTemplate.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.notification.rest.dto.v1_0.NotificationTemplate"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postNotificationTemplate.getId());
+
+		assertEquals(
+			getNotificationTemplate,
+			NotificationTemplateSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected NotificationTemplate
+			testGetNotificationTemplate_addNotificationTemplate()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetNotificationTemplate() throws Exception {
+		NotificationTemplate notificationTemplate =
+			testGraphQLGetNotificationTemplate_addNotificationTemplate();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				notificationTemplate,
+				NotificationTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"notificationTemplate",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"notificationTemplateId",
+											notificationTemplate.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/notificationTemplate"))));
+
+		// Using the namespace notification_v1_0
+
+		Assert.assertTrue(
+			equals(
+				notificationTemplate,
+				NotificationTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"notification_v1_0",
+								new GraphQLField(
+									"notificationTemplate",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"notificationTemplateId",
+												notificationTemplate.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/notification_v1_0",
+						"Object/notificationTemplate"))));
+	}
+
+	@Test
+	public void testGraphQLGetNotificationTemplateNotFound() throws Exception {
+		Long irrelevantNotificationTemplateId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"notificationTemplate",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"notificationTemplateId",
+									irrelevantNotificationTemplateId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace notification_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"notification_v1_0",
+						new GraphQLField(
+							"notificationTemplate",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"notificationTemplateId",
+										irrelevantNotificationTemplateId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected NotificationTemplate
+			testGraphQLGetNotificationTemplate_addNotificationTemplate()
+		throws Exception {
+
+		return testGraphQLNotificationTemplate_addNotificationTemplate();
+	}
+
+	@Test
+	public void testGetNotificationTemplateByExternalReferenceCode()
+		throws Exception {
+
+		NotificationTemplate postNotificationTemplate =
+			testGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate();
+
+		NotificationTemplate getNotificationTemplate =
+			notificationTemplateResource.
+				getNotificationTemplateByExternalReferenceCode(
+					postNotificationTemplate.getExternalReferenceCode());
+
+		assertEquals(postNotificationTemplate, getNotificationTemplate);
+		assertValid(getNotificationTemplate);
+	}
+
+	protected NotificationTemplate
+			testGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetNotificationTemplateByExternalReferenceCode()
+		throws Exception {
+
+		NotificationTemplate notificationTemplate =
+			testGraphQLGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				notificationTemplate,
+				NotificationTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"notificationTemplateByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												notificationTemplate.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/notificationTemplateByExternalReferenceCode"))));
+
+		// Using the namespace notification_v1_0
+
+		Assert.assertTrue(
+			equals(
+				notificationTemplate,
+				NotificationTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"notification_v1_0",
+								new GraphQLField(
+									"notificationTemplateByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													notificationTemplate.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/notification_v1_0",
+						"Object/notificationTemplateByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetNotificationTemplateByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"notificationTemplateByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace notification_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"notification_v1_0",
+						new GraphQLField(
+							"notificationTemplateByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected NotificationTemplate
+			testGraphQLGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate()
+		throws Exception {
+
+		return testGraphQLNotificationTemplate_addNotificationTemplate();
 	}
 
 	@Test
@@ -371,12 +995,12 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 	public void testGetNotificationTemplatesPageWithPagination()
 		throws Exception {
 
-		Page<NotificationTemplate> notificationTemplatePage =
+		Page<NotificationTemplate> notificationTemplatesPage =
 			notificationTemplateResource.getNotificationTemplatesPage(
 				null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			notificationTemplatePage.getTotalCount());
+			notificationTemplatesPage.getTotalCount());
 
 		NotificationTemplate notificationTemplate1 =
 			testGetNotificationTemplatesPage_addNotificationTemplate(
@@ -720,6 +1344,43 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 	}
 
 	@Test
+	public void testPatchNotificationTemplate() throws Exception {
+		NotificationTemplate postNotificationTemplate =
+			testPatchNotificationTemplate_addNotificationTemplate();
+
+		NotificationTemplate randomPatchNotificationTemplate =
+			randomPatchNotificationTemplate();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NotificationTemplate patchNotificationTemplate =
+			notificationTemplateResource.patchNotificationTemplate(
+				postNotificationTemplate.getId(),
+				randomPatchNotificationTemplate);
+
+		NotificationTemplate expectedPatchNotificationTemplate =
+			postNotificationTemplate.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchNotificationTemplate, expectedPatchNotificationTemplate);
+
+		NotificationTemplate getNotificationTemplate =
+			notificationTemplateResource.getNotificationTemplate(
+				patchNotificationTemplate.getId());
+
+		assertEquals(
+			expectedPatchNotificationTemplate, getNotificationTemplate);
+		assertValid(getNotificationTemplate);
+	}
+
+	protected NotificationTemplate
+			testPatchNotificationTemplate_addNotificationTemplate()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostNotificationTemplate() throws Exception {
 		NotificationTemplate randomNotificationTemplate =
 			randomNotificationTemplate();
@@ -742,23 +1403,21 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 	}
 
 	@Test
-	public void testGetNotificationTemplateByExternalReferenceCode()
-		throws Exception {
+	public void testPostNotificationTemplateCopy() throws Exception {
+		NotificationTemplate randomNotificationTemplate =
+			randomNotificationTemplate();
 
 		NotificationTemplate postNotificationTemplate =
-			testGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate();
+			testPostNotificationTemplateCopy_addNotificationTemplate(
+				randomNotificationTemplate);
 
-		NotificationTemplate getNotificationTemplate =
-			notificationTemplateResource.
-				getNotificationTemplateByExternalReferenceCode(
-					postNotificationTemplate.getExternalReferenceCode());
-
-		assertEquals(postNotificationTemplate, getNotificationTemplate);
-		assertValid(getNotificationTemplate);
+		assertEquals(randomNotificationTemplate, postNotificationTemplate);
+		assertValid(postNotificationTemplate);
 	}
 
 	protected NotificationTemplate
-			testGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate()
+			testPostNotificationTemplateCopy_addNotificationTemplate(
+				NotificationTemplate notificationTemplate)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -766,116 +1425,34 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetNotificationTemplateByExternalReferenceCode()
-		throws Exception {
+	public void testPutNotificationTemplate() throws Exception {
+		NotificationTemplate postNotificationTemplate =
+			testPutNotificationTemplate_addNotificationTemplate();
 
-		NotificationTemplate notificationTemplate =
-			testGraphQLGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate();
+		NotificationTemplate randomNotificationTemplate =
+			randomNotificationTemplate();
 
-		// No namespace
+		NotificationTemplate putNotificationTemplate =
+			notificationTemplateResource.putNotificationTemplate(
+				postNotificationTemplate.getId(), randomNotificationTemplate);
 
-		Assert.assertTrue(
-			equals(
-				notificationTemplate,
-				NotificationTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"notificationTemplateByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												notificationTemplate.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/notificationTemplateByExternalReferenceCode"))));
+		assertEquals(randomNotificationTemplate, putNotificationTemplate);
+		assertValid(putNotificationTemplate);
 
-		// Using the namespace notification_v1_0
+		NotificationTemplate getNotificationTemplate =
+			notificationTemplateResource.getNotificationTemplate(
+				putNotificationTemplate.getId());
 
-		Assert.assertTrue(
-			equals(
-				notificationTemplate,
-				NotificationTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"notification_v1_0",
-								new GraphQLField(
-									"notificationTemplateByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													notificationTemplate.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/notification_v1_0",
-						"Object/notificationTemplateByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetNotificationTemplateByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"notificationTemplateByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace notification_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"notification_v1_0",
-						new GraphQLField(
-							"notificationTemplateByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
+		assertEquals(randomNotificationTemplate, getNotificationTemplate);
+		assertValid(getNotificationTemplate);
 	}
 
 	protected NotificationTemplate
-			testGraphQLGetNotificationTemplateByExternalReferenceCode_addNotificationTemplate()
+			testPutNotificationTemplate_addNotificationTemplate()
 		throws Exception {
 
-		return testGraphQLNotificationTemplate_addNotificationTemplate();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -930,13 +1507,6 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 	}
 
 	protected NotificationTemplate
-			testPutNotificationTemplateByExternalReferenceCode_createNotificationTemplate()
-		throws Exception {
-
-		return randomNotificationTemplate();
-	}
-
-	protected NotificationTemplate
 			testPutNotificationTemplateByExternalReferenceCode_addNotificationTemplate()
 		throws Exception {
 
@@ -944,525 +1514,67 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testDeleteNotificationTemplate() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		NotificationTemplate notificationTemplate =
-			testDeleteNotificationTemplate_addNotificationTemplate();
-
-		assertHttpResponseStatusCode(
-			204,
-			notificationTemplateResource.deleteNotificationTemplateHttpResponse(
-				notificationTemplate.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			notificationTemplateResource.getNotificationTemplateHttpResponse(
-				notificationTemplate.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			notificationTemplateResource.getNotificationTemplateHttpResponse(
-				0L));
-	}
-
 	protected NotificationTemplate
-			testDeleteNotificationTemplate_addNotificationTemplate()
+			testPutNotificationTemplateByExternalReferenceCode_createNotificationTemplate()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return randomNotificationTemplate();
 	}
 
 	@Test
-	public void testGraphQLDeleteNotificationTemplate() throws Exception {
-
-		// No namespace
-
+	public void testBatchEngineDeleteImportTask() throws Exception {
 		NotificationTemplate notificationTemplate1 =
-			testGraphQLDeleteNotificationTemplate_addNotificationTemplate();
+			testBatchEngineDeleteImportTask_addNotificationTemplate();
 
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteNotificationTemplate",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"notificationTemplateId",
-									notificationTemplate1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteNotificationTemplate"));
+		testBatchEngineDeleteImportTask_deleteNotificationTemplate(
+			200, null, notificationTemplate1.getId());
 
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"notificationTemplate",
-					new HashMap<String, Object>() {
-						{
-							put(
-								"notificationTemplateId",
-								notificationTemplate1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace notification_v1_0
-
-		NotificationTemplate notificationTemplate2 =
-			testGraphQLDeleteNotificationTemplate_addNotificationTemplate();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"notification_v1_0",
-						new GraphQLField(
-							"deleteNotificationTemplate",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"notificationTemplateId",
-										notificationTemplate2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/notification_v1_0",
-				"Object/deleteNotificationTemplate"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"notification_v1_0",
-					new GraphQLField(
-						"notificationTemplate",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"notificationTemplateId",
-									notificationTemplate2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
+		assertHttpResponseStatusCode(
+			404,
+			notificationTemplateResource.getNotificationTemplateHttpResponse(
+				notificationTemplate1.getId()));
 	}
 
 	protected NotificationTemplate
-			testGraphQLDeleteNotificationTemplate_addNotificationTemplate()
+			testBatchEngineDeleteImportTask_addNotificationTemplate()
 		throws Exception {
 
-		return testGraphQLNotificationTemplate_addNotificationTemplate();
+		return testDeleteNotificationTemplate_addNotificationTemplate();
 	}
 
-	@Test
-	public void testGetNotificationTemplate() throws Exception {
-		NotificationTemplate postNotificationTemplate =
-			testGetNotificationTemplate_addNotificationTemplate();
-
-		NotificationTemplate getNotificationTemplate =
-			notificationTemplateResource.getNotificationTemplate(
-				postNotificationTemplate.getId());
-
-		assertEquals(postNotificationTemplate, getNotificationTemplate);
-		assertValid(getNotificationTemplate);
-	}
-
-	@Test
-	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
-		NotificationTemplate postNotificationTemplate =
-			testGetNotificationTemplate_addNotificationTemplate();
-
-		NotificationTemplate getNotificationTemplate =
-			notificationTemplateResource.getNotificationTemplate(
-				postNotificationTemplate.getId());
-
-		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
-			_vulcanCRUDItemDelegateBuilderRegistry.builder(
-				testCompany,
-				"com.liferay.notification.rest.dto.v1_0.NotificationTemplate"
-			).acceptLanguage(
-				new AcceptLanguage() {
-
-					@Override
-					public List<Locale> getLocales() {
-						return Arrays.asList(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public String getPreferredLanguageId() {
-						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public Locale getPreferredLocale() {
-						return LocaleUtil.getDefault();
-					}
-
-				}
-			).groupLocalService(
-				_groupLocalService
-			).httpServletRequest(
-				testVulcanCRUDItemDelegate_getHttpServletRequest()
-			).httpServletResponse(
-				new MockHttpServletResponse()
-			).resourceActionLocalService(
-				_resourceActionLocalService
-			).resourcePermissionLocalService(
-				_resourcePermissionLocalService
-			).roleLocalService(
-				_roleLocalService
-			).scopeChecker(
-				_scopeChecker
-			).uriInfo(
-				testVulcanCRUDItemDelegate_getUriInfo()
-			).user(
-				testVulcanCRUDItemDelegate_getUser()
-			).build();
-
-		Object item = vulcanCRUDItemDelegate.getItem(
-			postNotificationTemplate.getId());
-
-		assertEquals(
-			getNotificationTemplate,
-			NotificationTemplateSerDes.toDTO(item.toString()));
-	}
-
-	protected HttpServletRequest
-		testVulcanCRUDItemDelegate_getHttpServletRequest() {
-
-		return new MockHttpServletRequest() {
-
-			@Override
-			public StringBuffer getRequestURL() {
-				return new StringBuffer(
-					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
-						RandomTestUtil.randomString()));
-			}
-
-		};
-	}
-
-	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
-		String applicationPath = RandomTestUtil.randomString() + "/";
-		String resourcePath = RandomTestUtil.randomString();
-
-		return new UriInfo() {
-
-			@Override
-			public String getPath() {
-				return resourcePath;
-			}
-
-			@Override
-			public String getPath(boolean decode) {
-				return getPath();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments(boolean decode) {
-				return getPathSegments();
-			}
-
-			@Override
-			public URI getRequestUri() {
-				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
-			}
-
-			@Override
-			public UriBuilder getRequestUriBuilder() {
-				return UriBuilder.fromUri(getRequestUri());
-			}
-
-			@Override
-			public URI getAbsolutePath() {
-				return getRequestUri();
-			}
-
-			@Override
-			public UriBuilder getAbsolutePathBuilder() {
-				return getRequestUriBuilder();
-			}
-
-			@Override
-			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
-			}
-
-			@Override
-			public UriBuilder getBaseUriBuilder() {
-				return UriBuilder.fromUri(getBaseUri());
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters(
-				boolean decode) {
-
-				return getPathParameters();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters(
-				boolean decode) {
-
-				return getQueryParameters();
-			}
-
-			@Override
-			public List<String> getMatchedURIs() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<String> getMatchedURIs(boolean decode) {
-				return getMatchedURIs();
-			}
-
-			@Override
-			public List<Object> getMatchedResources() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public URI resolve(URI requestUri) {
-				return getBaseUri().resolve(requestUri);
-			}
-
-			@Override
-			public URI relativize(URI uri) {
-				return getBaseUri().relativize(uri);
-			}
-
-		};
-	}
-
-	protected com.liferay.portal.kernel.model.User
-		testVulcanCRUDItemDelegate_getUser() {
-
-		return _testCompanyAdminUser;
-	}
-
-	protected NotificationTemplate
-			testGetNotificationTemplate_addNotificationTemplate()
+	protected void testBatchEngineDeleteImportTask_deleteNotificationTemplate(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
 
-	@Test
-	public void testGraphQLGetNotificationTemplate() throws Exception {
-		NotificationTemplate notificationTemplate =
-			testGraphQLGetNotificationTemplate_addNotificationTemplate();
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.notification.rest.dto.v1_0.NotificationTemplate",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
 
-		// No namespace
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
 
-		Assert.assertTrue(
-			equals(
-				notificationTemplate,
-				NotificationTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"notificationTemplate",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"notificationTemplateId",
-											notificationTemplate.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/notificationTemplate"))));
-
-		// Using the namespace notification_v1_0
-
-		Assert.assertTrue(
-			equals(
-				notificationTemplate,
-				NotificationTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"notification_v1_0",
-								new GraphQLField(
-									"notificationTemplate",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"notificationTemplateId",
-												notificationTemplate.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/notification_v1_0",
-						"Object/notificationTemplate"))));
-	}
-
-	@Test
-	public void testGraphQLGetNotificationTemplateNotFound() throws Exception {
-		Long irrelevantNotificationTemplateId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"notificationTemplate",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"notificationTemplateId",
-									irrelevantNotificationTemplateId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace notification_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"notification_v1_0",
-						new GraphQLField(
-							"notificationTemplate",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"notificationTemplateId",
-										irrelevantNotificationTemplateId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected NotificationTemplate
-			testGraphQLGetNotificationTemplate_addNotificationTemplate()
-		throws Exception {
-
-		return testGraphQLNotificationTemplate_addNotificationTemplate();
-	}
-
-	@Test
-	public void testPatchNotificationTemplate() throws Exception {
-		NotificationTemplate postNotificationTemplate =
-			testPatchNotificationTemplate_addNotificationTemplate();
-
-		NotificationTemplate randomPatchNotificationTemplate =
-			randomPatchNotificationTemplate();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		NotificationTemplate patchNotificationTemplate =
-			notificationTemplateResource.patchNotificationTemplate(
-				postNotificationTemplate.getId(),
-				randomPatchNotificationTemplate);
-
-		NotificationTemplate expectedPatchNotificationTemplate =
-			postNotificationTemplate.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchNotificationTemplate, expectedPatchNotificationTemplate);
-
-		NotificationTemplate getNotificationTemplate =
-			notificationTemplateResource.getNotificationTemplate(
-				patchNotificationTemplate.getId());
-
-		assertEquals(
-			expectedPatchNotificationTemplate, getNotificationTemplate);
-		assertValid(getNotificationTemplate);
-	}
-
-	protected NotificationTemplate
-			testPatchNotificationTemplate_addNotificationTemplate()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutNotificationTemplate() throws Exception {
-		NotificationTemplate postNotificationTemplate =
-			testPutNotificationTemplate_addNotificationTemplate();
-
-		NotificationTemplate randomNotificationTemplate =
-			randomNotificationTemplate();
-
-		NotificationTemplate putNotificationTemplate =
-			notificationTemplateResource.putNotificationTemplate(
-				postNotificationTemplate.getId(), randomNotificationTemplate);
-
-		assertEquals(randomNotificationTemplate, putNotificationTemplate);
-		assertValid(putNotificationTemplate);
-
-		NotificationTemplate getNotificationTemplate =
-			notificationTemplateResource.getNotificationTemplate(
-				putNotificationTemplate.getId());
-
-		assertEquals(randomNotificationTemplate, getNotificationTemplate);
-		assertValid(getNotificationTemplate);
-	}
-
-	protected NotificationTemplate
-			testPutNotificationTemplate_addNotificationTemplate()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostNotificationTemplateCopy() throws Exception {
-		NotificationTemplate randomNotificationTemplate =
-			randomNotificationTemplate();
-
-		NotificationTemplate postNotificationTemplate =
-			testPostNotificationTemplateCopy_addNotificationTemplate(
-				randomNotificationTemplate);
-
-		assertEquals(randomNotificationTemplate, postNotificationTemplate);
-		assertValid(postNotificationTemplate);
-	}
-
-	protected NotificationTemplate
-			testPostNotificationTemplateCopy_addNotificationTemplate(
-				NotificationTemplate notificationTemplate)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2721,7 +2833,30 @@ public abstract class BaseNotificationTemplateResourceTestCase {
 		return randomNotificationTemplate();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected NotificationTemplateResource notificationTemplateResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

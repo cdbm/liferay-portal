@@ -14,6 +14,7 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
+import com.liferay.object.rest.internal.resource.v1_0.CollaboratorResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryRelatedObjectsResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.OpenAPIResourceImpl;
@@ -42,6 +43,11 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,11 +56,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.framework.BundleContext;
 
@@ -432,6 +433,7 @@ public class ObjectEntryOpenAPIResourceImpl
 			openAPISchemaFilter,
 			new HashSet<Class<?>>() {
 				{
+					add(CollaboratorResourceImpl.class);
 					add(ObjectEntryRelatedObjectsResourceImpl.class);
 					add(ObjectEntryResourceImpl.class);
 					add(OpenAPIResourceImpl.class);

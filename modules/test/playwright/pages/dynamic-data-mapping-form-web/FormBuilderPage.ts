@@ -16,6 +16,7 @@ export class FormBuilderPage {
 	readonly formSettingsDoneButton: Locator;
 	readonly formTab: Locator;
 	readonly formTitle: Locator;
+	readonly helpText: Locator;
 	readonly newFormHeading: Locator;
 	readonly newPageButton: Locator;
 	readonly openFormButton: Locator;
@@ -26,6 +27,7 @@ export class FormBuilderPage {
 	readonly saveButton: Locator;
 	readonly settingsAdvancedTab: Locator;
 	readonly shareButton: Locator;
+	readonly translationManagerButton: Locator;
 	readonly unpublishButton: Locator;
 
 	constructor(page: Page) {
@@ -36,13 +38,16 @@ export class FormBuilderPage {
 		this.formSettingsDoneButton = page.getByRole('button', {name: 'Done'});
 		this.formTab = page.getByRole('button', {name: 'Form'});
 		this.formTitle = page.getByPlaceholder('Untitled Form');
+		this.helpText = page.getByLabel('Help Text');
 		this.newFormHeading = page.getByRole('heading', {name: 'New Form'});
 		this.newPageButton = page.getByRole('button', {name: 'New Page'});
 		this.openFormButton = page.getByRole('button', {
 			name: 'Open Form',
 		});
 		this.page = page;
-		this.previewButton = page.getByRole('button', {name: 'Preview'});
+		this.previewButton = page
+			.getByRole('button', {name: 'Preview'})
+			.and(page.getByTitle('A form draft will be saved'));
 		this.publishButton = page.getByRole('button', {
 			exact: true,
 			name: 'Publish',
@@ -51,10 +56,18 @@ export class FormBuilderPage {
 		this.saveButton = page.getByRole('button', {name: 'Save'});
 		this.settingsAdvancedTab = page.getByRole('tab', {name: 'Advanced'});
 		this.shareButton = page.getByRole('button', {name: 'Share'});
+		this.translationManagerButton = page
+			.locator('#translationManager')
+			.getByRole('button');
 		this.unpublishButton = page.getByRole('button', {
 			exact: true,
 			name: 'Unpublish',
 		});
+	}
+
+	async changeFormBuilderLanguage(language: string) {
+		await this.translationManagerButton.click();
+		await this.page.getByRole('menuitem', {name: language}).click();
 	}
 
 	async clickPreviewButton() {
@@ -82,7 +95,7 @@ export class FormBuilderPage {
 
 		const formSubmissionURL = await this.page.evaluate(() => {
 			const urlInput = document.querySelector(
-				'input.form-control[readonly]'
+				'.share-form-modal-item-link input.form-control[readonly]'
 			) as HTMLInputElement;
 
 			return urlInput.value;
@@ -101,8 +114,23 @@ export class FormBuilderPage {
 
 	async openFieldSettings(fieldLabel: string) {
 		await this.page
-			.locator('.ddm-field .form-group')
-			.getByLabel(fieldLabel, {exact: true})
+			.locator('.ddm-field .form-group label.ddm-label', {
+				hasText: fieldLabel,
+			})
 			.click({force: true});
+	}
+
+	async openPreviewForm() {
+		const newTabPagePromise = new Promise<Page>((resolve) =>
+			this.page.once('popup', resolve)
+		);
+
+		await this.clickPreviewButton();
+
+		const newTabPage = await newTabPagePromise;
+
+		await newTabPage.waitForLoadState('domcontentloaded');
+
+		return newTabPage;
 	}
 }

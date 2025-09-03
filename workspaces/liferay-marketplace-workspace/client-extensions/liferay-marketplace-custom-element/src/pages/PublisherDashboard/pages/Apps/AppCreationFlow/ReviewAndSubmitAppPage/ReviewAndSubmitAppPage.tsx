@@ -20,25 +20,23 @@ import {App, supportAndHelpMap} from './ReviewAndSubmitAppPageUtil';
 
 import './ReviewAndSubmitAppPage.scss';
 import {useMarketplaceContext} from '../../../../../../context/MarketplaceContext';
-import {
-	PRODUCT_CATEGORIES,
-	PRODUCT_SPECIFICATION_KEY,
-} from '../../../../../../enums/Product';
+import {MarketplaceCategories} from '../../../../../../enums/Categories';
+import {ProductSpecificationKey} from '../../../../../../enums/Product';
 import {Liferay} from '../../../../../../liferay/liferay';
-import HeadlessCommerceAdminCatalogImpl from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {getProductCategoriesByVocabularyName} from '../../../../../../utils/productUtils';
 
 type ReviewAndSubmitAppPageProps = {
-	onClickBack: () => void;
-	onClickContinue: () => void;
+	onClickBack?: () => void;
+	onClickContinue?: () => void;
 	productERC?: string;
 	productId?: number;
 	readonly?: boolean;
 };
 
 export function ReviewAndSubmitAppPage({
-	onClickBack,
-	onClickContinue,
+	onClickBack = () => {},
+	onClickContinue = () => {},
 	productERC,
 	productId,
 	readonly = false,
@@ -55,7 +53,7 @@ export function ReviewAndSubmitAppPage({
 			setLoading(true);
 
 			const product =
-				await HeadlessCommerceAdminCatalogImpl.getProductByExternalReferenceCode(
+				await HeadlessCommerceAdminCatalog.getProductByExternalReferenceCode(
 					productERC as string,
 					new URLSearchParams({
 						nestedFields:
@@ -71,19 +69,18 @@ export function ReviewAndSubmitAppPage({
 
 			const productCategories = getProductCategoriesByVocabularyName(
 				categories,
-				PRODUCT_CATEGORIES.MARKETPLACE_APP_CATEGORY
+				MarketplaceCategories.MARKETPLACE_APP_CATEGORY
 			);
 
 			const productTags = getProductCategoriesByVocabularyName(
 				categories,
-				PRODUCT_CATEGORIES.MARKETPLACE_APP_TAGS
+				MarketplaceCategories.MARKETPLACE_APP_TAGS
 			);
 
 			const isCloud =
 				productSpecifications.some(
 					({specificationKey, value}) =>
-						specificationKey ===
-							PRODUCT_SPECIFICATION_KEY.APP_TYPE &&
+						specificationKey === ProductSpecificationKey.APP_TYPE &&
 						(value.en_US === 'cloud' ||
 							(value as unknown as string) === 'cloud')
 				) ?? false;

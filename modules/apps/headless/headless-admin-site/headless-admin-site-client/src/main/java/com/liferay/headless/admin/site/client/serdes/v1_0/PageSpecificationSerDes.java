@@ -10,13 +10,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -82,6 +82,15 @@ public class PageSpecificationSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (pageSpecification.getCustomFields() == null) {
+			map.put("customFields", null);
+		}
+		else {
+			map.put(
+				"customFields",
+				String.valueOf(pageSpecification.getCustomFields()));
+		}
+
 		if (pageSpecification.getExternalReferenceCode() == null) {
 			map.put("externalReferenceCode", null);
 		}
@@ -97,6 +106,20 @@ public class PageSpecificationSerDes {
 		else {
 			map.put(
 				"settings", String.valueOf(pageSpecification.getSettings()));
+		}
+
+		if (pageSpecification.
+				getSiteTemplatePageSpecificationExternalReferenceCode() ==
+					null) {
+
+			map.put("siteTemplatePageSpecificationExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"siteTemplatePageSpecificationExternalReferenceCode",
+				String.valueOf(
+					pageSpecification.
+						getSiteTemplatePageSpecificationExternalReferenceCode()));
 		}
 
 		if (pageSpecification.getStatus() == null) {
@@ -131,10 +154,21 @@ public class PageSpecificationSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+			if (Objects.equals(jsonParserFieldName, "customFields")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"siteTemplatePageSpecificationExternalReferenceCode")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "status")) {
@@ -177,7 +211,29 @@ public class PageSpecificationSerDes {
 			PageSpecification pageSpecification, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+			if (Objects.equals(jsonParserFieldName, "customFields")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					com.liferay.headless.admin.site.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.admin.site.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] =
+							com.liferay.headless.admin.site.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
+					}
+
+					pageSpecification.setCustomFields(customFieldsArray);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
 				if (jsonParserFieldValue != null) {
 					pageSpecification.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
@@ -187,6 +243,16 @@ public class PageSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					pageSpecification.setSettings(
 						SettingsSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"siteTemplatePageSpecificationExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					pageSpecification.
+						setSiteTemplatePageSpecificationExternalReferenceCode(
+							(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "status")) {

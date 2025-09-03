@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -201,6 +202,10 @@ public interface ObjectDefinitionSettingLocalService
 	public ObjectDefinitionSetting fetchObjectDefinitionSetting(
 		long objectDefinitionSettingId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectDefinitionSetting fetchObjectDefinitionSetting(
+		long objectDefinitionId, String name);
+
 	/**
 	 * Returns the object definition setting with the matching UUID and company.
 	 *
@@ -233,6 +238,11 @@ public interface ObjectDefinitionSettingLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectDefinitionSetting getObjectDefinitionSetting(
 			long objectDefinitionSettingId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectDefinitionSetting getObjectDefinitionSetting(
+			long objectDefinitionId, String name)
 		throws PortalException;
 
 	/**
@@ -274,6 +284,10 @@ public interface ObjectDefinitionSettingLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectDefinitionSettingsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Map<Long, ObjectDefinitionSetting> getObjectDefinitionSettingsMap(
+		long companyId, String name);
 
 	/**
 	 * Returns the OSGi service identifier.

@@ -221,14 +221,14 @@ export class SearchPage {
 			target: this.searchResultsPaginationItemsPerPageDropdown
 				.nth(index)
 				.getByRole('option', {
-					name: `${delta.toString()}  Entries per Page`,
+					name: new RegExp(`${delta}`),
 				}),
 			trigger: this.searchResultsPaginationItemsPerPageToggle.nth(index),
 		});
 
 		await expect(
 			this.searchResultsPaginationItemsPerPageToggle.nth(index)
-		).toHaveText(new RegExp(`${delta.toString()} Entries`));
+		).toHaveText(new RegExp(`${delta} Entries`));
 	}
 
 	async selectPaginationPageNumber(pageNumber: number) {
@@ -286,6 +286,8 @@ export class SearchPage {
 
 			await expect(searchFacetCheckbox).not.toBeChecked();
 		}
+
+		await expect(searchFacetCheckbox).not.toBeDisabled();
 	}
 
 	async selectSearchFacetLink(

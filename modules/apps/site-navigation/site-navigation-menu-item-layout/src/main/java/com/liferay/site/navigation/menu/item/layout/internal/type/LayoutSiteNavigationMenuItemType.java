@@ -11,7 +11,7 @@ import com.liferay.exportimport.kernel.staging.LayoutStaging;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -54,18 +53,18 @@ import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeContext;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -114,12 +113,6 @@ public class LayoutSiteNavigationMenuItemType
 			return false;
 		}
 
-		if (!ArrayUtil.contains(
-				portletDataContext.getLayoutIds(), layout.getLayoutId())) {
-
-			return false;
-		}
-
 		LayoutRevision layoutRevision = _layoutStaging.getLayoutRevision(
 			layout);
 
@@ -135,7 +128,7 @@ public class LayoutSiteNavigationMenuItemType
 
 		portletDataContext.addReferenceElement(
 			siteNavigationMenuItem, siteNavigationMenuItemElement, layout,
-			PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+			PortletDataContext.REFERENCE_TYPE_DEPENDENCY_DISPOSABLE, true);
 
 		return true;
 	}
@@ -167,7 +160,7 @@ public class LayoutSiteNavigationMenuItemType
 	public String getItemSelectorURL(HttpServletRequest httpServletRequest) {
 		RenderResponse renderResponse =
 			(RenderResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
 			new LayoutItemSelectorCriterion();
@@ -312,6 +305,8 @@ public class LayoutSiteNavigationMenuItemType
 	@Override
 	public String getTypeSettingsFromLayout(Layout layout) {
 		return UnicodePropertiesBuilder.put(
+			"externalReferenceCode", layout.getExternalReferenceCode()
+		).put(
 			"groupId", String.valueOf(layout.getGroupId())
 		).put(
 			"layoutUuid", layout.getUuid()
@@ -401,6 +396,8 @@ public class LayoutSiteNavigationMenuItemType
 		importedSiteNavigationMenuItem.setTypeSettings(
 			UnicodePropertiesBuilder.fastLoad(
 				siteNavigationMenuItem.getTypeSettings()
+			).put(
+				"externalReferenceCode", layout.getExternalReferenceCode()
 			).put(
 				"groupId", String.valueOf(layout.getGroupId())
 			).put(

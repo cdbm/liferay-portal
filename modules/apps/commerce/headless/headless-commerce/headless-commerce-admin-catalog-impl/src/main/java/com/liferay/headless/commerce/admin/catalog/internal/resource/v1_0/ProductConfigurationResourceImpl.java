@@ -27,7 +27,6 @@ import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductCon
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationResource;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -45,13 +44,13 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -174,9 +173,7 @@ public class ProductConfigurationResourceImpl
 			null, booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
 			CPConfigurationEntry.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(Field.CLASS_PK),
-			object -> {
-				SearchContext searchContext = (SearchContext)object;
-
+			searchContext -> {
 				searchContext.setAttribute(
 					CPField.CP_CONFIGURATION_LIST_ID,
 					cpConfigurationList.getCPConfigurationListId());
@@ -310,9 +307,6 @@ public class ProductConfigurationResourceImpl
 				GetterUtil.getBoolean(
 					!_isTaxable(productTaxConfiguration),
 					cpConfigurationEntry.isTaxExempt()),
-				GetterUtil.getBoolean(
-					productConfiguration.getVisible(),
-					cpConfigurationEntry.isVisible()),
 				GetterUtil.getDouble(
 					productShippingConfiguration.getWeight(),
 					cpConfigurationEntry.getWeight()),
@@ -429,9 +423,6 @@ public class ProductConfigurationResourceImpl
 				GetterUtil.getBoolean(
 					!_isTaxable(productTaxConfiguration),
 					masterCPConfigurationEntry.isTaxExempt()),
-				GetterUtil.getBoolean(
-					productConfiguration.getVisible(),
-					masterCPConfigurationEntry.isVisible()),
 				GetterUtil.getDouble(
 					productShippingConfiguration.getWeight(),
 					masterCPConfigurationEntry.getWeight()),
@@ -555,7 +546,6 @@ public class ProductConfigurationResourceImpl
 					productShippingConfiguration.getShippingSeparately(), true),
 				!GetterUtil.getBoolean(
 					productTaxConfiguration.getTaxable(), true),
-				GetterUtil.getBoolean(productConfiguration.getVisible(), true),
 				GetterUtil.getDouble(productShippingConfiguration.getWeight()),
 				GetterUtil.getDouble(productShippingConfiguration.getWidth())),
 			false);
@@ -566,10 +556,16 @@ public class ProductConfigurationResourceImpl
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> addAction(
-				"UPDATE", cpConfigurationEntry.getCPConfigurationEntryId(),
-				"deleteProductConfiguration",
-				_cpConfigurationEntryModelResourcePermission)
+			() -> {
+				if (cpConfigurationEntry.isMaster()) {
+					return null;
+				}
+
+				return addAction(
+					"UPDATE", cpConfigurationEntry.getCPConfigurationEntryId(),
+					"deleteProductConfiguration",
+					_cpConfigurationEntryModelResourcePermission);
+			}
 		).put(
 			"get",
 			() -> addAction(

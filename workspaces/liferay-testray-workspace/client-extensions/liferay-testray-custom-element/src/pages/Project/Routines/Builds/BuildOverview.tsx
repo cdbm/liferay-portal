@@ -15,7 +15,7 @@ import {safeJSONParse} from '~/util';
 import JiraLink from '../../../../components/JiraLink';
 import Container from '../../../../components/Layout/Container';
 import QATable from '../../../../components/Table/QATable';
-import {useTotalTestCases} from '../../../../hooks/data/useCaseResultGroupBy';
+import {useTotalTestCasesByTestrayBuild} from '../../../../hooks/data/useCaseResultGroupBy';
 import useIssuesFound from '../../../../hooks/data/useIssuesFound';
 import i18n from '../../../../i18n';
 import {TestrayBuild, TestrayTask} from '../../../../services/rest';
@@ -29,7 +29,7 @@ type BuildOverviewProps = {
 };
 
 const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
-	const totalTestCasesGroup = useTotalTestCases(testrayBuild);
+	const totalTestCasesGroup = useTotalTestCasesByTestrayBuild(testrayBuild);
 	const {chart, entity, loading} = useCaseResultsChart({
 		buildId: testrayBuild.id,
 	});
@@ -87,6 +87,13 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 									: testrayBuild?.gitHash,
 						},
 						{
+							title: i18n.translate('cpu-use-time'),
+							value:
+								testrayBuild?.cpuUseTime === 'null' || ''
+									? '-'
+									: testrayBuild?.cpuUseTime,
+						},
+						{
 							title: i18n.translate('execution-date'),
 							value: formatUTCDate(testrayBuild.dueDate),
 						},
@@ -104,7 +111,6 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 				<>
 					<ClayPanel
 						collapsable
-						defaultExpanded
 						displayTitle={
 							<div className="tr-small-heading">
 								{i18n.translate('playwright-reports')}

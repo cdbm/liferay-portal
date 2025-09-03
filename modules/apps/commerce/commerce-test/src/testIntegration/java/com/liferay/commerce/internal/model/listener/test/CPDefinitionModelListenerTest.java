@@ -23,6 +23,7 @@ import com.liferay.commerce.service.CPDefinitionInventoryService;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -99,13 +100,14 @@ public class CPDefinitionModelListenerTest {
 
 		CPConfigurationList cpConfigurationList2 =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, cpConfigurationList1.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), cpConfigurationList1.getGroupId(),
 				cpConfigurationList1.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 1.0,
 				calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
 			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, true,

@@ -27,6 +27,7 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -59,7 +60,7 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.TreeMap;
+import java.util.NavigableMap;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -107,8 +108,9 @@ public class LayoutReferencesExportImportContentProcessorTest {
 				null, TestPropsValues.getUserId(), draftLayout.getGroupId(), 0,
 				0, segmentsExperienceId, draftLayout.getPlid(),
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-				fragmentRenderer.getConfiguration(
-					defaultFragmentRendererContext),
+				JSONFactoryUtil.toString(
+					fragmentRenderer.getConfigurationJSONObject(
+						defaultFragmentRendererContext)),
 				JSONUtil.put(
 					FragmentEntryProcessorConstants.
 						KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
@@ -1042,7 +1044,7 @@ public class LayoutReferencesExportImportContentProcessorTest {
 			layoutSet = group.getPublicLayoutSet();
 		}
 
-		TreeMap<String, String> virtualHostnames =
+		NavigableMap<String, String> virtualHostnames =
 			layoutSet.getVirtualHostnames();
 
 		return _portal.getPortalURL(

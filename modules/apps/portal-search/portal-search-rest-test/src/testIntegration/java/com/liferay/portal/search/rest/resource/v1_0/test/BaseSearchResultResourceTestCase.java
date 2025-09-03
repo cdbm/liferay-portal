@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -297,12 +297,12 @@ public abstract class BaseSearchResultResourceTestCase {
 
 	@Test
 	public void testGetSearchPageWithPagination() throws Exception {
-		Page<SearchResult> searchResultPage =
+		Page<SearchResult> searchResultsPage =
 			searchResultResource.getSearchPage(
 				null, null, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			searchResultPage.getTotalCount());
+			searchResultsPage.getTotalCount());
 
 		SearchResult searchResult1 = testGetSearchPage_addSearchResult(
 			randomSearchResult());
@@ -528,6 +528,11 @@ public abstract class BaseSearchResultResourceTestCase {
 	@Test
 	public void testPostSearchPage() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule

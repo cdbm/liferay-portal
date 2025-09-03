@@ -16,6 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -27,13 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Zoltán Takács
@@ -224,6 +224,55 @@ public class ProductConfigurationList implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
+		if (_customFieldsSupplier != null) {
+			customFields = _customFieldsSupplier.get();
+
+			_customFieldsSupplier = null;
+		}
+
+		return customFields;
+	}
+
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
+		this.customFields = customFields;
+
+		_customFieldsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCustomFields(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
+
+		_customFieldsSupplier = () -> {
+			try {
+				return customFieldsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
@@ -727,6 +776,29 @@ public class ProductConfigurationList implements Serializable {
 			sb.append(liferayToJSONDateFormat.format(createDate));
 
 			sb.append("\"");
+		}
+
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(customFields[i]);
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		Date displayDate = getDisplayDate();

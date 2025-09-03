@@ -77,10 +77,16 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 								!!newObjectDefinition.actions.permissions,
 							hasObjectDefinitionUpdateResourcePermission:
 								!!newObjectDefinition.actions.update,
+							isTreeStructure:
+								!!newObjectDefinition.objectDefinitionSettings?.some(
+									(setting) =>
+										setting.name ===
+										'rootObjectDefinitionExternalReferenceCodes'
+								),
 							objectDefinitionId: newObjectDefinition.id,
 							objectDefinitionName: newObjectDefinition.name,
 							objectDefinitionPermissionsURL,
-							objectFoldersLenght: objectFolders.length,
+							objectFoldersLength: objectFolders.length,
 							status: newObjectDefinition.status,
 						});
 
@@ -1068,10 +1074,16 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 								objectDefinition.hasObjectDefinitionManagePermissionsResourcePermission,
 							hasObjectDefinitionUpdateResourcePermission:
 								objectDefinition.hasObjectDefinitionUpdateResourcePermission,
+							isTreeStructure:
+								!!objectDefinition.objectDefinitionSettings?.some(
+									(setting) =>
+										setting.name ===
+										'rootObjectDefinitionExternalReferenceCodes'
+								),
 							objectDefinitionId: objectDefinition.id,
 							objectDefinitionName: objectDefinition.name,
 							objectDefinitionPermissionsURL,
-							objectFoldersLenght: objectFolders.length,
+							objectFoldersLength: objectFolders.length,
 							status: objectDefinition.status,
 						});
 

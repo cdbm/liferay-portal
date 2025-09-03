@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -191,12 +191,12 @@ public abstract class BaseSkuResourceTestCase {
 		assertValid(getSku);
 	}
 
-	protected Long testGetDiscountSkuSku_getDiscountSkuId() throws Exception {
+	protected Sku testGetDiscountSkuSku_addSku() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Sku testGetDiscountSkuSku_addSku() throws Exception {
+	protected Long testGetDiscountSkuSku_getDiscountSkuId() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -315,12 +315,12 @@ public abstract class BaseSkuResourceTestCase {
 		assertValid(getSku);
 	}
 
-	protected Long testGetPriceEntryIdSku_getPriceEntryId() throws Exception {
+	protected Sku testGetPriceEntryIdSku_addSku() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Sku testGetPriceEntryIdSku_addSku() throws Exception {
+	protected Long testGetPriceEntryIdSku_getPriceEntryId() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}

@@ -13,6 +13,7 @@ import com.liferay.item.selector.taglib.internal.util.EntryURLUtil;
 import com.liferay.item.selector.taglib.internal.util.GroupItemSelectorProviderRegistryUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
@@ -23,10 +24,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
+import jakarta.portlet.PortletURL;
+
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.PortletURL;
 
 /**
  * @author Cristina González
@@ -91,8 +92,15 @@ public class GroupSelectorDisplayContext {
 	}
 
 	public Set<String> getGroupTypes() {
-		return GroupItemSelectorProviderRegistryUtil.
-			getGroupItemSelectorProviderTypes();
+		Set<String> groupItemSelectorProviderTypes =
+			GroupItemSelectorProviderRegistryUtil.
+				getGroupItemSelectorProviderTypes();
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-17564")) {
+			groupItemSelectorProviderTypes.remove("space");
+		}
+
+		return groupItemSelectorProviderTypes;
 	}
 
 	public SearchContainer<Group> getSearchContainer() {

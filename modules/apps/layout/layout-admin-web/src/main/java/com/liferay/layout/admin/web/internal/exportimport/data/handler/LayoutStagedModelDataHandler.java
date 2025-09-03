@@ -665,7 +665,8 @@ public class LayoutStagedModelDataHandler
 					PortletDataHandlerKeys.
 						LAYOUTS_IMPORT_MODE_CREATED_FROM_PROTOTYPE)) {
 
-				importedLayout.setSourcePrototypeLayoutUuid(uuid);
+				importedLayout.setLayoutSetPrototypeLayoutERC(
+					layout.getExternalReferenceCode());
 
 				layoutId = _layoutLocalService.getNextLayoutId(
 					groupId, privateLayout);
@@ -677,8 +678,8 @@ public class LayoutStagedModelDataHandler
 					layout.getLayoutPrototypeUuid());
 				importedLayout.setLayoutPrototypeLinkEnabled(
 					layout.isLayoutPrototypeLinkEnabled());
-				importedLayout.setSourcePrototypeLayoutUuid(
-					layout.getSourcePrototypeLayoutUuid());
+				importedLayout.setLayoutSetPrototypeLayoutERC(
+					layout.getLayoutSetPrototypeLayoutERC());
 			}
 
 			importedLayout.setUuid(uuid);
@@ -720,6 +721,7 @@ public class LayoutStagedModelDataHandler
 			}
 			finally {
 				portletDataContext.setPlid(originalPlid);
+				portletDataContext.setPrivateLayout(privateLayout);
 			}
 
 			long draftLayoutPlid = layoutPlids.get(
@@ -745,14 +747,17 @@ public class LayoutStagedModelDataHandler
 					layout, Layout.class, layout.getGroupId(),
 					masterLayoutUuid);
 
-			long originalPlid = portletDataContext.getPlid();
+			if (masterLayoutElement != null) {
+				long originalPlid = portletDataContext.getPlid();
 
-			try {
-				StagedModelDataHandlerUtil.importStagedModel(
-					portletDataContext, masterLayoutElement);
-			}
-			finally {
-				portletDataContext.setPlid(originalPlid);
+				try {
+					StagedModelDataHandlerUtil.importStagedModel(
+						portletDataContext, masterLayoutElement);
+				}
+				finally {
+					portletDataContext.setPlid(originalPlid);
+					portletDataContext.setPrivateLayout(privateLayout);
+				}
 			}
 
 			long masterLayoutPlid = GetterUtil.getLong(
@@ -792,6 +797,7 @@ public class LayoutStagedModelDataHandler
 				}
 				finally {
 					portletDataContext.setPlid(originalPlid);
+					portletDataContext.setPrivateLayout(privateLayout);
 				}
 			}
 
@@ -914,8 +920,8 @@ public class LayoutStagedModelDataHandler
 					priority = TransactionInvokerUtil.invoke(
 						_transactionConfig,
 						() -> _layoutLocalServiceHelper.getNextPriority(
-							groupId, finalPrivateLayout, finalParentLayoutId,
-							null, -1));
+							groupId, null, finalPrivateLayout,
+							finalParentLayoutId, -1));
 				}
 
 				importedLayout.setPriority(priority);

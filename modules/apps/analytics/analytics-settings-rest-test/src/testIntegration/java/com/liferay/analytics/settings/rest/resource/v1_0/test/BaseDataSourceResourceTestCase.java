@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSource;
+import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceLiferayAnalyticsURL;
 import com.liferay.analytics.settings.rest.client.dto.v1_0.Field;
 import com.liferay.analytics.settings.rest.client.http.HttpInvoker;
 import com.liferay.analytics.settings.rest.client.pagination.Page;
@@ -41,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -179,7 +180,16 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	@Test
 	public void testDeleteDataSource() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataSource dataSource = testDeleteDataSource_addDataSource();
+
+		assertHttpResponseStatusCode(
+			204, dataSourceResource.deleteDataSourceHttpResponse());
+	}
+
+	protected DataSource testDeleteDataSource_addDataSource() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -189,7 +199,7 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	@Test
 	public void testPostDataSource() throws Exception {
-		Assert.assertTrue(false);
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(
@@ -238,6 +248,18 @@ public abstract class BaseDataSourceResourceTestCase {
 		}
 	}
 
+	protected void assertEquals(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL1,
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL2) {
+
+		Assert.assertTrue(
+			dataSourceLiferayAnalyticsURL1 + " does not equal " +
+				dataSourceLiferayAnalyticsURL2,
+			equals(
+				dataSourceLiferayAnalyticsURL1,
+				dataSourceLiferayAnalyticsURL2));
+	}
+
 	protected void assertEqualsIgnoringOrder(
 		List<DataSource> dataSources1, List<DataSource> dataSources2) {
 
@@ -261,6 +283,10 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	protected void assertValid(DataSource dataSource) throws Exception {
 		boolean valid = true;
+
+		if (dataSource.getDataSourceId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -342,7 +368,41 @@ public abstract class BaseDataSourceResourceTestCase {
 		}
 	}
 
+	protected void assertValid(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL) {
+
+		boolean valid = true;
+
+		for (String additionalAssertFieldName :
+				getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames()) {
+
+			if (Objects.equals(
+					"liferayAnalyticsURL", additionalAssertFieldName)) {
+
+				if (dataSourceLiferayAnalyticsURL.getLiferayAnalyticsURL() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			throw new IllegalArgumentException(
+				"Invalid additional assert field name " +
+					additionalAssertFieldName);
+		}
+
+		Assert.assertTrue(valid);
+	}
+
 	protected String[] getAdditionalAssertFieldNames() {
+		return new String[0];
+	}
+
+	protected String[]
+		getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames() {
+
 		return new String[0];
 	}
 
@@ -474,6 +534,39 @@ public abstract class BaseDataSourceResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected boolean equals(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL1,
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL2) {
+
+		if (dataSourceLiferayAnalyticsURL1 == dataSourceLiferayAnalyticsURL2) {
+			return true;
+		}
+
+		for (String additionalAssertFieldName :
+				getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames()) {
+
+			if (Objects.equals(
+					"liferayAnalyticsURL", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						dataSourceLiferayAnalyticsURL1.getLiferayAnalyticsURL(),
+						dataSourceLiferayAnalyticsURL2.
+							getLiferayAnalyticsURL())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			throw new IllegalArgumentException(
+				"Invalid additional assert field name " +
+					additionalAssertFieldName);
+		}
+
+		return true;
 	}
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
@@ -664,6 +757,17 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	protected DataSource randomPatchDataSource() throws Exception {
 		return randomDataSource();
+	}
+
+	protected DataSourceLiferayAnalyticsURL
+			randomDataSourceLiferayAnalyticsURL()
+		throws Exception {
+
+		return new DataSourceLiferayAnalyticsURL() {
+			{
+				liferayAnalyticsURL = RandomTestUtil.randomString();
+			}
+		};
 	}
 
 	protected DataSourceResource dataSourceResource;

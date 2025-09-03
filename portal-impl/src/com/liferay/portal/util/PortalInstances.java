@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.User;
@@ -32,20 +33,21 @@ import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.initializer.kernel.util.SiteInitializerThreadLocal;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.sql.SQLException;
 
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -95,7 +97,13 @@ public class PortalInstances {
 		}
 
 		if (companyIdObj != null) {
-			return companyIdObj.longValue();
+			long companyId = companyIdObj.longValue();
+
+			if (CompanyThreadLocal.getCompanyId() == CompanyConstants.SYSTEM) {
+				CompanyThreadLocal.setCompanyId(companyId);
+			}
+
+			return companyId;
 		}
 
 		long companyId = _getCompanyIdByVirtualHosts(
@@ -166,7 +174,7 @@ public class PortalInstances {
 				LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 					group.getGroupId(), false);
 
-				TreeMap<String, String> virtualHostnames =
+				NavigableMap<String, String> virtualHostnames =
 					layoutSet.getVirtualHostnames();
 
 				if (virtualHostnames.isEmpty() ||
@@ -259,7 +267,7 @@ public class PortalInstances {
 
 			if (!skipCheck) {
 				try {
-					CompanyLocalServiceUtil.checkCompany(company.getWebId());
+					CompanyLocalServiceUtil.checkCompany(company, false);
 				}
 				catch (Exception exception) {
 					_log.error(exception);
@@ -494,11 +502,7 @@ public class PortalInstances {
 			virtualHostname = "localhost";
 		}
 
-		if (Objects.equals(virtualHostname, serverName)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(virtualHostname, serverName);
 	}
 
 	private static void _setAttributes(

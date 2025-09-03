@@ -46,15 +46,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+import jakarta.portlet.WindowStateException;
+
+import jakarta.servlet.ServletContext;
+
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-import javax.portlet.WindowStateException;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
-	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+	property = "jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = AssetRendererFactory.class
 )
 public class JournalArticleAssetRendererFactory
@@ -141,6 +141,13 @@ public class JournalArticleAssetRendererFactory
 				article = _journalArticleLocalService.fetchDisplayArticle(
 					articleResource.getGroupId(),
 					articleResource.getArticleId());
+			}
+
+			if (article == null) {
+				article = _journalArticleLocalService.fetchLatestArticle(
+					articleResource.getGroupId(),
+					articleResource.getArticleId(),
+					WorkflowConstants.STATUS_PENDING);
 			}
 
 			if (article == null) {

@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -291,10 +291,10 @@ public abstract class BaseChannelResourceTestCase {
 
 	@Test
 	public void testGetChannelsPageWithPagination() throws Exception {
-		Page<Channel> channelPage = channelResource.getChannelsPage(
+		Page<Channel> channelsPage = channelResource.getChannelsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(channelPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(channelsPage.getTotalCount());
 
 		Channel channel1 = testGetChannelsPage_addChannel(randomChannel());
 
@@ -560,6 +560,11 @@ public abstract class BaseChannelResourceTestCase {
 
 	protected Channel testGraphQLGetChannelsPage_addChannel() throws Exception {
 		return testGraphQLChannel_addChannel();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule

@@ -59,11 +59,11 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -400,8 +400,9 @@ public class EvaluateLayoutStructureRulesStrutsActionTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _draftLayout.getPlid(),
-				segmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_draftLayout.getPlid(), segmentsExperienceId,
+				layoutStructure.toString());
 
 		return layoutStructureRule.getId();
 	}

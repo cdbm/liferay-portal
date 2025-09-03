@@ -32,7 +32,6 @@ import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporaryS
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -118,7 +117,7 @@ public class FragmentEntryLinkLocalServiceTest {
 			_fragmentCollection.getFragmentCollectionId(), null,
 			"Fragment Name", StringPool.BLANK, "<div>test</div>",
 			StringPool.BLANK, false, _read("configuration-light.json"), null, 0,
-			false, FragmentConstants.TYPE_SECTION, null,
+			false, false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		_fragmentEntryWithFreeMarker =
@@ -127,7 +126,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-freemarker.html"), StringPool.BLANK, false,
-				_read("configuration-light.json"), null, 0, false,
+				_read("configuration-light.json"), null, 0, false, false,
 				FragmentConstants.TYPE_SECTION, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -181,8 +180,9 @@ public class FragmentEntryLinkLocalServiceTest {
 			_fragmentEntry.getHtml(), fragmentEntryLink.getHtml());
 
 		Assert.assertEquals(
-			_read("expected-editable-values-light-modified.json"),
-			fragmentEntryLink.getEditableValues());
+			_objectMapper.readTree(
+				_read("expected-editable-values-light-modified.json")),
+			_objectMapper.readTree(fragmentEntryLink.getEditableValues()));
 	}
 
 	@Test(
@@ -234,8 +234,8 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 					fragmentEntryLink.getFragmentEntryLinkId()));
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				fragmentEntryLink.getEditableValues());
+			JSONObject jsonObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			JSONObject editableJSONObject = jsonObject.getJSONObject(
 				FragmentEntryProcessorConstants.
@@ -268,8 +268,8 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 					fragmentEntryLink.getFragmentEntryLinkId()));
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				fragmentEntryLink.getEditableValues());
+			JSONObject jsonObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			JSONObject editableJSONObject = jsonObject.getJSONObject(
 				FragmentEntryProcessorConstants.
@@ -299,8 +299,7 @@ public class FragmentEntryLinkLocalServiceTest {
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 				fragmentEntryLink.getFragmentEntryLinkId()));
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject editableJSONObject = jsonObject.getJSONObject(
 			FragmentEntryProcessorConstants.
@@ -329,8 +328,7 @@ public class FragmentEntryLinkLocalServiceTest {
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 				fragmentEntryLink.getFragmentEntryLinkId()));
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject editableJSONObject = jsonObject.getJSONObject(
 			FragmentEntryProcessorConstants.
@@ -656,8 +654,9 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", RandomTestUtil.randomString(),
 				"<div>test</div>", RandomTestUtil.randomString(), false,
-				configuration, null, 0, false, FragmentConstants.TYPE_SECTION,
-				null, WorkflowConstants.STATUS_APPROVED, _serviceContext);
+				configuration, null, 0, false, false,
+				FragmentConstants.TYPE_SECTION, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
@@ -692,8 +691,9 @@ public class FragmentEntryLinkLocalServiceTest {
 			configuration, fragmentEntryLink.getConfiguration());
 
 		Assert.assertEquals(
-			_read("expected-editable-values-light-modified.json"),
-			fragmentEntryLink.getEditableValues());
+			_objectMapper.readTree(
+				_read("expected-editable-values-light-modified.json")),
+			_objectMapper.readTree(fragmentEntryLink.getEditableValues()));
 	}
 
 	@Test
@@ -710,7 +710,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK, StringUtil.randomString(),
 				StringPool.BLANK, false, _read("configuration-light.json"),
-				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+				null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -745,13 +745,59 @@ public class FragmentEntryLinkLocalServiceTest {
 		Assert.assertEquals(
 			newConfiguration, fragmentEntryLink.getConfiguration());
 
-		JSONObject editableValuesJSONObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
-
 		Assert.assertEquals(
 			_objectMapper.readTree(
 				_read("expected-editable-values-light-modified.json")),
-			_objectMapper.readTree(editableValuesJSONObject.toString()));
+			_objectMapper.readTree(fragmentEntryLink.getEditableValues()));
+	}
+
+	@Test
+	@TestInfo("LPS-102130")
+	public void testUpdateFragmentEntryLinkWithPropagationAndFreeMarkerVariables()
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentEntryLocalService.addFragmentEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				_fragmentCollection.getFragmentCollectionId(), null,
+				"Fragment Name", StringPool.BLANK,
+				_read("fragment-freemarker-variables.html"), StringPool.BLANK,
+				false, StringPool.BLANK, null, 0, false, false,
+				FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+				StringPool.BLANK, StringPool.BLANK, 0, null,
+				fragmentEntry.getType(), _serviceContext);
+
+		_fragmentEntryLocalService.updateFragmentEntry(
+			TestPropsValues.getUserId(), fragmentEntry.getFragmentEntryId(),
+			fragmentEntry.getFragmentCollectionId(), fragmentEntry.getName(),
+			fragmentEntry.getCss(),
+			_read("updated-fragment-freemarker-variables.html"),
+			fragmentEntry.getJs(), false, fragmentEntry.getConfiguration(),
+			StringPool.BLANK, fragmentEntry.getPreviewFileEntryId(), false,
+			fragmentEntry.getTypeOptions(), WorkflowConstants.STATUS_APPROVED);
+
+		_fragmentEntryLinkLocalService.updateLatestChanges(
+			fragmentEntryLink.getFragmentEntryLinkId());
+
+		fragmentEntryLink =
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				fragmentEntryLink.getFragmentEntryLinkId());
+
+		Assert.assertEquals(
+			_objectMapper.readTree(
+				_read(
+					"expected-updated-editable-values-freemarker-variables-" +
+						"update-latest-changes.json")),
+			_objectMapper.readTree(fragmentEntryLink.getEditableValues()));
 	}
 
 	@Test
@@ -764,7 +810,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-configuration.html"), StringPool.BLANK, false,
-				_read("configuration-new-field.json"), null, 0, false,
+				_read("configuration-new-field.json"), null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -811,7 +857,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-editable.html"), StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -847,6 +893,61 @@ public class FragmentEntryLinkLocalServiceTest {
 	}
 
 	@Test
+	@TestInfo("LPD-56902")
+	public void testUpdateFragmentEntryLinkWithPropagationAndUpdatedDefaultValues()
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentEntryLocalService.addFragmentEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				_fragmentCollection.getFragmentCollectionId(), null,
+				"Fragment Name", StringPool.BLANK,
+				_read("fragment-editable-default-values.html"),
+				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+				false, FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+				StringPool.BLANK, StringPool.BLANK, 0, null,
+				fragmentEntry.getType(), _serviceContext);
+
+		_fragmentEntryLinkLocalService.updateFragmentEntryLink(
+			TestPropsValues.getUserId(),
+			fragmentEntryLink.getFragmentEntryLinkId(),
+			_read(
+				"updated-editable-default-values-update-latest-changes.json"));
+
+		_fragmentEntryLocalService.updateFragmentEntry(
+			TestPropsValues.getUserId(), fragmentEntry.getFragmentEntryId(),
+			fragmentEntry.getFragmentCollectionId(), fragmentEntry.getName(),
+			fragmentEntry.getCss(),
+			_read("updated-fragment-editable-default-values.html"),
+			fragmentEntry.getJs(), false, fragmentEntry.getConfiguration(),
+			StringPool.BLANK, fragmentEntry.getPreviewFileEntryId(), false,
+			fragmentEntry.getTypeOptions(), WorkflowConstants.STATUS_APPROVED);
+
+		_fragmentEntryLinkLocalService.updateLatestChanges(
+			fragmentEntryLink.getFragmentEntryLinkId());
+
+		fragmentEntryLink =
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				fragmentEntryLink.getFragmentEntryLinkId());
+
+		Assert.assertEquals(
+			_objectMapper.readTree(
+				_read(
+					"expected-editable-default-values-update-latest-" +
+						"changes.json")),
+			_objectMapper.readTree(fragmentEntryLink.getEditableValues()));
+	}
+
+	@Test
 	@TestInfo("LPS-118241")
 	public void testUpdateFragmentEntryLinkWithPropagationAndUpdatedEditableItems()
 		throws Exception {
@@ -857,7 +958,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-editable.html"), StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -909,7 +1010,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_read("fragment-freemarker-with-configuration.html"),
 				StringPool.BLANK, false, _read("configuration-tabs.json"), null,
-				0, false, FragmentConstants.TYPE_COMPONENT, null,
+				0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink1 =
@@ -989,7 +1090,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				"Fragment Name", StringPool.BLANK,
 				"<div><img src=\"[resources:liferay]\" /></div>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -1080,7 +1181,7 @@ public class FragmentEntryLinkLocalServiceTest {
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 
 		return mockHttpServletRequest;

@@ -5,7 +5,7 @@
 
 export default function getInitialEvent() {
 	return {
-		associatedTickets: [],
+		associatedTickets: '[]',
 		currentLiferayVersion: {
 			key: '',
 		},
@@ -22,7 +22,10 @@ export default function getInitialEvent() {
 		},
 		r_accountEntryToBusinessEvents_accountEntryId: '',
 		targetGoLiveDate: '',
-		time: '',
+		targetGoLiveTime: {
+			hours: '--',
+			minutes: '--',
+		},
 		timeZone: {
 			key: '',
 		},

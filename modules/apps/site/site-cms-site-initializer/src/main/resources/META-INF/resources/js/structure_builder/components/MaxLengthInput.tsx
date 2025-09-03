@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayForm, {ClayToggle} from '@clayui/form';
+import ClayForm, {ClayCheckbox} from '@clayui/form';
 import {sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
@@ -11,7 +11,13 @@ import {useStateDispatch} from '../contexts/StateContext';
 import {Field, MaxLengthSettingsField} from '../utils/field';
 import Input from './Input';
 
-export default function MaxLengthInput({field}: {field: Field}) {
+export default function MaxLengthInput({
+	disabled,
+	field,
+}: {
+	disabled?: boolean;
+	field: Field;
+}) {
 	const maxLengthSettingsField = field as MaxLengthSettingsField;
 
 	const dispatch = useStateDispatch();
@@ -23,9 +29,13 @@ export default function MaxLengthInput({field}: {field: Field}) {
 	return (
 		<>
 			<ClayForm.Group className="mb-3">
-				<ClayToggle
+				<ClayCheckbox
+					checked={enableLimitCharacters}
+					disabled={disabled}
 					label={Liferay.Language.get('limit-characters')}
-					onToggle={(value) => {
+					onChange={(event) => {
+						const value = event.target.checked;
+
 						setEnableLimitCharacters(value);
 
 						if (!value) {
@@ -40,12 +50,12 @@ export default function MaxLengthInput({field}: {field: Field}) {
 							});
 						}
 					}}
-					toggled={enableLimitCharacters}
 				/>
 			</ClayForm.Group>
 			{enableLimitCharacters ? (
 				<ClayForm.Group className="mb-3">
 					<Input
+						disabled={disabled}
 						helpMessage={sub(
 							Liferay.Language.get(
 								'set-the-maximum-number-of-characters-accepted-this-value-cant-be-less-than-x-or-greater-than-x'

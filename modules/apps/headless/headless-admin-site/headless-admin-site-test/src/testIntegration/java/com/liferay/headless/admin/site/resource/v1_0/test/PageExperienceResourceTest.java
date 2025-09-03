@@ -6,15 +6,16 @@
 package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.headless.admin.site.client.dto.v1_0.ContainerPageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageElement;
+import com.liferay.headless.admin.site.client.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
-import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
@@ -22,13 +23,14 @@ import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rubén Pulido
  */
-@FeatureFlags("LPD-35443")
+@FeatureFlag("LPD-35443")
 @RunWith(Arquillian.class)
 public class PageExperienceResourceTest
 	extends BasePageExperienceResourceTestCase {
@@ -119,6 +121,15 @@ public class PageExperienceResourceTest
 		}
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodePageExperience()
+		throws Exception {
+
+		super.testGraphQLGetSiteSiteByExternalReferenceCodePageExperience();
+	}
+
 	@Override
 	@Test
 	public void testPatchSiteSiteByExternalReferenceCodePageExperience()
@@ -191,16 +202,44 @@ public class PageExperienceResourceTest
 
 		pageExperience.setName_i18n(
 			Collections.singletonMap("en-US", RandomTestUtil.randomString()));
-		pageExperience.setPageElements(new PageElement[0]);
 
-		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
-			testGroup.getGroupId());
-
-		pageExperience.setSegmentExternalReferenceCode(
-			segmentsEntry.getSegmentsEntryKey());
-
+		pageExperience.setPageElements(
+			new PageElement[] {
+				new PageElement() {
+					{
+						setPageElementDefinition(
+							new ContainerPageElementDefinition() {
+								{
+									setIndexed(true);
+									setType(
+										PageElementDefinition.Type.CONTAINER);
+								}
+							});
+						setPageElements(new PageElement[0]);
+						setPosition(0);
+					}
+				},
+				new PageElement() {
+					{
+						setPageElementDefinition(
+							new ContainerPageElementDefinition() {
+								{
+									setIndexed(true);
+									setType(
+										PageElementDefinition.Type.CONTAINER);
+								}
+							});
+						setPageElements(new PageElement[0]);
+						setPosition(1);
+					}
+				}
+			});
 		pageExperience.setPageSpecificationExternalReferenceCode(
 			_draftLayout.getExternalReferenceCode());
+		pageExperience.setSegmentExternalReferenceCode(
+			SegmentsTestUtil.addSegmentsEntry(
+				testGroup.getGroupId()
+			).getSegmentsEntryKey());
 
 		return pageExperience;
 	}
@@ -221,26 +260,10 @@ public class PageExperienceResourceTest
 
 	@Override
 	protected String
-			testGetSiteSiteByExternalReferenceCodePageSpecificationPageExperiencesPage_getIrrelevantSiteExternalReferenceCode()
-		throws Exception {
-
-		return irrelevantGroup.getExternalReferenceCode();
-	}
-
-	@Override
-	protected String
 			testGetSiteSiteByExternalReferenceCodePageSpecificationPageExperiencesPage_getPageSpecificationExternalReferenceCode()
 		throws Exception {
 
 		return _draftLayout.getExternalReferenceCode();
-	}
-
-	@Override
-	protected String
-			testGetSiteSiteByExternalReferenceCodePageSpecificationPageExperiencesPage_getSiteExternalReferenceCode()
-		throws Exception {
-
-		return testGroup.getExternalReferenceCode();
 	}
 
 	@Override

@@ -60,66 +60,19 @@ public class RoleStagedModelDataHandlerTest
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
+	@Override
 	@Test
-	public void testImportRoleWithUserGroup() throws Exception {
-		initExport();
+	public void testStagedModelDataHandler() throws Exception {
+		_company = CompanyTestUtil.addCompany();
 
-		UserGroup userGroup = _userGroupLocalService.addUserGroup(
-			StringPool.BLANK, TestPropsValues.getUserId(),
-			stagingGroup.getCompanyId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				stagingGroup.getGroupId()));
+		try {
+			super.testStagedModelDataHandler();
 
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-
-		_groupLocalService.addRoleGroup(
-			role.getRoleId(), userGroup.getGroupId());
-
-		Assert.assertEquals(
-			1, _roleLocalService.getAssigneesTotal(role.getRoleId()));
-
-		StagedModelDataHandlerUtil.exportStagedModel(portletDataContext, role);
-
-		String originalName = PrincipalThreadLocal.getName();
-		PermissionChecker originalPermissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		Company company = CompanyTestUtil.addCompany();
-
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
-					company.getCompanyId())) {
-
-			User user = UserTestUtil.getAdminUser(company.getCompanyId());
-
-			Assert.assertNotNull(user);
-
-			PermissionThreadLocal.setPermissionChecker(
-				PermissionCheckerFactoryUtil.create(user));
-			PrincipalThreadLocal.setName(user.getUserId());
-
-			initImport(stagingGroup, company.getGroup());
-
-			Role exportedRole = (Role)readExportedStagedModel(role);
-
-			Role importedRole = _getImportedRole(
-				exportedRole, company.getGroup(), role, user);
-
-			Assert.assertEquals(
-				exportedRole.getExternalReferenceCode(),
-				importedRole.getExternalReferenceCode());
-			Assert.assertEquals(exportedRole.getName(), importedRole.getName());
-			Assert.assertEquals(
-				0,
-				_roleLocalService.getAssigneesTotal(importedRole.getRoleId()));
+			_testStagedModelDataHandlerImportAccountRole();
+			_testStagedModelDataHandlerImportRoleWithUserGroup();
 		}
 		finally {
-			PermissionThreadLocal.setPermissionChecker(
-				originalPermissionChecker);
-			PrincipalThreadLocal.setName(originalName);
-
-			_companyLocalService.deleteCompany(company);
+			_companyLocalService.deleteCompany(_company);
 		}
 	}
 
@@ -192,6 +145,116 @@ public class RoleStagedModelDataHandlerTest
 
 		return (Role)getStagedModel(importedRole.getUuid(), group);
 	}
+
+	private void _testStagedModelDataHandlerImportAccountRole()
+		throws Exception {
+
+		initExport();
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_ACCOUNT);
+
+		StagedModelDataHandlerUtil.exportStagedModel(portletDataContext, role);
+
+		String originalName = PrincipalThreadLocal.getName();
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					_company.getCompanyId())) {
+
+			User user = UserTestUtil.getAdminUser(_company.getCompanyId());
+
+			Assert.assertNotNull(user);
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+			PrincipalThreadLocal.setName(user.getUserId());
+
+			_roleLocalService.deleteRole(role);
+
+			initImport(stagingGroup, _company.getGroup());
+
+			Role exportedRole = (Role)readExportedStagedModel(role);
+
+			Role importedRole = _getImportedRole(
+				exportedRole, _company.getGroup(), role, user);
+
+			Assert.assertEquals(
+				exportedRole.getExternalReferenceCode(),
+				importedRole.getExternalReferenceCode());
+			Assert.assertEquals(exportedRole.getName(), importedRole.getName());
+			Assert.assertEquals(
+				exportedRole.getClassName(), importedRole.getClassName());
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+			PrincipalThreadLocal.setName(originalName);
+		}
+	}
+
+	private void _testStagedModelDataHandlerImportRoleWithUserGroup()
+		throws Exception {
+
+		initExport();
+
+		UserGroup userGroup = _userGroupLocalService.addUserGroup(
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			stagingGroup.getCompanyId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				stagingGroup.getGroupId()));
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_groupLocalService.addRoleGroup(
+			role.getRoleId(), userGroup.getGroupId());
+
+		Assert.assertEquals(
+			1, _roleLocalService.getAssigneesTotal(role.getRoleId()));
+
+		StagedModelDataHandlerUtil.exportStagedModel(portletDataContext, role);
+
+		String originalName = PrincipalThreadLocal.getName();
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					_company.getCompanyId())) {
+
+			User user = UserTestUtil.getAdminUser(_company.getCompanyId());
+
+			Assert.assertNotNull(user);
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+			PrincipalThreadLocal.setName(user.getUserId());
+
+			initImport(stagingGroup, _company.getGroup());
+
+			Role exportedRole = (Role)readExportedStagedModel(role);
+
+			Role importedRole = _getImportedRole(
+				exportedRole, _company.getGroup(), role, user);
+
+			Assert.assertEquals(
+				exportedRole.getExternalReferenceCode(),
+				importedRole.getExternalReferenceCode());
+			Assert.assertEquals(exportedRole.getName(), importedRole.getName());
+			Assert.assertEquals(
+				0,
+				_roleLocalService.getAssigneesTotal(importedRole.getRoleId()));
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+			PrincipalThreadLocal.setName(originalName);
+		}
+	}
+
+	private Company _company;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;

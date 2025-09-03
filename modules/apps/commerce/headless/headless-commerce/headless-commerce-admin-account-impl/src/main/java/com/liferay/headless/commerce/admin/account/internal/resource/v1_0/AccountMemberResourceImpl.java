@@ -5,19 +5,18 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelService;
-import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountRole;
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountMemberUtil;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountMemberResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
@@ -28,10 +27,10 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.List;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,14 +56,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.deleteAccountEntryUserRels(
 			accountEntry.getAccountEntryId(), new long[] {userId});
@@ -92,14 +85,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryUserRel accountEntryUserRel =
 			_accountEntryUserRelService.getAccountEntryUserRel(
@@ -118,14 +105,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		List<AccountEntryUserRel> accountEntryUserRels =
 			_accountEntryUserRelService.getAccountEntryUserRelsByAccountEntryId(
@@ -179,14 +160,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_updateAccountEntryUserRel(
 			accountEntry, _userLocalService.getUser(userId), accountMember);
@@ -216,14 +191,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryUserRel accountEntryUserRel =
 			AccountMemberUtil.addAccountEntryUserRel(

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.DiscountAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		discountAccountGroupResource = DiscountAccountGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -191,12 +204,116 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 
 	@Test
 	public void testDeleteDiscountAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DiscountAccountGroup discountAccountGroup =
+			testDeleteDiscountAccountGroup_addDiscountAccountGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			discountAccountGroupResource.deleteDiscountAccountGroupHttpResponse(
+				discountAccountGroup.getDiscountAccountGroupId()));
+	}
+
+	protected DiscountAccountGroup
+			testDeleteDiscountAccountGroup_addDiscountAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteDiscountAccountGroup() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		DiscountAccountGroup discountAccountGroup1 =
+			testGraphQLDeleteDiscountAccountGroup_addDiscountAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDiscountAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"discountAccountGroupId",
+									discountAccountGroup1.
+										getDiscountAccountGroupId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDiscountAccountGroup"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		DiscountAccountGroup discountAccountGroup2 =
+			testGraphQLDeleteDiscountAccountGroup_addDiscountAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deleteDiscountAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"discountAccountGroupId",
+										discountAccountGroup2.
+											getDiscountAccountGroupId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deleteDiscountAccountGroup"));
+	}
+
+	protected DiscountAccountGroup
+			testGraphQLDeleteDiscountAccountGroup_addDiscountAccountGroup()
+		throws Exception {
+
+		return testGraphQLDiscountAccountGroup_addDiscountAccountGroup();
+	}
+
+	@Test
+	public void testDeleteDiscountAccountGroupBatch() throws Exception {
+		DiscountAccountGroup discountAccountGroup1 =
+			testDeleteDiscountAccountGroupBatch_addDiscountAccountGroup();
+
+		testDeleteDiscountAccountGroupBatch_deleteDiscountAccountGroup(
+			202, null, discountAccountGroup1.getDiscountAccountGroupId());
+	}
+
+	protected DiscountAccountGroup
+			testDeleteDiscountAccountGroupBatch_addDiscountAccountGroup()
+		throws Exception {
+
+		return testDeleteDiscountAccountGroup_addDiscountAccountGroup();
+	}
+
+	protected void
+			testDeleteDiscountAccountGroupBatch_deleteDiscountAccountGroup(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			discountAccountGroupResource.
+				deleteDiscountAccountGroupBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"discountAccountGroupId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -261,6 +378,12 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 			page,
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_getExpectedActions(
 				externalReferenceCode));
+
+		discountAccountGroupResource.deleteDiscountAccountGroup(
+			discountAccountGroup1.getDiscountAccountGroupId());
+
+		discountAccountGroupResource.deleteDiscountAccountGroup(
+			discountAccountGroup2.getDiscountAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -280,13 +403,13 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_getExternalReferenceCode();
 
-		Page<DiscountAccountGroup> discountAccountGroupPage =
+		Page<DiscountAccountGroup> discountAccountGroupsPage =
 			discountAccountGroupResource.
 				getDiscountByExternalReferenceCodeDiscountAccountGroupsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountAccountGroupPage.getTotalCount());
+			discountAccountGroupsPage.getTotalCount());
 
 		DiscountAccountGroup discountAccountGroup1 =
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_addDiscountAccountGroup(
@@ -416,30 +539,6 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 	}
 
 	@Test
-	public void testPostDiscountByExternalReferenceCodeDiscountAccountGroup()
-		throws Exception {
-
-		DiscountAccountGroup randomDiscountAccountGroup =
-			randomDiscountAccountGroup();
-
-		DiscountAccountGroup postDiscountAccountGroup =
-			testPostDiscountByExternalReferenceCodeDiscountAccountGroup_addDiscountAccountGroup(
-				randomDiscountAccountGroup);
-
-		assertEquals(randomDiscountAccountGroup, postDiscountAccountGroup);
-		assertValid(postDiscountAccountGroup);
-	}
-
-	protected DiscountAccountGroup
-			testPostDiscountByExternalReferenceCodeDiscountAccountGroup_addDiscountAccountGroup(
-				DiscountAccountGroup discountAccountGroup)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetDiscountIdDiscountAccountGroupsPage() throws Exception {
 		Long id = testGetDiscountIdDiscountAccountGroupsPage_getId();
 		Long irrelevantId =
@@ -494,6 +593,12 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 		assertValid(
 			page,
 			testGetDiscountIdDiscountAccountGroupsPage_getExpectedActions(id));
+
+		discountAccountGroupResource.deleteDiscountAccountGroup(
+			discountAccountGroup1.getDiscountAccountGroupId());
+
+		discountAccountGroupResource.deleteDiscountAccountGroup(
+			discountAccountGroup2.getDiscountAccountGroupId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -615,12 +720,12 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 
 		Long id = testGetDiscountIdDiscountAccountGroupsPage_getId();
 
-		Page<DiscountAccountGroup> discountAccountGroupPage =
+		Page<DiscountAccountGroup> discountAccountGroupsPage =
 			discountAccountGroupResource.getDiscountIdDiscountAccountGroupsPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountAccountGroupPage.getTotalCount());
+			discountAccountGroupsPage.getTotalCount());
 
 		DiscountAccountGroup discountAccountGroup1 =
 			testGetDiscountIdDiscountAccountGroupsPage_addDiscountAccountGroup(
@@ -910,6 +1015,30 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 	}
 
 	@Test
+	public void testPostDiscountByExternalReferenceCodeDiscountAccountGroup()
+		throws Exception {
+
+		DiscountAccountGroup randomDiscountAccountGroup =
+			randomDiscountAccountGroup();
+
+		DiscountAccountGroup postDiscountAccountGroup =
+			testPostDiscountByExternalReferenceCodeDiscountAccountGroup_addDiscountAccountGroup(
+				randomDiscountAccountGroup);
+
+		assertEquals(randomDiscountAccountGroup, postDiscountAccountGroup);
+		assertValid(postDiscountAccountGroup);
+	}
+
+	protected DiscountAccountGroup
+			testPostDiscountByExternalReferenceCodeDiscountAccountGroup_addDiscountAccountGroup(
+				DiscountAccountGroup discountAccountGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostDiscountIdDiscountAccountGroup() throws Exception {
 		DiscountAccountGroup randomDiscountAccountGroup =
 			randomDiscountAccountGroup();
@@ -931,8 +1060,67 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DiscountAccountGroup discountAccountGroup1 =
+			testBatchEngineDeleteImportTask_addDiscountAccountGroup();
+
+		testBatchEngineDeleteImportTask_deleteDiscountAccountGroup(
+			200, null, discountAccountGroup1.getDiscountAccountGroupId());
+	}
+
+	protected DiscountAccountGroup
+			testBatchEngineDeleteImportTask_addDiscountAccountGroup()
+		throws Exception {
+
+		return testDeleteDiscountAccountGroup_addDiscountAccountGroup();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDiscountAccountGroup(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountAccountGroup",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"discountAccountGroupId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected DiscountAccountGroup
+			testGraphQLDiscountAccountGroup_addDiscountAccountGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		DiscountAccountGroup discountAccountGroup,
@@ -1020,6 +1208,10 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (discountAccountGroup.getDiscountAccountGroupId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1602,7 +1794,30 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 		return randomDiscountAccountGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DiscountAccountGroupResource discountAccountGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -4,7 +4,7 @@
 		"node-scripts": "./bin.js"
 	},
 	"com.liferay": {
-		"sha256": "a8d4f079e9f96cf671908a825729a2d86ca11a23f73d75843120d997aba90d8b"
+		"sha256": "ec01b11f3462b9e16b7f9fa6ce57df071b46d0e92a939d5d7bcf33d17e98246e"
 	},
 	"dependencies": {
 		"@babel/preset-env": "7.24.7",
@@ -52,6 +52,7 @@
 		"react-test-renderer-16.12.0": "npm:react-test-renderer@16.12.0",
 		"regenerator-runtime": "0.11.1",
 		"resolve": "^1.19.0",
+		"rtlcss": "^4.3.0",
 		"sass": "1.77.5",
 		"sonda": "^0.7.1",
 		"stylelint": "13.2.0",

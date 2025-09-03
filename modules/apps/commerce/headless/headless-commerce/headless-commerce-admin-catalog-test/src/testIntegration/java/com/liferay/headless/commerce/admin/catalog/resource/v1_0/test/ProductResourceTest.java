@@ -36,6 +36,8 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.problem.Problem;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -57,6 +59,8 @@ import com.liferay.portal.test.rule.Inject;
 
 import java.math.BigDecimal;
 
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -86,8 +90,8 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 			ServiceContextTestUtil.getServiceContext(testCompany.getGroupId());
 
 		_accountGroup = _accountGroupLocalService.addAccountGroup(
-			user.getUserId(), null, RandomTestUtil.randomString(),
-			serviceContext);
+			StringPool.BLANK, user.getUserId(), null,
+			RandomTestUtil.randomString(), serviceContext);
 
 		_accountGroup.setDefaultAccountGroup(false);
 		_accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
@@ -143,7 +147,20 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 	@Ignore
 	@Override
 	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testDeleteProduct() throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteProductBatch() throws Exception {
 	}
 
 	@Ignore
@@ -182,6 +199,7 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 	@Test
 	public void testGetProductsPage() throws Exception {
 		_testGetProductsPage();
+		_testGetProductsPageWithSearch();
 		_testGetProductsPageWithFilter();
 	}
 
@@ -281,7 +299,8 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 
 		randomPatchProduct = randomProduct();
 
-		randomPatchProduct.setExpirationDate(RandomTestUtil.nextDate());
+		randomPatchProduct.setExpirationDate(
+			randomPatchProduct.getDisplayDate());
 		randomPatchProduct.setNeverExpire(false);
 
 		postProduct = testPostProduct_addProduct(randomPatchProduct);
@@ -350,7 +369,7 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 	@Override
 	@Test
 	public void testPutProductByExternalReferenceCode() throws Exception {
-		testPatchProductByExternalReferenceCode();
+		_testPutProductByExternalReferenceCodeWithFutureDisplayDate();
 	}
 
 	@Ignore
@@ -449,7 +468,10 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 		return productResource.postProduct(product);
 	}
 
-	private Product _randomProductWithProductSpecification() throws Exception {
+	private Product _randomProductWithProductSpecification(
+			String specificationValue)
+		throws Exception {
+
 		return new Product() {
 			{
 				active = true;
@@ -473,7 +495,7 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 							specificationKey = _cpSpecificationOption.getKey();
 							value = LanguageUtils.getLanguageIdMap(
 								HashMapBuilder.put(
-									LocaleUtil.getDefault(), "test"
+									LocaleUtil.getDefault(), specificationValue
 								).build());
 						}
 					}
@@ -543,7 +565,6 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 		long totalCount = page.getTotalCount();
 
 		Product product1 = testGetProductsPage_addProduct(randomProduct());
-
 		Product product2 = testGetProductsPage_addProduct(randomProduct());
 
 		page = productResource.getProductsPage(
@@ -556,7 +577,6 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 		assertValid(page, testGetProductsPage_getExpectedActions());
 
 		productResource.deleteProduct(product1.getProductId());
-
 		productResource.deleteProduct(product2.getProductId());
 	}
 
@@ -568,9 +588,8 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 
 		Product product1 = testGetProductsPage_addProduct(
 			_randomProductWithSku());
-
 		Product product2 = testGetProductsPage_addProduct(
-			_randomProductWithProductSpecification());
+			_randomProductWithProductSpecification("test specification"));
 
 		page = productResource.getProductsPage(
 			null, null, Pagination.of(1, 10), null);
@@ -599,8 +618,74 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 		assertContains(product2, (List<Product>)page.getItems());
 		assertValid(page, testGetProductsPage_getExpectedActions());
 
-		productResource.deleteProduct(product1.getProductId());
+		page = productResource.getProductsPage(
+			null, "(specificationValues/any(x:contains(x, 'specification')))",
+			Pagination.of(1, 10), null);
 
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+		assertContains(product2, (List<Product>)page.getItems());
+		assertValid(page, testGetProductsPage_getExpectedActions());
+
+		page = productResource.getProductsPage(
+			null,
+			"(specificationValues/any(x:contains(x, 'test specification')))",
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+		assertContains(product2, (List<Product>)page.getItems());
+		assertValid(page, testGetProductsPage_getExpectedActions());
+
+		productResource.deleteProduct(product1.getProductId());
+		productResource.deleteProduct(product2.getProductId());
+	}
+
+	private void _testGetProductsPageWithSearch() throws Exception {
+		String string1 = RandomTestUtil.randomString();
+		String string2 = RandomTestUtil.randomString();
+
+		Product product1 = testGetProductsPage_addProduct(
+			_randomProductWithProductSpecification(
+				StringBundler.concat(string1, StringPool.SPACE, string2)));
+
+		Page<Product> page = productResource.getProductsPage(
+			string1, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+		assertContains(product1, (List<Product>)page.getItems());
+
+		page = productResource.getProductsPage(
+			string2, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertContains(product1, (List<Product>)page.getItems());
+
+		page = productResource.getProductsPage(
+			StringBundler.concat(string1, StringPool.SPACE, string2), null,
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertContains(product1, (List<Product>)page.getItems());
+
+		String string3 = RandomTestUtil.randomString();
+
+		Product product2 = testGetProductsPage_addProduct(
+			_randomProductWithProductSpecification(string3));
+
+		page = productResource.getProductsPage(
+			StringBundler.concat(
+				string2, StringPool.COMMA, StringPool.SPACE, string3),
+			null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertContains(product1, (List<Product>)page.getItems());
+		assertContains(product2, (List<Product>)page.getItems());
+
+		productResource.deleteProduct(product1.getProductId());
 		productResource.deleteProduct(product2.getProductId());
 	}
 
@@ -818,6 +903,41 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 
 		Assert.assertEquals(
 			cpInstance.getStatus(), WorkflowConstants.STATUS_APPROVED);
+	}
+
+	private void _testPutProductByExternalReferenceCodeWithFutureDisplayDate()
+		throws Exception {
+
+		Product randomProduct = _randomProductWithSku();
+
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.add(Calendar.YEAR, 1);
+
+		randomProduct.setDisplayDate(calendar.getTime());
+
+		Product postProduct = productResource.postProduct(randomProduct);
+
+		Product putProduct = postProduct.clone();
+
+		putProduct.setName(
+			Collections.singletonMap(
+				"en_US", "_testPostProductWithFutureDisplayDate"));
+
+		putProduct = productResource.putProductByExternalReferenceCode(
+			postProduct.getExternalReferenceCode(), putProduct);
+
+		Product getProduct = productResource.getProduct(
+			putProduct.getProductId());
+
+		Assert.assertEquals(
+			String.valueOf(postProduct), postProduct.getId(),
+			putProduct.getId());
+		Assert.assertEquals(
+			String.valueOf(putProduct), putProduct.getId(), getProduct.getId());
+		Assert.assertEquals(
+			String.valueOf(putProduct), putProduct.getName(),
+			getProduct.getName());
 	}
 
 	@DeleteAfterTestRun

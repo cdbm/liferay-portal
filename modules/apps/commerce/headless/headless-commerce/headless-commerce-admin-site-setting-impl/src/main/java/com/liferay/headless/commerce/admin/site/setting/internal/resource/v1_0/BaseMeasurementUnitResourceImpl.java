@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -42,6 +40,17 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.NotSupportedException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -51,27 +60,299 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Zoltán Takács
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseMeasurementUnitResourceImpl
 	implements EntityModelResource, MeasurementUnitResource,
 			   VulcanBatchEngineTaskItemDelegate<MeasurementUnit>,
 			   VulcanCRUDItemDelegate<MeasurementUnit> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/measurement-units/{id}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteMeasurementUnit(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/measurement-units/batch")
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteMeasurementUnitBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				MeasurementUnit.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path(
+		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteMeasurementUnitByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "key"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/measurement-units/by-key/{key}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteMeasurementUnitByKey(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("key")
+			String key)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/measurement-units/{id}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public MeasurementUnit getMeasurementUnit(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+
+		return new MeasurementUnit();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public MeasurementUnit getMeasurementUnitByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new MeasurementUnit();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "key"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/measurement-units/by-key/{key}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public MeasurementUnit getMeasurementUnitByKey(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("key")
+			String key)
+		throws Exception {
+
+		return new MeasurementUnit();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-type/{measurementUnitType}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "measurementUnitType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/measurement-units/by-type/{measurementUnitType}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<MeasurementUnit> getMeasurementUnitsByType(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("measurementUnitType")
+			String measurementUnitType,
+			@jakarta.ws.rs.core.Context Pagination pagination,
+			@jakarta.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -103,17 +384,196 @@ public abstract class BaseMeasurementUnitResourceImpl
 			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
 		}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/measurement-units")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/measurement-units")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Page<MeasurementUnit> getMeasurementUnitsPage(
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@jakarta.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@jakarta.ws.rs.core.Context Pagination pagination,
+			@jakarta.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/measurement-units/{id}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Response patchMeasurementUnit(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
+			Long id,
+			MeasurementUnit measurementUnit)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path(
+		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Response patchMeasurementUnitByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			MeasurementUnit measurementUnit)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "key"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/measurement-units/by-key/{key}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Response patchMeasurementUnitByKey(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("key")
+			String key,
+			MeasurementUnit measurementUnit)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/measurement-units")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public MeasurementUnit postMeasurementUnit(MeasurementUnit measurementUnit)
+		throws Exception {
+
+		return new MeasurementUnit();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
+		}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/measurement-units/batch")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response postMeasurementUnitBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.postImportTask(
+				MeasurementUnit.class.getName(), callbackURL, null, object)
+		).build();
 	}
 
 	/**
@@ -150,23 +610,25 @@ public abstract class BaseMeasurementUnitResourceImpl
 			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
 		}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/measurement-units/export-batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/measurement-units/export-batch")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
 	@Override
 	public Response postMeasurementUnitsPageExportBatch(
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@jakarta.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@jakarta.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
+			@jakarta.ws.rs.DefaultValue("JSON")
+			@jakarta.ws.rs.QueryParam("contentType")
 			String contentType,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
+			@jakarta.ws.rs.QueryParam("fieldNames")
 			String fieldNames)
 		throws Exception {
 
@@ -192,177 +654,6 @@ public abstract class BaseMeasurementUnitResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/measurement-units")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public MeasurementUnit postMeasurementUnit(MeasurementUnit measurementUnit)
-		throws Exception {
-
-		return new MeasurementUnit();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/measurement-units/batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response postMeasurementUnitBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.postImportTask(
-				MeasurementUnit.class.getName(), callbackURL, null, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteMeasurementUnitByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public MeasurementUnit getMeasurementUnitByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new MeasurementUnit();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path(
-		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Response patchMeasurementUnitByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			MeasurementUnit measurementUnit)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-externalReferenceCode/{externalReferenceCode}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -378,304 +669,22 @@ public abstract class BaseMeasurementUnitResourceImpl
 			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
 		}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
 		"/measurement-units/by-externalReferenceCode/{externalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
 	public MeasurementUnit putMeasurementUnitByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
 			String externalReferenceCode,
 			MeasurementUnit measurementUnit)
 		throws Exception {
 
 		return new MeasurementUnit();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "key"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/measurement-units/by-key/{key}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteMeasurementUnitByKey(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("key")
-			String key)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "key"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/measurement-units/by-key/{key}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public MeasurementUnit getMeasurementUnitByKey(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("key")
-			String key)
-		throws Exception {
-
-		return new MeasurementUnit();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-key/{key}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "key"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/measurement-units/by-key/{key}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Response patchMeasurementUnitByKey(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("key")
-			String key,
-			MeasurementUnit measurementUnit)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/by-type/{measurementUnitType}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "measurementUnitType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/measurement-units/by-type/{measurementUnitType}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<MeasurementUnit> getMeasurementUnitsByType(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("measurementUnitType")
-			String measurementUnitType,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/measurement-units/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteMeasurementUnit(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/measurement-units/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteMeasurementUnitBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				MeasurementUnit.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/measurement-units/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public MeasurementUnit getMeasurementUnit(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
-		throws Exception {
-
-		return new MeasurementUnit();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-site-setting/v1.0/measurement-units/{id}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "name": ___, "primary": ___, "priority": ___, "rate": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "MeasurementUnit")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/measurement-units/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Response patchMeasurementUnit(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id,
-			MeasurementUnit measurementUnit)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
 	}
 
 	@Override
@@ -700,35 +709,36 @@ public abstract class BaseMeasurementUnitResourceImpl
 			String updateStrategy = (String)parameters.getOrDefault(
 				"updateStrategy", "UPDATE");
 
-			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				measurementUnitUnsafeFunction =
-					measurementUnit ->
-						putMeasurementUnitByExternalReferenceCode(
-							measurementUnit.getExternalReferenceCode(),
-							measurementUnit);
-			}
-
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 				measurementUnitUnsafeFunction = measurementUnit -> {
+					MeasurementUnit getMeasurementUnit = null;
 					MeasurementUnit persistedMeasurementUnit = null;
 
 					try {
-						MeasurementUnit getMeasurementUnit =
+						getMeasurementUnit =
 							getMeasurementUnitByExternalReferenceCode(
 								measurementUnit.getExternalReferenceCode());
 
 						patchMeasurementUnit(
-							getMeasurementUnit.getId() != null ?
-								getMeasurementUnit.getId() :
-									_parseLong(
-										(String)parameters.get(
-											"measurementUnitId")),
-							measurementUnit);
+							getMeasurementUnit.getId(), measurementUnit);
 					}
 					catch (NoSuchModelException noSuchModelException) {
 						persistedMeasurementUnit = postMeasurementUnit(
 							measurementUnit);
 					}
+
+					return persistedMeasurementUnit;
+				};
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				measurementUnitUnsafeFunction = measurementUnit -> {
+					MeasurementUnit persistedMeasurementUnit = null;
+
+					persistedMeasurementUnit =
+						putMeasurementUnitByExternalReferenceCode(
+							measurementUnit.getExternalReferenceCode(),
+							measurementUnit);
 
 					return persistedMeasurementUnit;
 				};
@@ -764,9 +774,32 @@ public abstract class BaseMeasurementUnitResourceImpl
 
 		UnsafeFunction<MeasurementUnit, MeasurementUnit, Exception>
 			measurementUnitUnsafeFunction = measurementUnit -> {
-				deleteMeasurementUnit(measurementUnit.getId());
+				if (measurementUnit.getId() != null) {
+					try {
+						deleteMeasurementUnit(measurementUnit.getId());
 
-				return measurementUnit;
+						return measurementUnit;
+					}
+					catch (Exception exception) {
+						if (measurementUnit.getExternalReferenceCode() !=
+								null) {
+
+							deleteMeasurementUnitByExternalReferenceCode(
+								measurementUnit.getExternalReferenceCode());
+
+							return measurementUnit;
+						}
+					}
+				}
+				else if (measurementUnit.getExternalReferenceCode() != null) {
+					deleteMeasurementUnitByExternalReferenceCode(
+						measurementUnit.getExternalReferenceCode());
+
+					return measurementUnit;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
 			};
 
 		if (contextBatchUnsafeBiConsumer != null) {
@@ -800,13 +833,6 @@ public abstract class BaseMeasurementUnitResourceImpl
 			new MultivaluedHashMap<String, Object>(multivaluedMap));
 	}
 
-	@Override
-	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
-		throws Exception {
-
-		return null;
-	}
-
 	public String getResourceName() {
 		return "MeasurementUnit";
 	}
@@ -817,7 +843,9 @@ public abstract class BaseMeasurementUnitResourceImpl
 
 	@Override
 	public Page<MeasurementUnit> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -860,10 +888,7 @@ public abstract class BaseMeasurementUnitResourceImpl
 
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 			measurementUnitUnsafeFunction = measurementUnit -> {
-				patchMeasurementUnit(
-					measurementUnit.getId() != null ? measurementUnit.getId() :
-						_parseLong((String)parameters.get("measurementUnitId")),
-					measurementUnit);
+				patchMeasurementUnit(measurementUnit.getId(), measurementUnit);
 
 				return null;
 			};
@@ -890,10 +915,9 @@ public abstract class BaseMeasurementUnitResourceImpl
 		}
 	}
 
-	private Long _parseLong(String value) {
-		if (value != null) {
-			return Long.parseLong(value);
-		}
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
 
 		return null;
 	}
@@ -955,7 +979,8 @@ public abstract class BaseMeasurementUnitResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1011,7 +1036,7 @@ public abstract class BaseMeasurementUnitResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1036,7 +1061,7 @@ public abstract class BaseMeasurementUnitResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1054,13 +1079,13 @@ public abstract class BaseMeasurementUnitResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1071,7 +1096,7 @@ public abstract class BaseMeasurementUnitResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1117,6 +1142,20 @@ public abstract class BaseMeasurementUnitResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -1132,6 +1171,80 @@ public abstract class BaseMeasurementUnitResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -1144,11 +1257,45 @@ public abstract class BaseMeasurementUnitResourceImpl
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -1168,6 +1315,104 @@ public abstract class BaseMeasurementUnitResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1181,6 +1426,29 @@ public abstract class BaseMeasurementUnitResourceImpl
 
 		return TransformUtil.unsafeTransformToLongArray(
 			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
@@ -1198,7 +1466,8 @@ public abstract class BaseMeasurementUnitResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

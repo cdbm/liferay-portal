@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListOrderType;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -42,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +104,16 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			testCompany.getCompanyId());
 
 		priceListOrderTypeResource = PriceListOrderTypeResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -185,12 +198,115 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 
 	@Test
 	public void testDeletePriceListOrderType() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PriceListOrderType priceListOrderType =
+			testDeletePriceListOrderType_addPriceListOrderType();
+
+		assertHttpResponseStatusCode(
+			204,
+			priceListOrderTypeResource.deletePriceListOrderTypeHttpResponse(
+				priceListOrderType.getPriceListOrderTypeId()));
+	}
+
+	protected PriceListOrderType
+			testDeletePriceListOrderType_addPriceListOrderType()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeletePriceListOrderType() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		PriceListOrderType priceListOrderType1 =
+			testGraphQLDeletePriceListOrderType_addPriceListOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deletePriceListOrderType",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"priceListOrderTypeId",
+									priceListOrderType1.
+										getPriceListOrderTypeId());
+							}
+						})),
+				"JSONObject/data", "Object/deletePriceListOrderType"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		PriceListOrderType priceListOrderType2 =
+			testGraphQLDeletePriceListOrderType_addPriceListOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deletePriceListOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"priceListOrderTypeId",
+										priceListOrderType2.
+											getPriceListOrderTypeId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deletePriceListOrderType"));
+	}
+
+	protected PriceListOrderType
+			testGraphQLDeletePriceListOrderType_addPriceListOrderType()
+		throws Exception {
+
+		return testGraphQLPriceListOrderType_addPriceListOrderType();
+	}
+
+	@Test
+	public void testDeletePriceListOrderTypeBatch() throws Exception {
+		PriceListOrderType priceListOrderType1 =
+			testDeletePriceListOrderTypeBatch_addPriceListOrderType();
+
+		testDeletePriceListOrderTypeBatch_deletePriceListOrderType(
+			202, null, priceListOrderType1.getPriceListOrderTypeId());
+	}
+
+	protected PriceListOrderType
+			testDeletePriceListOrderTypeBatch_addPriceListOrderType()
+		throws Exception {
+
+		return testDeletePriceListOrderType_addPriceListOrderType();
+	}
+
+	protected void testDeletePriceListOrderTypeBatch_deletePriceListOrderType(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			priceListOrderTypeResource.
+				deletePriceListOrderTypeBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"priceListOrderTypeId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -255,6 +371,12 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			page,
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_getExpectedActions(
 				externalReferenceCode));
+
+		priceListOrderTypeResource.deletePriceListOrderType(
+			priceListOrderType1.getPriceListOrderTypeId());
+
+		priceListOrderTypeResource.deletePriceListOrderType(
+			priceListOrderType2.getPriceListOrderTypeId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -274,13 +396,13 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		String externalReferenceCode =
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_getExternalReferenceCode();
 
-		Page<PriceListOrderType> priceListOrderTypePage =
+		Page<PriceListOrderType> priceListOrderTypesPage =
 			priceListOrderTypeResource.
 				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceListOrderTypePage.getTotalCount());
+			priceListOrderTypesPage.getTotalCount());
 
 		PriceListOrderType priceListOrderType1 =
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_addPriceListOrderType(
@@ -410,30 +532,6 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 	}
 
 	@Test
-	public void testPostPriceListByExternalReferenceCodePriceListOrderType()
-		throws Exception {
-
-		PriceListOrderType randomPriceListOrderType =
-			randomPriceListOrderType();
-
-		PriceListOrderType postPriceListOrderType =
-			testPostPriceListByExternalReferenceCodePriceListOrderType_addPriceListOrderType(
-				randomPriceListOrderType);
-
-		assertEquals(randomPriceListOrderType, postPriceListOrderType);
-		assertValid(postPriceListOrderType);
-	}
-
-	protected PriceListOrderType
-			testPostPriceListByExternalReferenceCodePriceListOrderType_addPriceListOrderType(
-				PriceListOrderType priceListOrderType)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetPriceListIdPriceListOrderTypesPage() throws Exception {
 		Long id = testGetPriceListIdPriceListOrderTypesPage_getId();
 		Long irrelevantId =
@@ -487,6 +585,12 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		assertValid(
 			page,
 			testGetPriceListIdPriceListOrderTypesPage_getExpectedActions(id));
+
+		priceListOrderTypeResource.deletePriceListOrderType(
+			priceListOrderType1.getPriceListOrderTypeId());
+
+		priceListOrderTypeResource.deletePriceListOrderType(
+			priceListOrderType2.getPriceListOrderTypeId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -505,12 +609,12 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 
 		Long id = testGetPriceListIdPriceListOrderTypesPage_getId();
 
-		Page<PriceListOrderType> priceListOrderTypePage =
+		Page<PriceListOrderType> priceListOrderTypesPage =
 			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
 				id, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			priceListOrderTypePage.getTotalCount());
+			priceListOrderTypesPage.getTotalCount());
 
 		PriceListOrderType priceListOrderType1 =
 			testGetPriceListIdPriceListOrderTypesPage_addPriceListOrderType(
@@ -634,6 +738,30 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 	}
 
 	@Test
+	public void testPostPriceListByExternalReferenceCodePriceListOrderType()
+		throws Exception {
+
+		PriceListOrderType randomPriceListOrderType =
+			randomPriceListOrderType();
+
+		PriceListOrderType postPriceListOrderType =
+			testPostPriceListByExternalReferenceCodePriceListOrderType_addPriceListOrderType(
+				randomPriceListOrderType);
+
+		assertEquals(randomPriceListOrderType, postPriceListOrderType);
+		assertValid(postPriceListOrderType);
+	}
+
+	protected PriceListOrderType
+			testPostPriceListByExternalReferenceCodePriceListOrderType_addPriceListOrderType(
+				PriceListOrderType priceListOrderType)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostPriceListIdPriceListOrderType() throws Exception {
 		PriceListOrderType randomPriceListOrderType =
 			randomPriceListOrderType();
@@ -649,6 +777,65 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 	protected PriceListOrderType
 			testPostPriceListIdPriceListOrderType_addPriceListOrderType(
 				PriceListOrderType priceListOrderType)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		PriceListOrderType priceListOrderType1 =
+			testBatchEngineDeleteImportTask_addPriceListOrderType();
+
+		testBatchEngineDeleteImportTask_deletePriceListOrderType(
+			200, null, priceListOrderType1.getPriceListOrderTypeId());
+	}
+
+	protected PriceListOrderType
+			testBatchEngineDeleteImportTask_addPriceListOrderType()
+		throws Exception {
+
+		return testDeletePriceListOrderType_addPriceListOrderType();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePriceListOrderType(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListOrderType",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"priceListOrderTypeId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	protected PriceListOrderType
+			testGraphQLPriceListOrderType_addPriceListOrderType()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -739,6 +926,10 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (priceListOrderType.getPriceListOrderTypeId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1343,7 +1534,30 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		return randomPriceListOrderType();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PriceListOrderTypeResource priceListOrderTypeResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

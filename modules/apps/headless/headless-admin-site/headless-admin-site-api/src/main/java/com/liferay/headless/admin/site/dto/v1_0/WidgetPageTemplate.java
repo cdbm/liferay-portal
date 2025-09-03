@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword;
-import com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyCategory;
 import com.liferay.headless.admin.user.dto.v1_0.Creator;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -18,6 +16,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -30,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -488,30 +486,7 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 			sb.append("\"");
 		}
 
-		ItemExternalReference[] keywordItemExternalReferences =
-			getKeywordItemExternalReferences();
-
-		if (keywordItemExternalReferences != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"keywordItemExternalReferences\": ");
-
-			sb.append("[");
-
-			for (int i = 0; i < keywordItemExternalReferences.length; i++) {
-				sb.append(String.valueOf(keywordItemExternalReferences[i]));
-
-				if ((i + 1) < keywordItemExternalReferences.length) {
-					sb.append(", ");
-				}
-			}
-
-			sb.append("]");
-		}
-
-		Keyword[] keywords = getKeywords();
+		String[] keywords = getKeywords();
 
 		if (keywords != null) {
 			if (sb.length() > 1) {
@@ -523,7 +498,11 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < keywords.length; i++) {
-				sb.append(keywords[i]);
+				sb.append("\"");
+
+				sb.append(_escape(keywords[i]));
+
+				sb.append("\"");
 
 				if ((i + 1) < keywords.length) {
 					sb.append(", ");
@@ -593,28 +572,6 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 			sb.append("\"pageTemplateSettings\": ");
 
 			sb.append(String.valueOf(pageTemplateSettings));
-		}
-
-		TaxonomyCategory[] taxonomyCategories = getTaxonomyCategories();
-
-		if (taxonomyCategories != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"taxonomyCategories\": ");
-
-			sb.append("[");
-
-			for (int i = 0; i < taxonomyCategories.length; i++) {
-				sb.append(taxonomyCategories[i]);
-
-				if ((i + 1) < taxonomyCategories.length) {
-					sb.append(", ");
-				}
-			}
-
-			sb.append("]");
 		}
 
 		ItemExternalReference[] taxonomyCategoryItemExternalReferences =

@@ -39,11 +39,13 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProvider;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MimeTypes;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portlet.documentlibrary.util.DLAppUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -115,22 +117,18 @@ public class AttachmentManagerImpl implements AttachmentManager {
 
 	@Override
 	public long getMaximumFileSize(long objectFieldId, boolean signedIn) {
-		ObjectFieldSetting objectFieldSetting =
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId, ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE);
+		long maximumFileSize = Math.min(
+			_getObjectFieldSettingMaximumFileSize(objectFieldId),
+			_uploadServletRequestConfigurationProvider.getMaxSize());
 
-		long maximumFileSize = GetterUtil.getLong(
-			objectFieldSetting.getValue());
-
-		if (signedIn ||
-			(maximumFileSize <
-				_objectConfiguration.maximumFileSizeForGuestUsers())) {
-
-			return maximumFileSize * _FILE_LENGTH_MB;
+		if (signedIn) {
+			return maximumFileSize;
 		}
 
-		return _objectConfiguration.maximumFileSizeForGuestUsers() *
-			_FILE_LENGTH_MB;
+		return Math.min(
+			maximumFileSize,
+			_objectConfiguration.maximumFileSizeForGuestUsers() *
+				_FILE_LENGTH_MB);
 	}
 
 	@Override
@@ -148,7 +146,7 @@ public class AttachmentManagerImpl implements AttachmentManager {
 			return fileEntry;
 		}
 
-		_validateFile(
+		_validateObjectDefinitionSettings(
 			fileContent, fileName, objectFieldId, serviceContext.getUserId());
 
 		DLFolder dlFolder = getDLFolder(
@@ -156,17 +154,23 @@ public class AttachmentManagerImpl implements AttachmentManager {
 			serviceContext.getUserId());
 
 		try (InputStream inputStream = new ByteArrayInputStream(fileContent)) {
+			String title = DLUtil.getUniqueTitle(
+				groupId, dlFolder.getFolderId(),
+				FileUtil.stripExtension(fileName));
+			String sourceFileName = DLUtil.getUniqueFileName(
+				groupId, dlFolder.getFolderId(), fileName, true);
+			String mimeType = _mimeTypes.getContentType(inputStream, fileName);
+
+			_validateDLSettings(
+				companyId, groupId,
+				DLAppUtil.getExtension(title, sourceFileName), mimeType,
+				fileContent.length, sourceFileName);
+
 			return _dlAppLocalService.addFileEntry(
 				externalReferenceCode, serviceContext.getUserId(),
 				dlFolder.getRepositoryId(), dlFolder.getFolderId(),
-				DLUtil.getUniqueFileName(
-					groupId, dlFolder.getFolderId(), fileName, true),
-				_mimeTypes.getContentType(inputStream, fileName),
-				DLUtil.getUniqueTitle(
-					groupId, dlFolder.getFolderId(),
-					FileUtil.stripExtension(fileName)),
-				StringPool.BLANK, null, null, inputStream, fileContent.length,
-				null, null, null, serviceContext);
+				sourceFileName, mimeType, title, StringPool.BLANK, null, null,
+				fileContent, null, null, null, serviceContext);
 		}
 	}
 
@@ -185,7 +189,7 @@ public class AttachmentManagerImpl implements AttachmentManager {
 			return fileEntry;
 		}
 
-		_validateFile(
+		_validateObjectDefinitionSettings(
 			fileContent, fileName, objectFieldId, serviceContext.getUserId());
 
 		long repositoryId = groupId;
@@ -210,18 +214,20 @@ public class AttachmentManagerImpl implements AttachmentManager {
 		cloneServiceContext.setCompanyId(companyId);
 
 		try (InputStream inputStream = new ByteArrayInputStream(fileContent)) {
-			_dlValidator.validateFileSize(
-				groupId, fileName,
-				_mimeTypes.getContentType(inputStream, fileName),
-				fileContent.length);
+			String title = DLUtil.getUniqueTitle(
+				groupId, folderId, FileUtil.stripExtension(fileName));
+			String sourceFileName = DLUtil.getUniqueFileName(
+				groupId, folderId, fileName, true);
+			String mimeType = _mimeTypes.getContentType(inputStream, fileName);
+
+			_validateDLSettings(
+				companyId, groupId,
+				DLAppUtil.getExtension(title, sourceFileName), mimeType,
+				fileContent.length, sourceFileName);
 
 			return _dlAppService.addFileEntry(
-				externalReferenceCode, repositoryId, folderId,
-				DLUtil.getUniqueFileName(groupId, folderId, fileName, true),
-				_mimeTypes.getContentType(inputStream, fileName),
-				DLUtil.getUniqueTitle(
-					groupId, folderId, FileUtil.stripExtension(fileName)),
-				StringPool.BLANK, null, null, inputStream, fileContent.length,
+				externalReferenceCode, repositoryId, folderId, sourceFileName,
+				mimeType, title, StringPool.BLANK, null, null, fileContent,
 				null, null, null, cloneServiceContext);
 		}
 	}
@@ -230,9 +236,13 @@ public class AttachmentManagerImpl implements AttachmentManager {
 	public void validateFileExtension(String fileName, long objectFieldId)
 		throws FileExtensionException {
 
-		if (!ArrayUtil.contains(
-				getAcceptedFileExtensions(objectFieldId),
-				FileUtil.getExtension(fileName), true)) {
+		String[] acceptedFileExtensions = getAcceptedFileExtensions(
+			objectFieldId);
+
+		if (!ArrayUtil.contains(acceptedFileExtensions, StringPool.STAR) &&
+			!ArrayUtil.contains(
+				acceptedFileExtensions, FileUtil.getExtension(fileName),
+				true)) {
 
 			throw new FileExtensionException.InvalidExtension(
 				"Invalid file extension for " + fileName);
@@ -268,6 +278,20 @@ public class AttachmentManagerImpl implements AttachmentManager {
 	protected void activate(Map<String, Object> properties) {
 		_objectConfiguration = ConfigurableUtil.createConfigurable(
 			ObjectConfiguration.class, properties);
+	}
+
+	private long _getObjectFieldSettingMaximumFileSize(long objectFieldId) {
+		ObjectFieldSetting objectFieldSetting =
+			_objectFieldSettingLocalService.fetchObjectFieldSetting(
+				objectFieldId, ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE);
+
+		long value = GetterUtil.getLong(objectFieldSetting.getValue());
+
+		if (value == 0) {
+			return Long.MAX_VALUE;
+		}
+
+		return value * _FILE_LENGTH_MB;
 	}
 
 	private Repository _getRepository(
@@ -348,7 +372,35 @@ public class AttachmentManagerImpl implements AttachmentManager {
 		return storageDLFolderId;
 	}
 
-	private void _validateFile(
+	private void _validateDLSettings(
+			long companyId, long groupId, String fileExtension, String mimeType,
+			long size, String sourceFileName)
+		throws PortalException {
+
+		_dlValidator.validateFileName(sourceFileName);
+
+		_dlValidator.validateFileExtension(sourceFileName);
+
+		if (size != 0) {
+			_dlValidator.validateFileMimeType(companyId, mimeType);
+		}
+
+		try {
+			_dlValidator.validateFileSize(
+				groupId, sourceFileName, mimeType, size);
+		}
+		catch (FileSizeException fileSizeException) {
+			throw new FileSizeException(
+				StringBundler.concat(
+					"File ", sourceFileName,
+					" exceeds the maximum permitted size of ",
+					fileSizeException.getMaxSize() / _FILE_LENGTH_MB, " MB"));
+		}
+
+		_dlValidator.validateSourceFileExtension(fileExtension, sourceFileName);
+	}
+
+	private void _validateObjectDefinitionSettings(
 			byte[] fileContent, String fileName, long objectFieldId,
 			long userId)
 		throws Exception {
@@ -392,6 +444,10 @@ public class AttachmentManagerImpl implements AttachmentManager {
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;
+
+	@Reference
+	private UploadServletRequestConfigurationProvider
+		_uploadServletRequestConfigurationProvider;
 
 	@Reference
 	private UserLocalService _userLocalService;

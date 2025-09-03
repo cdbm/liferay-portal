@@ -10,8 +10,8 @@ import com.liferay.commerce.product.content.render.list.CPContentListRendererReg
 import com.liferay.commerce.product.content.render.list.entry.CPContentListEntryRendererRegistry;
 import com.liferay.commerce.product.content.search.web.internal.display.context.CPSearchResultsDisplayContext;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.type.CPTypeRegistry;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -21,7 +21,7 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "javax.portlet.name=" + CPPortletKeys.CP_SEARCH_RESULTS,
+	property = "jakarta.portlet.name=" + CPPortletKeys.CP_SEARCH_RESULTS,
 	service = ConfigurationAction.class
 )
 public class CPSearchResultsConfigurationAction

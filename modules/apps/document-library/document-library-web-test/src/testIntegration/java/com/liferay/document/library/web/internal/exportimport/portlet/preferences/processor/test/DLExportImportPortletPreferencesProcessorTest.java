@@ -6,6 +6,7 @@
 package com.liferay.document.library.web.internal.exportimport.portlet.preferences.processor.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.constants.DLPortletKeys;
@@ -56,6 +57,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.ratings.kernel.model.RatingsEntry;
 import com.liferay.ratings.test.util.RatingsTestUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -63,8 +66,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -516,6 +517,24 @@ public class DLExportImportPortletPreferencesProcessorTest {
 					DLFolder.class.getName(), folder.getFolderId())));
 	}
 
+	@Test
+	public void testImportDLFileEntryInDifferentGroup() throws Exception {
+		_setPortletPreferences(
+			DLAppTestUtil.addFileEntry(TestPropsValues.getGroupId()));
+
+		_portletDataContextImport.setSourceGroupId(
+			TestPropsValues.getGroupId());
+
+		Map<String, String> map = _getPortletPreferencesValues(
+			_exportImportPortletPreferencesProcessor.
+				processImportPortletPreferences(
+					_portletDataContextImport, _portletPreferences));
+
+		Assert.assertEquals(
+			_group.getExternalReferenceCode(),
+			map.get("selectedGroupExternalReferenceCode"));
+	}
+
 	private DepotEntry _addDepotEntry() throws Exception {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			HashMapBuilder.put(
@@ -524,6 +543,7 @@ public class DLExportImportPortletPreferencesProcessorTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
 			).build(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
 		_depotEntries.add(depotEntry);
@@ -778,7 +798,7 @@ public class DLExportImportPortletPreferencesProcessorTest {
 	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
-	@Inject(filter = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY)
+	@Inject(filter = "jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY)
 	private ExportImportPortletPreferencesProcessor
 		_exportImportPortletPreferencesProcessor;
 

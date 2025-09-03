@@ -1,12 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.128.0",
-		"@clayui/core": "3.130.0",
-		"@clayui/drop-down": "3.130.0",
-		"@clayui/icon": "3.128.0",
-		"@clayui/label": "3.128.0",
-		"@clayui/layout": "3.128.0",
+		"@clayui/button": "3.144.1",
+		"@clayui/core": "3.145.0",
+		"@clayui/drop-down": "3.145.0",
+		"@clayui/icon": "3.144.1",
+		"@clayui/label": "3.144.1",
+		"@clayui/layout": "3.144.1",
+		"@clayui/loading-indicator": "3.144.1",
+		"@liferay/layout-js-components-web": "*",
 		"classnames": "2.3.1",
+		"document-library-video": "*",
 		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"react": "18.2.0"
@@ -19,5 +22,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "4.0.113"
+	"version": "4.0.123"
 }

@@ -10,6 +10,7 @@ import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfi
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -50,7 +51,6 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -62,6 +62,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.service.base.LayoutServiceBaseImpl;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -72,8 +74,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * Provides the remote service for accessing, adding, deleting, exporting,
@@ -356,7 +356,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 		return TempFileEntryUtil.addTempFileEntry(
 			groupId, getUserId(),
-			DigesterUtil.digestHex(Digester.SHA_256, folderName), fileName,
+			DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName), fileName,
 			inputStream, mimeType);
 	}
 
@@ -454,7 +454,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 		TempFileEntryUtil.deleteTempFileEntry(
 			groupId, getUserId(),
-			DigesterUtil.digestHex(Digester.SHA_256, folderName), fileName);
+			DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName), fileName);
 	}
 
 	@Override
@@ -1051,7 +1051,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 			return TempFileEntryUtil.getTempFileNames(
 				groupId, getUserId(),
-				DigesterUtil.digestHex(Digester.SHA_256, folderName));
+				DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName));
 		}
 	}
 
@@ -1675,15 +1675,15 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	protected List<Layout> filterLayouts(List<Layout> layouts) {
-		List<Layout> filteredLayouts = new ArrayList<>();
+		return TransformUtil.transform(
+			layouts,
+			layout -> {
+				if (_hasViewPermission(layout)) {
+					return layout;
+				}
 
-		for (Layout layout : layouts) {
-			if (_hasViewPermission(layout)) {
-				filteredLayouts.add(layout);
-			}
-		}
-
-		return filteredLayouts;
+				return null;
+			});
 	}
 
 	protected List<Layout> filterLayouts(

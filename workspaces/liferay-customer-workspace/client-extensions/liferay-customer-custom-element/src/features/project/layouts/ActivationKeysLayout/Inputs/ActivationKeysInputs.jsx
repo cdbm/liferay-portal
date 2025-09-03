@@ -21,7 +21,7 @@ import {
 import downloadFromBlob from '~/utils/downloadFromBlob';
 import getDateCustomFormat from '~/utils/getDateCustomFormat';
 import getKebabCase from '~/utils/getKebabCase';
-import {useCustomerPortal} from '~/features/project/context';
+import {useAppContext} from '~/features/project/context';
 import {EXTENSION_FILE_TYPES, STATUS_CODE} from '~/features/project/utils/constants';
 import {getYearlyTerms} from '~/features/project/utils/getYearlyTerms';
 
@@ -34,7 +34,7 @@ const ActivationKeysInputs = ({
 	productTitle,
 	projectName,
 }) => {
-	const [{project, userAccount}] = useCustomerPortal();
+	const [{project, userAccount}] = useAppContext();
 
 	const {
 		articleGettingStartedWithLiferayEnterpriseSearchURL,
@@ -275,11 +275,11 @@ const ActivationKeysInputs = ({
 						>
 							{orderItemsDates.map((dateInterval, index) => {
 								const formattedDate = `${getDateCustomFormat(
-									dateInterval.startDate,
-									FORMAT_DATE_TYPES.day2DMonthSYearN
+									FORMAT_DATE_TYPES.day2DMonthSYearN,
+									dateInterval.startDate
 								)} - ${getDateCustomFormat(
-									dateInterval.endDate,
-									FORMAT_DATE_TYPES.day2DMonthSYearN
+									FORMAT_DATE_TYPES.day2DMonthSYearN,
+									dateInterval.endDate
 								)}`;
 
 								return (

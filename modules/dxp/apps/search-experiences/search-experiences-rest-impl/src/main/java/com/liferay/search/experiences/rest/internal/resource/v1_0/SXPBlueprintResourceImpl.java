@@ -25,6 +25,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.search.experiences.constants.SXPActionKeys;
+import com.liferay.search.experiences.constants.SXPBlueprintConstants;
 import com.liferay.search.experiences.constants.SXPConstants;
 import com.liferay.search.experiences.exception.DuplicateSXPBlueprintExternalReferenceCodeException;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
@@ -37,13 +38,13 @@ import com.liferay.search.experiences.rest.internal.resource.v1_0.util.TitleMapU
 import com.liferay.search.experiences.rest.resource.v1_0.SXPBlueprintResource;
 import com.liferay.search.experiences.service.SXPBlueprintService;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -340,7 +341,7 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 			return sxpBlueprint.getSchemaVersion();
 		}
 
-		return "1.1";
+		return SXPBlueprintConstants.SCHEMA_VERSION;
 	}
 
 	private SXPBlueprint _updateSXPBlueprint(

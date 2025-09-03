@@ -36,13 +36,13 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -71,7 +71,7 @@ public class SystemFDSSerializer
 	}
 
 	@Override
-	public String serializeAPIURL(
+	public String serializeAdditionalAPIURLParameters(
 		String fdsName, HttpServletRequest httpServletRequest) {
 
 		SystemFDSEntry systemFDSEntry =
@@ -86,6 +86,23 @@ public class SystemFDSSerializer
 			systemFDSEntry.getRESTEndpoint(), systemFDSEntry.getRESTSchema()
 		).addQueryString(
 			systemFDSEntry.getAdditionalAPIURLParameters()
+		).buildQueryString();
+	}
+
+	@Override
+	public String serializeAPIURL(
+		String fdsName, HttpServletRequest httpServletRequest) {
+
+		SystemFDSEntry systemFDSEntry =
+			systemFDSEntryRegistry.getSystemFDSEntry(fdsName);
+
+		if (systemFDSEntry == null) {
+			return null;
+		}
+
+		return createFDSAPIURLBuilder(
+			httpServletRequest, systemFDSEntry.getRESTApplication(),
+			systemFDSEntry.getRESTEndpoint(), systemFDSEntry.getRESTSchema()
 		).build();
 	}
 
@@ -360,11 +377,6 @@ public class SystemFDSSerializer
 	}
 
 	private static final SystemFDSEntry _systemFDSEntry = new SystemFDSEntry() {
-
-		@Override
-		public String getAdditionalAPIURLParameters() {
-			return "";
-		}
 
 		public int getDefaultItemsPerPage() {
 			return SystemFDSEntry.super.getDefaultItemsPerPage();

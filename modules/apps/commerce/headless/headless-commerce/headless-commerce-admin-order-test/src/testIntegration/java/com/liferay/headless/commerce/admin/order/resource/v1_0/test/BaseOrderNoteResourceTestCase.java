@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderNote;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseOrderNoteResourceTestCase {
 			testCompany.getCompanyId());
 
 		orderNoteResource = OrderNoteResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -211,176 +224,6 @@ public abstract class BaseOrderNoteResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteOrderNoteByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		OrderNote orderNote =
-			testDeleteOrderNoteByExternalReferenceCode_addOrderNote();
-
-		assertHttpResponseStatusCode(
-			204,
-			orderNoteResource.
-				deleteOrderNoteByExternalReferenceCodeHttpResponse(
-					orderNote.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			orderNoteResource.getOrderNoteByExternalReferenceCodeHttpResponse(
-				orderNote.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			orderNoteResource.getOrderNoteByExternalReferenceCodeHttpResponse(
-				orderNote.getExternalReferenceCode()));
-	}
-
-	protected OrderNote
-			testDeleteOrderNoteByExternalReferenceCode_addOrderNote()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetOrderNoteByExternalReferenceCode() throws Exception {
-		OrderNote postOrderNote =
-			testGetOrderNoteByExternalReferenceCode_addOrderNote();
-
-		OrderNote getOrderNote =
-			orderNoteResource.getOrderNoteByExternalReferenceCode(
-				postOrderNote.getExternalReferenceCode());
-
-		assertEquals(postOrderNote, getOrderNote);
-		assertValid(getOrderNote);
-	}
-
-	protected OrderNote testGetOrderNoteByExternalReferenceCode_addOrderNote()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetOrderNoteByExternalReferenceCode()
-		throws Exception {
-
-		OrderNote orderNote =
-			testGraphQLGetOrderNoteByExternalReferenceCode_addOrderNote();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				orderNote,
-				OrderNoteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"orderNoteByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												orderNote.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/orderNoteByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				orderNote,
-				OrderNoteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminOrder_v1_0",
-								new GraphQLField(
-									"orderNoteByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													orderNote.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminOrder_v1_0",
-						"Object/orderNoteByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetOrderNoteByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"orderNoteByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"orderNoteByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected OrderNote
-			testGraphQLGetOrderNoteByExternalReferenceCode_addOrderNote()
-		throws Exception {
-
-		return testGraphQLOrderNote_addOrderNote();
-	}
-
-	@Test
-	public void testPatchOrderNoteByExternalReferenceCode() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testDeleteOrderNote() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		OrderNote orderNote = testDeleteOrderNote_addOrderNote();
@@ -391,9 +234,8 @@ public abstract class BaseOrderNoteResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, orderNoteResource.getOrderNoteHttpResponse(orderNote.getId()));
-
 		assertHttpResponseStatusCode(
-			404, orderNoteResource.getOrderNoteHttpResponse(orderNote.getId()));
+			404, orderNoteResource.getOrderNoteHttpResponse(0L));
 	}
 
 	protected OrderNote testDeleteOrderNote_addOrderNote() throws Exception {
@@ -474,6 +316,439 @@ public abstract class BaseOrderNoteResourceTestCase {
 		throws Exception {
 
 		return testGraphQLOrderNote_addOrderNote();
+	}
+
+	@Test
+	public void testDeleteOrderNoteBatch() throws Exception {
+		OrderNote orderNote1 = testDeleteOrderNoteBatch_addOrderNote();
+
+		testDeleteOrderNoteBatch_deleteOrderNote(
+			202, orderNote1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+
+		orderNote1 = testDeleteOrderNoteBatch_addOrderNote();
+
+		testDeleteOrderNoteBatch_deleteOrderNote(202, null, orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+
+		orderNote1 = testDeleteOrderNoteBatch_addOrderNote();
+		OrderNote orderNote2 = testDeleteOrderNoteBatch_addOrderNote();
+
+		testDeleteOrderNoteBatch_deleteOrderNote(
+			202, orderNote2.getExternalReferenceCode(), orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote2.getId()));
+
+		testDeleteOrderNoteBatch_deleteOrderNote(
+			202, orderNote2.getExternalReferenceCode(), orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote2.getId()));
+	}
+
+	protected OrderNote testDeleteOrderNoteBatch_addOrderNote()
+		throws Exception {
+
+		return testDeleteOrderNote_addOrderNote();
+	}
+
+	protected void testDeleteOrderNoteBatch_deleteOrderNote(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			orderNoteResource.deleteOrderNoteBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteOrderNoteByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderNote orderNote =
+			testDeleteOrderNoteByExternalReferenceCode_addOrderNote();
+
+		assertHttpResponseStatusCode(
+			204,
+			orderNoteResource.
+				deleteOrderNoteByExternalReferenceCodeHttpResponse(
+					orderNote.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteByExternalReferenceCodeHttpResponse(
+				orderNote.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected OrderNote
+			testDeleteOrderNoteByExternalReferenceCode_addOrderNote()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetOrderByExternalReferenceCodeOrderNotesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getIrrelevantExternalReferenceCode();
+
+		Page<OrderNote> page =
+			orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+				externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			OrderNote irrelevantOrderNote =
+				testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantOrderNote());
+
+			page =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					irrelevantExternalReferenceCode,
+					Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOrderNote, (List<OrderNote>)page.getItems());
+			assertValid(
+				page,
+				testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		OrderNote orderNote1 =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				externalReferenceCode, randomOrderNote());
+
+		OrderNote orderNote2 =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				externalReferenceCode, randomOrderNote());
+
+		page = orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+			externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderNote1, (List<OrderNote>)page.getItems());
+		assertContains(orderNote2, (List<OrderNote>)page.getItems());
+		assertValid(
+			page,
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
+				externalReferenceCode));
+
+		orderNoteResource.deleteOrderNote(orderNote1.getId());
+
+		orderNoteResource.deleteOrderNote(orderNote2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrderByExternalReferenceCodeOrderNotesPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode();
+
+		Page<OrderNote> orderNotesPage =
+			orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+				externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(orderNotesPage.getTotalCount());
+
+		OrderNote orderNote1 =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				externalReferenceCode, randomOrderNote());
+
+		OrderNote orderNote2 =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				externalReferenceCode, randomOrderNote());
+
+		OrderNote orderNote3 =
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				externalReferenceCode, randomOrderNote());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderNote> page1 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(orderNote1, (List<OrderNote>)page1.getItems());
+
+			Page<OrderNote> page2 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(orderNote2, (List<OrderNote>)page2.getItems());
+
+			Page<OrderNote> page3 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
+		}
+		else {
+			Page<OrderNote> page1 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+			List<OrderNote> orderNotes1 = (List<OrderNote>)page1.getItems();
+
+			Assert.assertEquals(
+				orderNotes1.toString(), totalCount + 2, orderNotes1.size());
+
+			Page<OrderNote> page2 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderNote> orderNotes2 = (List<OrderNote>)page2.getItems();
+
+			Assert.assertEquals(orderNotes2.toString(), 1, orderNotes2.size());
+
+			Page<OrderNote> page3 =
+				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderNote1, (List<OrderNote>)page3.getItems());
+			assertContains(orderNote2, (List<OrderNote>)page3.getItems());
+			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
+		}
+	}
+
+	protected OrderNote
+			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
+				String externalReferenceCode, OrderNote orderNote)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrderByExternalReferenceCodeOrderNotesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetOrderIdOrderNotesPage() throws Exception {
+		Long id = testGetOrderIdOrderNotesPage_getId();
+		Long irrelevantId = testGetOrderIdOrderNotesPage_getIrrelevantId();
+
+		Page<OrderNote> page = orderNoteResource.getOrderIdOrderNotesPage(
+			id, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantId != null) {
+			OrderNote irrelevantOrderNote =
+				testGetOrderIdOrderNotesPage_addOrderNote(
+					irrelevantId, randomIrrelevantOrderNote());
+
+			page = orderNoteResource.getOrderIdOrderNotesPage(
+				irrelevantId, Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantOrderNote, (List<OrderNote>)page.getItems());
+			assertValid(
+				page,
+				testGetOrderIdOrderNotesPage_getExpectedActions(irrelevantId));
+		}
+
+		OrderNote orderNote1 = testGetOrderIdOrderNotesPage_addOrderNote(
+			id, randomOrderNote());
+
+		OrderNote orderNote2 = testGetOrderIdOrderNotesPage_addOrderNote(
+			id, randomOrderNote());
+
+		page = orderNoteResource.getOrderIdOrderNotesPage(
+			id, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderNote1, (List<OrderNote>)page.getItems());
+		assertContains(orderNote2, (List<OrderNote>)page.getItems());
+		assertValid(page, testGetOrderIdOrderNotesPage_getExpectedActions(id));
+
+		orderNoteResource.deleteOrderNote(orderNote1.getId());
+
+		orderNoteResource.deleteOrderNote(orderNote2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderIdOrderNotesPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrderIdOrderNotesPageWithPagination() throws Exception {
+		Long id = testGetOrderIdOrderNotesPage_getId();
+
+		Page<OrderNote> orderNotesPage =
+			orderNoteResource.getOrderIdOrderNotesPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(orderNotesPage.getTotalCount());
+
+		OrderNote orderNote1 = testGetOrderIdOrderNotesPage_addOrderNote(
+			id, randomOrderNote());
+
+		OrderNote orderNote2 = testGetOrderIdOrderNotesPage_addOrderNote(
+			id, randomOrderNote());
+
+		OrderNote orderNote3 = testGetOrderIdOrderNotesPage_addOrderNote(
+			id, randomOrderNote());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderNote> page1 = orderNoteResource.getOrderIdOrderNotesPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(orderNote1, (List<OrderNote>)page1.getItems());
+
+			Page<OrderNote> page2 = orderNoteResource.getOrderIdOrderNotesPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			assertContains(orderNote2, (List<OrderNote>)page2.getItems());
+
+			Page<OrderNote> page3 = orderNoteResource.getOrderIdOrderNotesPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
+
+			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
+		}
+		else {
+			Page<OrderNote> page1 = orderNoteResource.getOrderIdOrderNotesPage(
+				id, Pagination.of(1, totalCount + 2));
+
+			List<OrderNote> orderNotes1 = (List<OrderNote>)page1.getItems();
+
+			Assert.assertEquals(
+				orderNotes1.toString(), totalCount + 2, orderNotes1.size());
+
+			Page<OrderNote> page2 = orderNoteResource.getOrderIdOrderNotesPage(
+				id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderNote> orderNotes2 = (List<OrderNote>)page2.getItems();
+
+			Assert.assertEquals(orderNotes2.toString(), 1, orderNotes2.size());
+
+			Page<OrderNote> page3 = orderNoteResource.getOrderIdOrderNotesPage(
+				id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderNote1, (List<OrderNote>)page3.getItems());
+			assertContains(orderNote2, (List<OrderNote>)page3.getItems());
+			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
+		}
+	}
+
+	protected OrderNote testGetOrderIdOrderNotesPage_addOrderNote(
+			Long id, OrderNote orderNote)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOrderIdOrderNotesPage_getId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOrderIdOrderNotesPage_getIrrelevantId()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -773,193 +1048,147 @@ public abstract class BaseOrderNoteResourceTestCase {
 	}
 
 	@Test
+	public void testGetOrderNoteByExternalReferenceCode() throws Exception {
+		OrderNote postOrderNote =
+			testGetOrderNoteByExternalReferenceCode_addOrderNote();
+
+		OrderNote getOrderNote =
+			orderNoteResource.getOrderNoteByExternalReferenceCode(
+				postOrderNote.getExternalReferenceCode());
+
+		assertEquals(postOrderNote, getOrderNote);
+		assertValid(getOrderNote);
+	}
+
+	protected OrderNote testGetOrderNoteByExternalReferenceCode_addOrderNote()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderNoteByExternalReferenceCode()
+		throws Exception {
+
+		OrderNote orderNote =
+			testGraphQLGetOrderNoteByExternalReferenceCode_addOrderNote();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				orderNote,
+				OrderNoteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"orderNoteByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												orderNote.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/orderNoteByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderNote,
+				OrderNoteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderNoteByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													orderNote.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderNoteByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetOrderNoteByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"orderNoteByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderNoteByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected OrderNote
+			testGraphQLGetOrderNoteByExternalReferenceCode_addOrderNote()
+		throws Exception {
+
+		return testGraphQLOrderNote_addOrderNote();
+	}
+
+	@Test
 	public void testPatchOrderNote() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
-	public void testGetOrderByExternalReferenceCodeOrderNotesPage()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getIrrelevantExternalReferenceCode();
-
-		Page<OrderNote> page =
-			orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-				externalReferenceCode, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			OrderNote irrelevantOrderNote =
-				testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-					irrelevantExternalReferenceCode,
-					randomIrrelevantOrderNote());
-
-			page =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					irrelevantExternalReferenceCode,
-					Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantOrderNote, (List<OrderNote>)page.getItems());
-			assertValid(
-				page,
-				testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		OrderNote orderNote1 =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				externalReferenceCode, randomOrderNote());
-
-		OrderNote orderNote2 =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				externalReferenceCode, randomOrderNote());
-
-		page = orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-			externalReferenceCode, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(orderNote1, (List<OrderNote>)page.getItems());
-		assertContains(orderNote2, (List<OrderNote>)page.getItems());
-		assertValid(
-			page,
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
-				externalReferenceCode));
-
-		orderNoteResource.deleteOrderNote(orderNote1.getId());
-
-		orderNoteResource.deleteOrderNote(orderNote2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrderByExternalReferenceCodeOrderNotesPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode();
-
-		Page<OrderNote> orderNotePage =
-			orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-				externalReferenceCode, null);
-
-		int totalCount = GetterUtil.getInteger(orderNotePage.getTotalCount());
-
-		OrderNote orderNote1 =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				externalReferenceCode, randomOrderNote());
-
-		OrderNote orderNote2 =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				externalReferenceCode, randomOrderNote());
-
-		OrderNote orderNote3 =
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				externalReferenceCode, randomOrderNote());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OrderNote> page1 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(orderNote1, (List<OrderNote>)page1.getItems());
-
-			Page<OrderNote> page2 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(orderNote2, (List<OrderNote>)page2.getItems());
-
-			Page<OrderNote> page3 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
-		}
-		else {
-			Page<OrderNote> page1 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
-
-			List<OrderNote> orderNotes1 = (List<OrderNote>)page1.getItems();
-
-			Assert.assertEquals(
-				orderNotes1.toString(), totalCount + 2, orderNotes1.size());
-
-			Page<OrderNote> page2 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OrderNote> orderNotes2 = (List<OrderNote>)page2.getItems();
-
-			Assert.assertEquals(orderNotes2.toString(), 1, orderNotes2.size());
-
-			Page<OrderNote> page3 =
-				orderNoteResource.getOrderByExternalReferenceCodeOrderNotesPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(orderNote1, (List<OrderNote>)page3.getItems());
-			assertContains(orderNote2, (List<OrderNote>)page3.getItems());
-			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
-		}
-	}
-
-	protected OrderNote
-			testGetOrderByExternalReferenceCodeOrderNotesPage_addOrderNote(
-				String externalReferenceCode, OrderNote orderNote)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOrderByExternalReferenceCodeOrderNotesPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
+	public void testPatchOrderNoteByExternalReferenceCode() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -986,157 +1215,6 @@ public abstract class BaseOrderNoteResourceTestCase {
 	}
 
 	@Test
-	public void testGetOrderIdOrderNotesPage() throws Exception {
-		Long id = testGetOrderIdOrderNotesPage_getId();
-		Long irrelevantId = testGetOrderIdOrderNotesPage_getIrrelevantId();
-
-		Page<OrderNote> page = orderNoteResource.getOrderIdOrderNotesPage(
-			id, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantId != null) {
-			OrderNote irrelevantOrderNote =
-				testGetOrderIdOrderNotesPage_addOrderNote(
-					irrelevantId, randomIrrelevantOrderNote());
-
-			page = orderNoteResource.getOrderIdOrderNotesPage(
-				irrelevantId, Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantOrderNote, (List<OrderNote>)page.getItems());
-			assertValid(
-				page,
-				testGetOrderIdOrderNotesPage_getExpectedActions(irrelevantId));
-		}
-
-		OrderNote orderNote1 = testGetOrderIdOrderNotesPage_addOrderNote(
-			id, randomOrderNote());
-
-		OrderNote orderNote2 = testGetOrderIdOrderNotesPage_addOrderNote(
-			id, randomOrderNote());
-
-		page = orderNoteResource.getOrderIdOrderNotesPage(
-			id, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(orderNote1, (List<OrderNote>)page.getItems());
-		assertContains(orderNote2, (List<OrderNote>)page.getItems());
-		assertValid(page, testGetOrderIdOrderNotesPage_getExpectedActions(id));
-
-		orderNoteResource.deleteOrderNote(orderNote1.getId());
-
-		orderNoteResource.deleteOrderNote(orderNote2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrderIdOrderNotesPage_getExpectedActions(Long id)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrderIdOrderNotesPageWithPagination() throws Exception {
-		Long id = testGetOrderIdOrderNotesPage_getId();
-
-		Page<OrderNote> orderNotePage =
-			orderNoteResource.getOrderIdOrderNotesPage(id, null);
-
-		int totalCount = GetterUtil.getInteger(orderNotePage.getTotalCount());
-
-		OrderNote orderNote1 = testGetOrderIdOrderNotesPage_addOrderNote(
-			id, randomOrderNote());
-
-		OrderNote orderNote2 = testGetOrderIdOrderNotesPage_addOrderNote(
-			id, randomOrderNote());
-
-		OrderNote orderNote3 = testGetOrderIdOrderNotesPage_addOrderNote(
-			id, randomOrderNote());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<OrderNote> page1 = orderNoteResource.getOrderIdOrderNotesPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(orderNote1, (List<OrderNote>)page1.getItems());
-
-			Page<OrderNote> page2 = orderNoteResource.getOrderIdOrderNotesPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			assertContains(orderNote2, (List<OrderNote>)page2.getItems());
-
-			Page<OrderNote> page3 = orderNoteResource.getOrderIdOrderNotesPage(
-				id,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit));
-
-			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
-		}
-		else {
-			Page<OrderNote> page1 = orderNoteResource.getOrderIdOrderNotesPage(
-				id, Pagination.of(1, totalCount + 2));
-
-			List<OrderNote> orderNotes1 = (List<OrderNote>)page1.getItems();
-
-			Assert.assertEquals(
-				orderNotes1.toString(), totalCount + 2, orderNotes1.size());
-
-			Page<OrderNote> page2 = orderNoteResource.getOrderIdOrderNotesPage(
-				id, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<OrderNote> orderNotes2 = (List<OrderNote>)page2.getItems();
-
-			Assert.assertEquals(orderNotes2.toString(), 1, orderNotes2.size());
-
-			Page<OrderNote> page3 = orderNoteResource.getOrderIdOrderNotesPage(
-				id, Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(orderNote1, (List<OrderNote>)page3.getItems());
-			assertContains(orderNote2, (List<OrderNote>)page3.getItems());
-			assertContains(orderNote3, (List<OrderNote>)page3.getItems());
-		}
-	}
-
-	protected OrderNote testGetOrderIdOrderNotesPage_addOrderNote(
-			Long id, OrderNote orderNote)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOrderIdOrderNotesPage_getId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetOrderIdOrderNotesPage_getIrrelevantId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
 	public void testPostOrderIdOrderNote() throws Exception {
 		OrderNote randomOrderNote = randomOrderNote();
 
@@ -1153,6 +1231,88 @@ public abstract class BaseOrderNoteResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OrderNote orderNote1 = testBatchEngineDeleteImportTask_addOrderNote();
+
+		testBatchEngineDeleteImportTask_deleteOrderNote(
+			200, orderNote1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+
+		orderNote1 = testBatchEngineDeleteImportTask_addOrderNote();
+
+		testBatchEngineDeleteImportTask_deleteOrderNote(
+			200, null, orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+
+		orderNote1 = testBatchEngineDeleteImportTask_addOrderNote();
+		OrderNote orderNote2 = testBatchEngineDeleteImportTask_addOrderNote();
+
+		testBatchEngineDeleteImportTask_deleteOrderNote(
+			200, orderNote2.getExternalReferenceCode(), orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteOrderNote(
+			200, orderNote2.getExternalReferenceCode(), orderNote1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			orderNoteResource.getOrderNoteHttpResponse(orderNote2.getId()));
+	}
+
+	protected OrderNote testBatchEngineDeleteImportTask_addOrderNote()
+		throws Exception {
+
+		return testDeleteOrderNote_addOrderNote();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOrderNote(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderNote",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected OrderNote testGraphQLOrderNote_addOrderNote() throws Exception {
@@ -1855,7 +2015,30 @@ public abstract class BaseOrderNoteResourceTestCase {
 		return randomOrderNote();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OrderNoteResource orderNoteResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

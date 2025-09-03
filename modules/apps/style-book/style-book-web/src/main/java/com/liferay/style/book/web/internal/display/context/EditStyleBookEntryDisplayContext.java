@@ -16,11 +16,11 @@ import com.liferay.fragment.util.comparator.FragmentCollectionCreateDateComparat
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.layout.item.selector.LayoutItemSelectorReturnType;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateEntryItemSelectorCriterion;
 import com.liferay.layout.page.template.item.selector.LayoutPageTemplateEntryItemSelectorReturnType;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateEntryItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryModifiedDateComparator;
@@ -63,19 +63,18 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
-import com.liferay.style.book.web.internal.util.StyleBookUtil;
+import com.liferay.style.book.util.StyleBookUtil;
+
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -107,6 +106,8 @@ public class EditStyleBookEntryDisplayContext {
 			"fragmentCollectionPreviewURL",
 			ResourceURLBuilder.createResourceURL(
 				_renderResponse
+			).setParameter(
+				"styleBookEntryThemeId", _styleBookEntry.getThemeId()
 			).setResourceID(
 				"/style_book/preview_fragment_collection"
 			).buildString()
@@ -246,7 +247,7 @@ public class EditStyleBookEntryDisplayContext {
 								"name", fragmentCollectionContributor.getName()
 							).put(
 								"url",
-								_getPreviewFragmentCollectionURL(
+								_getFragmentCollectionPreviewURL(
 									fragmentCollectionContributor.
 										getFragmentCollectionKey(),
 									CompanyConstants.SYSTEM)
@@ -262,7 +263,7 @@ public class EditStyleBookEntryDisplayContext {
 								"name", fragmentCollection.getName()
 							).put(
 								"url",
-								_getPreviewFragmentCollectionURL(
+								_getFragmentCollectionPreviewURL(
 									fragmentCollection.
 										getFragmentCollectionKey(),
 									fragmentCollection.getGroupId())
@@ -273,6 +274,22 @@ public class EditStyleBookEntryDisplayContext {
 		).put(
 			"totalLayouts", fragmentCollectionsCount
 		);
+	}
+
+	private String _getFragmentCollectionPreviewURL(
+		String fragmentCollectionKey, long groupId) {
+
+		return ResourceURLBuilder.createResourceURL(
+			_renderResponse
+		).setParameter(
+			"fragmentCollectionKey", fragmentCollectionKey
+		).setParameter(
+			"groupId", groupId
+		).setParameter(
+			"styleBookEntryThemeId", _styleBookEntry.getThemeId()
+		).setResourceID(
+			"/style_book/preview_fragment_collection"
+		).buildString();
 	}
 
 	private int _getFragmentCollectionsCount() {
@@ -441,26 +458,6 @@ public class EditStyleBookEntryDisplayContext {
 		);
 	}
 
-	private String _getPreviewFragmentCollectionURL(
-		String fragmentCollectionKey, long groupId) {
-
-		String url = ResourceURLBuilder.createResourceURL(
-			_renderResponse
-		).setResourceID(
-			"/style_book/preview_fragment_collection"
-		).buildString();
-
-		String portletNamespace = PortalUtil.getPortletNamespace(
-			StyleBookPortletKeys.STYLE_BOOK);
-
-		url = HttpComponentsUtil.addParameter(
-			url, portletNamespace + "groupId", groupId);
-
-		return HttpComponentsUtil.addParameter(
-			url, portletNamespace + "fragmentCollectionKey",
-			fragmentCollectionKey);
-	}
-
 	private long _getPreviewItemsGroupId() {
 		if (_previewItemsGroupId != null) {
 			return _previewItemsGroupId;
@@ -583,7 +580,7 @@ public class EditStyleBookEntryDisplayContext {
 	private String _getThemeName() {
 		if (FeatureFlagManagerUtil.isEnabled("LPD-30204")) {
 			return StyleBookUtil.getThemeName(
-				_styleBookEntry.getCompanyId(), _httpServletRequest,
+				_styleBookEntry.getCompanyId(), _themeDisplay.getLocale(),
 				_styleBookEntry.getThemeId());
 		}
 

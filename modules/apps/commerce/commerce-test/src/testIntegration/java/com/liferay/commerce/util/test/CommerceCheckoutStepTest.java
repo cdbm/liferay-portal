@@ -20,6 +20,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.util.CommerceCheckoutStep;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Group;
@@ -46,11 +47,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.portlet.ActionRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
-
-import javax.portlet.ActionRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.frutilla.FrutillaRule;
 
@@ -131,7 +132,7 @@ public class CommerceCheckoutStepTest {
 		String emailAddress = "buyer@liferay.com";
 
 		AccountEntry accountEntry1 = _accountEntryLocalService.addAccountEntry(
-			_serviceContext.getUserId(),
+			StringPool.BLANK, _serviceContext.getUserId(),
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null, emailAddress, null, null,
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -268,7 +269,7 @@ public class CommerceCheckoutStepTest {
 			mockLiferayPortletActionRequest.getHttpServletRequest();
 
 		httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 
 		mockLiferayPortletActionRequest.setAttribute(
 			CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);

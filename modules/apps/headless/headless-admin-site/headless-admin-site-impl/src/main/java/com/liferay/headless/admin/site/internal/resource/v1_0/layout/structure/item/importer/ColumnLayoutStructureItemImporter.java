@@ -5,7 +5,7 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
-import com.liferay.headless.admin.site.dto.v1_0.PageColumnDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.ColumnPageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
@@ -35,14 +35,15 @@ public class ColumnLayoutStructureItemImporter
 						pageElement, layoutStructure),
 					pageElement.getPosition());
 
-		PageColumnDefinition pageColumnDefinition =
-			(PageColumnDefinition)pageElement.getDefinition();
+		ColumnPageElementDefinition columnPageElementDefinition =
+			(ColumnPageElementDefinition)pageElement.getPageElementDefinition();
 
-		if (pageColumnDefinition == null) {
+		if (columnPageElementDefinition == null) {
 			return columnLayoutStructureItem;
 		}
 
-		columnLayoutStructureItem.setSize(pageColumnDefinition.getSize());
+		columnLayoutStructureItem.setSize(
+			columnPageElementDefinition.getSize());
 
 		return columnLayoutStructureItem;
 	}

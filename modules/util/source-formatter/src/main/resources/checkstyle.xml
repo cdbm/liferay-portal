@@ -303,6 +303,13 @@
 			<message key="company.local.service.use.sql" value="Use &quot;CompanyLocalService.forEachCompany&quot; instead of SQL" />
 			<message key="portal.instances.use" value="Use &quot;PortalInstancePool.getCompanyIds&quot; instead to fetch company IDs" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.CompanyThreadLocalCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks usage of `CompanyThreadLocal`." />
+			<property name="enabled" value="false" />
+			<message key="close.call.missing" value="Missing calling &quot;close&quot; to variable &quot;{0}&quot;, use &quot;{1}.close&quot; or try-with-resources statement instead" />
+			<message key="set.company.id.call.avoid" value="Do not use &quot;CompanyThreadLocal.setCompanyId&quot;, use &quot;CompanyThreadLocal.setCompanyIdWithSafeCloseable&quot; instead" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ComponentAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Performs several checks on classes with @Component annotation." />
@@ -354,6 +361,12 @@
 			<property name="category" value="Styling" />
 			<property name="description" value="Finds contractions in Strings (such as `can't` or `you're`)." />
 			<message key="contraction.avoid" value="Avoid using contraction &quot;{0}&quot;" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.CreatingThreadsForDBAccessCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Finds cases where `CompanyInheritableThreadLocalCallable` should be used when creating threads for DB access." />
+			<property name="enabled" value="false" />
+			<message key="company.inheritable.thread.local.callable.use" value="Use &quot;CompanyInheritableThreadLocalCallable&quot; to create threads for DB access" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CreationMenuBuilderCheck">
 			<property name="category" value="Miscellaneous" />
@@ -633,6 +646,11 @@
 			<message key="parentheses.missing.1" value="Missing parentheses between the &quot;{0}&quot; operator and the &quot;{1}&quot; operator" />
 			<message key="parentheses.missing.2" value="Missing parentheses around the {0} hand side argument of the &quot;{1}&quot; operator" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ModelSetCallWithCompanyIdCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks for inserting the companyId as part of a varchar field in the database." />
+			<message key="parameter.incorrect" value="Do not use variable &quot;companyId&quot; as the parameter when calling model set method, see LPD-43079" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ModifiedMethodCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Checks for incorrect `modified` method with `@Modified` annotation." />
@@ -850,6 +868,11 @@
 			<property name="description" value="Finds cases where a redundant `toString()` is called on variable type `String`." />
 			<message key="string.cast.unneeded" value="No need to call &quot;.toString()&quot; on type String" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.StringIndexOfCallCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Finds calls to `indexOf` (use `contains` instead)." />
+			<message key="method.use" value="Use method &quot;contains&quot; instead of &quot;indexOf&quot;" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SystemEventCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds missing or redundant usage of @SystemEvent for delete events." />
@@ -890,6 +913,13 @@
 			<property name="category" value="Performance" />
 			<property name="description" value="Finds new instances of `java.lang.Thread` (use `ThreadLocalUtil.create` instead)." />
 			<message key="thread.local.util.use" value="Use &quot;ThreadLocalUtil.create&quot; when initializing variable &quot;{0}&quot;" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ThreadLocalVariableNameCheck">
+			<property name="category" value="Naming Conventions" />
+			<property name="description" value="Checks for consistent naming on variables of type '*ThreadLocal'." />
+			<property name="enabled" value="false" />
+			<message key="literal.string.incorrect" value="The literal string in the variable assignment for &quot;{0}&quot; should be &quot;{1}&quot;" />
+			<message key="variable.incorrect.ending" value="Name of variable with type &quot;{0}&quot; should not end with &quot;{1}&quot;" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ThreadNameCheck">
 			<property name="category" value="Naming Conventions" />

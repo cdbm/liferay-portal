@@ -28,13 +28,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.util.comparator.AssetVocabularyGroupLocalizedTitleComparator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -79,7 +79,7 @@ public class AssetVocabularyItemSelectorViewDescriptor
 		SearchContainer<AssetVocabulary> searchContainer =
 			new SearchContainer<>(
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST),
+					JavaConstants.JAKARTA_PORTLET_REQUEST),
 				_portletURL, null, "there-are-no-items-to-display");
 
 		if (searchContainer.isSearch()) {

@@ -33,10 +33,10 @@ import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.BridgeMethodResolver;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Neil Griffin
@@ -51,7 +51,7 @@ public class JSR330BeanPortletPostProcessor
 			@SuppressWarnings("unchecked")
 			Class<? extends Annotation> injectAnnotation =
 				(Class<? extends Annotation>)ClassUtils.forName(
-					"javax.inject.Inject",
+					"jakarta.inject.Inject",
 					JSR330BeanPortletPostProcessor.class.getClassLoader());
 
 			_autowiredAnnotationTypes.add(injectAnnotation);
@@ -141,54 +141,30 @@ public class JSR330BeanPortletPostProcessor
 			(ConfigurableListableBeanFactory)beanFactory;
 	}
 
-	private AnnotationAttributes _getAnnotationAttributes(
-		AccessibleObject accessibleObject) {
-
-		Annotation[] annotations = accessibleObject.getAnnotations();
-
-		if (annotations.length <= 0) {
-			return null;
-		}
-
-		for (Class<? extends Annotation> autowiredAnnotationType :
-				_autowiredAnnotationTypes) {
-
-			AnnotationAttributes mergedAnnotationAttributes =
-				AnnotatedElementUtils.getMergedAnnotationAttributes(
-					accessibleObject, autowiredAnnotationType);
-
-			if (mergedAnnotationAttributes != null) {
-				return mergedAnnotationAttributes;
-			}
-		}
-
-		return null;
-	}
-
 	private InjectionMetadata _getInjectionMetadata(Class<?> beanClass) {
-		List<InjectionMetadata.InjectedElement> injectedElements =
+		List<InjectionMetadata.InjectedElement> injectedElements1 =
 			new ArrayList<>();
 		Class<?> curClass = beanClass;
 
 		while ((curClass != null) && (curClass != Object.class)) {
-			List<InjectionMetadata.InjectedElement> injectionElements =
+			List<InjectionMetadata.InjectedElement> injectedElements2 =
 				new ArrayList<>();
 
 			Field[] fields = curClass.getDeclaredFields();
 
 			for (Field field : fields) {
-				AnnotationAttributes annotationAttributes =
-					_getAnnotationAttributes(field);
+				MergedAnnotation<?> mergedAnnotation = _getMergedAnnotation(
+					field);
 
-				if (annotationAttributes != null) {
+				if (mergedAnnotation != null) {
 					if (Modifier.isStatic(field.getModifiers())) {
 						continue;
 					}
 
 					boolean required = determineRequiredStatus(
-						annotationAttributes);
+						mergedAnnotation);
 
-					injectionElements.add(
+					injectedElements2.add(
 						new JSR330InjectedFieldElement(
 							_configurableListableBeanFactory, field, required));
 				}
@@ -206,10 +182,10 @@ public class JSR330BeanPortletPostProcessor
 					continue;
 				}
 
-				AnnotationAttributes annotationAttributes =
-					_getAnnotationAttributes(bridgedMethod);
+				MergedAnnotation<?> mergedAnnotation = _getMergedAnnotation(
+					bridgedMethod);
 
-				if ((annotationAttributes != null) &&
+				if ((mergedAnnotation != null) &&
 					method.equals(
 						ClassUtils.getMostSpecificMethod(method, beanClass))) {
 
@@ -221,21 +197,21 @@ public class JSR330BeanPortletPostProcessor
 						BeanUtils.findPropertyForMethod(
 							bridgedMethod, beanClass);
 					boolean required = determineRequiredStatus(
-						annotationAttributes);
+						mergedAnnotation);
 
-					injectionElements.add(
+					injectedElements2.add(
 						new JSR330InjectedMethodElement(
 							_configurableListableBeanFactory, method,
 							propertyDescriptor, required));
 				}
 			}
 
-			injectedElements.addAll(0, injectionElements);
+			injectedElements1.addAll(0, injectedElements2);
 
 			curClass = curClass.getSuperclass();
 		}
 
-		return new InjectionMetadata(beanClass, injectedElements);
+		return new InjectionMetadata(beanClass, injectedElements1);
 	}
 
 	private InjectionMetadata _getInjectionMetadata(
@@ -243,7 +219,7 @@ public class JSR330BeanPortletPostProcessor
 
 		String key = beanName;
 
-		if (StringUtils.isEmpty(key)) {
+		if (ObjectUtils.isEmpty(key)) {
 			key = beanClass.getName();
 		}
 
@@ -268,6 +244,26 @@ public class JSR330BeanPortletPostProcessor
 		}
 
 		return injectionMetadata;
+	}
+
+	private MergedAnnotation<?> _getMergedAnnotation(
+		AccessibleObject accessibleObject) {
+
+		MergedAnnotations mergedAnnotations = MergedAnnotations.from(
+			accessibleObject);
+
+		for (Class<? extends Annotation> autowiredAnnotationType :
+				_autowiredAnnotationTypes) {
+
+			MergedAnnotation<?> mergedAnnotation = mergedAnnotations.get(
+				autowiredAnnotationType);
+
+			if (mergedAnnotation.isPresent()) {
+				return mergedAnnotation;
+			}
+		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

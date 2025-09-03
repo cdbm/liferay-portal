@@ -13,6 +13,7 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
@@ -26,7 +27,6 @@ import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -44,6 +44,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,8 +65,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Rubén Pulido
@@ -107,13 +107,14 @@ public class InfoRequestFieldValuesProviderHelper {
 		for (InfoField<?> infoField :
 				_getInfoFields(className, classTypeId, groupId)) {
 
-			if (!infoField.isEditable()) {
+			if (!infoField.isEditable() &&
+				!ArrayUtil.contains(
+					_ALLOWED_NONEDITABLE_FIELDS, infoField.getName())) {
+
 				continue;
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-37927") &&
-				infoField.isLocalizable()) {
-
+			if (infoField.isLocalizable()) {
 				infoFieldValues.put(
 					infoField.getUniqueId(),
 					new InfoFieldValue<>(
@@ -161,7 +162,7 @@ public class InfoRequestFieldValuesProviderHelper {
 					infoFieldValues.put(
 						infoField.getUniqueId(),
 						_getInfoFieldValue(
-							infoField, themeDisplay.getLocale(), false));
+							true, infoField, themeDisplay.getLocale(), false));
 
 					continue;
 				}
@@ -173,7 +174,7 @@ public class InfoRequestFieldValuesProviderHelper {
 					infoFieldValues.put(
 						infoField.getUniqueId(),
 						_getInfoFieldValue(
-							infoField, themeDisplay.getLocale(),
+							true, infoField, themeDisplay.getLocale(),
 							Collections.emptyList()));
 
 					continue;
@@ -186,7 +187,8 @@ public class InfoRequestFieldValuesProviderHelper {
 				themeDisplay.getUserId());
 
 			InfoFieldValue<Object> infoFieldValue = _getInfoFieldValue(
-				infoField, themeDisplay.getLocale(), value);
+				regularParameters != null, infoField, themeDisplay.getLocale(),
+				value);
 
 			if (infoFieldValue != null) {
 				infoFieldValues.put(infoField.getUniqueId(), infoFieldValue);
@@ -223,9 +225,10 @@ public class InfoRequestFieldValuesProviderHelper {
 	}
 
 	private InfoFieldValue<Object> _getInfoFieldValue(
-		InfoField<?> infoField, Locale locale, Object value) {
+		boolean includeNullValues, InfoField<?> infoField, Locale locale,
+		Object value) {
 
-		if (value == null) {
+		if ((value == null) && !includeNullValues) {
 			return null;
 		}
 
@@ -366,6 +369,7 @@ public class InfoRequestFieldValuesProviderHelper {
 		}
 
 		if (infoField.getInfoFieldType() instanceof FileInfoFieldType ||
+			infoField.getInfoFieldType() instanceof FriendlyURLInfoFieldType ||
 			infoField.getInfoFieldType() instanceof HTMLInfoFieldType ||
 			infoField.getInfoFieldType() instanceof LongTextInfoFieldType ||
 			infoField.getInfoFieldType() instanceof RelationshipInfoFieldType ||
@@ -377,6 +381,10 @@ public class InfoRequestFieldValuesProviderHelper {
 
 		return null;
 	}
+
+	private static final String[] _ALLOWED_NONEDITABLE_FIELDS = {
+		"expirationDate", "reviewDate"
+	};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		InfoRequestFieldValuesProviderHelper.class);

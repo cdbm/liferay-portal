@@ -11,7 +11,9 @@ import com.liferay.asset.kernel.exception.DuplicateCategoryExternalReferenceCode
 import com.liferay.asset.kernel.exception.InvalidAssetCategoryException;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.persistence.AssetVocabularyPersistence;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -46,9 +48,11 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.asset.service.base.AssetCategoryLocalServiceBaseImpl;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 
@@ -125,7 +129,9 @@ public class AssetCategoryLocalServiceImpl
 				parentCategoryId);
 		}
 
-		_assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
+		if (vocabularyId != AssetVocabularyConstants.EMPTY_VOCABULARY_ID) {
+			_assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
+		}
 
 		long categoryId = counterLocalService.increment();
 
@@ -153,6 +159,13 @@ public class AssetCategoryLocalServiceImpl
 		category.setTitleMap(trimmedTitleMap);
 		category.setDescriptionMap(descriptionMap);
 		category.setVocabularyId(vocabularyId);
+
+		if (EmptyModelManagerUtil.isEmptyModel()) {
+			category.setStatus(WorkflowConstants.STATUS_EMPTY);
+		}
+		else {
+			category.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
 
 		category = assetCategoryPersistence.update(category);
 
@@ -415,6 +428,24 @@ public class AssetCategoryLocalServiceImpl
 		return Collections.emptyList();
 	}
 
+	public AssetCategory getOrAddEmptyCategory(
+			String externalReferenceCode, long userId, long groupId)
+		throws PortalException {
+
+		return EmptyModelManagerUtil.getOrAddEmptyModel(
+			AssetCategory.class,
+			() -> assetCategoryLocalService.addCategory(
+				externalReferenceCode, userId, groupId,
+				AssetCategoryConstants.EMPTY_PARENT_CATEGORY_ID,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), externalReferenceCode),
+				null, AssetVocabularyConstants.EMPTY_VOCABULARY_ID,
+				new String[0], new ServiceContext()),
+			externalReferenceCode,
+			this::fetchAssetCategoryByExternalReferenceCode,
+			this::getAssetCategoryByExternalReferenceCode, groupId);
+	}
+
 	@Override
 	public List<Long> getSubcategoryIds(long parentCategoryId) {
 		AssetCategory parentAssetCategory =
@@ -516,41 +547,7 @@ public class AssetCategoryLocalServiceImpl
 		AssetCategory category = assetCategoryPersistence.findByPrimaryKey(
 			categoryId);
 
-		validate(
-			categoryId, parentCategoryId, category.getName(), vocabularyId);
-
-		if (categoryId == parentCategoryId) {
-			throw new InvalidAssetCategoryException(parentCategoryId, 2);
-		}
-
-		AssetCategory parentCategory = null;
-
-		if (parentCategoryId > 0) {
-			parentCategory = assetCategoryPersistence.findByPrimaryKey(
-				parentCategoryId);
-
-			String treePath = parentCategory.getTreePath();
-
-			if (treePath.startsWith(category.getTreePath())) {
-				throw new InvalidAssetCategoryException(categoryId, 1);
-			}
-		}
-
-		if (vocabularyId != category.getVocabularyId()) {
-			_assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
-
-			updateChildrenVocabularyId(category, vocabularyId);
-
-			category.setVocabularyId(vocabularyId);
-		}
-
-		if (parentCategoryId != category.getParentCategoryId()) {
-			_rebuildTreePath(category, parentCategory);
-
-			category.setParentCategoryId(parentCategoryId);
-		}
-
-		return assetCategoryPersistence.update(category);
+		return _moveCategory(category, parentCategoryId, vocabularyId);
 	}
 
 	@Override
@@ -636,43 +633,15 @@ public class AssetCategoryLocalServiceImpl
 			categoryProperties = new String[0];
 		}
 
-		validate(categoryId, parentCategoryId, name, vocabularyId);
-
-		if (categoryId == parentCategoryId) {
-			throw new InvalidAssetCategoryException(
-				parentCategoryId,
-				InvalidAssetCategoryException.CANNOT_MOVE_INTO_ITSELF);
-		}
-
-		AssetCategory parentCategory = null;
-
-		if (parentCategoryId > 0) {
-			parentCategory = assetCategoryPersistence.findByPrimaryKey(
-				parentCategoryId);
-		}
-
-		if (vocabularyId != category.getVocabularyId()) {
-			_assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
-
-			parentCategoryId =
-				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID;
-
-			category.setVocabularyId(vocabularyId);
-
-			updateChildrenVocabularyId(category, vocabularyId);
-		}
-
-		if (parentCategoryId != category.getParentCategoryId()) {
-			_rebuildTreePath(category, parentCategory);
-
-			category.setParentCategoryId(parentCategoryId);
-		}
-
 		category.setName(name);
 		category.setTitleMap(trimmedTitleMap);
 		category.setDescriptionMap(descriptionMap);
 
-		return assetCategoryPersistence.update(category);
+		if (category.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			category.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
+		return _moveCategory(category, parentCategoryId, vocabularyId);
 	}
 
 	protected SearchContext buildSearchContext(
@@ -785,6 +754,53 @@ public class AssetCategoryLocalServiceImpl
 		}
 
 		return trimmedTitleMap;
+	}
+
+	private AssetCategory _moveCategory(
+			AssetCategory category, long parentCategoryId, long vocabularyId)
+		throws PortalException {
+
+		validate(
+			category.getCategoryId(), parentCategoryId, category.getName(),
+			vocabularyId);
+
+		if (category.getCategoryId() == parentCategoryId) {
+			throw new InvalidAssetCategoryException(
+				parentCategoryId,
+				InvalidAssetCategoryException.CANNOT_MOVE_INTO_ITSELF);
+		}
+
+		AssetCategory parentCategory = null;
+
+		if (parentCategoryId > 0) {
+			parentCategory = assetCategoryPersistence.findByPrimaryKey(
+				parentCategoryId);
+
+			String treePath = parentCategory.getTreePath();
+
+			if (treePath.startsWith(category.getTreePath())) {
+				throw new InvalidAssetCategoryException(
+					category.getCategoryId(),
+					InvalidAssetCategoryException.
+						CANNOT_MOVE_INTO_CHILD_CATEGORY);
+			}
+		}
+
+		if (parentCategoryId != category.getParentCategoryId()) {
+			_rebuildTreePath(category, parentCategory);
+
+			category.setParentCategoryId(parentCategoryId);
+		}
+
+		if (vocabularyId != category.getVocabularyId()) {
+			_assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
+
+			updateChildrenVocabularyId(category, vocabularyId);
+
+			category.setVocabularyId(vocabularyId);
+		}
+
+		return assetCategoryPersistence.update(category);
 	}
 
 	private void _rebuildTreePath(

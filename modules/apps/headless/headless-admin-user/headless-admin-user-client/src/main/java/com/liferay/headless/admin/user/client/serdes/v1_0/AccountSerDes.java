@@ -8,11 +8,12 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountGroupBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountRole;
-import com.liferay.headless.admin.user.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.user.client.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.client.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -22,8 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -156,7 +155,7 @@ public class AccountSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < account.getCustomFields().length; i++) {
-				sb.append(String.valueOf(account.getCustomFields()[i]));
+				sb.append(account.getCustomFields()[i]);
 
 				if ((i + 1) < account.getCustomFields().length) {
 					sb.append(", ");
@@ -323,6 +322,20 @@ public class AccountSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (account.getLogoBase64() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"logoBase64\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(account.getLogoBase64()));
+
+			sb.append("\"");
 		}
 
 		if (account.getLogoExternalReferenceCode() != null) {
@@ -729,6 +742,13 @@ public class AccountSerDes {
 			map.put("keywords", String.valueOf(account.getKeywords()));
 		}
 
+		if (account.getLogoBase64() == null) {
+			map.put("logoBase64", null);
+		}
+		else {
+			map.put("logoBase64", String.valueOf(account.getLogoBase64()));
+		}
+
 		if (account.getLogoExternalReferenceCode() == null) {
 			map.put("logoExternalReferenceCode", null);
 		}
@@ -940,6 +960,9 @@ public class AccountSerDes {
 			else if (Objects.equals(jsonParserFieldName, "keywords")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "logoBase64")) {
+				return false;
+			}
 			else if (Objects.equals(
 						jsonParserFieldName, "logoExternalReferenceCode")) {
 
@@ -1083,12 +1106,16 @@ public class AccountSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.admin.user.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.admin.user.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.admin.user.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					account.setCustomFields(customFieldsArray);
@@ -1168,6 +1195,11 @@ public class AccountSerDes {
 				if (jsonParserFieldValue != null) {
 					account.setKeywords(
 						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "logoBase64")) {
+				if (jsonParserFieldValue != null) {
+					account.setLogoBase64((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(

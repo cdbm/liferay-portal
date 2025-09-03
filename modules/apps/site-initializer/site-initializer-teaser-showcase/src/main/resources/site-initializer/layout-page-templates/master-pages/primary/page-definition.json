@@ -312,6 +312,16 @@
 															"indexed": true
 														},
 														"type": "Fragment"
+													},
+													{
+														"definition": {
+															"widgetInstance": {
+																"widgetConfig": {
+																},
+																"widgetName": "com_liferay_site_navigation_language_web_portlet_SiteNavigationLanguagePortlet"
+															}
+														},
+														"type": "Widget"
 													}
 												],
 												"type": "Section"
@@ -616,6 +626,9 @@
 																	}
 																}
 															],
+															"fragmentStyle": {
+																"paddingLeft": "6"
+															},
 															"indexed": true
 														},
 														"type": "Fragment"
@@ -727,6 +740,9 @@
 																	}
 																}
 															],
+															"fragmentStyle": {
+																"paddingLeft": "6"
+															},
 															"indexed": true
 														},
 														"type": "Fragment"
@@ -825,6 +841,9 @@
 																	}
 																}
 															],
+															"fragmentStyle": {
+																"paddingLeft": "6"
+															},
 															"indexed": true
 														},
 														"type": "Fragment"
@@ -922,6 +941,9 @@
 																	}
 																}
 															],
+															"fragmentStyle": {
+																"paddingLeft": "6"
+															},
 															"indexed": true
 														},
 														"type": "Fragment"
@@ -1051,7 +1073,7 @@
 																	"value": {
 																		"html": {
 																			"value_i18n": {
-																				"en_US": "<p class=\"mb-0\">\n © 2024 Clarity Vision Solutions, INC\n</p>"
+																				"en_US": "<p class=\"mb-0\">\n © 2025 Clarity Vision Solutions, INC\n</p>"
 																			}
 																		}
 																	}

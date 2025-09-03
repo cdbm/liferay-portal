@@ -59,6 +59,12 @@ public class ObjectEntryVersionLocalServiceUtil {
 		return getService().addObjectEntryVersion(objectEntryVersion);
 	}
 
+	public static void checkObjectEntryVersions(long companyId)
+		throws PortalException {
+
+		getService().checkObjectEntryVersions(companyId);
+	}
+
 	/**
 	 * Creates a new object entry version with the primary key. Does not add the object entry version to the database.
 	 *
@@ -99,6 +105,13 @@ public class ObjectEntryVersionLocalServiceUtil {
 		return getService().deleteObjectEntryVersion(objectEntryVersionId);
 	}
 
+	public static ObjectEntryVersion deleteObjectEntryVersion(
+			long objectEntryId, int version)
+		throws PortalException {
+
+		return getService().deleteObjectEntryVersion(objectEntryId, version);
+	}
+
 	/**
 	 * Deletes the object entry version from the database. Also notifies the appropriate model listeners.
 	 *
@@ -113,6 +126,17 @@ public class ObjectEntryVersionLocalServiceUtil {
 		ObjectEntryVersion objectEntryVersion) {
 
 		return getService().deleteObjectEntryVersion(objectEntryVersion);
+	}
+
+	public static void deleteObjectEntryVersionByObjectDefinitionId(
+		Long objectDefinitionId) {
+
+		getService().deleteObjectEntryVersionByObjectDefinitionId(
+			objectDefinitionId);
+	}
+
+	public static void deleteObjectEntryVersions(long objectEntryId) {
+		getService().deleteObjectEntryVersions(objectEntryId);
 	}
 
 	/**
@@ -210,10 +234,43 @@ public class ObjectEntryVersionLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
+	public static ObjectEntryVersion expireObjectEntryVersion(
+			long userId, com.liferay.object.model.ObjectEntry objectEntry,
+			int version,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().expireObjectEntryVersion(
+			userId, objectEntry, version, serviceContext);
+	}
+
+	public static ObjectEntryVersion expireObjectEntryVersion(
+			long userId, ObjectEntryVersion objectEntryVersion)
+		throws PortalException {
+
+		return getService().expireObjectEntryVersion(
+			userId, objectEntryVersion);
+	}
+
+	public static void expireObjectEntryVersions(
+			long userId, com.liferay.object.model.ObjectEntry objectEntry,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws Exception {
+
+		getService().expireObjectEntryVersions(
+			userId, objectEntry, serviceContext);
+	}
+
 	public static ObjectEntryVersion fetchObjectEntryVersion(
 		long objectEntryVersionId) {
 
 		return getService().fetchObjectEntryVersion(objectEntryVersionId);
+	}
+
+	public static ObjectEntryVersion fetchObjectEntryVersion(
+		long objectEntryId, int version) {
+
+		return getService().fetchObjectEntryVersion(objectEntryId, version);
 	}
 
 	/**
@@ -265,6 +322,13 @@ public class ObjectEntryVersionLocalServiceUtil {
 		return getService().getObjectEntryVersion(objectEntryVersionId);
 	}
 
+	public static ObjectEntryVersion getObjectEntryVersion(
+			long objectEntryId, int version)
+		throws PortalException {
+
+		return getService().getObjectEntryVersion(objectEntryId, version);
+	}
+
 	/**
 	 * Returns the object entry version with the matching UUID and company.
 	 *
@@ -304,6 +368,12 @@ public class ObjectEntryVersionLocalServiceUtil {
 		return getService().getObjectEntryVersions(objectEntryId);
 	}
 
+	public static List<ObjectEntryVersion> getObjectEntryVersions(
+		long objectEntryId, int start, int end) {
+
+		return getService().getObjectEntryVersions(objectEntryId, start, end);
+	}
+
 	/**
 	 * Returns the number of object entry versions.
 	 *
@@ -311,6 +381,10 @@ public class ObjectEntryVersionLocalServiceUtil {
 	 */
 	public static int getObjectEntryVersionsCount() {
 		return getService().getObjectEntryVersionsCount();
+	}
+
+	public static int getObjectEntryVersionsCount(long objectEntryId) {
+		return getService().getObjectEntryVersionsCount(objectEntryId);
 	}
 
 	/**
@@ -329,6 +403,13 @@ public class ObjectEntryVersionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
+	}
+
+	public static boolean isLatestObjectEntryVersion(
+			long objectEntryId, int version)
+		throws PortalException {
+
+		return getService().isLatestObjectEntryVersion(objectEntryId, version);
 	}
 
 	public static ObjectEntryVersion updateLatestObjectEntryVersion(

@@ -28,6 +28,62 @@ public class ObjectEntryVersionServiceWrapper
 		_objectEntryVersionService = objectEntryVersionService;
 	}
 
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion deleteObjectEntryVersion(
+			long objectEntryId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionService.deleteObjectEntryVersion(
+			objectEntryId, version);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion expireObjectEntryVersion(
+			com.liferay.object.model.ObjectEntry objectEntry,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext,
+			long userId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionService.expireObjectEntryVersion(
+			objectEntry, serviceContext, userId, version);
+	}
+
+	@Override
+	public void expireObjectEntryVersions(
+			long userId, com.liferay.object.model.ObjectEntry objectEntry,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws Exception {
+
+		_objectEntryVersionService.expireObjectEntryVersions(
+			userId, objectEntry, serviceContext);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectEntryVersion getObjectEntryVersion(
+			long objectEntryId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionService.getObjectEntryVersion(
+			objectEntryId, version);
+	}
+
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectEntryVersion>
+			getObjectEntryVersions(long objectEntryId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionService.getObjectEntryVersions(
+			objectEntryId, start, end);
+	}
+
+	@Override
+	public int getObjectEntryVersionsCount(long objectEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryVersionService.getObjectEntryVersionsCount(
+			objectEntryId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

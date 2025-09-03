@@ -18,6 +18,9 @@ import com.liferay.headless.admin.user.client.http.HttpInvoker;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.resource.v1_0.PhoneResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.PhoneSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -52,6 +55,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -69,16 +82,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -125,6 +128,16 @@ public abstract class BasePhoneResourceTestCase {
 			testCompany.getCompanyId());
 
 		phoneResource = PhoneResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -206,6 +219,184 @@ public abstract class BasePhoneResourceTestCase {
 		Assert.assertEquals(regex, phone.getExternalReferenceCode());
 		Assert.assertEquals(regex, phone.getPhoneNumber());
 		Assert.assertEquals(regex, phone.getPhoneType());
+	}
+
+	@Test
+	public void testDeletePhone() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Phone phone = testDeletePhone_addPhone();
+
+		assertHttpResponseStatusCode(
+			204, phoneResource.deletePhoneHttpResponse(phone.getId()));
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone.getId()));
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(0L));
+	}
+
+	protected Phone testDeletePhone_addPhone() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeletePhone() throws Exception {
+
+		// No namespace
+
+		Phone phone1 = testGraphQLDeletePhone_addPhone();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deletePhone",
+						new HashMap<String, Object>() {
+							{
+								put("phoneId", phone1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deletePhone"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"phone",
+					new HashMap<String, Object>() {
+						{
+							put("phoneId", phone1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Phone phone2 = testGraphQLDeletePhone_addPhone();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deletePhone",
+							new HashMap<String, Object>() {
+								{
+									put("phoneId", phone2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deletePhone"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"phone",
+						new HashMap<String, Object>() {
+							{
+								put("phoneId", phone2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Phone testGraphQLDeletePhone_addPhone() throws Exception {
+		return testGraphQLPhone_addPhone();
+	}
+
+	@Test
+	public void testDeletePhoneBatch() throws Exception {
+		Phone phone1 = testDeletePhoneBatch_addPhone();
+
+		testDeletePhoneBatch_deletePhone(
+			202, phone1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+
+		phone1 = testDeletePhoneBatch_addPhone();
+
+		testDeletePhoneBatch_deletePhone(202, null, phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+
+		phone1 = testDeletePhoneBatch_addPhone();
+		Phone phone2 = testDeletePhoneBatch_addPhone();
+
+		testDeletePhoneBatch_deletePhone(
+			202, phone2.getExternalReferenceCode(), phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+		assertHttpResponseStatusCode(
+			200, phoneResource.getPhoneHttpResponse(phone2.getId()));
+
+		testDeletePhoneBatch_deletePhone(
+			202, phone2.getExternalReferenceCode(), phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone2.getId()));
+	}
+
+	protected Phone testDeletePhoneBatch_addPhone() throws Exception {
+		return testDeletePhone_addPhone();
+	}
+
+	protected void testDeletePhoneBatch_deletePhone(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			phoneResource.deletePhoneBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeletePhoneByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Phone phone = testDeletePhoneByExternalReferenceCode_addPhone();
+
+		assertHttpResponseStatusCode(
+			204,
+			phoneResource.deletePhoneByExternalReferenceCodeHttpResponse(
+				phone.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			phoneResource.getPhoneByExternalReferenceCodeHttpResponse(
+				phone.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			phoneResource.getPhoneByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected Phone testDeletePhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -542,282 +733,6 @@ public abstract class BasePhoneResourceTestCase {
 	}
 
 	@Test
-	public void testDeletePhoneByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Phone phone = testDeletePhoneByExternalReferenceCode_addPhone();
-
-		assertHttpResponseStatusCode(
-			204,
-			phoneResource.deletePhoneByExternalReferenceCodeHttpResponse(
-				phone.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			phoneResource.getPhoneByExternalReferenceCodeHttpResponse(
-				phone.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			phoneResource.getPhoneByExternalReferenceCodeHttpResponse(
-				phone.getExternalReferenceCode()));
-	}
-
-	protected Phone testDeletePhoneByExternalReferenceCode_addPhone()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetPhoneByExternalReferenceCode() throws Exception {
-		Phone postPhone = testGetPhoneByExternalReferenceCode_addPhone();
-
-		Phone getPhone = phoneResource.getPhoneByExternalReferenceCode(
-			postPhone.getExternalReferenceCode());
-
-		assertEquals(postPhone, getPhone);
-		assertValid(getPhone);
-	}
-
-	protected Phone testGetPhoneByExternalReferenceCode_addPhone()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetPhoneByExternalReferenceCode() throws Exception {
-		Phone phone = testGraphQLGetPhoneByExternalReferenceCode_addPhone();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				phone,
-				PhoneSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"phoneByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												phone.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/phoneByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				phone,
-				PhoneSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"phoneByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													phone.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/phoneByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetPhoneByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"phoneByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"phoneByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Phone testGraphQLGetPhoneByExternalReferenceCode_addPhone()
-		throws Exception {
-
-		return testGraphQLPhone_addPhone();
-	}
-
-	@Test
-	public void testPatchPhoneByExternalReferenceCode() throws Exception {
-		Phone postPhone = testPatchPhoneByExternalReferenceCode_addPhone();
-
-		Phone randomPatchPhone = randomPatchPhone();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Phone patchPhone = phoneResource.patchPhoneByExternalReferenceCode(
-			postPhone.getExternalReferenceCode(), randomPatchPhone);
-
-		Phone expectedPatchPhone = postPhone.clone();
-
-		BeanTestUtil.copyProperties(randomPatchPhone, expectedPatchPhone);
-
-		Phone getPhone = phoneResource.getPhoneByExternalReferenceCode(
-			patchPhone.getExternalReferenceCode());
-
-		assertEquals(expectedPatchPhone, getPhone);
-		assertValid(getPhone);
-	}
-
-	protected Phone testPatchPhoneByExternalReferenceCode_addPhone()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeletePhone() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Phone phone = testDeletePhone_addPhone();
-
-		assertHttpResponseStatusCode(
-			204, phoneResource.deletePhoneHttpResponse(phone.getId()));
-
-		assertHttpResponseStatusCode(
-			404, phoneResource.getPhoneHttpResponse(phone.getId()));
-
-		assertHttpResponseStatusCode(
-			404, phoneResource.getPhoneHttpResponse(0L));
-	}
-
-	protected Phone testDeletePhone_addPhone() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeletePhone() throws Exception {
-
-		// No namespace
-
-		Phone phone1 = testGraphQLDeletePhone_addPhone();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deletePhone",
-						new HashMap<String, Object>() {
-							{
-								put("phoneId", phone1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deletePhone"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"phone",
-					new HashMap<String, Object>() {
-						{
-							put("phoneId", phone1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Phone phone2 = testGraphQLDeletePhone_addPhone();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"deletePhone",
-							new HashMap<String, Object>() {
-								{
-									put("phoneId", phone2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-				"Object/deletePhone"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminUser_v1_0",
-					new GraphQLField(
-						"phone",
-						new HashMap<String, Object>() {
-							{
-								put("phoneId", phone2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Phone testGraphQLDeletePhone_addPhone() throws Exception {
-		return testGraphQLPhone_addPhone();
-	}
-
-	@Test
 	public void testGetPhone() throws Exception {
 		Phone postPhone = testGetPhone_addPhone();
 
@@ -1108,28 +1023,130 @@ public abstract class BasePhoneResourceTestCase {
 	}
 
 	@Test
-	public void testPatchPhone() throws Exception {
-		Phone postPhone = testPatchPhone_addPhone();
+	public void testGetPhoneByExternalReferenceCode() throws Exception {
+		Phone postPhone = testGetPhoneByExternalReferenceCode_addPhone();
 
-		Phone randomPatchPhone = randomPatchPhone();
+		Phone getPhone = phoneResource.getPhoneByExternalReferenceCode(
+			postPhone.getExternalReferenceCode());
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Phone patchPhone = phoneResource.patchPhone(
-			postPhone.getId(), randomPatchPhone);
-
-		Phone expectedPatchPhone = postPhone.clone();
-
-		BeanTestUtil.copyProperties(randomPatchPhone, expectedPatchPhone);
-
-		Phone getPhone = phoneResource.getPhone(patchPhone.getId());
-
-		assertEquals(expectedPatchPhone, getPhone);
+		assertEquals(postPhone, getPhone);
 		assertValid(getPhone);
 	}
 
-	protected Phone testPatchPhone_addPhone() throws Exception {
+	protected Phone testGetPhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetPhoneByExternalReferenceCode() throws Exception {
+		Phone phone = testGraphQLGetPhoneByExternalReferenceCode_addPhone();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				phone,
+				PhoneSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"phoneByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												phone.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/phoneByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				phone,
+				PhoneSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"phoneByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													phone.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/phoneByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetPhoneByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"phoneByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"phoneByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Phone testGraphQLGetPhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		return testGraphQLPhone_addPhone();
 	}
 
 	@Test
@@ -1300,6 +1317,135 @@ public abstract class BasePhoneResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testPatchPhone() throws Exception {
+		Phone postPhone = testPatchPhone_addPhone();
+
+		Phone randomPatchPhone = randomPatchPhone();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Phone patchPhone = phoneResource.patchPhone(
+			postPhone.getId(), randomPatchPhone);
+
+		Phone expectedPatchPhone = postPhone.clone();
+
+		BeanTestUtil.copyProperties(randomPatchPhone, expectedPatchPhone);
+
+		Phone getPhone = phoneResource.getPhone(patchPhone.getId());
+
+		assertEquals(expectedPatchPhone, getPhone);
+		assertValid(getPhone);
+	}
+
+	protected Phone testPatchPhone_addPhone() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchPhoneByExternalReferenceCode() throws Exception {
+		Phone postPhone = testPatchPhoneByExternalReferenceCode_addPhone();
+
+		Phone randomPatchPhone = randomPatchPhone();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Phone patchPhone = phoneResource.patchPhoneByExternalReferenceCode(
+			postPhone.getExternalReferenceCode(), randomPatchPhone);
+
+		Phone expectedPatchPhone = postPhone.clone();
+
+		BeanTestUtil.copyProperties(randomPatchPhone, expectedPatchPhone);
+
+		Phone getPhone = phoneResource.getPhoneByExternalReferenceCode(
+			patchPhone.getExternalReferenceCode());
+
+		assertEquals(expectedPatchPhone, getPhone);
+		assertValid(getPhone);
+	}
+
+	protected Phone testPatchPhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Phone phone1 = testBatchEngineDeleteImportTask_addPhone();
+
+		testBatchEngineDeleteImportTask_deletePhone(
+			200, phone1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+
+		phone1 = testBatchEngineDeleteImportTask_addPhone();
+
+		testBatchEngineDeleteImportTask_deletePhone(200, null, phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+
+		phone1 = testBatchEngineDeleteImportTask_addPhone();
+		Phone phone2 = testBatchEngineDeleteImportTask_addPhone();
+
+		testBatchEngineDeleteImportTask_deletePhone(
+			200, phone2.getExternalReferenceCode(), phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone1.getId()));
+		assertHttpResponseStatusCode(
+			200, phoneResource.getPhoneHttpResponse(phone2.getId()));
+
+		testBatchEngineDeleteImportTask_deletePhone(
+			200, phone2.getExternalReferenceCode(), phone1.getId());
+
+		assertHttpResponseStatusCode(
+			404, phoneResource.getPhoneHttpResponse(phone2.getId()));
+	}
+
+	protected Phone testBatchEngineDeleteImportTask_addPhone()
+		throws Exception {
+
+		return testDeletePhone_addPhone();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePhone(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.user.dto.v1_0.Phone", null, null,
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected Phone testGraphQLPhone_addPhone() throws Exception {
@@ -1964,7 +2110,30 @@ public abstract class BasePhoneResourceTestCase {
 		return randomPhone();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PhoneResource phoneResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

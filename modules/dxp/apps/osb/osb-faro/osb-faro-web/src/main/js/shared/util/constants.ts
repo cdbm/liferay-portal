@@ -9,7 +9,7 @@ export enum AcquisitionTypes {
 export enum ActivityActions {
 	Comments = 3,
 	Downloads = 0,
-	Previews = 4,
+	Impressions = 4,
 	Submissions = 1,
 	Visits = 2
 }
@@ -243,8 +243,7 @@ export enum SegmentStates {
 }
 
 export enum SegmentTypes {
-	Dynamic = 'DYNAMIC',
-	Static = 'STATIC'
+	Dynamic = 'DYNAMIC'
 }
 
 export enum SessionEntityTypes {

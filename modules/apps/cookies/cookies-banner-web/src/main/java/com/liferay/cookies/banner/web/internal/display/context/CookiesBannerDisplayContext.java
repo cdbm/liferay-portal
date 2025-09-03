@@ -23,11 +23,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eduardo García
@@ -119,6 +119,13 @@ public class CookiesBannerDisplayContext
 		}
 
 		return StringPool.POUND;
+	}
+
+	public String getTitle(Locale locale) {
+		LocalizedValuesMap titleLocalizedValuesMap =
+			cookiesBannerConfiguration.title();
+
+		return titleLocalizedValuesMap.get(locale);
 	}
 
 }

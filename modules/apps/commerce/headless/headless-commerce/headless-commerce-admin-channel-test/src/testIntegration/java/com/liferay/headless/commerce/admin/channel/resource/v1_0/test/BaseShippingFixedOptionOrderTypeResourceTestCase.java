@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.ShippingFixedOptionOrderType;
 import com.liferay.headless.commerce.admin.channel.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.channel.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -113,6 +116,16 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 			).locale(
 				LocaleUtil.getDefault()
 			).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 	}
 
 	@After
@@ -197,14 +210,121 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 
 	@Test
 	public void testDeleteShippingFixedOptionOrderType() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ShippingFixedOptionOrderType shippingFixedOptionOrderType =
+			testDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+
+		assertHttpResponseStatusCode(
+			204,
+			shippingFixedOptionOrderTypeResource.
+				deleteShippingFixedOptionOrderTypeHttpResponse(
+					shippingFixedOptionOrderType.
+						getShippingFixedOptionOrderTypeId()));
+	}
+
+	protected ShippingFixedOptionOrderType
+			testDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteShippingFixedOptionOrderType()
 		throws Exception {
 
-		Assert.assertTrue(false);
+		// No namespace
+
+		ShippingFixedOptionOrderType shippingFixedOptionOrderType1 =
+			testGraphQLDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteShippingFixedOptionOrderType",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"shippingFixedOptionOrderTypeId",
+									shippingFixedOptionOrderType1.
+										getShippingFixedOptionOrderTypeId());
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteShippingFixedOptionOrderType"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		ShippingFixedOptionOrderType shippingFixedOptionOrderType2 =
+			testGraphQLDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"deleteShippingFixedOptionOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"shippingFixedOptionOrderTypeId",
+										shippingFixedOptionOrderType2.
+											getShippingFixedOptionOrderTypeId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminChannel_v1_0",
+				"Object/deleteShippingFixedOptionOrderType"));
+	}
+
+	protected ShippingFixedOptionOrderType
+			testGraphQLDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType()
+		throws Exception {
+
+		return testGraphQLShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+	}
+
+	@Test
+	public void testDeleteShippingFixedOptionOrderTypeBatch() throws Exception {
+		ShippingFixedOptionOrderType shippingFixedOptionOrderType1 =
+			testDeleteShippingFixedOptionOrderTypeBatch_addShippingFixedOptionOrderType();
+
+		testDeleteShippingFixedOptionOrderTypeBatch_deleteShippingFixedOptionOrderType(
+			202, null,
+			shippingFixedOptionOrderType1.getShippingFixedOptionOrderTypeId());
+	}
+
+	protected ShippingFixedOptionOrderType
+			testDeleteShippingFixedOptionOrderTypeBatch_addShippingFixedOptionOrderType()
+		throws Exception {
+
+		return testDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+	}
+
+	protected void
+			testDeleteShippingFixedOptionOrderTypeBatch_deleteShippingFixedOptionOrderType(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			shippingFixedOptionOrderTypeResource.
+				deleteShippingFixedOptionOrderTypeBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"shippingFixedOptionOrderTypeId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -272,6 +392,12 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 			page,
 			testGetShippingFixedOptionIdShippingFixedOptionOrderTypesPage_getExpectedActions(
 				id));
+
+		shippingFixedOptionOrderTypeResource.deleteShippingFixedOptionOrderType(
+			shippingFixedOptionOrderType1.getShippingFixedOptionOrderTypeId());
+
+		shippingFixedOptionOrderTypeResource.deleteShippingFixedOptionOrderType(
+			shippingFixedOptionOrderType2.getShippingFixedOptionOrderTypeId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -399,13 +525,13 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 		Long id =
 			testGetShippingFixedOptionIdShippingFixedOptionOrderTypesPage_getId();
 
-		Page<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypePage =
+		Page<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypesPage =
 			shippingFixedOptionOrderTypeResource.
 				getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
 					id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			shippingFixedOptionOrderTypePage.getTotalCount());
+			shippingFixedOptionOrderTypesPage.getTotalCount());
 
 		ShippingFixedOptionOrderType shippingFixedOptionOrderType1 =
 			testGetShippingFixedOptionIdShippingFixedOptionOrderTypesPage_addShippingFixedOptionOrderType(
@@ -735,8 +861,69 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ShippingFixedOptionOrderType shippingFixedOptionOrderType1 =
+			testBatchEngineDeleteImportTask_addShippingFixedOptionOrderType();
+
+		testBatchEngineDeleteImportTask_deleteShippingFixedOptionOrderType(
+			200, null,
+			shippingFixedOptionOrderType1.getShippingFixedOptionOrderTypeId());
+	}
+
+	protected ShippingFixedOptionOrderType
+			testBatchEngineDeleteImportTask_addShippingFixedOptionOrderType()
+		throws Exception {
+
+		return testDeleteShippingFixedOptionOrderType_addShippingFixedOptionOrderType();
+	}
+
+	protected void
+			testBatchEngineDeleteImportTask_deleteShippingFixedOptionOrderType(
+				int expectedStatusCode, String externalReferenceCode, Long id,
+				String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.channel.dto.v1_0.ShippingFixedOptionOrderType",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"shippingFixedOptionOrderTypeId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected ShippingFixedOptionOrderType
+			testGraphQLShippingFixedOptionOrderType_addShippingFixedOptionOrderType()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		ShippingFixedOptionOrderType shippingFixedOptionOrderType,
@@ -836,6 +1023,12 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (shippingFixedOptionOrderType.getShippingFixedOptionOrderTypeId() ==
+				null) {
+
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1387,8 +1580,31 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 		return randomShippingFixedOptionOrderType();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ShippingFixedOptionOrderTypeResource
 		shippingFixedOptionOrderTypeResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

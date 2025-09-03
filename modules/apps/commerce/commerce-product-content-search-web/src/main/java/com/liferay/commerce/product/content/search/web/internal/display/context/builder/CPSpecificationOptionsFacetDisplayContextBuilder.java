@@ -14,6 +14,7 @@ import com.liferay.commerce.product.content.search.web.internal.util.CPSpecifica
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -34,6 +35,9 @@ import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -41,9 +45,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
 
 /**
  * @author Crescenzo Rega
@@ -436,18 +437,11 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 	}
 
 	private List<Tuple> _getTuples(FacetCollector facetCollector) {
-		List<TermCollector> termCollectors = facetCollector.getTermCollectors();
-
-		List<Tuple> tuples = new ArrayList<>(termCollectors.size());
-
-		for (TermCollector termCollector : termCollectors) {
-			tuples.add(
-				new Tuple(
-					facetCollector.getFieldName(), termCollector.getFrequency(),
-					termCollector.getTerm()));
-		}
-
-		return tuples;
+		return TransformUtil.transform(
+			facetCollector.getTermCollectors(),
+			termCollector -> new Tuple(
+				facetCollector.getFieldName(), termCollector.getFrequency(),
+				termCollector.getTerm()));
 	}
 
 	private boolean _isCPDefinitionSpecificationOptionValueSelected(

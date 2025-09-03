@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FrameLocator, Locator, Page} from '@playwright/test';
+import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
+import {DataApiHelpers} from '../../helpers/ApiHelpers';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import {getRandomInt} from '../../utils/getRandomInt';
 import {waitForAlert} from '../../utils/waitForAlert';
+import {DataTablePage} from '../account-admin-web/DataTablePage';
 import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
 
 export const searchTableRowByValue = async function (
@@ -39,7 +42,37 @@ export const searchTableRowByValue = async function (
 export class UsersAndOrganizationsPage {
 	readonly activateButton: Locator;
 	readonly activateUserMenuItem: Locator;
+	readonly addOrganizationButton: Locator;
+	readonly addUserButton: Locator;
 	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly assignOrganizationRolesIFrame: FrameLocator;
+	readonly assignOrganizationRolesMenuItem: Locator;
+	readonly assignOrganizationRolesSearchBarButton: Locator;
+	readonly assignOrganizationRolesTable: Locator;
+	readonly assignOrganizationRolesTableRow: (
+		colPosition: number,
+		value: string,
+		strictEqual?: boolean
+	) => Promise<{column: Locator; row: Locator}>;
+	readonly assignOrganizationRolesTableRowLink: (
+		roleName: string
+	) => Promise<Locator>;
+	readonly assignOrganizationRolesTableStatus: (
+		roleName: string,
+		status: string
+	) => Promise<Locator>;
+	readonly assignOrganizationRolesUserCell: (
+		userName: string
+	) => Promise<Locator>;
+	readonly assignOrganizationRolesUserTable: Locator;
+	readonly assignOrganizationRolesUserTableCell: (
+		userName: string
+	) => Promise<Locator>;
+	readonly assignOrganizationRolesUserTableRow: (
+		colPosition: number,
+		value: string,
+		strictEqual?: boolean
+	) => Promise<{column: Locator; row: Locator}>;
 	readonly assignUsersIFrame: FrameLocator;
 	readonly assignUsersMenuItem: Locator;
 	readonly assignUsersTable: Locator;
@@ -51,14 +84,20 @@ export class UsersAndOrganizationsPage {
 	readonly assignUsersCheckbox: (userName: string) => Promise<Locator>;
 	readonly assignUsersDoneButton: Locator;
 	readonly clearButton: Locator;
+	readonly commentsInput: Locator;
 	readonly deactivateButton: Locator;
 	readonly deactivateUserMenuItem: Locator;
 	readonly deleteButton: Locator;
+	readonly deleteOrganizationMenuItem: Locator;
 	readonly deletePersonalDataMenuItem: Locator;
+	readonly editOrganizationMenuItem: Locator;
+	readonly emailAddressInput: Locator;
 	readonly exportImportOptionsMenuItem: Locator;
 	readonly exportPersonalDataItem: Locator;
 	readonly exportUsersOptionsMenuItem: Locator;
+	readonly firstNameInput: Locator;
 	readonly impersonateUserMenuItem: Locator;
+	readonly lastNameInput: Locator;
 	readonly manageCustomFieldsOptionsMenuItem: Locator;
 	readonly myOrganizationsBreadcrumbLink: (
 		organizationName: string
@@ -82,6 +121,8 @@ export class UsersAndOrganizationsPage {
 	readonly myOrganizationsUserAndOrgsTableRowLink: (
 		organizationName: string
 	) => Promise<Locator>;
+	readonly noPermissionMessage: Locator;
+	readonly noResultsMessage: Locator;
 	readonly noUsersMessage: Locator;
 	readonly organizationActionsMenu: (
 		organizationName: string
@@ -89,15 +130,8 @@ export class UsersAndOrganizationsPage {
 	readonly optionsMenu: Locator;
 	readonly organizationChartLink: Locator;
 	readonly organizationsLink: Locator;
-	readonly organizationsTable: Locator;
-	readonly organizationsTableRow: (
-		colPosition: number,
-		value: string,
-		strictEqual?: boolean
-	) => Promise<{column: Locator; row: Locator}>;
-	readonly organizationsTableRowLink: (
-		organizationName: string
-	) => Promise<Locator>;
+	readonly organizationsTable: DataTablePage;
+	readonly organizationsTableEmptyMessage: Locator;
 	readonly organizationUsersTable: Locator;
 	readonly organizationUsersTableRow: (
 		colPosition: number,
@@ -116,11 +150,15 @@ export class UsersAndOrganizationsPage {
 	) => Promise<Locator>;
 	readonly page: Page;
 	readonly pageTitle: Locator;
+	readonly saveUserButton: Locator;
+	readonly screenNameInput: Locator;
 	readonly selectAllUsersCheckBox: Locator;
+	readonly statusText: (value: string) => Locator;
 	readonly tableFilterMenu: Locator;
 	readonly tableFilterMenuItem: (option: string) => Locator;
 	readonly tableOrderMenu: Locator;
-	readonly tableOrderLastLoginDateItem: Locator;
+	readonly tableOrderMenuItem: (option: string) => Locator;
+	readonly userIdInput: Locator;
 	readonly usersCheckbox: (userName: string) => Promise<Locator>;
 	readonly usersSearchBar: Locator;
 	readonly usersSearchBarButton: Locator;
@@ -135,13 +173,110 @@ export class UsersAndOrganizationsPage {
 	readonly userPersonalMenuButton: Locator;
 	readonly usersTable: Locator;
 	readonly usersTableCell: (userName: string) => Locator;
+	readonly userPreferencesButton: Locator;
+	readonly displaySettingsButton: Locator;
+	readonly timeZoneSelect: Locator;
+	readonly saveTimeZoneButton: Locator;
+	readonly usersAndOrganizationsButton: Locator;
 
 	constructor(page: Page) {
 		this.activateButton = page.getByRole('button', {name: 'Activate'});
 		this.activateUserMenuItem = page.getByRole('menuitem', {
 			name: 'Activate',
 		});
+		this.addOrganizationButton = page.getByRole('link', {
+			name: 'Add Organization',
+		});
+		this.addUserButton = page.getByRole('link', {name: 'Add User'});
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.assignOrganizationRolesIFrame = page.frameLocator(
+			'iframe[title="Assign Organization Roles"]'
+		);
+		this.assignOrganizationRolesMenuItem = page.getByRole('menuitem', {
+			name: 'Assign Organization Roles',
+		});
+		this.assignOrganizationRolesSearchBarButton =
+			this.assignOrganizationRolesIFrame.getByRole('button', {
+				name: 'Search for',
+			});
+		this.assignOrganizationRolesTable =
+			this.assignOrganizationRolesIFrame.locator(
+				'#_com_liferay_roles_selector_web_portlet_RolesSelectorPortlet_rolesSearchContainer'
+			);
+		this.assignOrganizationRolesTableRow = async (
+			colPosition: number,
+			value: string,
+			strictEqual: boolean = false
+		) => {
+			return await searchTableRowByValue(
+				this.assignOrganizationRolesTable,
+				colPosition,
+				value,
+				strictEqual
+			);
+		};
+		this.assignOrganizationRolesTableRowLink = async (roleName: string) => {
+			const assignOrganizationRolesTableRow =
+				await this.assignOrganizationRolesTableRow(0, roleName, true);
+
+			if (
+				assignOrganizationRolesTableRow &&
+				assignOrganizationRolesTableRow.column
+			) {
+				return assignOrganizationRolesTableRow.column.getByRole(
+					'link',
+					{
+						name: roleName,
+					}
+				);
+			}
+
+			throw new Error(`Cannot locate role row with name ${roleName}`);
+		};
+		this.assignOrganizationRolesTableStatus = async (
+			roleName: string,
+			status: string
+		) => {
+			const assignOrganizationRolesTableRow =
+				await this.assignOrganizationRolesTableRow(0, roleName);
+
+			if (
+				assignOrganizationRolesTableRow &&
+				assignOrganizationRolesTableRow.row
+			) {
+				return assignOrganizationRolesTableRow.row.getByText(status);
+			}
+		};
+		this.assignOrganizationRolesUserCell = async (userName: string) => {
+			return page.getByRole('cell', {
+				exact: true,
+				name: userName,
+			});
+		};
+		this.assignOrganizationRolesUserTable =
+			this.assignOrganizationRolesIFrame.locator(
+				'#_com_liferay_roles_selector_web_portlet_RolesSelectorPortlet_usersSearchContainer'
+			);
+		this.assignOrganizationRolesUserTableCell = async (
+			userName: string
+		) => {
+			return this.assignOrganizationRolesUserTable.getByRole('cell', {
+				exact: true,
+				name: userName,
+			});
+		};
+		this.assignOrganizationRolesUserTableRow = async (
+			colPosition: number,
+			value: string,
+			strictEqual: boolean = false
+		) => {
+			return await searchTableRowByValue(
+				this.assignOrganizationRolesUserTable,
+				colPosition,
+				value,
+				strictEqual
+			);
+		};
 		this.assignUsersIFrame = page.frameLocator('iframe[id="modalIframe"]');
 		this.assignUsersMenuItem = page.getByRole('menuitem', {
 			name: 'Assign Users',
@@ -165,26 +300,36 @@ export class UsersAndOrganizationsPage {
 			name: 'Assign Users',
 		});
 		this.clearButton = page.getByRole('button', {name: 'Clear'});
+		this.commentsInput = page.getByLabel('Characters Maximum:');
 		this.deactivateButton = page.getByRole('button', {name: 'Deactivate'});
 		this.deactivateUserMenuItem = page.getByRole('menuitem', {
 			name: 'Deactivate',
 		});
 		this.deleteButton = page.getByRole('button', {name: 'Delete'});
+		this.deleteOrganizationMenuItem = page.getByRole('menuitem', {
+			name: 'Delete',
+		});
 		this.deletePersonalDataMenuItem = page.getByRole('menuitem', {
 			name: 'Delete Personal Data',
 		});
+		this.editOrganizationMenuItem = page.getByRole('menuitem', {
+			name: 'Edit',
+		});
+		this.emailAddressInput = page.getByLabel('Email Address');
 		this.exportImportOptionsMenuItem = page.getByRole('menuitem', {
 			name: 'Export / Import',
 		});
 		this.exportUsersOptionsMenuItem = page.getByRole('menuitem', {
 			name: 'Export Users',
 		});
+		this.firstNameInput = page.getByLabel('First Name');
 		this.exportPersonalDataItem = page.getByRole('menuitem', {
 			name: 'Export Personal Data',
 		});
 		this.impersonateUserMenuItem = page.getByRole('menuitem', {
 			name: 'Impersonate User',
 		});
+		this.lastNameInput = page.getByLabel('Last Name');
 		this.manageCustomFieldsOptionsMenuItem = page.getByRole('menuitem', {
 			name: 'Manage Custom Fields',
 		});
@@ -263,33 +408,16 @@ export class UsersAndOrganizationsPage {
 				`Cannot locate organization row with name ${organizationName}`
 			);
 		};
+		this.noPermissionMessage = page.getByText(
+			'You do not belong to an organization and are not allowed to view other organizations.'
+		);
+		this.noResultsMessage = page.getByText('No results were found.', {
+			exact: true,
+		});
 		this.noUsersMessage = page.getByText('No users were found');
 		this.optionsMenu = page
 			.getByTestId('headerOptions')
 			.getByLabel('Options');
-		this.organizationActionsMenu = async (organizationName: string) => {
-			const organizationsTableRow = await this.organizationsTableRow(
-				1,
-				organizationName,
-				true
-			);
-
-			if (organizationsTableRow && organizationsTableRow.row) {
-				const organizationActionsMenu =
-					organizationsTableRow.row.getByLabel('Show Actions');
-
-				if (organizationActionsMenu) {
-					return organizationActionsMenu;
-				}
-			}
-			else {
-				throw new Error(
-					`Cannot locate organization row with organizationName ${organizationName}`
-				);
-			}
-
-			throw new Error(`Cannot locate button with label: Show Actions`);
-		};
 		this.organizationChartLink = page.getByRole('link', {
 			exact: true,
 			name: 'Organization Chart',
@@ -297,8 +425,16 @@ export class UsersAndOrganizationsPage {
 		this.organizationsLink = page.getByRole('link', {
 			name: 'Organizations',
 		});
-		this.organizationsTable = page.locator(
-			'#_com_liferay_users_admin_web_portlet_UsersAdminPortlet_organizationsSearchContainer'
+		this.organizationsTable = new DataTablePage(
+			page,
+			page
+				.locator(
+					'#_com_liferay_users_admin_web_portlet_UsersAdminPortlet_organizationsSearchContainer'
+				)
+				.first()
+		);
+		this.organizationsTableEmptyMessage = page.getByText(
+			'No organizations were found.'
 		);
 		this.organizationUsersTable = page.locator(
 			'[id$="_organizationUsersSearchContainer"]'
@@ -365,37 +501,10 @@ export class UsersAndOrganizationsPage {
 			}
 		};
 		this.assignUsersDoneButton = page.getByRole('button', {name: 'Done'});
-		this.organizationsTableRow = async (
-			colPosition: number,
-			value: string,
-			strictEqual: boolean = false
-		) => {
-			return await searchTableRowByValue(
-				this.organizationsTable,
-				colPosition,
-				value,
-				strictEqual
-			);
-		};
-		this.organizationsTableRowLink = async (organizationName: string) => {
-			const myOrganizationsTableRow = await this.organizationsTableRow(
-				1,
-				organizationName,
-				true
-			);
-
-			if (myOrganizationsTableRow && myOrganizationsTableRow.column) {
-				return myOrganizationsTableRow.column.getByRole('link', {
-					name: organizationName,
-				});
-			}
-
-			throw new Error(
-				`Cannot locate organization row with name ${organizationName}`
-			);
-		};
 		this.page = page;
 		this.pageTitle = page.getByTestId('headerTitle');
+		this.saveUserButton = page.getByRole('button', {name: 'Save'});
+		this.screenNameInput = page.getByLabel('Screen Name');
 		this.usersCheckbox = async (userName: string) => {
 			const usersTableRow = await this.usersTableRow(1, userName);
 
@@ -419,6 +528,7 @@ export class UsersAndOrganizationsPage {
 				strictEqual
 			);
 		};
+		this.statusText = (value) => page.getByText(value, {exact: true});
 		this.selectAllUsersCheckBox = page
 			.locator('.management-bar')
 			.getByLabel('Select All Users on the Page');
@@ -440,9 +550,12 @@ export class UsersAndOrganizationsPage {
 		this.tableOrderMenu = page
 			.locator('.management-bar')
 			.getByLabel('Order');
-		this.tableOrderLastLoginDateItem = page.getByRole('menuitem', {
-			name: 'Last Login Date',
-		});
+		this.tableOrderMenuItem = (option: string) => {
+			return page.getByRole('menuitem', {
+				name: option,
+			});
+		};
+		this.userIdInput = page.getByLabel('User ID');
 		this.usersTableRowLink = async (screenName: string) => {
 			const usersTableRow = await this.usersTableRow(2, screenName, true);
 
@@ -478,6 +591,14 @@ export class UsersAndOrganizationsPage {
 				name: userName,
 			});
 		};
+		this.userPreferencesButton = page.getByRole('link', {
+			name: 'Preferences',
+		});
+		this.displaySettingsButton = page.getByRole('link', {
+			name: 'Display Settings',
+		});
+		this.timeZoneSelect = page.getByLabel('Time Zone');
+		this.saveTimeZoneButton = page.getByRole('button', {name: 'Save'});
 	}
 
 	async activateUsers(userNames: string[]) {
@@ -486,6 +607,35 @@ export class UsersAndOrganizationsPage {
 		}
 		await this.activateButton.click();
 		await waitForAlert(this.page);
+	}
+
+	async createUser(
+		apiHelpers: DataApiHelpers,
+		userName = `user${getRandomInt()}`,
+		comment?: string
+	) {
+		await this.goto();
+
+		await expect(async () => {
+			await this.addUserButton.click();
+			await this.screenNameInput.fill(userName);
+			await this.emailAddressInput.fill(`${userName}@liferay.com`);
+			await this.firstNameInput.fill(userName);
+			await this.lastNameInput.fill(userName);
+
+			if (comment) {
+				await this.commentsInput.fill(comment);
+			}
+
+			await this.saveUserButton.click();
+
+			await waitForAlert(this.page, 'The user was created successfully.');
+		}).toPass();
+
+		apiHelpers.data.push({
+			id: await this.userIdInput.inputValue(),
+			type: 'userAccount',
+		});
 	}
 
 	async deActivateUsers(userNames: string[]) {
@@ -515,11 +665,7 @@ export class UsersAndOrganizationsPage {
 				target: this.tableFilterMenuItem(option),
 				trigger: this.tableFilterMenu,
 			}),
-			this.page.waitForResponse(
-				(resp) =>
-					resp.status() === 200 &&
-					resp.url().includes('navigation=' + option)
-			),
+			await expect(this.page.getByText('Search Results')).toBeVisible(),
 		]);
 	}
 
@@ -618,6 +764,8 @@ export class UsersAndOrganizationsPage {
 	}
 
 	async goToUser(userName: string) {
-		await this.page.getByRole('link', {name: userName}).click();
+		await this.page
+			.getByRole('link', {exact: true, name: userName})
+			.click();
 	}
 }

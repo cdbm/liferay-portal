@@ -17,10 +17,10 @@ import com.liferay.commerce.product.content.render.list.entry.CPContentListEntry
 import com.liferay.commerce.product.content.web.internal.configuration.CPCompareContentMiniPortletInstanceConfiguration;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
+import com.liferay.commerce.product.helper.CPCompareHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
-import com.liferay.commerce.product.util.CPCompareHelper;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -32,15 +32,15 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -171,7 +171,7 @@ public class CPCompareContentMiniDisplayContext {
 				_cpDefinitionHelper.getCPCatalogEntry(
 					CommerceUtil.getCommerceAccountId(commerceContext),
 					commerceContext.getCommerceChannelGroupId(), cpDefinitionId,
-					_cpRequestHelper.getLocale()));
+					_cpRequestHelper.getLocale(), false));
 		}
 
 		if (cpCatalogEntries.size() > getProductsLimit()) {

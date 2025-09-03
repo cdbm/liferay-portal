@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -290,14 +290,14 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		String productExternalReferenceCode =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage_getProductExternalReferenceCode();
 
-		Page<ProductSpecification> productSpecificationPage =
+		Page<ProductSpecification> productSpecificationsPage =
 			productSpecificationResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
 					null);
 
 		int totalCount = GetterUtil.getInteger(
-			productSpecificationPage.getTotalCount());
+			productSpecificationsPage.getTotalCount());
 
 		ProductSpecification productSpecification1 =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
@@ -538,13 +538,13 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		Long productId =
 			testGetChannelProductProductSpecificationsPage_getProductId();
 
-		Page<ProductSpecification> productSpecificationPage =
+		Page<ProductSpecification> productSpecificationsPage =
 			productSpecificationResource.
 				getChannelProductProductSpecificationsPage(
 					channelId, productId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productSpecificationPage.getTotalCount());
+			productSpecificationsPage.getTotalCount());
 
 		ProductSpecification productSpecification1 =
 			testGetChannelProductProductSpecificationsPage_addProductSpecification(
@@ -684,12 +684,9 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		return null;
 	}
 
-	protected ProductSpecification
-			testGraphQLProductSpecification_addProductSpecification()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

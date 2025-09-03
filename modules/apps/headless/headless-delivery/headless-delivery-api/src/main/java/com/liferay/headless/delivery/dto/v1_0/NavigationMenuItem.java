@@ -16,6 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -28,12 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Javier Gamarra
  * @generated
@@ -42,6 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName(
 	description = "Represents a navigation menu item.",
 	value = "NavigationMenuItem"
+)
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Represents a navigation menu item.",
+	requiredProperties = {"typeSettings"}
 )
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "NavigationMenuItem")
@@ -101,51 +106,6 @@ public class NavigationMenuItem implements Serializable {
 	private Supplier<String[]> _availableLanguagesSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The navigation menu item's content API REST URL."
-	)
-	public String getContentURL() {
-		if (_contentURLSupplier != null) {
-			contentURL = _contentURLSupplier.get();
-
-			_contentURLSupplier = null;
-		}
-
-		return contentURL;
-	}
-
-	public void setContentURL(String contentURL) {
-		this.contentURL = contentURL;
-
-		_contentURLSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setContentURL(
-		UnsafeSupplier<String, Exception> contentURLUnsafeSupplier) {
-
-		_contentURLSupplier = () -> {
-			try {
-				return contentURLUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The navigation menu item's content API REST URL."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String contentURL;
-
-	@JsonIgnore
-	private Supplier<String> _contentURLSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The navigation menu item's creator."
 	)
 	@Valid
@@ -193,7 +153,9 @@ public class NavigationMenuItem implements Serializable {
 		description = "A list of the custom fields associated with the navigation menu item."
 	)
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -203,7 +165,9 @@ public class NavigationMenuItem implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -211,7 +175,9 @@ public class NavigationMenuItem implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -230,10 +196,11 @@ public class NavigationMenuItem implements Serializable {
 		description = "A list of the custom fields associated with the navigation menu item."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The navigation menu item's creation date."
@@ -408,92 +375,6 @@ public class NavigationMenuItem implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The link to a page on the server."
-	)
-	public String getLink() {
-		if (_linkSupplier != null) {
-			link = _linkSupplier.get();
-
-			_linkSupplier = null;
-		}
-
-		return link;
-	}
-
-	public void setLink(String link) {
-		this.link = link;
-
-		_linkSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setLink(UnsafeSupplier<String, Exception> linkUnsafeSupplier) {
-		_linkSupplier = () -> {
-			try {
-				return linkUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The link to a page on the server.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String link;
-
-	@JsonIgnore
-	private Supplier<String> _linkSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The localized links to a page on the server."
-	)
-	@Valid
-	public Map<String, String> getLink_i18n() {
-		if (_link_i18nSupplier != null) {
-			link_i18n = _link_i18nSupplier.get();
-
-			_link_i18nSupplier = null;
-		}
-
-		return link_i18n;
-	}
-
-	public void setLink_i18n(Map<String, String> link_i18n) {
-		this.link_i18n = link_i18n;
-
-		_link_i18nSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setLink_i18n(
-		UnsafeSupplier<Map<String, String>, Exception>
-			link_i18nUnsafeSupplier) {
-
-		_link_i18nSupplier = () -> {
-			try {
-				return link_i18nUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The localized links to a page on the server.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Map<String, String> link_i18n;
-
-	@JsonIgnore
-	private Supplier<Map<String, String>> _link_i18nSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The navigation menu item's name."
@@ -674,51 +555,6 @@ public class NavigationMenuItem implements Serializable {
 	private Supplier<Long> _parentNavigationMenuIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The navigation menu item's linked site page URL."
-	)
-	public String getSitePageURL() {
-		if (_sitePageURLSupplier != null) {
-			sitePageURL = _sitePageURLSupplier.get();
-
-			_sitePageURLSupplier = null;
-		}
-
-		return sitePageURL;
-	}
-
-	public void setSitePageURL(String sitePageURL) {
-		this.sitePageURL = sitePageURL;
-
-		_sitePageURLSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setSitePageURL(
-		UnsafeSupplier<String, Exception> sitePageURLUnsafeSupplier) {
-
-		_sitePageURLSupplier = () -> {
-			try {
-				return sitePageURLUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The navigation menu item's linked site page URL."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected String sitePageURL;
-
-	@JsonIgnore
-	private Supplier<String> _sitePageURLSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The navigation menu item's type."
 	)
 	public String getType() {
@@ -753,36 +589,40 @@ public class NavigationMenuItem implements Serializable {
 	}
 
 	@GraphQLField(description = "The navigation menu item's type.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String type;
 
 	@JsonIgnore
 	private Supplier<String> _typeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The navigation menu item's linked URL."
+		description = "The navigation menu item's type settings."
 	)
-	public String getUrl() {
-		if (_urlSupplier != null) {
-			url = _urlSupplier.get();
+	@Valid
+	public Map<String, String> getTypeSettings() {
+		if (_typeSettingsSupplier != null) {
+			typeSettings = _typeSettingsSupplier.get();
 
-			_urlSupplier = null;
+			_typeSettingsSupplier = null;
 		}
 
-		return url;
+		return typeSettings;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+	public void setTypeSettings(Map<String, String> typeSettings) {
+		this.typeSettings = typeSettings;
 
-		_urlSupplier = null;
+		_typeSettingsSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setUrl(UnsafeSupplier<String, Exception> urlUnsafeSupplier) {
-		_urlSupplier = () -> {
+	public void setTypeSettings(
+		UnsafeSupplier<Map<String, String>, Exception>
+			typeSettingsUnsafeSupplier) {
+
+		_typeSettingsSupplier = () -> {
 			try {
-				return urlUnsafeSupplier.get();
+				return typeSettingsUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -793,12 +633,13 @@ public class NavigationMenuItem implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The navigation menu item's linked URL.")
+	@GraphQLField(description = "The navigation menu item's type settings.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String url;
+	@NotNull
+	protected Map<String, String> typeSettings;
 
 	@JsonIgnore
-	private Supplier<String> _urlSupplier;
+	private Supplier<Map<String, String>> _typeSettingsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getUseCustomName() {
@@ -897,22 +738,6 @@ public class NavigationMenuItem implements Serializable {
 			sb.append("]");
 		}
 
-		String contentURL = getContentURL();
-
-		if (contentURL != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"contentURL\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(contentURL));
-
-			sb.append("\"");
-		}
-
 		Creator creator = getCreator();
 
 		if (creator != null) {
@@ -925,7 +750,8 @@ public class NavigationMenuItem implements Serializable {
 			sb.append(String.valueOf(creator));
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -937,7 +763,7 @@ public class NavigationMenuItem implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1007,34 +833,6 @@ public class NavigationMenuItem implements Serializable {
 			sb.append(id);
 		}
 
-		String link = getLink();
-
-		if (link != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"link\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(link));
-
-			sb.append("\"");
-		}
-
-		Map<String, String> link_i18n = getLink_i18n();
-
-		if (link_i18n != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"link_i18n\": ");
-
-			sb.append(_toJSON(link_i18n));
-		}
-
 		String name = getName();
 
 		if (name != null) {
@@ -1097,22 +895,6 @@ public class NavigationMenuItem implements Serializable {
 			sb.append(parentNavigationMenuId);
 		}
 
-		String sitePageURL = getSitePageURL();
-
-		if (sitePageURL != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"sitePageURL\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(sitePageURL));
-
-			sb.append("\"");
-		}
-
 		String type = getType();
 
 		if (type != null) {
@@ -1129,20 +911,16 @@ public class NavigationMenuItem implements Serializable {
 			sb.append("\"");
 		}
 
-		String url = getUrl();
+		Map<String, String> typeSettings = getTypeSettings();
 
-		if (url != null) {
+		if (typeSettings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"url\": ");
+			sb.append("\"typeSettings\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(url));
-
-			sb.append("\"");
+			sb.append(_toJSON(typeSettings));
 		}
 
 		Boolean useCustomName = getUseCustomName();

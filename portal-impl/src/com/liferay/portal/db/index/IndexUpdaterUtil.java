@@ -8,8 +8,11 @@ package com.liferay.portal.db.index;
 import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.db.DBResourceUtil;
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.DuplicateUniqueFinderRowsCleaner;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -24,18 +27,20 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -111,13 +116,20 @@ public class IndexUpdaterUtil {
 		DependencyManagerSyncUtil.registerSyncFutureTask(
 			new FutureTask<>(
 				() -> {
+					try {
+						PrimaryKeyUpdaterUtil.updateAllPrimaryKeys();
+					}
+					catch (Exception exception) {
+						_log.error(exception);
+					}
+
 					bundleTracker.open();
 
 					DependencyManagerSyncUtil.registerSyncCallable(
 						() -> {
 							bundleTracker.close();
 
-							_processedServletContextNames.clear();
+							_clearProcessedServletContextNames();
 
 							_awaitFuturesTermination();
 
@@ -206,6 +218,38 @@ public class IndexUpdaterUtil {
 		_futures.clear();
 	}
 
+	private static void _clearProcessedServletContextNames() {
+		_processedServletContextNames.clear();
+	}
+
+	private static void _deleteDuplicates(
+			Connection connection, DB db, String tableName, String indexesSQL)
+		throws Exception {
+
+		Matcher matcher = _uniqueIndexPattern.matcher(indexesSQL);
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		while (matcher.find()) {
+			if (dbInspector.hasIndex(tableName, matcher.group(1))) {
+				continue;
+			}
+
+			String orderByColumns = StringUtil.merge(
+				db.getPrimaryKeyColumnNames(connection, tableName),
+				StringPool.COMMA_AND_SPACE);
+
+			DuplicateUniqueFinderRowsCleaner duplicateUniqueFinderRowsCleaner =
+				new DuplicateUniqueFinderRowsCleaner(
+					connection, tableName,
+					StringUtil.split(
+						matcher.group(2), StringPool.COMMA_AND_SPACE),
+					orderByColumns + " asc");
+
+			duplicateUniqueFinderRowsCleaner.deleteDuplicates();
+		}
+	}
+
 	private static ExecutorService _getExecutorService() {
 		return _executorServiceDCLSingleton.getSingleton(
 			() -> {
@@ -270,8 +314,21 @@ public class IndexUpdaterUtil {
 
 		db.process(
 			companyId -> {
-				try {
-					try (Connection connection = DataAccess.getConnection()) {
+				try (Connection connection = DataAccess.getConnection()) {
+					try {
+						db.updateIndexes(
+							connection, tableName, indexesSQL, true);
+					}
+					catch (SQLException sqlException) {
+						if (!StartupHelperUtil.isUpgrading() ||
+							!indexesSQL.contains("unique index")) {
+
+							throw sqlException;
+						}
+
+						_deleteDuplicates(
+							connection, db, tableName, indexesSQL);
+
 						db.updateIndexes(
 							connection, tableName, indexesSQL, true);
 					}
@@ -295,8 +352,10 @@ public class IndexUpdaterUtil {
 	private static final DCLSingleton<ExecutorService>
 		_executorServiceDCLSingleton = new DCLSingleton<>();
 	private static final List<Future<?>> _futures =
-		Collections.synchronizedList(new ArrayList<Future<?>>());
+		new CopyOnWriteArrayList<>();
 	private static final Set<String> _processedServletContextNames =
 		ConcurrentHashMap.newKeySet();
+	private static final Pattern _uniqueIndexPattern = Pattern.compile(
+		"create\\s+unique\\s+index\\s+(\\w+)\\s+on\\s+\\w+\\s*\\(([^)]+)\\)");
 
 }

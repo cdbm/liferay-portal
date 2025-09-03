@@ -12,6 +12,7 @@ import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -48,10 +49,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.service.base.AssetVocabularyLocalServiceBaseImpl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -202,6 +205,13 @@ public class AssetVocabularyLocalServiceImpl
 		vocabulary.setDescriptionMap(descriptionMap);
 		vocabulary.setSettings(settings);
 		vocabulary.setVisibilityType(visibilityType);
+
+		if (EmptyModelManagerUtil.isEmptyModel()) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_EMPTY);
+		}
+		else {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
 
 		vocabulary = assetVocabularyPersistence.update(vocabulary);
 
@@ -389,6 +399,24 @@ public class AssetVocabularyLocalServiceImpl
 		return assetVocabularyPersistence.findByG_N(groupId, name);
 	}
 
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long userId, long groupId)
+		throws PortalException {
+
+		return EmptyModelManagerUtil.getOrAddEmptyModel(
+			AssetVocabulary.class,
+			() -> assetVocabularyLocalService.addVocabulary(
+				externalReferenceCode, userId, groupId, externalReferenceCode,
+				externalReferenceCode,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), externalReferenceCode),
+				null, null, AssetVocabularyConstants.VISIBILITY_TYPE_EMPTY,
+				new ServiceContext()),
+			externalReferenceCode,
+			this::fetchAssetVocabularyByExternalReferenceCode,
+			this::getAssetVocabularyByExternalReferenceCode, groupId);
+	}
+
 	@Override
 	public List<AssetVocabulary> getVocabularies(Hits hits)
 		throws PortalException {
@@ -481,6 +509,10 @@ public class AssetVocabularyLocalServiceImpl
 		vocabulary.setSettings(settings);
 		vocabulary.setVisibilityType(visibilityType);
 
+		if (vocabulary.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		return assetVocabularyPersistence.update(vocabulary);
 	}
 
@@ -503,6 +535,10 @@ public class AssetVocabularyLocalServiceImpl
 
 		vocabulary.setDescriptionMap(descriptionMap);
 		vocabulary.setSettings(settings);
+
+		if (vocabulary.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
 
 		return assetVocabularyPersistence.update(vocabulary);
 	}

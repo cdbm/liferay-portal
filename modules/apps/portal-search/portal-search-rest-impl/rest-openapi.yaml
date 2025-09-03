@@ -147,10 +147,10 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.portal.search.rest.client', and version '1.0.23'."
+        'com.liferay.portal.search.rest.client', and version '1.0.26'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
     title: ""
     version: v1.0
 openapi: 3.0.1
@@ -158,62 +158,62 @@ paths:
     "/search":
         get:
             description:
-                "Search the company index for matching content. This endpoint is development and requires setting the
-                portal property 'feature.flag.LPD-11232' to true or enabling via Instance Settings > Feature Flags: Developer."
+                "Search the company index for matching content. This endpoint requires setting the
+                portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Release."
             operationId: getSearchPage
             parameters:
-                - in: query
-                  name: blueprintExternalReferenceCode
-                  schema:
-                      type: string
-                - in: query
-                  name: emptySearch
-                  schema:
-                      type: boolean
-                - in: query
-                  description:
-                      Model class names to be searched for. Defaults to all.
-                  name: entryClassNames
-                  schema:
-                      type: string
-                - in: query
-                  description:
-                      The list of fields to be returned.
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: scope
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: blueprintExternalReferenceCode
+                    schema:
+                        type: string
+                -   in: query
+                    name: emptySearch
+                    schema:
+                        type: boolean
+                -   in: query
+                    description:
+                        Model class names to be searched for. Defaults to all.
+                    name: entryClassNames
+                    schema:
+                        type: string
+                -   in: query
+                    description:
+                        The list of fields to be returned.
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: scope
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -234,50 +234,50 @@ paths:
                 portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Release."
             operationId: postSearchPage
             parameters:
-                - in: query
-                  description:
-                      Model class names to be searched for. Defaults to all.
-                  name: entryClassNames
-                  schema:
-                      type: string
-                - in: query
-                  description:
-                      The list of fields to be returned.
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: scope
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    description:
+                        Model class names to be searched for. Defaults to all.
+                    name: entryClassNames
+                    schema:
+                        type: string
+                -   in: query
+                    description:
+                        The list of fields to be returned.
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: scope
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -304,22 +304,22 @@ paths:
         get:
             operationId: getEmbeddingEmbeddingModelsPage
             parameters:
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: provider
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: provider
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -359,40 +359,40 @@ paths:
         post:
             operationId: postSuggestionsPage
             parameters:
-                - in: query
-                  name: currentURL
-                  schema:
-                      type: string
-                - in: query
-                  name: destinationFriendlyURL
-                  schema:
-                      type: string
-                - in: query
-                  deprecated: true
-                  description:
-                      Deprecated as of Cavanaugh (7.4.x), replaced by scope
-                  name: groupId
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: keywordsParameterName
-                  schema:
-                      type: string
-                - in: query
-                  name: plid
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: scope
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  required: true
-                  schema:
-                      type: string
+                -   in: query
+                    name: currentURL
+                    schema:
+                        type: string
+                -   in: query
+                    name: destinationFriendlyURL
+                    schema:
+                        type: string
+                -   in: query
+                    deprecated: true
+                    description:
+                        Deprecated as of Cavanaugh (7.4.x), replaced by scope
+                    name: groupId
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: keywordsParameterName
+                    schema:
+                        type: string
+                -   in: query
+                    name: plid
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: scope
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:

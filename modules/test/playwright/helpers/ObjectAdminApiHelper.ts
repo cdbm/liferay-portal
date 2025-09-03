@@ -5,26 +5,14 @@
 
 import {
 	ObjectDefinition,
-	ObjectDefinitionApi,
+	ObjectDefinitionAPI,
 	ObjectField,
 	ObjectFolder,
-	ObjectFolderApi,
+	ObjectFolderAPI,
 } from '@liferay/object-admin-rest-client-js';
 
 import {getRandomInt} from '../utils/getRandomInt';
 import {ApiHelpers} from './ApiHelpers';
-
-export interface CreateObjectField {
-	attachmentSource?: string;
-	listTypeDefinitionName?: string;
-	mandatory?: boolean;
-	objectDefinitionLabel?: string;
-
-	objectDefinitionNodes: unknown;
-	objectFieldBusinessType: string;
-	objectFieldLabel: string;
-}
-
 export class ObjectAdminApiHelper {
 	readonly apiHelpers: ApiHelpers;
 	readonly basePath: string;
@@ -32,6 +20,18 @@ export class ObjectAdminApiHelper {
 	constructor(apiHelpers: ApiHelpers) {
 		this.apiHelpers = apiHelpers;
 		this.basePath = 'object-admin/v1.0';
+	}
+
+	async getAllObjectDefinitions() {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions`
+		);
+	}
+
+	async getAllObjectDefinitionsFields(objectDefinitionId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/${objectDefinitionId}/object-fields`
+		);
 	}
 
 	async postObjectDefinitionObjectFieldBatch(
@@ -45,6 +45,7 @@ export class ObjectAdminApiHelper {
 	}
 
 	async postRandomObjectDefinition({
+		className,
 		objectFields,
 		objectFolderExternalReferenceCode,
 		panelCategoryKey,
@@ -52,6 +53,7 @@ export class ObjectAdminApiHelper {
 		status,
 		titleObjectFieldName,
 	}: {
+		className?: string;
 		objectFields?: Partial<ObjectField>[];
 		objectFolderExternalReferenceCode?: string;
 		panelCategoryKey?: string;
@@ -64,6 +66,7 @@ export class ObjectAdminApiHelper {
 
 		const requestBody: ObjectDefinition = {
 			active: true,
+			className,
 			externalReferenceCode: objectDefinitionExternalReferenceCode,
 			label: {
 				en_US: objectDefinitionExternalReferenceCode,
@@ -101,11 +104,11 @@ export class ObjectAdminApiHelper {
 				objectFolderExternalReferenceCode;
 		}
 
-		const objectDefinitionApiClient =
-			await this.apiHelpers.buildRestClient(ObjectDefinitionApi);
+		const objectDefinitionAPIClient =
+			await this.apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
 		return (
-			await objectDefinitionApiClient.postObjectDefinition(requestBody)
+			await objectDefinitionAPIClient.postObjectDefinition(requestBody)
 		).body;
 	}
 
@@ -113,11 +116,11 @@ export class ObjectAdminApiHelper {
 		const objectFolderExternalReferenceCode =
 			'objectFolder' + getRandomInt();
 
-		const objectFolderApiClient =
-			await this.apiHelpers.buildRestClient(ObjectFolderApi);
+		const objectFolderAPIClient =
+			await this.apiHelpers.buildRestClient(ObjectFolderAPI);
 
 		return (
-			await objectFolderApiClient.postObjectFolder({
+			await objectFolderAPIClient.postObjectFolder({
 				externalReferenceCode: objectFolderExternalReferenceCode,
 				label: {
 					en_US: objectFolderExternalReferenceCode,

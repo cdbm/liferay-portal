@@ -66,9 +66,9 @@ public interface WorkflowDefinitionLinkLocalService
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.WorkflowDefinitionLinkLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the workflow definition link local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link WorkflowDefinitionLinkLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public WorkflowDefinitionLink addWorkflowDefinitionLink(
-			long userId, long companyId, long groupId, String className,
-			long classPK, long typePK, String workflowDefinitionName,
-			int workflowDefinitionVersion)
+			String externalReferenceCode, long userId, long companyId,
+			long groupId, String className, long classPK, long typePK,
+			String workflowDefinitionName, int workflowDefinitionVersion)
 		throws PortalException;
 
 	/**
@@ -141,6 +141,8 @@ public interface WorkflowDefinitionLinkLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public WorkflowDefinitionLink deleteWorkflowDefinitionLink(
 		WorkflowDefinitionLink workflowDefinitionLink);
+
+	public void deleteWorkflowDefinitionLinks(long companyId, String className);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
@@ -216,7 +218,7 @@ public interface WorkflowDefinitionLinkLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WorkflowDefinitionLink fetchDefaultWorkflowDefinitionLink(
-		long companyId, String className, long classPK, long typePK);
+		long companyId, String className);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WorkflowDefinitionLink fetchWorkflowDefinitionLink(
@@ -256,11 +258,6 @@ public interface WorkflowDefinitionLinkLocalService
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public WorkflowDefinitionLink getDefaultWorkflowDefinitionLink(
-			long companyId, String className, long classPK, long typePK)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		PortletDataContext portletDataContext);
 
@@ -292,12 +289,6 @@ public interface WorkflowDefinitionLinkLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WorkflowDefinitionLink getWorkflowDefinitionLink(
 			long workflowDefinitionLinkId)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public WorkflowDefinitionLink getWorkflowDefinitionLink(
-			long companyId, long groupId, String className, long classPK,
-			long typePK)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -349,6 +340,10 @@ public interface WorkflowDefinitionLinkLocalService
 	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
 			long companyId, long groupId, String className, long classPK)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
+		long companyId, String className);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(

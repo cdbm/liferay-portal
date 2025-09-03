@@ -36,14 +36,14 @@ import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+
 import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Marco Leo
@@ -60,6 +60,12 @@ public class PriceTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
+			if ((commerceContext == null) ||
+				(commerceContext.getCommerceChannelId() == 0)) {
+
+				return SKIP_BODY;
+			}
+
 			long cpInstanceId = 0;
 
 			if (_showDefaultSkuPrice) {

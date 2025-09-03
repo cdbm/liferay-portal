@@ -5,19 +5,21 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.Build;
+import com.liferay.jenkins.results.parser.BuildReport;
+import com.liferay.jenkins.results.parser.DownstreamBuildReport;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-import com.liferay.jenkins.results.parser.TestClassResult;
-import com.liferay.jenkins.results.parser.TestResult;
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.TestClassReport;
+import com.liferay.jenkins.results.parser.TestReport;
+import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 import com.liferay.jenkins.results.parser.test.clazz.JSUnitModulesTestClass;
-import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Michael Hashimoto
@@ -26,16 +28,26 @@ public class JSUnitBatchBuildTestrayCaseResult
 	extends BatchBuildTestrayCaseResult {
 
 	public JSUnitBatchBuildTestrayCaseResult(
-		TestrayBuild testrayBuild, TopLevelBuild topLevelBuild,
-		AxisTestClassGroup axisTestClassGroup,
-		TestClassMethod testClassMethod) {
+		TestrayBuild testrayBuild, TopLevelBuildReport topLevelBuildReport,
+		AxisTestClassGroup axisTestClassGroup, TestClass testClass) {
 
-		super(testrayBuild, topLevelBuild, axisTestClassGroup);
+		super(testrayBuild, topLevelBuildReport, axisTestClassGroup);
 
-		_testClassMethod = testClassMethod;
+		_jsUnitModulesTestClass = (JSUnitModulesTestClass)testClass;
+	}
 
-		_jsUnitModulesTestClass =
-			(JSUnitModulesTestClass)testClassMethod.getTestClass();
+	@Override
+	public BuildReport getBuildReport() {
+		if (_jsUnitModulesTestClass.isBuildCachingEnabled()) {
+			DownstreamBuildReport cachedDownstreamBuildReport =
+				_jsUnitModulesTestClass.getCachedDownstreamBuildReport();
+
+			if (cachedDownstreamBuildReport != null) {
+				return cachedDownstreamBuildReport;
+			}
+		}
+
+		return super.getBuildReport();
 	}
 
 	@Override
@@ -52,40 +64,34 @@ public class JSUnitBatchBuildTestrayCaseResult
 
 	@Override
 	public long getDuration() {
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		TestClassReport testClassResult = _getTestClassReport();
 
-		if (testClassResults == null) {
+		if (testClassResult == null) {
 			return 0;
 		}
 
-		long duration = 0;
-
-		for (TestClassResult testClassResult : testClassResults) {
-			duration += testClassResult.getDuration();
-		}
-
-		return duration;
+		return testClassResult.getDuration();
 	}
 
 	@Override
 	public String getErrors() {
-		Build build = getBuild();
+		BuildReport buildReport = getBuildReport();
 
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		TestClassReport testClassResult = _getTestClassReport();
 
-		if ((testClassResults == null) || testClassResults.isEmpty()) {
-			if (build == null) {
+		if (testClassResult == null) {
+			if (buildReport == null) {
 				return "Unable to run build on CI";
 			}
 
-			String result = build.getResult();
+			String result = buildReport.getResult();
 
 			if (result == null) {
 				return "Unable to finish build on CI";
 			}
 
 			if (result.equals("ABORTED")) {
-				return build.getJobName() + " timed out after 2 hours";
+				return buildReport.getJobName() + " timed out after 2 hours";
 			}
 
 			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
@@ -95,57 +101,50 @@ public class JSUnitBatchBuildTestrayCaseResult
 			return "Failed prior to running test";
 		}
 
-		if (!_isTestClassResultsFailing()) {
+		if (!_isTestClassResultsFailing() || !testClassResult.isFailing()) {
 			return null;
 		}
 
 		Map<String, String> errorMessages = new HashMap<>();
 
-		for (TestClassResult testClassResult : testClassResults) {
-			if ((testClassResult == null) || !testClassResult.isFailing()) {
+		for (TestReport testResult : testClassResult.getTestReports()) {
+			if (!testResult.isFailing()) {
 				continue;
 			}
 
-			for (TestResult testResult : testClassResult.getTestResults()) {
-				if (!testResult.isFailing()) {
-					continue;
-				}
+			String errorMessage = testResult.getErrorDetails();
 
-				String errorMessage = testResult.getErrorDetails();
-
-				if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
-					errorMessage = build.getFailureMessage();
-				}
-
-				if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
-					errorMessage = "Failed for unknown reason";
-				}
-
-				if (errorMessage.contains("\n")) {
-					errorMessage = errorMessage.substring(
-						0, errorMessage.indexOf("\n"));
-				}
-
-				errorMessage = errorMessage.trim();
-
-				if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
-					errorMessage = "Failed for unknown reason";
-				}
-
-				String testName = testResult.getTestName();
-
-				errorMessages.put(
-					testName,
-					JenkinsResultsParserUtil.combine(
-						testName, ": ", errorMessage));
+			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+				errorMessage = buildReport.getFailureMessage();
 			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+				errorMessage = "Failed for unknown reason";
+			}
+
+			if (errorMessage.contains("\n")) {
+				errorMessage = errorMessage.substring(
+					0, errorMessage.indexOf("\n"));
+			}
+
+			errorMessage = errorMessage.trim();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+				errorMessage = "Failed for unknown reason";
+			}
+
+			String testName = testResult.getTestName();
+
+			errorMessages.put(
+				testName,
+				JenkinsResultsParserUtil.combine(testName, ": ", errorMessage));
 		}
 
 		if (errorMessages.size() > 1) {
 			return JenkinsResultsParserUtil.combine(
-				"Failed tests: ",
+				"Failed tests:\n",
 				JenkinsResultsParserUtil.join(
-					", ", new ArrayList<>(errorMessages.keySet())));
+					"\n", new ArrayList<>(errorMessages.keySet())));
 		}
 		else if (errorMessages.size() == 1) {
 			List<String> values = new ArrayList<>(errorMessages.values());
@@ -158,21 +157,21 @@ public class JSUnitBatchBuildTestrayCaseResult
 
 	@Override
 	public String getName() {
-		return _testClassMethod.getName();
+		return _jsUnitModulesTestClass.getTestTaskName();
 	}
 
 	@Override
 	public Status getStatus() {
-		Build build = getBuild();
+		BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
+		if (buildReport == null) {
 			return Status.UNTESTED;
 		}
 
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		TestClassReport testClassResult = _getTestClassReport();
 
-		if ((testClassResults == null) || testClassResults.isEmpty()) {
-			String result = build.getResult();
+		if (testClassResult == null) {
+			String result = buildReport.getResult();
 
 			if ((result == null) || result.equals("ABORTED") ||
 				result.equals("FAILURE") || result.equals("SUCCESS") ||
@@ -191,60 +190,53 @@ public class JSUnitBatchBuildTestrayCaseResult
 		return Status.PASSED;
 	}
 
-	private List<TestClassResult> _getTestClassResults() {
-		if (_testClassResults != null) {
-			return _testClassResults;
+	private TestClassReport _getTestClassReport() {
+		if (_testClassReport != null) {
+			return _testClassReport;
 		}
 
-		_testClassResults = new ArrayList<>();
+		if (_jsUnitModulesTestClass.isBuildCachingEnabled()) {
+			TestClassReport cachedTestClassReport =
+				_jsUnitModulesTestClass.getCachedTestClassReport();
 
-		Build build = getBuild();
+			if (cachedTestClassReport != null) {
+				_testClassReport = cachedTestClassReport;
 
-		if (build == null) {
-			return _testClassResults;
-		}
-
-		String taskDirectoryName = getName();
-
-		taskDirectoryName = taskDirectoryName.replace(":packageRunTest", "");
-
-		for (TestClassResult testClassResult : build.getTestClassResults()) {
-			String testResultTaskName = _getTestResultTaskName(testClassResult);
-
-			if (testResultTaskName.startsWith(taskDirectoryName)) {
-				_testClassResults.add(testClassResult);
+				return _testClassReport;
 			}
 		}
 
-		return _testClassResults;
-	}
+		DownstreamBuildReport downstreamBuildReport =
+			getDownstreamBuildReport();
 
-	private String _getTestResultTaskName(TestClassResult testClassResult) {
-		String testClassName = testClassResult.getClassName();
-
-		if (testClassName.contains(".modules.")) {
-			testClassName = testClassName.replaceAll(
-				".*\\.modules(\\..+)", "$1");
-		}
-		else {
-			testClassName = ".apps." + testClassName;
+		if (downstreamBuildReport == null) {
+			return _testClassReport;
 		}
 
-		return testClassName.replaceAll("\\.", ":");
+		for (TestClassReport testClassResult :
+				downstreamBuildReport.getTestClassReports()) {
+
+			if (Objects.equals(testClassResult.getTestClassName(), getName())) {
+				_testClassReport = testClassResult;
+
+				return _testClassReport;
+			}
+		}
+
+		return _testClassReport;
 	}
 
 	private boolean _isTestClassResultsFailing() {
-		for (TestClassResult testClassResult : _getTestClassResults()) {
-			if (testClassResult.isFailing()) {
-				return true;
-			}
+		TestClassReport testClassReport = _getTestClassReport();
+
+		if ((testClassReport == null) || testClassReport.isFailing()) {
+			return true;
 		}
 
 		return false;
 	}
 
 	private final JSUnitModulesTestClass _jsUnitModulesTestClass;
-	private final TestClassMethod _testClassMethod;
-	private List<TestClassResult> _testClassResults;
+	private TestClassReport _testClassReport;
 
 }

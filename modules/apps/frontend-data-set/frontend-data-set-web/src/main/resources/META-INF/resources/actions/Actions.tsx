@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IItemsActions} from '..';
 import React, {useContext, useState} from 'react';
 
 import FrontendDataSetContext, {
@@ -11,6 +10,7 @@ import FrontendDataSetContext, {
 } from '../FrontendDataSetContext';
 import filterItemActions from '../utils/actionItems/filterItemActions';
 import handleActionClick from '../utils/actionItems/handleActionClick';
+import {IItemsActions} from '../utils/types';
 import ViewsContext from '../views/ViewsContext';
 import ActionsDropdown from './ActionsDropdown';
 import QuickActions from './QuickActions';
@@ -21,19 +21,29 @@ function Actions({
 	actions,
 	itemData,
 	itemId,
+	items,
+	onItemSelectionChange,
 }: {
 	actions: Array<IItemsActions>;
 	itemData: any;
 	itemId: string | number;
+	items: any[];
+	onItemSelectionChange?: Function;
 }) {
 	const {
+		allItemsSelectedActive,
 		executeAsyncItemAction,
 		highlightItems,
+		infoPanelOpen,
 		inlineEditingSettings,
 		loadData,
 		onActionDropdownItemClick,
+		onInfoPanelToggleButtonClick,
 		openModal,
 		openSidePanel,
+		selectable,
+		selectedItemsKey,
+		selectedItemsValue,
 		toggleItemInlineEdit,
 	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
 
@@ -46,15 +56,30 @@ function Actions({
 	const [loading, setLoading] = useState(false);
 	const [menuActive, setMenuActive] = useState(false);
 
+	const isRowSelected =
+		allItemsSelectedActive ||
+		selectedItemsValue?.some(
+			(selectedItemValue) => String(selectedItemValue) === String(itemId)
+		);
+
 	const inlineEditingAvailable =
 		inlineEditingSettings && itemData.actions?.update;
+
 	const inlineEditingAlwaysOn =
 		inlineEditingAvailable && inlineEditingSettings.alwaysOn;
 
-	const formattedActions = filterItemActions(actions, itemData);
+	const formattedActions = filterItemActions({
+		actions,
+		infoPanelOpen,
+		itemData,
+		selectable,
+		selectedItemsKey,
+		selectedItemsValue,
+	});
 
 	if (inlineEditingAvailable && !inlineEditingAlwaysOn) {
 		formattedActions.unshift({
+			disabled: false,
 			icon: 'fieldset',
 			label: Liferay.Language.get('inline-edit'),
 			target: 'inlineEdit',
@@ -76,10 +101,14 @@ function Actions({
 			event,
 			executeAsyncItemAction,
 			highlightItems,
+			infoPanelOpen,
 			itemData,
 			itemId,
+			items,
 			loadData,
 			onActionDropdownItemClick,
+			onInfoPanelToggleButtonClick,
+			onItemSelectionChange,
 			openModal,
 			openSidePanel,
 			setLoading,
@@ -89,17 +118,20 @@ function Actions({
 
 	return (
 		<>
-			{quickActionsEnabled && formattedActions.length > 1 && (
-				<QuickActions
-					actions={formattedActions.slice(
-						0,
-						QUICK_ACTIONS_MAX_NUMBER
-					)}
-					itemData={itemData}
-					itemId={itemId}
-					onClick={handleClick}
-				/>
-			)}
+			{quickActionsEnabled &&
+				formattedActions.length > 1 &&
+				!isRowSelected && (
+					<QuickActions
+						actions={formattedActions.slice(
+							0,
+							QUICK_ACTIONS_MAX_NUMBER
+						)}
+						itemData={itemData}
+						itemId={itemId}
+						onClick={handleClick}
+					/>
+				)}
+
 			<ActionsDropdown
 				actions={formattedActions}
 				itemData={itemData}

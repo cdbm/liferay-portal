@@ -74,9 +74,10 @@ public interface ObjectEntryFolderLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectEntryFolder addObjectEntryFolder(
-			String externalReferenceCode, long userId, long groupId,
-			long parentObjectEntryFolderId, Map<Locale, String> labelMap,
-			String name, ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, long userId,
+			long parentObjectEntryFolderId, String description,
+			Map<Locale, String> labelMap, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -126,7 +127,7 @@ public interface ObjectEntryFolderLocalService
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
-	public ObjectEntryFolder deleteObjectEntryFolder(
+	public ObjectEntryFolder deleteObjectEntryFolderByExternalReferenceCode(
 			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException;
 
@@ -212,6 +213,10 @@ public interface ObjectEntryFolderLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntryFolder fetchObjectEntryFolder(long objectEntryFolderId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder fetchObjectEntryFolderByExternalReferenceCode(
+		String externalReferenceCode, long groupId, long companyId);
+
 	/**
 	 * Returns the object entry folder matching the UUID and group.
 	 *
@@ -242,6 +247,11 @@ public interface ObjectEntryFolderLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntryFolder getObjectEntryFolder(long objectEntryFolderId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder getObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException;
 
 	/**
@@ -314,6 +324,13 @@ public interface ObjectEntryFolderLocalService
 	public int getObjectEntryFoldersCount(
 		long groupId, long companyId, long parentObjectEntryFolderId);
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder getOrAddEmptyObjectEntryFolder(
+			String externalReferenceCode, long groupId, long companyId,
+			long userId, ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -329,10 +346,41 @@ public interface ObjectEntryFolderLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	public void moveObjectEntryFoldersToTrash(
+			long userId, ObjectEntryFolder parentObjectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public ObjectEntryFolder moveObjectEntryFolderToTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public ObjectEntryFolder restoreObjectEntryFolderFromTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public void restoreObjectEntryFoldersFromTrash(
+			long userId, ObjectEntryFolder parentObjectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public void subscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException;
+
+	public void unsubscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException;
+
 	public ObjectEntryFolder updateObjectEntryFolder(
 			long userId, long objectEntryFolderId,
-			long parentObjectEntryFolderId, Map<Locale, String> labelMap,
-			String name)
+			long parentObjectEntryFolderId, String description,
+			Map<Locale, String> labelMap, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -348,5 +396,9 @@ public interface ObjectEntryFolderLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectEntryFolder updateObjectEntryFolder(
 		ObjectEntryFolder objectEntryFolder);
+
+	public ObjectEntryFolder updateStatus(
+			ObjectEntryFolder objectEntryFolder, int status)
+		throws PortalException;
 
 }

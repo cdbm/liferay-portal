@@ -32,6 +32,7 @@ import com.liferay.staging.internal.constants.CompanyGroupConstants;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -174,15 +175,23 @@ public class StagingGroupHelperImpl implements StagingGroupHelper {
 
 	@Override
 	public boolean isCompanyGroup(Group group) {
-		Group companyGroup = fetchCompanyGroup(group.getCompanyId());
+		return isCompanyGroup(group.getCompanyId(), group.getGroupId());
+	}
 
-		if ((companyGroup != null) &&
-			(companyGroup.getGroupId() == group.getGroupId())) {
+	@Override
+	public boolean isCompanyGroup(long companyId, long groupId) {
+		Group companyGroup = fetchCompanyGroup(companyId);
 
+		if ((companyGroup != null) && (companyGroup.getGroupId() == groupId)) {
 			return true;
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean isCompanyGroupFriendlyURL(String friendlyURL) {
+		return Objects.equals(friendlyURL, CompanyGroupConstants.FRIENDLY_URL);
 	}
 
 	@Override

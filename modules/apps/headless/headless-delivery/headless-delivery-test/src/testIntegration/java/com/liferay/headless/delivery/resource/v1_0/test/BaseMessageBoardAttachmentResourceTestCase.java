@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.MessageBoardAttachment;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
@@ -53,6 +56,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.File;
 
 import java.lang.reflect.Method;
@@ -72,16 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -128,6 +131,16 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 			testCompany.getCompanyId());
 
 		messageBoardAttachmentResource = MessageBoardAttachmentResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -240,7 +253,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 			messageBoardAttachmentResource.
 				getMessageBoardAttachmentHttpResponse(
 					messageBoardAttachment.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			messageBoardAttachmentResource.
@@ -339,6 +351,107 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		throws Exception {
 
 		return testGraphQLMessageBoardAttachment_addMessageBoardAttachment();
+	}
+
+	@Test
+	public void testDeleteMessageBoardAttachmentBatch() throws Exception {
+		MessageBoardAttachment messageBoardAttachment1 =
+			testDeleteMessageBoardAttachmentBatch_addMessageBoardAttachment();
+
+		testDeleteMessageBoardAttachmentBatch_deleteMessageBoardAttachment(
+			202, null, messageBoardAttachment1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				getMessageBoardAttachmentHttpResponse(
+					messageBoardAttachment1.getId()));
+	}
+
+	protected MessageBoardAttachment
+			testDeleteMessageBoardAttachmentBatch_addMessageBoardAttachment()
+		throws Exception {
+
+		return testDeleteMessageBoardAttachment_addMessageBoardAttachment();
+	}
+
+	protected void
+			testDeleteMessageBoardAttachmentBatch_deleteMessageBoardAttachment(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			messageBoardAttachmentResource.
+				deleteMessageBoardAttachmentBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		MessageBoardAttachment messageBoardAttachment =
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment();
+
+		assertHttpResponseStatusCode(
+			204,
+			messageBoardAttachmentResource.
+				deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
+					messageBoardAttachment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				getSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
+					messageBoardAttachment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				getSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
+					"-"));
+	}
+
+	protected MessageBoardAttachment
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -778,37 +891,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 	}
 
 	@Test
-	public void testPostMessageBoardMessageMessageBoardAttachment()
-		throws Exception {
-
-		MessageBoardAttachment randomMessageBoardAttachment =
-			randomMessageBoardAttachment();
-
-		Map<String, File> multipartFiles = getMultipartFiles();
-
-		MessageBoardAttachment postMessageBoardAttachment =
-			testPostMessageBoardMessageMessageBoardAttachment_addMessageBoardAttachment(
-				randomMessageBoardAttachment, multipartFiles);
-
-		assertEquals(randomMessageBoardAttachment, postMessageBoardAttachment);
-		assertValid(postMessageBoardAttachment);
-
-		assertValid(postMessageBoardAttachment, multipartFiles);
-	}
-
-	protected MessageBoardAttachment
-			testPostMessageBoardMessageMessageBoardAttachment_addMessageBoardAttachment(
-				MessageBoardAttachment messageBoardAttachment,
-				Map<String, File> multipartFiles)
-		throws Exception {
-
-		return messageBoardAttachmentResource.
-			postMessageBoardMessageMessageBoardAttachment(
-				testGetMessageBoardMessageMessageBoardAttachmentsPage_getMessageBoardMessageId(),
-				messageBoardAttachment, multipartFiles);
-	}
-
-	@Test
 	public void testGetMessageBoardThreadMessageBoardAttachmentsPage()
 		throws Exception {
 
@@ -928,94 +1010,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 	}
 
 	@Test
-	public void testPostMessageBoardThreadMessageBoardAttachment()
-		throws Exception {
-
-		MessageBoardAttachment randomMessageBoardAttachment =
-			randomMessageBoardAttachment();
-
-		Map<String, File> multipartFiles = getMultipartFiles();
-
-		MessageBoardAttachment postMessageBoardAttachment =
-			testPostMessageBoardThreadMessageBoardAttachment_addMessageBoardAttachment(
-				randomMessageBoardAttachment, multipartFiles);
-
-		assertEquals(randomMessageBoardAttachment, postMessageBoardAttachment);
-		assertValid(postMessageBoardAttachment);
-
-		assertValid(postMessageBoardAttachment, multipartFiles);
-	}
-
-	protected MessageBoardAttachment
-			testPostMessageBoardThreadMessageBoardAttachment_addMessageBoardAttachment(
-				MessageBoardAttachment messageBoardAttachment,
-				Map<String, File> multipartFiles)
-		throws Exception {
-
-		return messageBoardAttachmentResource.
-			postMessageBoardThreadMessageBoardAttachment(
-				testGetMessageBoardThreadMessageBoardAttachmentsPage_getMessageBoardThreadId(),
-				messageBoardAttachment, multipartFiles);
-	}
-
-	@Test
-	public void testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		MessageBoardAttachment messageBoardAttachment =
-			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment();
-
-		assertHttpResponseStatusCode(
-			204,
-			messageBoardAttachmentResource.
-				deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
-					messageBoardAttachment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			messageBoardAttachmentResource.
-				getSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
-					messageBoardAttachment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			messageBoardAttachmentResource.
-				getSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
-					messageBoardAttachment.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected MessageBoardAttachment
-			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode()
 		throws Exception {
 
@@ -1033,6 +1027,14 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		assertValid(getMessageBoardAttachment);
 	}
 
+	protected MessageBoardAttachment
+			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long
 			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
 		throws Exception {
@@ -1043,14 +1045,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 
 	protected String
 			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected MessageBoardAttachment
-			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1087,7 +1081,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -1125,7 +1118,6 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 												"\"" +
 													testGraphQLGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -1223,6 +1215,125 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		throws Exception {
 
 		return testGraphQLMessageBoardAttachment_addMessageBoardAttachment();
+	}
+
+	@Test
+	public void testPostMessageBoardMessageMessageBoardAttachment()
+		throws Exception {
+
+		MessageBoardAttachment randomMessageBoardAttachment =
+			randomMessageBoardAttachment();
+
+		Map<String, File> multipartFiles = getMultipartFiles();
+
+		MessageBoardAttachment postMessageBoardAttachment =
+			testPostMessageBoardMessageMessageBoardAttachment_addMessageBoardAttachment(
+				randomMessageBoardAttachment, multipartFiles);
+
+		assertEquals(randomMessageBoardAttachment, postMessageBoardAttachment);
+		assertValid(postMessageBoardAttachment);
+
+		assertValid(postMessageBoardAttachment, multipartFiles);
+	}
+
+	protected MessageBoardAttachment
+			testPostMessageBoardMessageMessageBoardAttachment_addMessageBoardAttachment(
+				MessageBoardAttachment messageBoardAttachment,
+				Map<String, File> multipartFiles)
+		throws Exception {
+
+		return messageBoardAttachmentResource.
+			postMessageBoardMessageMessageBoardAttachment(
+				testGetMessageBoardMessageMessageBoardAttachmentsPage_getMessageBoardMessageId(),
+				messageBoardAttachment, multipartFiles);
+	}
+
+	@Test
+	public void testPostMessageBoardThreadMessageBoardAttachment()
+		throws Exception {
+
+		MessageBoardAttachment randomMessageBoardAttachment =
+			randomMessageBoardAttachment();
+
+		Map<String, File> multipartFiles = getMultipartFiles();
+
+		MessageBoardAttachment postMessageBoardAttachment =
+			testPostMessageBoardThreadMessageBoardAttachment_addMessageBoardAttachment(
+				randomMessageBoardAttachment, multipartFiles);
+
+		assertEquals(randomMessageBoardAttachment, postMessageBoardAttachment);
+		assertValid(postMessageBoardAttachment);
+
+		assertValid(postMessageBoardAttachment, multipartFiles);
+	}
+
+	protected MessageBoardAttachment
+			testPostMessageBoardThreadMessageBoardAttachment_addMessageBoardAttachment(
+				MessageBoardAttachment messageBoardAttachment,
+				Map<String, File> multipartFiles)
+		throws Exception {
+
+		return messageBoardAttachmentResource.
+			postMessageBoardThreadMessageBoardAttachment(
+				testGetMessageBoardThreadMessageBoardAttachmentsPage_getMessageBoardThreadId(),
+				messageBoardAttachment, multipartFiles);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		MessageBoardAttachment messageBoardAttachment1 =
+			testBatchEngineDeleteImportTask_addMessageBoardAttachment();
+
+		testBatchEngineDeleteImportTask_deleteMessageBoardAttachment(
+			200, null, messageBoardAttachment1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				getMessageBoardAttachmentHttpResponse(
+					messageBoardAttachment1.getId()));
+	}
+
+	protected MessageBoardAttachment
+			testBatchEngineDeleteImportTask_addMessageBoardAttachment()
+		throws Exception {
+
+		return testDeleteMessageBoardAttachment_addMessageBoardAttachment();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteMessageBoardAttachment(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.delivery.dto.v1_0.MessageBoardAttachment",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected MessageBoardAttachment
@@ -2109,7 +2220,30 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		return randomMessageBoardAttachment();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected MessageBoardAttachmentResource messageBoardAttachmentResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

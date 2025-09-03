@@ -38,13 +38,13 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.Portlet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.Portlet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -177,6 +177,7 @@ public class CETDeployerImpl implements CETDeployer {
 			_register(
 				EditorConfigContributor.class,
 				new CETEditorConfigContributor(
+					editorConfigContributorCET.getCompanyId(),
 					editorConfigContributorCET.getEditorConfigKeys(),
 					editorConfigContributorCET.getEditorNames(),
 					editorConfigContributorCET.getPortletNames(),
@@ -254,7 +255,7 @@ public class CETDeployerImpl implements CETDeployer {
 
 	private static final Snapshot<CommerceCETDeployer>
 		_commerceCETDeployerSnapshot = new Snapshot<>(
-			CETDeployer.class, CommerceCETDeployer.class);
+			CETDeployerImpl.class, CommerceCETDeployer.class);
 
 	private BundleContext _bundleContext;
 

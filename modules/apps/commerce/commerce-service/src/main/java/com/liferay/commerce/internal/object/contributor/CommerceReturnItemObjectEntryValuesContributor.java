@@ -10,10 +10,11 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
-import com.liferay.commerce.order.CommerceReturnThreadLocal;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.util.CommerceReturnThreadLocal;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.entry.ObjectEntryContext;
 import com.liferay.object.entry.contributor.ObjectEntryValuesContributor;
 import com.liferay.object.model.ObjectDefinition;
@@ -114,6 +115,7 @@ public class CommerceReturnItemObjectEntryValuesContributor
 					values.get(
 						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnERC")),
+				ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 				objectDefinition.getObjectDefinitionId());
 
 			if (originalObjectEntry == null) {
@@ -196,6 +198,7 @@ public class CommerceReturnItemObjectEntryValuesContributor
 					_objectEntryLocalService.getObjectEntry(
 						GetterUtil.getString(
 							values.get("externalReferenceCode")),
+						ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 						objectDefinitionId);
 
 				Map<String, Serializable> originalValues =

@@ -53,6 +53,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -70,16 +80,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -244,9 +244,9 @@ public abstract class BaseSiteResourceTestCase {
 
 	@Test
 	public void testGetMyUserAccountSitesPageWithPagination() throws Exception {
-		Page<Site> sitePage = siteResource.getMyUserAccountSitesPage(null);
+		Page<Site> sitesPage = siteResource.getMyUserAccountSitesPage(null);
 
-		int totalCount = GetterUtil.getInteger(sitePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(sitesPage.getTotalCount());
 
 		Site site1 = testGetMyUserAccountSitesPage_addSite(randomSite());
 
@@ -314,125 +314,6 @@ public abstract class BaseSiteResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetSiteByFriendlyUrlPath() throws Exception {
-		Site postSite = testGetSiteByFriendlyUrlPath_addSite();
-
-		Site getSite = siteResource.getSiteByFriendlyUrlPath(
-			postSite.getFriendlyUrlPath());
-
-		assertEquals(postSite, getSite);
-		assertValid(getSite);
-	}
-
-	protected Site testGetSiteByFriendlyUrlPath_addSite() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetSiteByFriendlyUrlPath() throws Exception {
-		Site site = testGraphQLGetSiteByFriendlyUrlPath_addSite();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				site,
-				SiteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"byFriendlyUrlPath",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"friendlyUrlPath",
-											"\"" + site.getFriendlyUrlPath() +
-												"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/byFriendlyUrlPath"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				site,
-				SiteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"byFriendlyUrlPath",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"friendlyUrlPath",
-												"\"" +
-													site.getFriendlyUrlPath() +
-														"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/byFriendlyUrlPath"))));
-	}
-
-	@Test
-	public void testGraphQLGetSiteByFriendlyUrlPathNotFound() throws Exception {
-		String irrelevantFriendlyUrlPath =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"byFriendlyUrlPath",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"friendlyUrlPath",
-									irrelevantFriendlyUrlPath);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"byFriendlyUrlPath",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"friendlyUrlPath",
-										irrelevantFriendlyUrlPath);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Site testGraphQLGetSiteByFriendlyUrlPath_addSite()
-		throws Exception {
-
-		return testGraphQLSite_addSite();
 	}
 
 	@Test
@@ -727,6 +608,130 @@ public abstract class BaseSiteResourceTestCase {
 
 	protected Site testGraphQLGetSite_addSite() throws Exception {
 		return testGraphQLSite_addSite();
+	}
+
+	@Test
+	public void testGetSiteByFriendlyUrlPath() throws Exception {
+		Site postSite = testGetSiteByFriendlyUrlPath_addSite();
+
+		Site getSite = siteResource.getSiteByFriendlyUrlPath(
+			postSite.getFriendlyUrlPath());
+
+		assertEquals(postSite, getSite);
+		assertValid(getSite);
+	}
+
+	protected Site testGetSiteByFriendlyUrlPath_addSite() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteByFriendlyUrlPath() throws Exception {
+		Site site = testGraphQLGetSiteByFriendlyUrlPath_addSite();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				site,
+				SiteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"byFriendlyUrlPath",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"friendlyUrlPath",
+											"\"" + site.getFriendlyUrlPath() +
+												"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/byFriendlyUrlPath"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				site,
+				SiteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"byFriendlyUrlPath",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"friendlyUrlPath",
+												"\"" +
+													site.getFriendlyUrlPath() +
+														"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/byFriendlyUrlPath"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteByFriendlyUrlPathNotFound() throws Exception {
+		String irrelevantFriendlyUrlPath =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"byFriendlyUrlPath",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"friendlyUrlPath",
+									irrelevantFriendlyUrlPath);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"byFriendlyUrlPath",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"friendlyUrlPath",
+										irrelevantFriendlyUrlPath);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Site testGraphQLGetSiteByFriendlyUrlPath_addSite()
+		throws Exception {
+
+		return testGraphQLSite_addSite();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Site testGraphQLSite_addSite() throws Exception {

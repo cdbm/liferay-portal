@@ -8,7 +8,7 @@ import DropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import React, {useContext, useEffect, useState} from 'react';
 
-import {TSort} from '../../index';
+import {TSort} from '../../utils/types';
 import ViewsContext from '../../views/ViewsContext';
 
 // @ts-ignore
@@ -62,7 +62,7 @@ function SortDropdown() {
 						/>
 					</span>
 
-					{Liferay.Language.get('order')}
+					{Liferay.Language.get('order[sort]')}
 
 					<ClayIcon
 						className="inline-item inline-item-after"

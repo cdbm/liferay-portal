@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.site.setting.client.dto.v1_0.TaxCategory;
 import com.liferay.headless.commerce.admin.site.setting.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.site.setting.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			testCompany.getCompanyId());
 
 		taxCategoryResource = TaxCategoryResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -198,6 +211,149 @@ public abstract class BaseTaxCategoryResourceTestCase {
 		Assert.assertFalse(json.contains(regex));
 
 		taxCategory = TaxCategorySerDes.toDTO(json);
+	}
+
+	@Test
+	public void testDeleteTaxCategory() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TaxCategory taxCategory = testDeleteTaxCategory_addTaxCategory();
+
+		assertHttpResponseStatusCode(
+			204,
+			taxCategoryResource.deleteTaxCategoryHttpResponse(
+				taxCategory.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			taxCategoryResource.getTaxCategoryHttpResponse(
+				taxCategory.getId()));
+		assertHttpResponseStatusCode(
+			404, taxCategoryResource.getTaxCategoryHttpResponse(0L));
+	}
+
+	protected TaxCategory testDeleteTaxCategory_addTaxCategory()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteTaxCategory() throws Exception {
+
+		// No namespace
+
+		TaxCategory taxCategory1 =
+			testGraphQLDeleteTaxCategory_addTaxCategory();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTaxCategory",
+						new HashMap<String, Object>() {
+							{
+								put("id", taxCategory1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteTaxCategory"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"taxCategory",
+					new HashMap<String, Object>() {
+						{
+							put("id", taxCategory1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
+
+		TaxCategory taxCategory2 =
+			testGraphQLDeleteTaxCategory_addTaxCategory();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminSiteSetting_v1_0",
+						new GraphQLField(
+							"deleteTaxCategory",
+							new HashMap<String, Object>() {
+								{
+									put("id", taxCategory2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
+				"Object/deleteTaxCategory"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminSiteSetting_v1_0",
+					new GraphQLField(
+						"taxCategory",
+						new HashMap<String, Object>() {
+							{
+								put("id", taxCategory2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected TaxCategory testGraphQLDeleteTaxCategory_addTaxCategory()
+		throws Exception {
+
+		return testGraphQLTaxCategory_addTaxCategory();
+	}
+
+	@Test
+	public void testDeleteTaxCategoryBatch() throws Exception {
+		TaxCategory taxCategory1 = testDeleteTaxCategoryBatch_addTaxCategory();
+
+		testDeleteTaxCategoryBatch_deleteTaxCategory(
+			202, null, taxCategory1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			taxCategoryResource.getTaxCategoryHttpResponse(
+				taxCategory1.getId()));
+	}
+
+	protected TaxCategory testDeleteTaxCategoryBatch_addTaxCategory()
+		throws Exception {
+
+		return testDeleteTaxCategory_addTaxCategory();
+	}
+
+	protected void testDeleteTaxCategoryBatch_deleteTaxCategory(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			taxCategoryResource.deleteTaxCategoryBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -279,11 +435,12 @@ public abstract class BaseTaxCategoryResourceTestCase {
 		Long groupId =
 			testGetCommerceAdminSiteSettingGroupTaxCategoryPage_getGroupId();
 
-		Page<TaxCategory> taxCategoryPage =
+		Page<TaxCategory> taxCategoriesPage =
 			taxCategoryResource.getCommerceAdminSiteSettingGroupTaxCategoryPage(
 				groupId, null);
 
-		int totalCount = GetterUtil.getInteger(taxCategoryPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			taxCategoriesPage.getTotalCount());
 
 		TaxCategory taxCategory1 =
 			testGetCommerceAdminSiteSettingGroupTaxCategoryPage_addTaxCategory(
@@ -393,135 +550,6 @@ public abstract class BaseTaxCategoryResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostCommerceAdminSiteSettingGroupTaxCategory()
-		throws Exception {
-
-		TaxCategory randomTaxCategory = randomTaxCategory();
-
-		TaxCategory postTaxCategory =
-			testPostCommerceAdminSiteSettingGroupTaxCategory_addTaxCategory(
-				randomTaxCategory);
-
-		assertEquals(randomTaxCategory, postTaxCategory);
-		assertValid(postTaxCategory);
-	}
-
-	protected TaxCategory
-			testPostCommerceAdminSiteSettingGroupTaxCategory_addTaxCategory(
-				TaxCategory taxCategory)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteTaxCategory() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		TaxCategory taxCategory = testDeleteTaxCategory_addTaxCategory();
-
-		assertHttpResponseStatusCode(
-			204,
-			taxCategoryResource.deleteTaxCategoryHttpResponse(
-				taxCategory.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxCategoryResource.getTaxCategoryHttpResponse(
-				taxCategory.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taxCategoryResource.getTaxCategoryHttpResponse(
-				taxCategory.getId()));
-	}
-
-	protected TaxCategory testDeleteTaxCategory_addTaxCategory()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteTaxCategory() throws Exception {
-
-		// No namespace
-
-		TaxCategory taxCategory1 =
-			testGraphQLDeleteTaxCategory_addTaxCategory();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteTaxCategory",
-						new HashMap<String, Object>() {
-							{
-								put("id", taxCategory1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteTaxCategory"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"taxCategory",
-					new HashMap<String, Object>() {
-						{
-							put("id", taxCategory1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
-
-		TaxCategory taxCategory2 =
-			testGraphQLDeleteTaxCategory_addTaxCategory();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminSiteSetting_v1_0",
-						new GraphQLField(
-							"deleteTaxCategory",
-							new HashMap<String, Object>() {
-								{
-									put("id", taxCategory2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
-				"Object/deleteTaxCategory"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminSiteSetting_v1_0",
-					new GraphQLField(
-						"taxCategory",
-						new HashMap<String, Object>() {
-							{
-								put("id", taxCategory2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected TaxCategory testGraphQLDeleteTaxCategory_addTaxCategory()
-		throws Exception {
-
-		return testGraphQLTaxCategory_addTaxCategory();
 	}
 
 	@Test
@@ -821,8 +849,86 @@ public abstract class BaseTaxCategoryResourceTestCase {
 	}
 
 	@Test
+	public void testPostCommerceAdminSiteSettingGroupTaxCategory()
+		throws Exception {
+
+		TaxCategory randomTaxCategory = randomTaxCategory();
+
+		TaxCategory postTaxCategory =
+			testPostCommerceAdminSiteSettingGroupTaxCategory_addTaxCategory(
+				randomTaxCategory);
+
+		assertEquals(randomTaxCategory, postTaxCategory);
+		assertValid(postTaxCategory);
+	}
+
+	protected TaxCategory
+			testPostCommerceAdminSiteSettingGroupTaxCategory_addTaxCategory(
+				TaxCategory taxCategory)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutTaxCategory() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		TaxCategory taxCategory1 =
+			testBatchEngineDeleteImportTask_addTaxCategory();
+
+		testBatchEngineDeleteImportTask_deleteTaxCategory(
+			200, null, taxCategory1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			taxCategoryResource.getTaxCategoryHttpResponse(
+				taxCategory1.getId()));
+	}
+
+	protected TaxCategory testBatchEngineDeleteImportTask_addTaxCategory()
+		throws Exception {
+
+		return testDeleteTaxCategory_addTaxCategory();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteTaxCategory(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.site.setting.dto.v1_0.TaxCategory",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected TaxCategory testGraphQLTaxCategory_addTaxCategory()
@@ -1282,7 +1388,30 @@ public abstract class BaseTaxCategoryResourceTestCase {
 		return randomTaxCategory();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected TaxCategoryResource taxCategoryResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

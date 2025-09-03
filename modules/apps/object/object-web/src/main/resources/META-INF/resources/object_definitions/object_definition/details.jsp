@@ -42,13 +42,15 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 			).put(
 				"isApproved", objectDefinition.isApproved()
 			).put(
+				"isEnableObjectEntrySchedule", objectDefinition.isEnableObjectEntrySchedule()
+			).put(
 				"isRootDescendantNode", objectDefinition.isRootDescendantNode()
 			).put(
 				"isRootNode", objectDefinition.isRootNode()
 			).put(
 				"label", LocalizationUtil.getLocalizationMap(objectDefinition.getLabel())
 			).put(
-				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("frontend-js-components-web")
+				"learnResources", LearnMessageUtil.getReactDataJSONObject("object-web")
 			).put(
 				"nonRelationshipObjectFieldsInfo", objectDefinitionsDetailsDisplayContext.getNonrelationshipObjectFieldsInfo()
 			).put(

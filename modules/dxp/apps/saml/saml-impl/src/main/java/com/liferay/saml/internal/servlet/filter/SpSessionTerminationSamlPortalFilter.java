@@ -5,6 +5,7 @@
 
 package com.liferay.saml.internal.servlet.filter;
 
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -14,12 +15,12 @@ import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.servlet.profile.SingleLogoutProfile;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -83,6 +84,11 @@ public class SpSessionTerminationSamlPortalFilter extends BaseSamlPortalFilter {
 
 				_singleLogoutProfile.terminateSpSession(
 					httpServletRequest, httpServletResponse);
+
+				if (FeatureFlagManagerUtil.isEnabled("LPD-29737")) {
+					_singleLogoutProfile.terminateSsoSession(
+						httpServletRequest, httpServletResponse);
+				}
 
 				_singleLogoutProfile.logout(
 					httpServletRequest, httpServletResponse);

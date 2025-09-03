@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Uuid} from '../contexts/StateContext';
+import {Uuid} from '../types/Uuid';
 import getRandomId from './getRandomId';
 import getUuid from './getUuid';
 import normalizeName from './normalizeName';
@@ -52,7 +52,7 @@ export const FIELD_TYPE_ICON: Record<FieldType, string> = {
 	'upload': 'upload',
 } as const;
 
-export const FIELD_TYPE_BUSINESS_TYPE: Record<FieldType, string> = {
+export const FIELD_TYPE_TO_BUSINESS_TYPE: Record<FieldType, string> = {
 	'boolean': 'Boolean',
 	'date': 'Date',
 	'datetime': 'DateTime',
@@ -66,11 +66,11 @@ export const FIELD_TYPE_BUSINESS_TYPE: Record<FieldType, string> = {
 	'upload': 'Attachment',
 } as const;
 
-export const FIELD_TYPE_DB_TYPE: Record<FieldType, string> = {
+export const FIELD_TYPE_TO_DB_TYPE: Record<FieldType, string> = {
 	'boolean': 'Boolean',
 	'date': 'Date',
 	'datetime': 'DateTime',
-	'decimal': 'BigDecimal',
+	'decimal': 'Double',
 	'integer': 'Integer',
 	'long-text': 'Clob',
 	'multiselect': 'String',
@@ -78,20 +78,6 @@ export const FIELD_TYPE_DB_TYPE: Record<FieldType, string> = {
 	'single-select': 'String',
 	'text': 'String',
 	'upload': 'Long',
-} as const;
-
-export const DB_TYPE_FIELD_TYPE: Record<string, FieldType> = {
-	BigDecimal: 'decimal',
-	Boolean: 'boolean',
-	Clob: 'long-text',
-	Date: 'date',
-	DateTime: 'datetime',
-	Integer: 'integer',
-	Long: 'upload',
-	RichText: 'rich-text',
-	SingleSelect: 'single-select',
-	String: 'text',
-	Upload: 'upload',
 } as const;
 
 // Types
@@ -110,7 +96,9 @@ type BaseField = {
 	label: Liferay.Language.LocalizedValue<string>;
 	localized: boolean;
 	name: string;
+	parent: Uuid;
 	required: boolean;
+	settings: {};
 	uuid: Uuid;
 };
 
@@ -136,9 +124,19 @@ export type LongTextField = BaseField & {
 	type: 'long-text';
 } & MaxLengthSettingsField;
 
+export type MultiselectField = BaseField & {
+	picklistId: number;
+	type: 'multiselect';
+};
+
 export type NumericField = BaseField & {
 	type: 'integer';
 } & UniqueValuesSettingsField;
+
+export type SingleSelectField = BaseField & {
+	picklistId: number;
+	type: 'single-select';
+};
 
 export type TextField = BaseField & {
 	type: 'text';
@@ -160,24 +158,47 @@ export type UploadField = BaseField & {
 export type Field =
 	| DateTimeField
 	| LongTextField
+	| MultiselectField
 	| NumericField
+	| SingleSelectField
 	| TextField
 	| UploadField
 	| (BaseField & {
 			settings: {};
 			type: Exclude<
 				FieldType,
-				['datetime', 'long-text', 'numeric', 'text', 'upload']
+				[
+					'datetime',
+					'long-text',
+					'multiselect',
+					'numeric',
+					'single-select',
+					'text',
+					'upload',
+				]
 			>;
 	  });
+
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export type FieldBusinessType =
-	(typeof FIELD_TYPE_BUSINESS_TYPE)[keyof typeof FIELD_TYPE_BUSINESS_TYPE];
+	(typeof FIELD_TYPE_TO_BUSINESS_TYPE)[keyof typeof FIELD_TYPE_TO_BUSINESS_TYPE];
 
 // Functions
 
-export function getDefaultField(type: FieldType): Field {
+export function getDefaultField({
+	label,
+	name,
+	parent,
+	required = false,
+	type,
+}: {
+	label?: string;
+	name?: string;
+	parent: Uuid;
+	required?: boolean;
+	type: FieldType;
+}): Field {
 	const base = {
 		erc: getRandomId(),
 		indexableConfig: {
@@ -187,11 +208,12 @@ export function getDefaultField(type: FieldType): Field {
 		},
 		label: {
 			[Liferay.ThemeDisplay.getDefaultLanguageId()]:
-				FIELD_TYPE_LABEL[type],
+				label ?? FIELD_TYPE_LABEL[type],
 		},
 		localized: Liferay.FeatureFlags['LPD-32050'],
-		name: normalizeName(type),
-		required: false,
+		name: name ?? normalizeName(type),
+		parent,
+		required,
 		settings: {},
 		uuid: getUuid(),
 	};
@@ -214,6 +236,20 @@ export function getDefaultField(type: FieldType): Field {
 				maximumFileSize: 100,
 			},
 			type: 'upload',
+		};
+	}
+	else if (type === 'single-select') {
+		return {
+			...base,
+			picklistId: 0,
+			type: 'single-select',
+		};
+	}
+	else if (type === 'multiselect') {
+		return {
+			...base,
+			picklistId: 0,
+			type: 'multiselect',
 		};
 	}
 

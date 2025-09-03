@@ -26,18 +26,18 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Marko Cikos
@@ -184,7 +184,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if (portletResponse != null) {
 			_namespace = portletResponse.getNamespace();
@@ -744,8 +744,8 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write(" management-bar-light");
 		}
 
-		jspWriter.write(
-			"\"><div class=\"container-fluid\"><ul class=\"navbar-nav\">");
+		jspWriter.write("\"><div class=\"container-fluid ");
+		jspWriter.write("container-fluid-max-xxxl\"><ul class=\"navbar-nav\">");
 
 		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
 			pageContext);
@@ -1031,7 +1031,8 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		if (!active && isShowSearch()) {
 			jspWriter.write("<div class=\"navbar-form navbar-form-autofit ");
 			jspWriter.write(" navbar-overlay navbar-overlay-sm-down\"><div");
-			jspWriter.write(" class=\"container-fluid\"><form");
+			jspWriter.write(" class=\"container-fluid ");
+			jspWriter.write("container-fluid-max-xxxl\"><form");
 
 			String searchActionURL = getSearchActionURL();
 
@@ -1202,8 +1203,9 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		if (isShowResultsBar()) {
 			jspWriter.write("<nav class=\"subnav-tbar subnav-tbar-primary");
 			jspWriter.write(" tbar tbar-inline-xs-down\"><div class=\"");
-			jspWriter.write("container-fluid\"><ul class=\"tbar-nav ");
-			jspWriter.write("tbar-nav-wrap\"><li class=\"tbar-item");
+			jspWriter.write("container-fluid container-fluid-max-xxxl\">");
+			jspWriter.write("<ul class=\"tbar-nav tbar-nav-wrap\"><li ");
+			jspWriter.write("class=\"tbar-item");
 
 			List<LabelItem> filterLabelItems = getFilterLabelItems();
 

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductChannel;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseProductChannelResourceTestCase {
 			testCompany.getCompanyId());
 
 		productChannelResource = ProductChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -225,11 +238,8 @@ public abstract class BaseProductChannelResourceTestCase {
 			404,
 			productChannelResource.getProductChannelHttpResponse(
 				productChannel.getId()));
-
 		assertHttpResponseStatusCode(
-			404,
-			productChannelResource.getProductChannelHttpResponse(
-				productChannel.getId()));
+			404, productChannelResource.getProductChannelHttpResponse(0L));
 	}
 
 	protected ProductChannel testDeleteProductChannel_addProductChannel()
@@ -315,6 +325,257 @@ public abstract class BaseProductChannelResourceTestCase {
 		throws Exception {
 
 		return testGraphQLProductChannel_addProductChannel();
+	}
+
+	@Test
+	public void testDeleteProductChannelBatch() throws Exception {
+		ProductChannel productChannel1 =
+			testDeleteProductChannelBatch_addProductChannel();
+
+		testDeleteProductChannelBatch_deleteProductChannel(
+			202, null, productChannel1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productChannelResource.getProductChannelHttpResponse(
+				productChannel1.getId()));
+	}
+
+	protected ProductChannel testDeleteProductChannelBatch_addProductChannel()
+		throws Exception {
+
+		return testDeleteProductChannel_addProductChannel();
+	}
+
+	protected void testDeleteProductChannelBatch_deleteProductChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productChannelResource.deleteProductChannelBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetProductByExternalReferenceCodeProductChannelsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetProductByExternalReferenceCodeProductChannelsPage_getIrrelevantExternalReferenceCode();
+
+		Page<ProductChannel> page =
+			productChannelResource.
+				getProductByExternalReferenceCodeProductChannelsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			ProductChannel irrelevantProductChannel =
+				testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantProductChannel());
+
+			page =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantProductChannel,
+				(List<ProductChannel>)page.getItems());
+			assertValid(
+				page,
+				testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		ProductChannel productChannel1 =
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				externalReferenceCode, randomProductChannel());
+
+		ProductChannel productChannel2 =
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				externalReferenceCode, randomProductChannel());
+
+		page =
+			productChannelResource.
+				getProductByExternalReferenceCodeProductChannelsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(productChannel1, (List<ProductChannel>)page.getItems());
+		assertContains(productChannel2, (List<ProductChannel>)page.getItems());
+		assertValid(
+			page,
+			testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
+				externalReferenceCode));
+
+		productChannelResource.deleteProductChannel(productChannel1.getId());
+
+		productChannelResource.deleteProductChannel(productChannel2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetProductByExternalReferenceCodeProductChannelsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode();
+
+		Page<ProductChannel> productChannelsPage =
+			productChannelResource.
+				getProductByExternalReferenceCodeProductChannelsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			productChannelsPage.getTotalCount());
+
+		ProductChannel productChannel1 =
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				externalReferenceCode, randomProductChannel());
+
+		ProductChannel productChannel2 =
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				externalReferenceCode, randomProductChannel());
+
+		ProductChannel productChannel3 =
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				externalReferenceCode, randomProductChannel());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductChannel> page1 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				productChannel1, (List<ProductChannel>)page1.getItems());
+
+			Page<ProductChannel> page2 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productChannel2, (List<ProductChannel>)page2.getItems());
+
+			Page<ProductChannel> page3 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productChannel3, (List<ProductChannel>)page3.getItems());
+		}
+		else {
+			Page<ProductChannel> page1 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<ProductChannel> productChannels1 =
+				(List<ProductChannel>)page1.getItems();
+
+			Assert.assertEquals(
+				productChannels1.toString(), totalCount + 2,
+				productChannels1.size());
+
+			Page<ProductChannel> page2 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductChannel> productChannels2 =
+				(List<ProductChannel>)page2.getItems();
+
+			Assert.assertEquals(
+				productChannels2.toString(), 1, productChannels2.size());
+
+			Page<ProductChannel> page3 =
+				productChannelResource.
+					getProductByExternalReferenceCodeProductChannelsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productChannel1, (List<ProductChannel>)page3.getItems());
+			assertContains(
+				productChannel2, (List<ProductChannel>)page3.getItems());
+			assertContains(
+				productChannel3, (List<ProductChannel>)page3.getItems());
+		}
+	}
+
+	protected ProductChannel
+			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
+				String externalReferenceCode, ProductChannel productChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeProductChannelsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -623,216 +884,6 @@ public abstract class BaseProductChannelResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductByExternalReferenceCodeProductChannelsPage()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetProductByExternalReferenceCodeProductChannelsPage_getIrrelevantExternalReferenceCode();
-
-		Page<ProductChannel> page =
-			productChannelResource.
-				getProductByExternalReferenceCodeProductChannelsPage(
-					externalReferenceCode, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			ProductChannel irrelevantProductChannel =
-				testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-					irrelevantExternalReferenceCode,
-					randomIrrelevantProductChannel());
-
-			page =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						irrelevantExternalReferenceCode,
-						Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantProductChannel,
-				(List<ProductChannel>)page.getItems());
-			assertValid(
-				page,
-				testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		ProductChannel productChannel1 =
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				externalReferenceCode, randomProductChannel());
-
-		ProductChannel productChannel2 =
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				externalReferenceCode, randomProductChannel());
-
-		page =
-			productChannelResource.
-				getProductByExternalReferenceCodeProductChannelsPage(
-					externalReferenceCode, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(productChannel1, (List<ProductChannel>)page.getItems());
-		assertContains(productChannel2, (List<ProductChannel>)page.getItems());
-		assertValid(
-			page,
-			testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
-				externalReferenceCode));
-
-		productChannelResource.deleteProductChannel(productChannel1.getId());
-
-		productChannelResource.deleteProductChannel(productChannel2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetProductByExternalReferenceCodeProductChannelsPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetProductByExternalReferenceCodeProductChannelsPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode();
-
-		Page<ProductChannel> productChannelPage =
-			productChannelResource.
-				getProductByExternalReferenceCodeProductChannelsPage(
-					externalReferenceCode, null);
-
-		int totalCount = GetterUtil.getInteger(
-			productChannelPage.getTotalCount());
-
-		ProductChannel productChannel1 =
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				externalReferenceCode, randomProductChannel());
-
-		ProductChannel productChannel2 =
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				externalReferenceCode, randomProductChannel());
-
-		ProductChannel productChannel3 =
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				externalReferenceCode, randomProductChannel());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<ProductChannel> page1 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(
-				productChannel1, (List<ProductChannel>)page1.getItems());
-
-			Page<ProductChannel> page2 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			assertContains(
-				productChannel2, (List<ProductChannel>)page2.getItems());
-
-			Page<ProductChannel> page3 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit));
-
-			assertContains(
-				productChannel3, (List<ProductChannel>)page3.getItems());
-		}
-		else {
-			Page<ProductChannel> page1 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(1, totalCount + 2));
-
-			List<ProductChannel> productChannels1 =
-				(List<ProductChannel>)page1.getItems();
-
-			Assert.assertEquals(
-				productChannels1.toString(), totalCount + 2,
-				productChannels1.size());
-
-			Page<ProductChannel> page2 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<ProductChannel> productChannels2 =
-				(List<ProductChannel>)page2.getItems();
-
-			Assert.assertEquals(
-				productChannels2.toString(), 1, productChannels2.size());
-
-			Page<ProductChannel> page3 =
-				productChannelResource.
-					getProductByExternalReferenceCodeProductChannelsPage(
-						externalReferenceCode,
-						Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(
-				productChannel1, (List<ProductChannel>)page3.getItems());
-			assertContains(
-				productChannel2, (List<ProductChannel>)page3.getItems());
-			assertContains(
-				productChannel3, (List<ProductChannel>)page3.getItems());
-		}
-	}
-
-	protected ProductChannel
-			testGetProductByExternalReferenceCodeProductChannelsPage_addProductChannel(
-				String externalReferenceCode, ProductChannel productChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetProductByExternalReferenceCodeProductChannelsPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetProductByExternalReferenceCodeProductChannelsPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
 	public void testGetProductIdProductChannelsPage() throws Exception {
 		Long id = testGetProductIdProductChannelsPage_getId();
 		Long irrelevantId =
@@ -901,11 +952,11 @@ public abstract class BaseProductChannelResourceTestCase {
 
 		Long id = testGetProductIdProductChannelsPage_getId();
 
-		Page<ProductChannel> productChannelPage =
+		Page<ProductChannel> productChannelsPage =
 			productChannelResource.getProductIdProductChannelsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productChannelPage.getTotalCount());
+			productChannelsPage.getTotalCount());
 
 		ProductChannel productChannel1 =
 			testGetProductIdProductChannelsPage_addProductChannel(
@@ -1013,6 +1064,61 @@ public abstract class BaseProductChannelResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ProductChannel productChannel1 =
+			testBatchEngineDeleteImportTask_addProductChannel();
+
+		testBatchEngineDeleteImportTask_deleteProductChannel(
+			200, null, productChannel1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			productChannelResource.getProductChannelHttpResponse(
+				productChannel1.getId()));
+	}
+
+	protected ProductChannel testBatchEngineDeleteImportTask_addProductChannel()
+		throws Exception {
+
+		return testDeleteProductChannel_addProductChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteProductChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected ProductChannel testGraphQLProductChannel_addProductChannel()
@@ -1697,7 +1803,30 @@ public abstract class BaseProductChannelResourceTestCase {
 		return randomProductChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductChannelResource productChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.asset.service.base.AssetCategoryServiceBaseImpl;
+import com.liferay.portlet.asset.service.permission.AssetCategoriesPermission;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 import com.liferay.util.dao.orm.CustomSQLUtil;
 
@@ -111,6 +112,22 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 			getPermissionChecker(), categoryId, ActionKeys.DELETE);
 
 		assetCategoryLocalService.deleteCategory(categoryId);
+	}
+
+	@Override
+	public AssetCategory deleteCategoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetCategory assetCategory =
+			assetCategoryLocalService.getAssetCategoryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		AssetCategoryPermission.check(
+			getPermissionChecker(), assetCategory.getCategoryId(),
+			ActionKeys.DELETE);
+
+		return assetCategoryLocalService.deleteCategory(assetCategory);
 	}
 
 	@Override
@@ -279,6 +296,25 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 
 		return assetCategoryPersistence.countByParentCategoryId(
 			parentCategoryId);
+	}
+
+	public AssetCategory getOrAddEmptyCategory(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetCategory category =
+			assetCategoryService.fetchCategoryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		if (category != null) {
+			return category;
+		}
+
+		AssetCategoriesPermission.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_CATEGORY);
+
+		return assetCategoryLocalService.getOrAddEmptyCategory(
+			externalReferenceCode, getUserId(), groupId);
 	}
 
 	@Override

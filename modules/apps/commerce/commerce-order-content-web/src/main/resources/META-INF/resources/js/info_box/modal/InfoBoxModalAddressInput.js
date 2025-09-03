@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import Autocomplete from '@clayui/autocomplete';
 import ClayForm, {
 	ClayInput,
 	ClaySelect,
@@ -13,7 +14,7 @@ import classnames from 'classnames';
 import {CommerceServiceProvider} from 'commerce-frontend-js';
 import {openToast} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 const InfoBoxModalAddressInput = ({
 	additionalProps,
@@ -31,6 +32,7 @@ const InfoBoxModalAddressInput = ({
 	const [countries, setCountries] = useState([]);
 	const [errors, setErrors] = useState({});
 	const [hasRegions, setHasRegions] = useState(false);
+	const [subtypes, setSubtypes] = useState([]);
 
 	const getAddressType = () => {
 		if (field === 'billingAddress') {
@@ -193,6 +195,48 @@ const InfoBoxModalAddressInput = ({
 	}, [currentAddress]);
 
 	useEffect(() => {
+		const externalReferenceCode =
+			currentAddress.addressType === 'billing'
+				? additionalProps.addressSubtypeConfiguration.billing
+				: currentAddress.addressType === 'shipping'
+					? additionalProps.addressSubtypeConfiguration.shipping
+					: additionalProps.addressSubtypeConfiguration
+							.billingAndShipping;
+
+		if (!externalReferenceCode) {
+			setSubtypes([]);
+
+			return;
+		}
+
+		CommerceServiceProvider.AdminListTypeAPI('v1')
+			.getListTypeEntries(externalReferenceCode, {
+				pageSize: -1,
+			})
+			.then((data) => {
+				setSubtypes(data.items);
+			})
+			.catch((error) => {
+				setSubtypes([]);
+
+				openToast({
+					message:
+						error.detail ||
+						error.errorDescription ||
+						Liferay.Language.get(
+							'an-unexpected-system-error-occurred'
+						),
+					type: 'danger',
+				});
+			});
+	}, [
+		additionalProps.addressSubtypeConfiguration.billing,
+		additionalProps.addressSubtypeConfiguration.billingAndShipping,
+		additionalProps.addressSubtypeConfiguration.shipping,
+		currentAddress.addressType,
+	]);
+
+	useEffect(() => {
 		CommerceServiceProvider.AdminUserAPI('v1')
 			.getPostalAddresses(Liferay.CommerceContext.account.accountId)
 			.then(({items}) => {
@@ -269,6 +313,17 @@ const InfoBoxModalAddressInput = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	const filteredSubtypeItems = useMemo(
+		() =>
+			subtypes.filter(
+				(item) =>
+					item.name.match(
+						new RegExp(currentAddress?.addressSubtype || '', 'i')
+					) !== null
+			),
+		[currentAddress?.addressSubtype, subtypes]
+	);
+
 	return (
 		<>
 			<label htmlFor="infoBoxModalAddressInput">
@@ -341,6 +396,82 @@ const InfoBoxModalAddressInput = ({
 							name="infoBoxModalAddressNameInput"
 						/>
 					</ClayForm.Group>
+
+					{(additionalProps.addressSubtypeConfiguration.billing ||
+						additionalProps.addressSubtypeConfiguration
+							.billingAndShipping ||
+						additionalProps.addressSubtypeConfiguration
+							.shipping) && (
+						<ClayForm.Group
+							className={classnames({
+								'has-error':
+									!!errors.infoBoxModalAddressSubtypeInput,
+							})}
+						>
+							<label htmlFor="infoBoxModalAddressSubtypeInput">
+								{Liferay.Language.get('subtype')}
+							</label>
+
+							<Autocomplete
+								aria-label={Liferay.Language.get('subtype')}
+								className="mb-3"
+								defaultValue={
+									currentAddress?.addressSubtype || ''
+								}
+								disabled={
+									!!currentAddress.id ||
+									!(currentAddress?.addressType === 'billing'
+										? additionalProps
+												.addressSubtypeConfiguration
+												.billing
+										: currentAddress.addressType ===
+											  'shipping'
+											? additionalProps
+													.addressSubtypeConfiguration
+													.shipping
+											: additionalProps
+													.addressSubtypeConfiguration
+													.billingAndShipping)
+								}
+								filterKey="name"
+								id="infoBoxModalAddressSubtypeInput"
+								items={filteredSubtypeItems}
+								menuTrigger="focus"
+								name="infoBoxModalAddressSubtypeInput"
+								onChange={(value) => {
+									setCurrentAddress((prevState) => {
+										return {
+											...prevState,
+											addressSubtype: value,
+										};
+									});
+								}}
+								onItemsChange={() => {}}
+								placeholder={Liferay.Language.get('subtype')}
+								value={
+									subtypes.find(
+										(item) =>
+											item.key ===
+											currentAddress?.addressSubtype
+									)?.name || currentAddress?.addressSubtype
+								}
+							>
+								{(item) => (
+									<Autocomplete.Item
+										key={item.key}
+										textValue={item.key}
+									>
+										<div>{item.name}</div>
+									</Autocomplete.Item>
+								)}
+							</Autocomplete>
+
+							<ErrorMessage
+								errors={errors}
+								name="infoBoxModalAddressSubtypeInput"
+							/>
+						</ClayForm.Group>
+					)}
 
 					<ClayForm.Group
 						className={classnames({

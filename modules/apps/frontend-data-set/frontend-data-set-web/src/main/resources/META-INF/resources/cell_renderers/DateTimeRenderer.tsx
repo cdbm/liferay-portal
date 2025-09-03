@@ -6,7 +6,15 @@
 import {ETimeZoneBehaviors} from '../constants';
 
 interface IDateTimeRendererOptions {
-	format?: any;
+	format?: {
+		day?: 'numeric' | '2-digit';
+		hour?: 'numeric' | '2-digit';
+		minute?: 'numeric' | '2-digit';
+		month?: 'numeric' | '2-digit' | 'short' | 'long' | 'narrow';
+		second?: 'numeric' | '2-digit';
+		timeZone?: string;
+		year?: 'numeric' | '2-digit';
+	};
 	timeZoneBehavior?: ETimeZoneBehaviors;
 }
 
@@ -23,13 +31,14 @@ function DateTimeRenderer({
 
 	const locale = Liferay.ThemeDisplay.getBCP47LanguageId();
 
-	const dateOptions = options?.format || {
-		day: 'numeric',
-		hour: 'numeric',
-		minute: 'numeric',
-		month: 'short',
-		second: 'numeric',
-		year: 'numeric',
+	const dateOptions = {
+		day: options?.format?.day || 'numeric',
+		hour: options?.format?.hour || 'numeric',
+		minute: options?.format?.minute || 'numeric',
+		month: options?.format?.month || 'short',
+		second: options?.format?.second || 'numeric',
+		timeZone: options?.format?.timeZone || 'UTC',
+		year: options?.format?.year || 'numeric',
 	};
 
 	if (

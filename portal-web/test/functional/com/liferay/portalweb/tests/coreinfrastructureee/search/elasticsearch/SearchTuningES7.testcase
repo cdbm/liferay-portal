@@ -5,7 +5,7 @@ definition {
 	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.main.component.name = "Elasticsearch Impl";
+	property testray.main.component.name = "Search Infrastructure > Elasticsearch Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -218,6 +218,8 @@ definition {
 
 	@priority = 3
 	test AssertResultRankingsMiscUI {
+		property custom.properties = "search.container.page.delta.values=4,20,40,60";
+
 		SearchTuning.openResultRankingsAdmin();
 
 		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
@@ -297,7 +299,7 @@ definition {
 
 	@priority = 4
 	test AssertResultRankingsPagination {
-		property custom.properties = "search.container.page.default.delta=5";
+		property custom.properties = "search.container.page.default.delta=5${line.separator}search.container.page.delta.values=4,20,40,60";
 
 		SearchTuning.openResultRankingsAdmin();
 
@@ -541,7 +543,7 @@ definition {
 
 	@priority = 4
 	test AssertSynonymsPagination {
-		property custom.properties = "search.container.page.default.delta=5";
+		property custom.properties = "search.container.page.default.delta=5${line.separator}search.container.page.delta.values=4,20,40,60";
 
 		SearchTuning.openSynonymsAdmin();
 
@@ -1108,7 +1110,7 @@ definition {
 
 	@priority = 5
 	test SearchWithSynonyms {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		for (var title : list "banana,red apple,citrus-orange,blue.berry!,\"xigua\"") {
 			JSONWebcontent.addWebContent(

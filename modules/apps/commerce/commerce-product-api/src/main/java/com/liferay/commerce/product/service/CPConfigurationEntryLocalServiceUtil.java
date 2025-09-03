@@ -66,8 +66,8 @@ public class CPConfigurationEntryLocalServiceUtil {
 			java.math.BigDecimal minStockQuantity,
 			java.math.BigDecimal multipleOrderQuantity, boolean purchasable,
 			boolean shippable, double shippingExtraPrice,
-			boolean shipSeparately, boolean taxExempt, boolean visible,
-			double weight, double width)
+			boolean shipSeparately, boolean taxExempt, double weight,
+			double width)
 		throws PortalException {
 
 		return getService().addCPConfigurationEntry(
@@ -78,7 +78,7 @@ public class CPConfigurationEntryLocalServiceUtil {
 			displayStockQuantity, freeShipping, height, lowStockActivity,
 			maxOrderQuantity, minOrderQuantity, minStockQuantity,
 			multipleOrderQuantity, purchasable, shippable, shippingExtraPrice,
-			shipSeparately, taxExempt, visible, weight, width);
+			shipSeparately, taxExempt, weight, width);
 	}
 
 	/**
@@ -110,10 +110,10 @@ public class CPConfigurationEntryLocalServiceUtil {
 	}
 
 	public static void deleteCPConfigurationEntries(
-			long classNameId, long classPK)
+			long classNameId, long classPK, boolean force)
 		throws PortalException {
 
-		getService().deleteCPConfigurationEntries(classNameId, classPK);
+		getService().deleteCPConfigurationEntries(classNameId, classPK, force);
 	}
 
 	/**
@@ -134,6 +134,14 @@ public class CPConfigurationEntryLocalServiceUtil {
 		return getService().deleteCPConfigurationEntry(cpConfigurationEntry);
 	}
 
+	public static CPConfigurationEntry deleteCPConfigurationEntry(
+			CPConfigurationEntry cpConfigurationEntry, boolean force)
+		throws PortalException {
+
+		return getService().deleteCPConfigurationEntry(
+			cpConfigurationEntry, force);
+	}
+
 	/**
 	 * Deletes the cp configuration entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -150,6 +158,14 @@ public class CPConfigurationEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteCPConfigurationEntry(CPConfigurationEntryId);
+	}
+
+	public static CPConfigurationEntry deleteCPConfigurationEntry(
+			long cpConfigurationEntryId, boolean force)
+		throws PortalException {
+
+		return getService().deleteCPConfigurationEntry(
+			cpConfigurationEntryId, force);
 	}
 
 	/**
@@ -282,13 +298,6 @@ public class CPConfigurationEntryLocalServiceUtil {
 			uuid, groupId);
 	}
 
-	public static CPConfigurationEntry forceDeleteCPConfigurationEntry(
-		CPConfigurationEntry cpConfigurationEntry) {
-
-		return getService().forceDeleteCPConfigurationEntry(
-			cpConfigurationEntry);
-	}
-
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -322,13 +331,6 @@ public class CPConfigurationEntryLocalServiceUtil {
 		long classNameId, long classPK) {
 
 		return getService().getCPConfigurationEntries(classNameId, classPK);
-	}
-
-	public static List<CPConfigurationEntry> getCPConfigurationEntries(
-		long classNameId, long classPK, boolean visible) {
-
-		return getService().getCPConfigurationEntries(
-			classNameId, classPK, visible);
 	}
 
 	/**
@@ -482,8 +484,8 @@ public class CPConfigurationEntryLocalServiceUtil {
 			java.math.BigDecimal minStockQuantity,
 			java.math.BigDecimal multipleOrderQuantity, boolean purchasable,
 			boolean shippable, double shippingExtraPrice,
-			boolean shipSeparately, boolean taxExempt, boolean visible,
-			double weight, double width)
+			boolean shipSeparately, boolean taxExempt, double weight,
+			double width)
 		throws PortalException {
 
 		return getService().updateCPConfigurationEntry(
@@ -493,7 +495,7 @@ public class CPConfigurationEntryLocalServiceUtil {
 			displayStockQuantity, freeShipping, height, lowStockActivity,
 			maxOrderQuantity, minOrderQuantity, minStockQuantity,
 			multipleOrderQuantity, purchasable, shippable, shippingExtraPrice,
-			shipSeparately, taxExempt, visible, weight, width);
+			shipSeparately, taxExempt, weight, width);
 	}
 
 	public static CPConfigurationEntryLocalService getService() {

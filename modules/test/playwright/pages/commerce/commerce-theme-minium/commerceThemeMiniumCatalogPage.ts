@@ -6,6 +6,7 @@
 import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
 export class CommerceThemeMiniumCatalogPage {
+	readonly accountSelectorButton: Locator;
 	readonly catalogSearch: Locator;
 	readonly clearSearchButton: Locator;
 	readonly configurationIFrame: FrameLocator;
@@ -13,7 +14,9 @@ export class CommerceThemeMiniumCatalogPage {
 	readonly configurationIFrameDefaultSortingDropdownMenu: Locator;
 	readonly configurationIFrameSaveButton: Locator;
 	readonly configurationMenuItem: Locator;
+	readonly createNewOrderButton: Locator;
 	readonly firstCardItem: Locator;
+	readonly firstCardItemAddToCartButton: Locator;
 	readonly globalSearchBarButton: Locator;
 	readonly globalSearchBarInput: Locator;
 	readonly globalSearchBarCommerceItemLink: (text: string) => Locator;
@@ -30,10 +33,15 @@ export class CommerceThemeMiniumCatalogPage {
 	readonly page: Page;
 	readonly popOverMessage: (popOverMessage: string) => Locator;
 	readonly productCard: (productName: string) => Locator;
+	readonly productCardPrice: (
+		productName: string,
+		productPrice: string
+	) => Locator;
 	readonly productCardAddToCartButton: (productName: string) => Locator;
 	readonly productLink: (productName: string) => Locator;
 
 	constructor(page: Page) {
+		this.accountSelectorButton = page.locator('.account-selector-dropdown');
 		this.catalogSearch = page.getByTestId('searchInput');
 		this.clearSearchButton = page.getByRole('button', {
 			name: 'Clear Search',
@@ -53,7 +61,14 @@ export class CommerceThemeMiniumCatalogPage {
 			exact: true,
 			name: 'Configuration',
 		});
+		this.createNewOrderButton = page.getByRole('button', {
+			name: 'Create New Order',
+		});
 		this.firstCardItem = page.locator('.product-card').first();
+		this.firstCardItemAddToCartButton = this.firstCardItem.getByRole(
+			'button',
+			{name: 'Add to Cart'}
+		);
 		this.globalSearchBarButton = page
 			.locator('.commerce-topbar-button__icon')
 			.first();
@@ -86,6 +101,10 @@ export class CommerceThemeMiniumCatalogPage {
 				.getByText(popOverMessage, {exact: true});
 		this.productCard = (productName: string) =>
 			this.page.locator('.product-card').filter({hasText: productName});
+		this.productCardPrice = (productName, productPrice) =>
+			this.productCard(productName).getByText(productPrice, {
+				exact: true,
+			});
 		this.productCardAddToCartButton = (productName: string) =>
 			this.productCard(productName).getByRole('button', {
 				exact: true,
@@ -169,6 +188,14 @@ export class CommerceThemeMiniumCatalogPage {
 		);
 	}
 
+	async addToCart(productName: string) {
+		await this.page.waitForLoadState('networkidle');
+
+		await this.productCardAddToCartButton(productName).click();
+
+		await this.page.waitForLoadState('networkidle');
+	}
+
 	async checkQuantitiesInPopOverMessages(
 		maxQuantity: number,
 		minQuantity: number,
@@ -230,7 +257,12 @@ export class CommerceThemeMiniumCatalogPage {
 	}
 
 	async focusGlobalSearchBarInput() {
-		await expect(this.globalSearchBarButton).toBeAttached();
-		await this.globalSearchBarButton.click();
+		await this.page.waitForLoadState('networkidle');
+
+		await expect(async () => {
+			await this.globalSearchBarButton.click();
+
+			await expect(this.globalSearchBarInput).toBeVisible();
+		}).toPass();
 	}
 }

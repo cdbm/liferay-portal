@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -41,6 +39,15 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -50,24 +57,111 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseUtilityPageResourceImpl
 	implements EntityModelResource, UtilityPageResource,
 			   VulcanBatchEngineTaskItemDelegate<UtilityPage> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes a specific utility page of a site."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteExternalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "utilityPageExternalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path(
+		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteSiteSiteByExternalReferenceCodeUtilityPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
+			String siteExternalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			String utilityPageExternalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves a specific utility page of a site."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteExternalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "utilityPageExternalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public UtilityPage getSiteSiteByExternalReferenceCodeUtilityPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
+			String siteExternalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			String utilityPageExternalReferenceCode)
+		throws Exception {
+
+		return new UtilityPage();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -124,23 +218,25 @@ public abstract class BaseUtilityPageResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteExternalReferenceCode}/utility-pages")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/sites/{siteExternalReferenceCode}/utility-pages")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Page<UtilityPage> getSiteSiteByExternalReferenceCodeUtilityPagesPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
 			String siteExternalReferenceCode,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
+			@jakarta.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context
+			@jakarta.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@jakarta.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@jakarta.ws.rs.core.Context Pagination pagination,
+			@jakarta.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -149,48 +245,17 @@ public abstract class BaseUtilityPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages' -d $'{"creatorExternalReferenceCode": ___, "dateCreated": ___, "dateModified": ___, "datePublished": ___, "externalReferenceCode": ___, "friendlyUrlHistory": ___, "friendlyUrlPath_i18n": ___, "markedAsDefault": ___, "name": ___, "pageSpecifications": ___, "thumbnail": ___, "type": ___, "utilityPageSettings": ___, "uuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Adds a new utility page"
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteExternalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/sites/{siteExternalReferenceCode}/utility-pages")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public UtilityPage postSiteSiteByExternalReferenceCodeUtilityPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
-			String siteExternalReferenceCode,
-			UtilityPage utilityPage)
-		throws Exception {
-
-		return new UtilityPage();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/permissions'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/permissions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "siteExternalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "utilityPageExternalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -209,155 +274,28 @@ public abstract class BaseUtilityPageResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/permissions"
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/permissions"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Page<Permission>
-			getSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteExternalReferenceCode")
-				String siteExternalReferenceCode,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("roleNames")
-				String roleNames)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteExternalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/permissions"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Page<Permission>
-			putSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteExternalReferenceCode")
-				String siteExternalReferenceCode,
-				Permission[] permissions)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes a specific utility page of a site."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteExternalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "utilityPageExternalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteSiteSiteByExternalReferenceCodeUtilityPage(
+	public Page<Permission> getSiteUtilityPagePermissionsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
 			String siteExternalReferenceCode,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
-			String utilityPageExternalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves a specific utility page of a site."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteExternalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "utilityPageExternalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public UtilityPage getSiteSiteByExternalReferenceCodeUtilityPage(
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			String utilityPageExternalReferenceCode,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
-			String siteExternalReferenceCode,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
-			String utilityPageExternalReferenceCode)
+			@jakarta.ws.rs.QueryParam("roleNames")
+			String roleNames)
 		throws Exception {
 
-		return new UtilityPage();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	/**
@@ -395,21 +333,21 @@ public abstract class BaseUtilityPageResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path(
 		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public UtilityPage patchSiteSiteByExternalReferenceCodeUtilityPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
 			String siteExternalReferenceCode,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
 			String utilityPageExternalReferenceCode,
 			UtilityPage utilityPage)
 		throws Exception {
@@ -473,54 +411,32 @@ public abstract class BaseUtilityPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}' -d $'{"creatorExternalReferenceCode": ___, "dateCreated": ___, "dateModified": ___, "datePublished": ___, "externalReferenceCode": ___, "friendlyUrlHistory": ___, "friendlyUrlPath_i18n": ___, "markedAsDefault": ___, "name": ___, "pageSpecifications": ___, "thumbnail": ___, "type": ___, "utilityPageSettings": ___, "uuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages' -d $'{"creatorExternalReferenceCode": ___, "dateCreated": ___, "dateModified": ___, "datePublished": ___, "externalReferenceCode": ___, "friendlyUrlHistory": ___, "friendlyUrlPath_i18n": ___, "markedAsDefault": ___, "name": ___, "pageSpecifications": ___, "thumbnail": ___, "type": ___, "utilityPageSettings": ___, "uuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates the utility page with the given external reference code, or creates it if it does not exist."
+		description = "Adds a new utility page"
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "siteExternalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "utilityPageExternalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/sites/{siteExternalReferenceCode}/utility-pages")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public UtilityPage putSiteSiteByExternalReferenceCodeUtilityPage(
+	public UtilityPage postSiteSiteByExternalReferenceCodeUtilityPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteExternalReferenceCode")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
 			String siteExternalReferenceCode,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
-			String utilityPageExternalReferenceCode,
 			UtilityPage utilityPage)
 		throws Exception {
 
@@ -562,21 +478,21 @@ public abstract class BaseUtilityPageResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
 		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/page-specifications"
 	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public ContentPageSpecification
 			postSiteSiteByExternalReferenceCodeUtilityPagePageSpecification(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteExternalReferenceCode")
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
 				String siteExternalReferenceCode,
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
+				@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
 				String utilityPageExternalReferenceCode,
 				ContentPageSpecification contentPageSpecification)
 		throws Exception {
@@ -587,8 +503,11 @@ public abstract class BaseUtilityPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/permissions'  -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-site/v1.0/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}' -d $'{"creatorExternalReferenceCode": ___, "dateCreated": ___, "dateModified": ___, "datePublished": ___, "externalReferenceCode": ___, "friendlyUrlHistory": ___, "friendlyUrlPath_i18n": ___, "markedAsDefault": ___, "name": ___, "pageSpecifications": ___, "thumbnail": ___, "type": ___, "utilityPageSettings": ___, "uuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the utility page with the given external reference code, or creates it if it does not exist."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -605,39 +524,37 @@ public abstract class BaseUtilityPageResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
+				name = "nestedFields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
+				name = "restrictFields"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/permissions"
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
+		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
-	public Page<Permission>
-			getSiteSiteExternalReferenceCodeUtilityPagePermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteExternalReferenceCode")
-				String siteExternalReferenceCode,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
-				String utilityPageExternalReferenceCode,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("roleNames")
-				String roleNames)
+	public UtilityPage putSiteSiteByExternalReferenceCodeUtilityPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
+			String siteExternalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			String utilityPageExternalReferenceCode,
+			UtilityPage utilityPage)
 		throws Exception {
 
-		return Page.of(Collections.emptyList());
+		return new UtilityPage();
 	}
 
 	/**
@@ -660,26 +577,27 @@ public abstract class BaseUtilityPageResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "UtilityPage")}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
 		"/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/permissions"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
-	public Page<Permission>
-			putSiteSiteExternalReferenceCodeUtilityPagePermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteExternalReferenceCode")
-				String siteExternalReferenceCode,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("utilityPageExternalReferenceCode")
-				String utilityPageExternalReferenceCode)
+	public Page<Permission> putSiteUtilityPagePermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteExternalReferenceCode")
+			String siteExternalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("utilityPageExternalReferenceCode")
+			String utilityPageExternalReferenceCode,
+			Permission[] permissions)
 		throws Exception {
 
-		return Page.of(Collections.emptyList());
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Override
@@ -719,13 +637,6 @@ public abstract class BaseUtilityPageResourceImpl
 			new MultivaluedHashMap<String, Object>(multivaluedMap));
 	}
 
-	@Override
-	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
-		throws Exception {
-
-		return null;
-	}
-
 	public String getResourceName() {
 		return "UtilityPage";
 	}
@@ -736,7 +647,9 @@ public abstract class BaseUtilityPageResourceImpl
 
 	@Override
 	public Page<UtilityPage> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -774,6 +687,13 @@ public abstract class BaseUtilityPageResourceImpl
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
+
+		return null;
 	}
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
@@ -827,7 +747,8 @@ public abstract class BaseUtilityPageResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -883,7 +804,7 @@ public abstract class BaseUtilityPageResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -908,7 +829,7 @@ public abstract class BaseUtilityPageResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -926,13 +847,13 @@ public abstract class BaseUtilityPageResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -943,7 +864,7 @@ public abstract class BaseUtilityPageResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -993,6 +914,20 @@ public abstract class BaseUtilityPageResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -1008,6 +943,80 @@ public abstract class BaseUtilityPageResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -1020,11 +1029,45 @@ public abstract class BaseUtilityPageResourceImpl
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -1044,6 +1087,104 @@ public abstract class BaseUtilityPageResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1057,6 +1198,29 @@ public abstract class BaseUtilityPageResourceImpl
 
 		return TransformUtil.unsafeTransformToLongArray(
 			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
@@ -1073,7 +1237,8 @@ public abstract class BaseUtilityPageResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

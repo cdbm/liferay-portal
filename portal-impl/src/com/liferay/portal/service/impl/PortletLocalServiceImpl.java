@@ -14,7 +14,6 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.ConfigurationFactoryImpl;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.application.type.ApplicationType;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletIdException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.internal.configuration.ConfigurationFactoryImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.model.PortletFilter;
 import com.liferay.portal.kernel.model.PortletInfo;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.PortletURLListener;
+import com.liferay.portal.kernel.model.PortletWrapper;
 import com.liferay.portal.kernel.model.PublicRenderParameter;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -112,6 +113,12 @@ import com.liferay.portlet.extra.config.ExtraPortletAppConfig;
 import com.liferay.portlet.extra.config.ExtraPortletAppConfigRegistry;
 import com.liferay.util.JS;
 
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PreferencesValidator;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.ServletContext;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -130,12 +137,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-
-import javax.portlet.PortletMode;
-import javax.portlet.PreferencesValidator;
-import javax.portlet.WindowState;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -506,7 +507,39 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 		Portlet portlet = companyPortletsMap.get(rootPortletId);
 
 		if (portlet != null) {
-			portlet = portlet.getClonedInstance(portletId);
+			String finalPortletId = portletId;
+			boolean finalStatic = portlet.isStatic();
+
+			portlet = new PortletWrapper(portlet) {
+
+				@Override
+				public String getInstanceId() {
+					return PortletIdCodec.decodeInstanceId(finalPortletId);
+				}
+
+				@Override
+				public String getPortletId() {
+					return finalPortletId;
+				}
+
+				@Override
+				public boolean getStatic() {
+					return _staticPortlet;
+				}
+
+				@Override
+				public boolean isStatic() {
+					return _staticPortlet;
+				}
+
+				@Override
+				public void setStatic(boolean staticPortlet) {
+					_staticPortlet = staticPortlet;
+				}
+
+				private boolean _staticPortlet = finalStatic;
+
+			};
 		}
 
 		return portlet;
@@ -1418,7 +1451,7 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 
 			PortletCategory curPortletCategory = new PortletCategory(name);
 
-			portletCategory.addCategory(curPortletCategory);
+			portletCategory.addCategory(curPortletCategory.getRootCategory());
 
 			Set<String> curPortletIds = curPortletCategory.getPortletIds();
 
@@ -3033,13 +3066,12 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 
 		@Override
 		public Portlet put(String key, Portlet value) {
-			if (!DBPartition.isPartitionEnabled() || (value == null) ||
-				(value.getCompanyId() == CompanyConstants.SYSTEM)) {
-
+			if (value.getCompanyId() == CompanyConstants.SYSTEM) {
 				return super.put(key, value);
 			}
 
-			return super.put(DBPartitionUtil.getPartitionKey(key), value);
+			return super.put(
+				DBPartitionUtil.getPartitionKey(key, value), value);
 		}
 
 		@Override
@@ -3066,7 +3098,7 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 			ServiceReference<FriendlyURLMapper> serviceReference) {
 
 			Object propertyValue = serviceReference.getProperty(
-				"javax.portlet.name");
+				"jakarta.portlet.name");
 
 			if (propertyValue == null) {
 				return null;

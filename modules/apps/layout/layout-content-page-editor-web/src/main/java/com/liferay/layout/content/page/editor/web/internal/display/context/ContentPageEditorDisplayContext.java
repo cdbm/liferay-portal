@@ -8,6 +8,8 @@ package com.liferay.layout.content.page.editor.web.internal.display.context;
 import com.liferay.asset.categories.item.selector.AssetCategoryTreeNodeItemSelectorCriterion;
 import com.liferay.asset.categories.item.selector.AssetCategoryTreeNodeItemSelectorReturnType;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.fragment.constants.FragmentActionKeys;
+import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
@@ -47,7 +49,7 @@ import com.liferay.layout.content.page.editor.web.internal.util.StyleBookEntryUt
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.converter.PaddingConverter;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
@@ -60,6 +62,9 @@ import com.liferay.layout.util.structure.CommonStylesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.marketplace.constants.MarketplaceActionKeys;
+import com.liferay.marketplace.constants.MarketplacePortletKeys;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
@@ -80,16 +85,18 @@ import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -102,7 +109,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -121,13 +127,20 @@ import com.liferay.segments.model.SegmentsExperimentRel;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
+import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorReturnType;
-import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,12 +153,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -170,8 +177,9 @@ public class ContentPageEditorDisplayContext {
 		LayoutPermission layoutPermission,
 		LayoutSetLocalService layoutSetLocalService,
 		PageEditorConfiguration pageEditorConfiguration, Portal portal,
-		PortletRequest portletRequest, PortletURLFactory portletURLFactory,
-		RenderResponse renderResponse,
+		PortletRequest portletRequest,
+		PortletResourcePermission portletResourcePermission,
+		PortletURLFactory portletURLFactory, RenderResponse renderResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
@@ -199,6 +207,7 @@ public class ContentPageEditorDisplayContext {
 		_layoutSetLocalService = layoutSetLocalService;
 		_pageEditorConfiguration = pageEditorConfiguration;
 		this.portal = portal;
+		_portletResourcePermission = portletResourcePermission;
 		_portletURLFactory = portletURLFactory;
 		this.renderResponse = renderResponse;
 		_segmentsConfigurationProvider = segmentsConfigurationProvider;
@@ -307,31 +316,6 @@ public class ContentPageEditorDisplayContext {
 				segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 					themeDisplay.getPlid())
 			).put(
-				"defaultStyleBookEntryImagePreviewURL",
-				() -> {
-					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultMasterStyleBookEntry();
-
-					if (defaultStyleBookEntry != null) {
-						return defaultStyleBookEntry.getImagePreviewURL(
-							themeDisplay);
-					}
-
-					return StringPool.BLANK;
-				}
-			).put(
-				"defaultStyleBookEntryName",
-				() -> {
-					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultMasterStyleBookEntry();
-
-					if (defaultStyleBookEntry != null) {
-						return defaultStyleBookEntry.getName();
-					}
-
-					return null;
-				}
-			).put(
 				"deleteFormStepURL",
 				getFragmentEntryActionURL(
 					"/layout_content_page_editor/delete_form_step")
@@ -378,16 +362,44 @@ public class ContentPageEditorDisplayContext {
 				() -> ModelHintsUtil.getMaxLength(
 					FragmentComposition.class.getName(), "name")
 			).put(
+				"fragmentPortletNamespace",
+				portal.getPortletNamespace(FragmentPortletKeys.FRAGMENT)
+			).put(
+				"fragmentsImportURL",
+				() -> ResourceURLBuilder.createResourceURL(
+					PortletURLFactoryUtil.create(
+						httpServletRequest, FragmentPortletKeys.FRAGMENT,
+						PortletRequest.RESOURCE_PHASE)
+				).setParameter(
+					"fragmentCollectionId",
+					ParamUtil.getString(
+						httpServletRequest, "fragmentCollectionId")
+				).setResourceID(
+					"/fragment/import"
+				).buildString()
+			).put(
 				"frontendTokens",
 				() -> {
-					Group group = themeDisplay.getScopeGroup();
+					FrontendTokenDefinition frontendTokenDefinition = null;
 
-					FrontendTokenDefinition frontendTokenDefinition =
-						_frontendTokenDefinitionRegistry.
-							getFrontendTokenDefinition(
-								_layoutSetLocalService.fetchLayoutSet(
-									themeDisplay.getSiteGroupId(),
-									group.isLayoutSetPrototype()));
+					if (FeatureFlagManagerUtil.isEnabled(
+							themeDisplay.getCompanyId(), "LPD-30204")) {
+
+						frontendTokenDefinition =
+							_frontendTokenDefinitionRegistry.
+								getFrontendTokenDefinition(
+									themeDisplay.getLayout());
+					}
+					else {
+						Group group = themeDisplay.getScopeGroup();
+
+						frontendTokenDefinition =
+							_frontendTokenDefinitionRegistry.
+								getFrontendTokenDefinition(
+									_layoutSetLocalService.fetchLayoutSet(
+										themeDisplay.getSiteGroupId(),
+										group.isLayoutSetPrototype()));
+					}
 
 					if (frontendTokenDefinition == null) {
 						return _jsonFactory.createJSONObject();
@@ -540,14 +552,14 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"infoListSelectorURL", _getInfoListSelectorURL()
 			).put(
-				"isConversionDraft", _isConversionDraft()
+				"isCMS",
+				() -> {
+					Group scopeGroup = themeDisplay.getScopeGroup();
+
+					return scopeGroup.isCMS();
+				}
 			).put(
-				"isMarketplaceButtonVisited",
-				GetterUtil.getBoolean(
-					SessionClicks.get(
-						httpServletRequest,
-						getPortletNamespace() + "isMarketplaceButtonVisited",
-						StringPool.BLANK))
+				"isConversionDraft", _isConversionDraft()
 			).put(
 				"isPrivateLayoutsEnabled",
 				() -> {
@@ -637,6 +649,16 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"redirectURL", _getRedirect()
 			).put(
+				"regenerateDisplayPageURL",
+				() -> {
+					Layout draftLayout = themeDisplay.getLayout();
+
+					return StringBundler.concat(
+						themeDisplay.getPortalURL(), themeDisplay.getPathMain(),
+						"/cms/regenerate_structure_display_page?plid=",
+						draftLayout.getPlid());
+				}
+			).put(
 				"renderFragmentEntriesURL",
 				_getResourceURL(
 					"/layout_content_page_editor/get_fragment_entry_links")
@@ -677,12 +699,32 @@ public class ContentPageEditorDisplayContext {
 				() -> {
 					Layout layout = themeDisplay.getLayout();
 
-					return layout.getStyleBookEntryId();
+					if (!FeatureFlagManagerUtil.isEnabled(
+							layout.getCompanyId(), "LPD-30204")) {
+
+						return layout.getStyleBookEntryId();
+					}
+
+					if (layout.getStyleBookEntryId() > 0) {
+						StyleBookEntry defaultStyleBookEntry =
+							DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(
+								layout);
+
+						if (defaultStyleBookEntry != null) {
+							return defaultStyleBookEntry.getStyleBookEntryId();
+						}
+					}
+
+					return "0";
 				}
 			).put(
 				"styleBooks", _getStyleBooks()
 			).put(
 				"themeColorsCssClasses", _getThemeColorsCssClasses()
+			).put(
+				"themeName",
+				StyleBookUtil.getThemeName(
+					themeDisplay.getLayout(), themeDisplay.getLocale())
 			).put(
 				"undoUpdateFormConfigURL",
 				getFragmentEntryActionURL(
@@ -792,6 +834,21 @@ public class ContentPageEditorDisplayContext {
 						ActionKeys.UPDATE);
 
 					return HashMapBuilder.<String, Object>put(
+						ContentPageEditorActionKeys.
+							INSTALL_FREE_BUNDLED_APPS_MARKETPLACE,
+						() -> PortletPermissionUtil.contains(
+							themeDisplay.getPermissionChecker(),
+							MarketplacePortletKeys.FRAGMENTS,
+							MarketplaceActionKeys.INSTALL_FREE_BUNDLED_APPS)
+					).put(
+						ContentPageEditorActionKeys.
+							PURCHASE_AND_INSTALL_PAID_APPS_MARKETPLACE,
+						() -> PortletPermissionUtil.contains(
+							themeDisplay.getPermissionChecker(),
+							MarketplacePortletKeys.FRAGMENTS,
+							MarketplaceActionKeys.
+								PURCHASE_AND_INSTALL_PAID_APPS)
+					).put(
 						ContentPageEditorActionKeys.UPDATE, hasUpdatePermission
 					).put(
 						ContentPageEditorActionKeys.
@@ -834,11 +891,30 @@ public class ContentPageEditorDisplayContext {
 					).put(
 						ContentPageEditorActionKeys.VIEW_MARKETPLACE,
 						() -> {
-							PermissionChecker permissionChecker =
-								themeDisplay.getPermissionChecker();
+							if (PortletPermissionUtil.contains(
+									themeDisplay.getPermissionChecker(),
+									MarketplacePortletKeys.FRAGMENTS,
+									MarketplaceActionKeys.
+										INSTALL_FREE_BUNDLED_APPS) ||
+								PortletPermissionUtil.contains(
+									themeDisplay.getPermissionChecker(),
+									MarketplacePortletKeys.FRAGMENTS,
+									MarketplaceActionKeys.
+										PURCHASE_AND_INSTALL_PAID_APPS)) {
 
-							return permissionChecker.isOmniadmin();
+								return true;
+							}
+
+							return PortletPermissionUtil.contains(
+								themeDisplay.getPermissionChecker(),
+								MarketplacePortletKeys.FRAGMENTS,
+								MarketplaceActionKeys.VIEW_APPS);
 						}
+					).put(
+						FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES,
+						() -> _portletResourcePermission.contains(
+							themeDisplay.getPermissionChecker(), getGroupId(),
+							FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES)
 					).build();
 				}
 			).put(
@@ -1881,8 +1957,10 @@ public class ContentPageEditorDisplayContext {
 
 		List<StyleBookEntry> styleBookEntries = new ArrayList<>();
 
+		FrontendTokenDefinition frontendTokenDefinition = null;
+
 		if (FeatureFlagManagerUtil.isEnabled("LPD-30204")) {
-			FrontendTokenDefinition frontendTokenDefinition =
+			frontendTokenDefinition =
 				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
 					themeDisplay.getLayout());
 
@@ -1894,10 +1972,52 @@ public class ContentPageEditorDisplayContext {
 			}
 		}
 		else {
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					themeDisplay.getLayoutSet());
+
 			styleBookEntries = _styleBookEntryLocalService.getStyleBookEntries(
 				_staging.getLiveGroupId(themeDisplay.getScopeGroupId()),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				StyleBookEntryNameComparator.getInstance(true));
+		}
+
+		if (frontendTokenDefinition != null) {
+			styleBooks.add(
+				HashMapBuilder.<String, Object>put(
+					"imagePreviewURL",
+					() -> {
+						StyleBookEntry defaultStyleBookEntry =
+							_getDefaultMasterStyleBookEntry();
+
+						if (defaultStyleBookEntry != null) {
+							return defaultStyleBookEntry.getImagePreviewURL(
+								themeDisplay);
+						}
+
+						return StringPool.BLANK;
+					}
+				).put(
+					"name",
+					DefaultStyleBookEntryUtil.getStyleBookEntryName(
+						themeDisplay.getLayout(), themeDisplay.getLocale(),
+						StyleBookUtil.getStyleFromThemeStyleBookEntry(
+							themeDisplay.getLayout(), themeDisplay.getLocale()))
+				).put(
+					"styleBookEntryId", "0"
+				).put(
+					"subtitle",
+					() -> {
+						StyleBookEntry defaultStyleBookEntry =
+							_getDefaultMasterStyleBookEntry();
+
+						if (defaultStyleBookEntry != null) {
+							return defaultStyleBookEntry.getName();
+						}
+
+						return null;
+					}
+				).build());
 		}
 
 		for (StyleBookEntry styleBookEntry : styleBookEntries) {
@@ -2072,6 +2192,7 @@ public class ContentPageEditorDisplayContext {
 	private Integer _layoutType;
 	private LayoutStructure _masterLayoutStructure;
 	private final PageEditorConfiguration _pageEditorConfiguration;
+	private final PortletResourcePermission _portletResourcePermission;
 	private final PortletURLFactory _portletURLFactory;
 	private Layout _publishedLayout;
 	private String _redirect;

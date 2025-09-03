@@ -27,6 +27,7 @@ export class CommerceSpecificationsPage {
 	) => Locator;
 	readonly specificationPicklistDropdownMenu: (action: string) => Locator;
 	readonly successMessage: Locator;
+	readonly visibleToggle: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
@@ -48,7 +49,7 @@ export class CommerceSpecificationsPage {
 		});
 		this.deleteModalButtonAction = (action: string) =>
 			page.getByRole('button', {exact: true, name: action});
-		this.goBack = page.getByRole('link', {name: 'Back'});
+		this.goBack = page.locator('span[title="Back"]');
 		this.goToSpecificationGroup = page.getByRole('link', {
 			name: 'Specification Groups',
 		});
@@ -77,6 +78,7 @@ export class CommerceSpecificationsPage {
 		this.successMessage = page.getByText(
 			'Success:Your request completed successfully.'
 		);
+		this.visibleToggle = page.getByLabel('Visible', {exact: true});
 	}
 
 	async waitForKey(specificationName) {

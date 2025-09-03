@@ -419,7 +419,7 @@ export const eventListColumns = {
 				{hidden && (
 					<ClayIcon
 						className={getCN('icon-root', Colors.Secondary)}
-						symbol='ac-hidden'
+						symbol='ac_hidden'
 					/>
 				)}
 			</td>
@@ -711,6 +711,12 @@ export const metricsListColumns = {
 		label,
 		sortable: false
 	}),
+	impressionMadeMetric: {
+		accessor: 'impressionMadeMetric',
+		className: 'table-column-text-end',
+		dataFormatter: data => data.toLocaleString(),
+		label: Liferay.Language.get('impressions')
+	},
 	modifiedDate: {
 		accessor: 'modifiedDate',
 		cellRenderer: ({data: {modifiedByUserName, modifiedDate}}) => {
@@ -729,12 +735,6 @@ export const metricsListColumns = {
 			);
 		},
 		label: Liferay.Language.get('last-modified')
-	},
-	previewsMetric: {
-		accessor: 'previewsMetric',
-		className: 'table-column-text-end',
-		dataFormatter: data => data.toLocaleString(),
-		label: Liferay.Language.get('previews')
 	},
 	ratingsMetric: {
 		accessor: 'ratingsMetric',
@@ -906,7 +906,6 @@ export const segmentsListColumns = {
 		accessor: 'name',
 		cellRenderer: NameCell,
 		cellRendererProps: {
-			renderIcon: SegmentSticker,
 			routeFn: ({data: {id}}) =>
 				toRoute(Routes.CONTACTS_SEGMENT, {
 					channelId,

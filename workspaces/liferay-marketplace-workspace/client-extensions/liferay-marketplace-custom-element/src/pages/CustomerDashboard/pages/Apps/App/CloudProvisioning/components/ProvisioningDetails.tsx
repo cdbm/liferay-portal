@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButtonWithIcon from '@clayui/button/lib/ButtonWithIcon';
+import {ClayButtonWithIcon} from '@clayui/button';
 import classNames from 'classnames';
 
 import i18n from '../../../../../../../i18n';
@@ -91,9 +91,7 @@ const ProvisioningDetails: React.FC<ProvisioningDetailsProps> = ({
 					name={headerInfo?.name}
 				/>
 
-				<AccountEmailInfo
-					userAccount={{...account, image: account.logoURL}}
-				/>
+				<AccountEmailInfo image={account.logoURL} name={account.name} />
 			</div>
 
 			<div className="d-flex flex-row mb-7 mt-5">

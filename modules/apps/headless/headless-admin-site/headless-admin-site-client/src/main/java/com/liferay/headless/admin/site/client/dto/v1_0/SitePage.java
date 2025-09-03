@@ -8,13 +8,13 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.SitePageSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -93,27 +93,6 @@ public class SitePage implements Cloneable, Serializable {
 	}
 
 	protected String creatorExternalReferenceCode;
-
-	public CustomField[] getCustomFields() {
-		return customFields;
-	}
-
-	public void setCustomFields(CustomField[] customFields) {
-		this.customFields = customFields;
-	}
-
-	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
-
-		try {
-			customFields = customFieldsUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected CustomField[] customFields;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -245,41 +224,16 @@ public class SitePage implements Cloneable, Serializable {
 
 	protected Map<String, String> friendlyUrlPath_i18n;
 
-	public ItemExternalReference[] getKeywordItemExternalReferences() {
-		return keywordItemExternalReferences;
-	}
-
-	public void setKeywordItemExternalReferences(
-		ItemExternalReference[] keywordItemExternalReferences) {
-
-		this.keywordItemExternalReferences = keywordItemExternalReferences;
-	}
-
-	public void setKeywordItemExternalReferences(
-		UnsafeSupplier<ItemExternalReference[], Exception>
-			keywordItemExternalReferencesUnsafeSupplier) {
-
-		try {
-			keywordItemExternalReferences =
-				keywordItemExternalReferencesUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected ItemExternalReference[] keywordItemExternalReferences;
-
-	public Keyword[] getKeywords() {
+	public String[] getKeywords() {
 		return keywords;
 	}
 
-	public void setKeywords(Keyword[] keywords) {
+	public void setKeywords(String[] keywords) {
 		this.keywords = keywords;
 	}
 
 	public void setKeywords(
-		UnsafeSupplier<Keyword[], Exception> keywordsUnsafeSupplier) {
+		UnsafeSupplier<String[], Exception> keywordsUnsafeSupplier) {
 
 		try {
 			keywords = keywordsUnsafeSupplier.get();
@@ -289,7 +243,7 @@ public class SitePage implements Cloneable, Serializable {
 		}
 	}
 
-	protected Keyword[] keywords;
+	protected String[] keywords;
 
 	public Map<String, String> getName_i18n() {
 		return name_i18n;
@@ -381,28 +335,6 @@ public class SitePage implements Cloneable, Serializable {
 	}
 
 	protected String parentSitePageExternalReferenceCode;
-
-	public TaxonomyCategory[] getTaxonomyCategories() {
-		return taxonomyCategories;
-	}
-
-	public void setTaxonomyCategories(TaxonomyCategory[] taxonomyCategories) {
-		this.taxonomyCategories = taxonomyCategories;
-	}
-
-	public void setTaxonomyCategories(
-		UnsafeSupplier<TaxonomyCategory[], Exception>
-			taxonomyCategoriesUnsafeSupplier) {
-
-		try {
-			taxonomyCategories = taxonomyCategoriesUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected TaxonomyCategory[] taxonomyCategories;
 
 	public ItemExternalReference[] getTaxonomyCategoryItemExternalReferences() {
 		return taxonomyCategoryItemExternalReferences;

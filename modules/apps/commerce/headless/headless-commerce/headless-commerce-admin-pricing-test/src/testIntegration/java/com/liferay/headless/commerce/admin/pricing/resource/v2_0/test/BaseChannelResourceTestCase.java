@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -193,14 +193,14 @@ public abstract class BaseChannelResourceTestCase {
 		assertValid(getChannel);
 	}
 
-	protected Long testGetDiscountChannelChannel_getDiscountChannelId()
+	protected Channel testGetDiscountChannelChannel_addChannel()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Channel testGetDiscountChannelChannel_addChannel()
+	protected Long testGetDiscountChannelChannel_getDiscountChannelId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -327,14 +327,14 @@ public abstract class BaseChannelResourceTestCase {
 		assertValid(getChannel);
 	}
 
-	protected Long testGetPriceListChannelChannel_getPriceListChannelId()
+	protected Channel testGetPriceListChannelChannel_addChannel()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Channel testGetPriceListChannelChannel_addChannel()
+	protected Long testGetPriceListChannelChannel_getPriceListChannelId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(

@@ -44,13 +44,6 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 		super(portalTopLevelBuildData);
 	}
 
-	protected String getBaseInvocationURL(String cohortName) {
-		return JenkinsResultsParserUtil.getMostAvailableMasterURL(
-			JenkinsResultsParserUtil.combine(
-				"http://", cohortName, ".liferay.com"),
-			1, 24, 2);
-	}
-
 	@Override
 	protected Element getJenkinsReportElement() {
 		PortalTopLevelBuildData portalTopLevelBuildData = getBuildData();
@@ -460,11 +453,7 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 		String portalBatchName = getBuildParameter(
 			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
 
-		if (portalBatchName.startsWith("functional")) {
-			return true;
-		}
-
-		return false;
+		return portalBatchName.startsWith("functional");
 	}
 
 	private boolean _isJUnitBatch() {

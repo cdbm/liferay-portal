@@ -13,18 +13,19 @@
 	},
 	"items": [
 		{
-			"defaultLanguageId": "en_US",
 			"externalReferenceCode": "L_API_PROPERTY_TYPES",
 			"listTypeEntries": [
 				{
 					"externalReferenceCode": "FIELD",
 					"key": "field",
-					"name": "Field"
+					"name": "Field",
+					"system": true
 				},
 				{
 					"externalReferenceCode": "RECORD",
 					"key": "record",
-					"name": "Record"
+					"name": "Record",
+					"system": true
 				}
 			],
 			"name": "API Property Types",

@@ -13,6 +13,7 @@ import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.comparator.CommerceCurrencyPriorityComparator;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
@@ -26,7 +27,6 @@ import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
@@ -42,12 +42,12 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Marco Leo
@@ -306,7 +306,9 @@ public class BaseCommerceContextHttp implements CommerceContext {
 
 	@Override
 	public long getCPConfigurationListId(long groupId) throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-10889")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_portal.getCompanyId(_httpServletRequest), "LPD-10889")) {
+
 			return 0;
 		}
 

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.CategoryDisplayPage;
 import com.liferay.headless.commerce.admin.channel.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.channel.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 			testCompany.getCompanyId());
 
 		categoryDisplayPageResource = CategoryDisplayPageResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -229,11 +242,9 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 			404,
 			categoryDisplayPageResource.getCategoryDisplayPageHttpResponse(
 				categoryDisplayPage.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
-			categoryDisplayPageResource.getCategoryDisplayPageHttpResponse(
-				categoryDisplayPage.getId()));
+			categoryDisplayPageResource.getCategoryDisplayPageHttpResponse(0L));
 	}
 
 	protected CategoryDisplayPage
@@ -321,6 +332,49 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 		throws Exception {
 
 		return testGraphQLCategoryDisplayPage_addCategoryDisplayPage();
+	}
+
+	@Test
+	public void testDeleteCategoryDisplayPageBatch() throws Exception {
+		CategoryDisplayPage categoryDisplayPage1 =
+			testDeleteCategoryDisplayPageBatch_addCategoryDisplayPage();
+
+		testDeleteCategoryDisplayPageBatch_deleteCategoryDisplayPage(
+			202, null, categoryDisplayPage1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			categoryDisplayPageResource.getCategoryDisplayPageHttpResponse(
+				categoryDisplayPage1.getId()));
+	}
+
+	protected CategoryDisplayPage
+			testDeleteCategoryDisplayPageBatch_addCategoryDisplayPage()
+		throws Exception {
+
+		return testDeleteCategoryDisplayPage_addCategoryDisplayPage();
+	}
+
+	protected void testDeleteCategoryDisplayPageBatch_deleteCategoryDisplayPage(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			categoryDisplayPageResource.
+				deleteCategoryDisplayPageBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -634,42 +688,6 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 	}
 
 	@Test
-	public void testPatchCategoryDisplayPage() throws Exception {
-		CategoryDisplayPage postCategoryDisplayPage =
-			testPatchCategoryDisplayPage_addCategoryDisplayPage();
-
-		CategoryDisplayPage randomPatchCategoryDisplayPage =
-			randomPatchCategoryDisplayPage();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CategoryDisplayPage patchCategoryDisplayPage =
-			categoryDisplayPageResource.patchCategoryDisplayPage(
-				postCategoryDisplayPage.getId(),
-				randomPatchCategoryDisplayPage);
-
-		CategoryDisplayPage expectedPatchCategoryDisplayPage =
-			postCategoryDisplayPage.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchCategoryDisplayPage, expectedPatchCategoryDisplayPage);
-
-		CategoryDisplayPage getCategoryDisplayPage =
-			categoryDisplayPageResource.getCategoryDisplayPage(
-				patchCategoryDisplayPage.getId());
-
-		assertEquals(expectedPatchCategoryDisplayPage, getCategoryDisplayPage);
-		assertValid(getCategoryDisplayPage);
-	}
-
-	protected CategoryDisplayPage
-			testPatchCategoryDisplayPage_addCategoryDisplayPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetChannelByExternalReferenceCodeCategoryDisplayPagesPage()
 		throws Exception {
 
@@ -863,13 +881,13 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 		String externalReferenceCode =
 			testGetChannelByExternalReferenceCodeCategoryDisplayPagesPage_getExternalReferenceCode();
 
-		Page<CategoryDisplayPage> categoryDisplayPagePage =
+		Page<CategoryDisplayPage> categoryDisplayPagesPage =
 			categoryDisplayPageResource.
 				getChannelByExternalReferenceCodeCategoryDisplayPagesPage(
 					externalReferenceCode, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			categoryDisplayPagePage.getTotalCount());
+			categoryDisplayPagesPage.getTotalCount());
 
 		CategoryDisplayPage categoryDisplayPage1 =
 			testGetChannelByExternalReferenceCodeCategoryDisplayPagesPage_addCategoryDisplayPage(
@@ -1165,30 +1183,6 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 	}
 
 	@Test
-	public void testPostChannelByExternalReferenceCodeCategoryDisplayPage()
-		throws Exception {
-
-		CategoryDisplayPage randomCategoryDisplayPage =
-			randomCategoryDisplayPage();
-
-		CategoryDisplayPage postCategoryDisplayPage =
-			testPostChannelByExternalReferenceCodeCategoryDisplayPage_addCategoryDisplayPage(
-				randomCategoryDisplayPage);
-
-		assertEquals(randomCategoryDisplayPage, postCategoryDisplayPage);
-		assertValid(postCategoryDisplayPage);
-	}
-
-	protected CategoryDisplayPage
-			testPostChannelByExternalReferenceCodeCategoryDisplayPage_addCategoryDisplayPage(
-				CategoryDisplayPage categoryDisplayPage)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetChannelIdCategoryDisplayPagesPage() throws Exception {
 		Long id = testGetChannelIdCategoryDisplayPagesPage_getId();
 		Long irrelevantId =
@@ -1367,12 +1361,12 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 
 		Long id = testGetChannelIdCategoryDisplayPagesPage_getId();
 
-		Page<CategoryDisplayPage> categoryDisplayPagePage =
+		Page<CategoryDisplayPage> categoryDisplayPagesPage =
 			categoryDisplayPageResource.getChannelIdCategoryDisplayPagesPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			categoryDisplayPagePage.getTotalCount());
+			categoryDisplayPagesPage.getTotalCount());
 
 		CategoryDisplayPage categoryDisplayPage1 =
 			testGetChannelIdCategoryDisplayPagesPage_addCategoryDisplayPage(
@@ -1660,6 +1654,66 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 	}
 
 	@Test
+	public void testPatchCategoryDisplayPage() throws Exception {
+		CategoryDisplayPage postCategoryDisplayPage =
+			testPatchCategoryDisplayPage_addCategoryDisplayPage();
+
+		CategoryDisplayPage randomPatchCategoryDisplayPage =
+			randomPatchCategoryDisplayPage();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CategoryDisplayPage patchCategoryDisplayPage =
+			categoryDisplayPageResource.patchCategoryDisplayPage(
+				postCategoryDisplayPage.getId(),
+				randomPatchCategoryDisplayPage);
+
+		CategoryDisplayPage expectedPatchCategoryDisplayPage =
+			postCategoryDisplayPage.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchCategoryDisplayPage, expectedPatchCategoryDisplayPage);
+
+		CategoryDisplayPage getCategoryDisplayPage =
+			categoryDisplayPageResource.getCategoryDisplayPage(
+				patchCategoryDisplayPage.getId());
+
+		assertEquals(expectedPatchCategoryDisplayPage, getCategoryDisplayPage);
+		assertValid(getCategoryDisplayPage);
+	}
+
+	protected CategoryDisplayPage
+			testPatchCategoryDisplayPage_addCategoryDisplayPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostChannelByExternalReferenceCodeCategoryDisplayPage()
+		throws Exception {
+
+		CategoryDisplayPage randomCategoryDisplayPage =
+			randomCategoryDisplayPage();
+
+		CategoryDisplayPage postCategoryDisplayPage =
+			testPostChannelByExternalReferenceCodeCategoryDisplayPage_addCategoryDisplayPage(
+				randomCategoryDisplayPage);
+
+		assertEquals(randomCategoryDisplayPage, postCategoryDisplayPage);
+		assertValid(postCategoryDisplayPage);
+	}
+
+	protected CategoryDisplayPage
+			testPostChannelByExternalReferenceCodeCategoryDisplayPage_addCategoryDisplayPage(
+				CategoryDisplayPage categoryDisplayPage)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostChannelIdCategoryDisplayPage() throws Exception {
 		CategoryDisplayPage randomCategoryDisplayPage =
 			randomCategoryDisplayPage();
@@ -1679,6 +1733,62 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		CategoryDisplayPage categoryDisplayPage1 =
+			testBatchEngineDeleteImportTask_addCategoryDisplayPage();
+
+		testBatchEngineDeleteImportTask_deleteCategoryDisplayPage(
+			200, null, categoryDisplayPage1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			categoryDisplayPageResource.getCategoryDisplayPageHttpResponse(
+				categoryDisplayPage1.getId()));
+	}
+
+	protected CategoryDisplayPage
+			testBatchEngineDeleteImportTask_addCategoryDisplayPage()
+		throws Exception {
+
+		return testDeleteCategoryDisplayPage_addCategoryDisplayPage();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteCategoryDisplayPage(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.channel.dto.v1_0.CategoryDisplayPage",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2360,7 +2470,30 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 		return randomCategoryDisplayPage();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CategoryDisplayPageResource categoryDisplayPageResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -44,6 +44,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Pagination;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.NodeMetricResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.NodeMetricSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -239,11 +239,11 @@ public abstract class BaseNodeMetricResourceTestCase {
 	public void testGetProcessNodeMetricsPageWithPagination() throws Exception {
 		Long processId = testGetProcessNodeMetricsPage_getProcessId();
 
-		Page<NodeMetric> nodeMetricPage =
+		Page<NodeMetric> nodeMetricsPage =
 			nodeMetricResource.getProcessNodeMetricsPage(
 				processId, null, null, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(nodeMetricPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(nodeMetricsPage.getTotalCount());
 
 		NodeMetric nodeMetric1 = testGetProcessNodeMetricsPage_addNodeMetric(
 			processId, randomNodeMetric());
@@ -483,6 +483,11 @@ public abstract class BaseNodeMetricResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

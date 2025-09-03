@@ -19,6 +19,9 @@ import com.liferay.change.tracking.rest.client.pagination.Page;
 import com.liferay.change.tracking.rest.client.pagination.Pagination;
 import com.liferay.change.tracking.rest.client.resource.v1_0.CTProcessResource;
 import com.liferay.change.tracking.rest.client.serdes.v1_0.CTProcessSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseCTProcessResourceTestCase {
 			testCompany.getCompanyId());
 
 		ctProcessResource = CTProcessResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -212,338 +225,6 @@ public abstract class BaseCTProcessResourceTestCase {
 	}
 
 	@Test
-	public void testGetCTProcessesPage() throws Exception {
-		Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
-			null, null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		page = ctProcessResource.getCTProcessesPage(
-			null, null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(ctProcess1, (List<CTProcess>)page.getItems());
-		assertContains(ctProcess2, (List<CTProcess>)page.getItems());
-		assertValid(page, testGetCTProcessesPage_getExpectedActions());
-
-		ctProcessResource.deleteCTProcess(ctProcess1.getId());
-
-		ctProcessResource.deleteCTProcess(ctProcess2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetCTProcessesPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		CTProcess ctProcess1 = randomCTProcess();
-
-		ctProcess1 = testGetCTProcessesPage_addCTProcess(ctProcess1);
-
-		for (EntityField entityField : entityFields) {
-			Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
-				null, null, getFilterString(entityField, "between", ctProcess1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(ctProcess1),
-				(List<CTProcess>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetCTProcessesPageWithFilter("eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithFilterStringContains()
-		throws Exception {
-
-		testGetCTProcessesPageWithFilter("contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetCTProcessesPageWithFilter("eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetCTProcessesPageWithFilter("startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetCTProcessesPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		for (EntityField entityField : entityFields) {
-			Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
-				null, null, getFilterString(entityField, operator, ctProcess1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(ctProcess1),
-				(List<CTProcess>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithPagination() throws Exception {
-		Page<CTProcess> ctProcessPage = ctProcessResource.getCTProcessesPage(
-			null, null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(ctProcessPage.getTotalCount());
-
-		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		CTProcess ctProcess3 = testGetCTProcessesPage_addCTProcess(
-			randomCTProcess());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<CTProcess> page1 = ctProcessResource.getCTProcessesPage(
-				null, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(ctProcess1, (List<CTProcess>)page1.getItems());
-
-			Page<CTProcess> page2 = ctProcessResource.getCTProcessesPage(
-				null, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(ctProcess2, (List<CTProcess>)page2.getItems());
-
-			Page<CTProcess> page3 = ctProcessResource.getCTProcessesPage(
-				null, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(ctProcess3, (List<CTProcess>)page3.getItems());
-		}
-		else {
-			Page<CTProcess> page1 = ctProcessResource.getCTProcessesPage(
-				null, null, null, Pagination.of(1, totalCount + 2), null);
-
-			List<CTProcess> ctProcesses1 = (List<CTProcess>)page1.getItems();
-
-			Assert.assertEquals(
-				ctProcesses1.toString(), totalCount + 2, ctProcesses1.size());
-
-			Page<CTProcess> page2 = ctProcessResource.getCTProcessesPage(
-				null, null, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<CTProcess> ctProcesses2 = (List<CTProcess>)page2.getItems();
-
-			Assert.assertEquals(
-				ctProcesses2.toString(), 1, ctProcesses2.size());
-
-			Page<CTProcess> page3 = ctProcessResource.getCTProcessesPage(
-				null, null, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(ctProcess1, (List<CTProcess>)page3.getItems());
-			assertContains(ctProcess2, (List<CTProcess>)page3.getItems());
-			assertContains(ctProcess3, (List<CTProcess>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithSortDateTime() throws Exception {
-		testGetCTProcessesPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, ctProcess1, ctProcess2) -> {
-				BeanTestUtil.setProperty(
-					ctProcess1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithSortDouble() throws Exception {
-		testGetCTProcessesPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, ctProcess1, ctProcess2) -> {
-				BeanTestUtil.setProperty(
-					ctProcess1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(
-					ctProcess2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithSortInteger() throws Exception {
-		testGetCTProcessesPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, ctProcess1, ctProcess2) -> {
-				BeanTestUtil.setProperty(ctProcess1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(ctProcess2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetCTProcessesPageWithSortString() throws Exception {
-		testGetCTProcessesPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, ctProcess1, ctProcess2) -> {
-				Class<?> clazz = ctProcess1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						ctProcess1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						ctProcess2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						ctProcess1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						ctProcess2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						ctProcess1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						ctProcess2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetCTProcessesPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, CTProcess, CTProcess, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		CTProcess ctProcess1 = randomCTProcess();
-		CTProcess ctProcess2 = randomCTProcess();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, ctProcess1, ctProcess2);
-		}
-
-		ctProcess1 = testGetCTProcessesPage_addCTProcess(ctProcess1);
-
-		ctProcess2 = testGetCTProcessesPage_addCTProcess(ctProcess2);
-
-		Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
-			null, null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<CTProcess> ascPage = ctProcessResource.getCTProcessesPage(
-				null, null, null,
-				Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(ctProcess1, (List<CTProcess>)ascPage.getItems());
-			assertContains(ctProcess2, (List<CTProcess>)ascPage.getItems());
-
-			Page<CTProcess> descPage = ctProcessResource.getCTProcessesPage(
-				null, null, null,
-				Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":desc");
-
-			assertContains(ctProcess2, (List<CTProcess>)descPage.getItems());
-			assertContains(ctProcess1, (List<CTProcess>)descPage.getItems());
-		}
-	}
-
-	protected CTProcess testGetCTProcessesPage_addCTProcess(CTProcess ctProcess)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteCTProcess() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		CTProcess ctProcess = testDeleteCTProcess_addCTProcess();
@@ -554,7 +235,6 @@ public abstract class BaseCTProcessResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, ctProcessResource.getCTProcessHttpResponse(ctProcess.getId()));
-
 		assertHttpResponseStatusCode(
 			404, ctProcessResource.getCTProcessHttpResponse(0L));
 	}
@@ -637,6 +317,44 @@ public abstract class BaseCTProcessResourceTestCase {
 		throws Exception {
 
 		return testGraphQLCTProcess_addCTProcess();
+	}
+
+	@Test
+	public void testDeleteCTProcessBatch() throws Exception {
+		CTProcess ctProcess1 = testDeleteCTProcessBatch_addCTProcess();
+
+		testDeleteCTProcessBatch_deleteCTProcess(202, null, ctProcess1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			ctProcessResource.getCTProcessHttpResponse(ctProcess1.getId()));
+	}
+
+	protected CTProcess testDeleteCTProcessBatch_addCTProcess()
+		throws Exception {
+
+		return testDeleteCTProcess_addCTProcess();
+	}
+
+	protected void testDeleteCTProcessBatch_deleteCTProcess(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			ctProcessResource.deleteCTProcessBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -937,6 +655,338 @@ public abstract class BaseCTProcessResourceTestCase {
 	}
 
 	@Test
+	public void testGetCTProcessesPage() throws Exception {
+		Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		page = ctProcessResource.getCTProcessesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(ctProcess1, (List<CTProcess>)page.getItems());
+		assertContains(ctProcess2, (List<CTProcess>)page.getItems());
+		assertValid(page, testGetCTProcessesPage_getExpectedActions());
+
+		ctProcessResource.deleteCTProcess(ctProcess1.getId());
+
+		ctProcessResource.deleteCTProcess(ctProcess2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCTProcessesPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		CTProcess ctProcess1 = randomCTProcess();
+
+		ctProcess1 = testGetCTProcessesPage_addCTProcess(ctProcess1);
+
+		for (EntityField entityField : entityFields) {
+			Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
+				null, null, getFilterString(entityField, "between", ctProcess1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(ctProcess1),
+				(List<CTProcess>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetCTProcessesPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithFilterStringContains()
+		throws Exception {
+
+		testGetCTProcessesPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetCTProcessesPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetCTProcessesPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetCTProcessesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		for (EntityField entityField : entityFields) {
+			Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
+				null, null, getFilterString(entityField, operator, ctProcess1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(ctProcess1),
+				(List<CTProcess>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithPagination() throws Exception {
+		Page<CTProcess> ctProcessesPage = ctProcessResource.getCTProcessesPage(
+			null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(ctProcessesPage.getTotalCount());
+
+		CTProcess ctProcess1 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		CTProcess ctProcess2 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		CTProcess ctProcess3 = testGetCTProcessesPage_addCTProcess(
+			randomCTProcess());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<CTProcess> page1 = ctProcessResource.getCTProcessesPage(
+				null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(ctProcess1, (List<CTProcess>)page1.getItems());
+
+			Page<CTProcess> page2 = ctProcessResource.getCTProcessesPage(
+				null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(ctProcess2, (List<CTProcess>)page2.getItems());
+
+			Page<CTProcess> page3 = ctProcessResource.getCTProcessesPage(
+				null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(ctProcess3, (List<CTProcess>)page3.getItems());
+		}
+		else {
+			Page<CTProcess> page1 = ctProcessResource.getCTProcessesPage(
+				null, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<CTProcess> ctProcesses1 = (List<CTProcess>)page1.getItems();
+
+			Assert.assertEquals(
+				ctProcesses1.toString(), totalCount + 2, ctProcesses1.size());
+
+			Page<CTProcess> page2 = ctProcessResource.getCTProcessesPage(
+				null, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<CTProcess> ctProcesses2 = (List<CTProcess>)page2.getItems();
+
+			Assert.assertEquals(
+				ctProcesses2.toString(), 1, ctProcesses2.size());
+
+			Page<CTProcess> page3 = ctProcessResource.getCTProcessesPage(
+				null, null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(ctProcess1, (List<CTProcess>)page3.getItems());
+			assertContains(ctProcess2, (List<CTProcess>)page3.getItems());
+			assertContains(ctProcess3, (List<CTProcess>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithSortDateTime() throws Exception {
+		testGetCTProcessesPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, ctProcess1, ctProcess2) -> {
+				BeanTestUtil.setProperty(
+					ctProcess1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithSortDouble() throws Exception {
+		testGetCTProcessesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, ctProcess1, ctProcess2) -> {
+				BeanTestUtil.setProperty(
+					ctProcess1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					ctProcess2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithSortInteger() throws Exception {
+		testGetCTProcessesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, ctProcess1, ctProcess2) -> {
+				BeanTestUtil.setProperty(ctProcess1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(ctProcess2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetCTProcessesPageWithSortString() throws Exception {
+		testGetCTProcessesPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, ctProcess1, ctProcess2) -> {
+				Class<?> clazz = ctProcess1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						ctProcess1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						ctProcess2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						ctProcess1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						ctProcess2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						ctProcess1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						ctProcess2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetCTProcessesPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, CTProcess, CTProcess, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		CTProcess ctProcess1 = randomCTProcess();
+		CTProcess ctProcess2 = randomCTProcess();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, ctProcess1, ctProcess2);
+		}
+
+		ctProcess1 = testGetCTProcessesPage_addCTProcess(ctProcess1);
+
+		ctProcess2 = testGetCTProcessesPage_addCTProcess(ctProcess2);
+
+		Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
+			null, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<CTProcess> ascPage = ctProcessResource.getCTProcessesPage(
+				null, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(ctProcess1, (List<CTProcess>)ascPage.getItems());
+			assertContains(ctProcess2, (List<CTProcess>)ascPage.getItems());
+
+			Page<CTProcess> descPage = ctProcessResource.getCTProcessesPage(
+				null, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(ctProcess2, (List<CTProcess>)descPage.getItems());
+			assertContains(ctProcess1, (List<CTProcess>)descPage.getItems());
+		}
+	}
+
+	protected CTProcess testGetCTProcessesPage_addCTProcess(CTProcess ctProcess)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostCTProcessRevert() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		CTProcess ctProcess = testPostCTProcessRevert_addCTProcess();
@@ -956,6 +1006,59 @@ public abstract class BaseCTProcessResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		CTProcess ctProcess1 = testBatchEngineDeleteImportTask_addCTProcess();
+
+		testBatchEngineDeleteImportTask_deleteCTProcess(
+			200, null, ctProcess1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			ctProcessResource.getCTProcessHttpResponse(ctProcess1.getId()));
+	}
+
+	protected CTProcess testBatchEngineDeleteImportTask_addCTProcess()
+		throws Exception {
+
+		return testDeleteCTProcess_addCTProcess();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteCTProcess(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.change.tracking.rest.dto.v1_0.CTProcess", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -1659,7 +1762,30 @@ public abstract class BaseCTProcessResourceTestCase {
 		return randomCTProcess();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CTProcessResource ctProcessResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -82,8 +82,9 @@ public interface SharingEntryLocalService
 	 * @review
 	 */
 	public SharingEntry addOrUpdateSharingEntry(
-			String externalReferenceCode, long userId, long toUserId,
-			long classNameId, long classPK, long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
@@ -122,9 +123,11 @@ public interface SharingEntryLocalService
 	 the expiration date is a past value
 	 * @review
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public SharingEntry addSharingEntry(
-			String externalReferenceCode, long userId, long toUserId,
-			long classNameId, long classPK, long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
@@ -143,6 +146,8 @@ public interface SharingEntryLocalService
 	 */
 	@Transactional(enabled = false)
 	public SharingEntry createSharingEntry(long sharingEntryId);
+
+	public void deleteCompanySharingEntries(long companyId, long classNameId);
 
 	/**
 	 * Deletes the sharing entries whose expiration date is before the current
@@ -336,6 +341,9 @@ public interface SharingEntryLocalService
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCompanySharingEntriesCount(long companyId, long classNameId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		PortletDataContext portletDataContext);
 
@@ -443,7 +451,8 @@ public interface SharingEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SharingEntry> getSharingEntries(
-		long classNameId, long classPK, int start, int end);
+		long classNameId, long classPK, int start, int end,
+		OrderByComparator<SharingEntry> orderByComparator);
 
 	/**
 	 * Returns all the sharing entries matching the UUID and company.
@@ -687,6 +696,7 @@ public interface SharingEntryLocalService
 	 value), or if the expiration date is a past value
 	 * @review
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public SharingEntry updateSharingEntry(
 			long userId, long sharingEntryId,
 			Collection<SharingEntryAction> sharingEntryActions,

@@ -240,17 +240,15 @@ public class UpgradeExecutor {
 
 		String fromSchemaVersion = upgradeInfo.getFromSchemaVersionString();
 
-		if (fromSchemaVersion.equals("0.0.0")) {
-			return true;
-		}
-
-		return false;
+		return fromSchemaVersion.equals("0.0.0");
 	}
 
 	private boolean _requiresUpdateIndexes(
 		Bundle bundle, List<UpgradeInfo> upgradeInfos) {
 
-		if (!BundleUtil.isLiferayServiceBundle(bundle)) {
+		if (!BundleUtil.isLiferayRequireSchemaVersionBundle(bundle) &&
+			!BundleUtil.isLiferayServiceBundle(bundle)) {
+
 			return false;
 		}
 

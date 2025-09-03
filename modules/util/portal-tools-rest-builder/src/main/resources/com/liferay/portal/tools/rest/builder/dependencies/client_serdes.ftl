@@ -14,6 +14,8 @@ package ${configYAML.apiPackagePath}.client.serdes.${escapedVersion};
 
 import ${configYAML.apiPackagePath}.client.json.BaseJSONParser;
 
+import ${configYAML.javaEEPackage}.annotation.Generated;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
@@ -25,8 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author ${configYAML.author}
@@ -296,7 +296,7 @@ public class ${schemaName}SerDes {
 				</#if>
 
 				if (Objects.equals(jsonParserFieldName, "${fieldName}")) {
-					<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.permission.", "${configYAML.apiPackagePath}.client.permission.") />
+					<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.", "${configYAML.apiPackagePath}.client.") />
 
 					<#if stringUtil.startsWith(propertyType, "Map<") || stringUtil.equals(propertyType, "Object[]")>
 						return true;
@@ -362,7 +362,7 @@ public class ${schemaName}SerDes {
 							<#assign capitalizedPropertyName = properties[propertyName] />
 						</#if>
 
-						<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.permission.", "${configYAML.apiPackagePath}.client.permission.") />
+						<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.", "${configYAML.apiPackagePath}.client.") />
 
 						<#if stringUtil.equals(propertyType, "BigDecimal")>
 							${schemaVarName}.set${capitalizedPropertyName}(new BigDecimal((String)jsonParserFieldValue));
@@ -390,9 +390,9 @@ public class ${schemaName}SerDes {
 							${schemaVarName}.set${capitalizedPropertyName}(toIntegers((Object[])jsonParserFieldValue));
 						<#elseif stringUtil.equals(propertyType, "String[]")>
 							${schemaVarName}.set${capitalizedPropertyName}(toStrings((Object[])jsonParserFieldValue));
-						<#elseif stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.permission.Permission")>
+						<#elseif stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.custom.field.CustomField") || stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.permission.Permission")>
 							${schemaVarName}.set${capitalizedPropertyName}(${propertyType}.toDTO((String)jsonParserFieldValue));
-						<#elseif stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.permission.Permission[]")>
+						<#elseif stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.custom.field.CustomField[]") || stringUtil.equals(propertyType, "${configYAML.apiPackagePath}.client.permission.Permission[]")>
 							Object[] jsonParserFieldValues = (Object[])jsonParserFieldValue;
 
 							${propertyType?remove_ending("[]")}[] ${propertyName}Array = new ${propertyType?remove_ending("[]")}[jsonParserFieldValues.length];
@@ -416,6 +416,8 @@ public class ${schemaName}SerDes {
 							${schemaVarName}.set${capitalizedPropertyName}(${propertyName}Array);
 						<#elseif enumSchemas?keys?seq_contains(properties[propertyName])>
 							${schemaVarName}.set${capitalizedPropertyName}(${schemaName}.${propertyType}.create((String)jsonParserFieldValue));
+						<#elseif globalEnumSchemas?keys?seq_contains(propertyType)>
+							${schemaVarName}.set${capitalizedPropertyName}(${propertyType}.create((String)jsonParserFieldValue));
 						<#else>
 							${schemaVarName}.set${capitalizedPropertyName}((${propertyType})jsonParserFieldValue);
 						</#if>

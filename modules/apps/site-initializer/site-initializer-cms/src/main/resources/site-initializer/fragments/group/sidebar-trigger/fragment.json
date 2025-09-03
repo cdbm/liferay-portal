@@ -1,9 +1,0 @@
-{
-	"cacheable": true,
-	"cssPath": "index.css",
-	"htmlPath": "index.html",
-	"icon": "product-menu-closed",
-	"jsPath": "index.js",
-	"name": "Sidebar Trigger",
-	"type": "component"
-}

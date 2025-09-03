@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.channel.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 			testCompany.getCompanyId());
 
 		accountAddressChannelResource = AccountAddressChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -194,12 +207,117 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 
 	@Test
 	public void testDeleteAccountAddressChannel() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountAddressChannel accountAddressChannel =
+			testDeleteAccountAddressChannel_addAccountAddressChannel();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountAddressChannelResource.
+				deleteAccountAddressChannelHttpResponse(
+					accountAddressChannel.getAccountAddressChannelId()));
+	}
+
+	protected AccountAddressChannel
+			testDeleteAccountAddressChannel_addAccountAddressChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteAccountAddressChannel() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		AccountAddressChannel accountAddressChannel1 =
+			testGraphQLDeleteAccountAddressChannel_addAccountAddressChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountAddressChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountAddressChannelId",
+									accountAddressChannel1.
+										getAccountAddressChannelId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteAccountAddressChannel"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		AccountAddressChannel accountAddressChannel2 =
+			testGraphQLDeleteAccountAddressChannel_addAccountAddressChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"deleteAccountAddressChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountAddressChannelId",
+										accountAddressChannel2.
+											getAccountAddressChannelId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminChannel_v1_0",
+				"Object/deleteAccountAddressChannel"));
+	}
+
+	protected AccountAddressChannel
+			testGraphQLDeleteAccountAddressChannel_addAccountAddressChannel()
+		throws Exception {
+
+		return testGraphQLAccountAddressChannel_addAccountAddressChannel();
+	}
+
+	@Test
+	public void testDeleteAccountAddressChannelBatch() throws Exception {
+		AccountAddressChannel accountAddressChannel1 =
+			testDeleteAccountAddressChannelBatch_addAccountAddressChannel();
+
+		testDeleteAccountAddressChannelBatch_deleteAccountAddressChannel(
+			202, null, accountAddressChannel1.getAccountAddressChannelId());
+	}
+
+	protected AccountAddressChannel
+			testDeleteAccountAddressChannelBatch_addAccountAddressChannel()
+		throws Exception {
+
+		return testDeleteAccountAddressChannel_addAccountAddressChannel();
+	}
+
+	protected void
+			testDeleteAccountAddressChannelBatch_deleteAccountAddressChannel(
+				int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			accountAddressChannelResource.
+				deleteAccountAddressChannelBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"accountAddressChannelId", () -> id
+						)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -266,6 +384,12 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 			page,
 			testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage_getExpectedActions(
 				externalReferenceCode));
+
+		accountAddressChannelResource.deleteAccountAddressChannel(
+			accountAddressChannel1.getAccountAddressChannelId());
+
+		accountAddressChannelResource.deleteAccountAddressChannel(
+			accountAddressChannel2.getAccountAddressChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -285,13 +409,13 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage_getExternalReferenceCode();
 
-		Page<AccountAddressChannel> accountAddressChannelPage =
+		Page<AccountAddressChannel> accountAddressChannelsPage =
 			accountAddressChannelResource.
 				getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountAddressChannelPage.getTotalCount());
+			accountAddressChannelsPage.getTotalCount());
 
 		AccountAddressChannel accountAddressChannel1 =
 			testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage_addAccountAddressChannel(
@@ -421,30 +545,6 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountAddressByExternalReferenceCodeAccountAddressChannel()
-		throws Exception {
-
-		AccountAddressChannel randomAccountAddressChannel =
-			randomAccountAddressChannel();
-
-		AccountAddressChannel postAccountAddressChannel =
-			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
-				randomAccountAddressChannel);
-
-		assertEquals(randomAccountAddressChannel, postAccountAddressChannel);
-		assertValid(postAccountAddressChannel);
-	}
-
-	protected AccountAddressChannel
-			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
-				AccountAddressChannel accountAddressChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetAccountAddressIdAccountAddressChannelsPage()
 		throws Exception {
 
@@ -508,6 +608,12 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 			page,
 			testGetAccountAddressIdAccountAddressChannelsPage_getExpectedActions(
 				addressId));
+
+		accountAddressChannelResource.deleteAccountAddressChannel(
+			accountAddressChannel1.getAccountAddressChannelId());
+
+		accountAddressChannelResource.deleteAccountAddressChannel(
+			accountAddressChannel2.getAccountAddressChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -632,13 +738,13 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		Long addressId =
 			testGetAccountAddressIdAccountAddressChannelsPage_getAddressId();
 
-		Page<AccountAddressChannel> accountAddressChannelPage =
+		Page<AccountAddressChannel> accountAddressChannelsPage =
 			accountAddressChannelResource.
 				getAccountAddressIdAccountAddressChannelsPage(
 					addressId, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountAddressChannelPage.getTotalCount());
+			accountAddressChannelsPage.getTotalCount());
 
 		AccountAddressChannel accountAddressChannel1 =
 			testGetAccountAddressIdAccountAddressChannelsPage_addAccountAddressChannel(
@@ -934,6 +1040,30 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 	}
 
 	@Test
+	public void testPostAccountAddressByExternalReferenceCodeAccountAddressChannel()
+		throws Exception {
+
+		AccountAddressChannel randomAccountAddressChannel =
+			randomAccountAddressChannel();
+
+		AccountAddressChannel postAccountAddressChannel =
+			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
+				randomAccountAddressChannel);
+
+		assertEquals(randomAccountAddressChannel, postAccountAddressChannel);
+		assertValid(postAccountAddressChannel);
+	}
+
+	protected AccountAddressChannel
+			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
+				AccountAddressChannel accountAddressChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountAddressIdAccountAddressChannel()
 		throws Exception {
 
@@ -957,8 +1087,67 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		AccountAddressChannel accountAddressChannel1 =
+			testBatchEngineDeleteImportTask_addAccountAddressChannel();
+
+		testBatchEngineDeleteImportTask_deleteAccountAddressChannel(
+			200, null, accountAddressChannel1.getAccountAddressChannelId());
+	}
+
+	protected AccountAddressChannel
+			testBatchEngineDeleteImportTask_addAccountAddressChannel()
+		throws Exception {
+
+		return testDeleteAccountAddressChannel_addAccountAddressChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteAccountAddressChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"accountAddressChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected AccountAddressChannel
+			testGraphQLAccountAddressChannel_addAccountAddressChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		AccountAddressChannel accountAddressChannel,
@@ -1048,6 +1237,10 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (accountAddressChannel.getAccountAddressChannelId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1632,7 +1825,30 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		return randomAccountAddressChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AccountAddressChannelResource accountAddressChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

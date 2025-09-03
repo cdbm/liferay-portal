@@ -11,6 +11,7 @@ import com.liferay.commerce.currency.constants.CommerceCurrencyPortletKeys;
 import com.liferay.commerce.currency.exception.CommerceCurrencyCodeException;
 import com.liferay.commerce.currency.exception.CommerceCurrencyFractionDigitsException;
 import com.liferay.commerce.currency.exception.CommerceCurrencyNameException;
+import com.liferay.commerce.currency.exception.CommerceCurrencyRateException;
 import com.liferay.commerce.currency.exception.DuplicateCommerceCurrencyException;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -28,13 +29,13 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.math.BigDecimal;
 
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommerceCurrencyPortletKeys.COMMERCE_CURRENCY,
+		"jakarta.portlet.name=" + CommerceCurrencyPortletKeys.COMMERCE_CURRENCY,
 		"mvc.command.name=/commerce_currency/edit_commerce_currency"
 	},
 	service = MVCActionCommand.class
@@ -91,6 +92,7 @@ public class EditCommerceCurrencyMVCActionCommand extends BaseMVCActionCommand {
 					 exception instanceof
 						 CommerceCurrencyFractionDigitsException ||
 					 exception instanceof CommerceCurrencyNameException ||
+					 exception instanceof CommerceCurrencyRateException ||
 					 exception instanceof DuplicateCommerceCurrencyException) {
 
 				hideDefaultErrorMessage(actionRequest);

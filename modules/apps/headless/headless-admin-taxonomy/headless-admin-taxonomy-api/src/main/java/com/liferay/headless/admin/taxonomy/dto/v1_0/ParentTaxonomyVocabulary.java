@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -130,7 +130,7 @@ public class ParentTaxonomyVocabulary implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
 	@JsonIgnore
@@ -169,7 +169,7 @@ public class ParentTaxonomyVocabulary implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String name;
 
 	@JsonIgnore
@@ -212,7 +212,7 @@ public class ParentTaxonomyVocabulary implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> name_i18n;
 
 	@JsonIgnore

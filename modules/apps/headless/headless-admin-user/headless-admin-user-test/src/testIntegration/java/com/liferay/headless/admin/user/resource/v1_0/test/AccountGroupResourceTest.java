@@ -18,19 +18,21 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.exportimport.test.rule.LazyReferencing;
+import com.liferay.exportimport.test.rule.LazyReferencingTestRule;
+import com.liferay.headless.admin.user.client.custom.field.CustomField;
+import com.liferay.headless.admin.user.client.custom.field.CustomValue;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountGroup;
 import com.liferay.headless.admin.user.client.dto.v1_0.Creator;
-import com.liferay.headless.admin.user.client.dto.v1_0.CustomField;
-import com.liferay.headless.admin.user.client.dto.v1_0.CustomValue;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.permission.Permission;
 import com.liferay.headless.admin.user.client.problem.Problem;
 import com.liferay.headless.admin.user.client.resource.v1_0.AccountGroupResource;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -55,7 +57,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
@@ -69,6 +71,8 @@ import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -78,6 +82,11 @@ import org.junit.runner.RunWith;
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LazyReferencingTestRule lazyReferencingTestRule =
+		LazyReferencingTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -124,7 +133,8 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 		_testPatchAccountGroupByExternalReferenceCodeWithoutName();
 	}
 
-	@FeatureFlags("LPD-47858")
+	@FeatureFlag("LPD-47858")
+	@LazyReferencing
 	@Override
 	@Test
 	public void testPostAccountGroup() throws Exception {
@@ -329,7 +339,7 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 
 	private AccountEntry _addAccountEntry() throws Exception {
 		return _accountEntryLocalService.addAccountEntry(
-			_serviceContext.getUserId(),
+			StringPool.BLANK, _serviceContext.getUserId(),
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
@@ -415,8 +425,19 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 
 		long totalCount = page.getTotalCount();
 
+		// Sleep for 1 second to ensure that account group 1 and existing
+		// account groups are created 1 second apart
+
+		Thread.sleep(1000);
+
 		AccountGroup accountGroup1 = testGetAccountGroupsPage_addAccountGroup(
 			randomAccountGroup());
+
+		// Sleep for 1 second to ensure that account group 1 and account
+		// group 2 are created 1 second apart
+
+		Thread.sleep(1000);
+
 		AccountGroup accountGroup2 = testGetAccountGroupsPage_addAccountGroup(
 			randomAccountGroup());
 
@@ -436,6 +457,11 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 			Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
+
+		// Sleep for 1 second to ensure that account group 1 and account
+		// group 2 are modified 1 second apart
+
+		Thread.sleep(1000);
 
 		accountGroup1.setDescription(
 			StringUtil.toLowerCase(RandomTestUtil.randomString()));
@@ -584,7 +610,7 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 
 		AccountEntry serviceBuilderAccountEntry1 =
 			_accountEntryLocalService.addAccountEntry(
-				TestPropsValues.getUserId(),
+				StringPool.BLANK, TestPropsValues.getUserId(),
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				RandomTestUtil.randomString(), null, new String[0], null, null,
 				null, AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -635,8 +661,8 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 		randomAccountGroup.setPermissions(
 			new Permission[] {permission1, permission2});
 
-		_waitForFinish(
-			"COMPLETED", true,
+		waitForFinish(
+			"COMPLETED",
 			HTTPTestUtil.invokeToJSONObject(
 				JSONUtil.put(
 					"items",
@@ -689,7 +715,7 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 		Assert.assertEquals(
 			accountBrief2.getType(), serviceBuilderAccountEntry3.getType());
 		Assert.assertEquals(
-			WorkflowConstants.STATUS_INCOMPLETE,
+			WorkflowConstants.STATUS_EMPTY,
 			serviceBuilderAccountEntry3.getStatus());
 
 		Role serviceBuilderRole2 =
@@ -746,8 +772,7 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 			RoleConstants.getLabelType(permission2.getRoleType()),
 			serviceBuilderRole3.getType());
 		Assert.assertEquals(
-			WorkflowConstants.STATUS_INCOMPLETE,
-			serviceBuilderRole3.getStatus());
+			WorkflowConstants.STATUS_EMPTY, serviceBuilderRole3.getStatus());
 	}
 
 	private void _testPutAccountGroupByExternalReferenceWithoutName()
@@ -792,33 +817,6 @@ public class AccountGroupResourceTest extends BaseAccountGroupResourceTestCase {
 
 			Assert.assertEquals(
 				"The account group name is invalid", problem.getTitle());
-		}
-	}
-
-	private JSONObject _waitForFinish(
-			String expectedExecuteStatus, boolean importTask,
-			JSONObject jsonObject)
-		throws Exception {
-
-		String endpoint = StringBundler.concat(
-			"headless-batch-engine/v1.0/",
-			importTask ? "import-task" : "export-task",
-			"/by-external-reference-code/");
-
-		while (true) {
-			jsonObject = HTTPTestUtil.invokeToJSONObject(
-				null, endpoint + jsonObject.getString("externalReferenceCode"),
-				Http.Method.GET);
-
-			String executeStatus = jsonObject.getString("executeStatus");
-
-			if (StringUtil.equals(executeStatus, "COMPLETED") ||
-				StringUtil.equals(executeStatus, "FAILED")) {
-
-				Assert.assertEquals(expectedExecuteStatus, executeStatus);
-
-				return jsonObject;
-			}
 		}
 	}
 

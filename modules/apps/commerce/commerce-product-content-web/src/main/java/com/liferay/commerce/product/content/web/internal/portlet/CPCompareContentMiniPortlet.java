@@ -12,9 +12,9 @@ import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.render.list.CPContentListRendererRegistry;
 import com.liferay.commerce.product.content.render.list.entry.CPContentListEntryRendererRegistry;
 import com.liferay.commerce.product.content.web.internal.display.context.CPCompareContentMiniDisplayContext;
+import com.liferay.commerce.product.helper.CPCompareHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.type.CPTypeRegistry;
-import com.liferay.commerce.product.util.CPCompareHelper;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -24,12 +24,12 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,13 +48,13 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.scopeable=true",
-		"javax.portlet.display-name=Product Comparison Bar",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/compare_products_mini/view.jsp",
-		"javax.portlet.name=" + CPPortletKeys.CP_COMPARE_CONTENT_MINI_WEB,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Product Comparison Bar",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.view-template=/compare_products_mini/view.jsp",
+		"jakarta.portlet.name=" + CPPortletKeys.CP_COMPARE_CONTENT_MINI_WEB,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )

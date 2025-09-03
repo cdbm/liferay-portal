@@ -9,10 +9,10 @@ import com.liferay.asset.link.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletImportController;
-import com.liferay.exportimport.internal.lar.DeletionSystemEventImporter;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
 import com.liferay.exportimport.kernel.controller.ImportController;
 import com.liferay.exportimport.kernel.exception.LARFileException;
+import com.liferay.exportimport.kernel.exception.LARScopeException;
 import com.liferay.exportimport.kernel.exception.LARTypeException;
 import com.liferay.exportimport.kernel.exception.LayoutImportException;
 import com.liferay.exportimport.kernel.exception.MissingPortletDataHandlerException;
@@ -33,6 +33,7 @@ import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.exportimport.lar.DeletionSystemEventImporter;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.layout.admin.kernel.visibility.LayoutVisibilityManager;
@@ -84,6 +85,8 @@ import com.liferay.portal.kernel.zip.ZipReaderFactory;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.site.model.adapter.StagedGroup;
 import com.liferay.sites.kernel.util.Sites;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -132,6 +135,8 @@ public class LayoutImportController implements ImportController {
 
 			// LAR validation
 
+			ExportImportThreadLocal.setExportImportConfigurationId(
+				exportImportConfiguration.getExportImportConfigurationId());
 			ExportImportThreadLocal.setLayoutDataDeletionImportInProcess(true);
 
 			Map<String, Serializable> settingsMap =
@@ -192,6 +197,8 @@ public class LayoutImportController implements ImportController {
 		PortletDataContext portletDataContext = null;
 
 		try {
+			ExportImportThreadLocal.setExportImportConfigurationId(
+				exportImportConfiguration.getExportImportConfigurationId());
 			ExportImportThreadLocal.setLayoutImportInProcess(true);
 
 			portletDataContext = getPortletDataContext(
@@ -590,6 +597,19 @@ public class LayoutImportController implements ImportController {
 
 			if (group.isCompany() ^ companySourceGroup) {
 				throw new LARTypeException(LARTypeException.TYPE_COMPANY_GROUP);
+			}
+
+			StagingGroupHelper stagingGroupHelper =
+				StagingGroupHelperUtil.getStagingGroupHelper();
+
+			boolean companyGroupFriendlyURL =
+				stagingGroupHelper.isCompanyGroupFriendlyURL(
+					headerElement.attributeValue("group-friendly-url"));
+
+			if (companyGroupFriendlyURL != stagingGroupHelper.isCompanyGroup(
+					group)) {
+
+				throw new LARScopeException();
 			}
 		}
 
@@ -1052,7 +1072,7 @@ public class LayoutImportController implements ImportController {
 				portletDataContext.isPrivateLayout());
 
 			for (Layout layout : previousLayouts) {
-				if (Validator.isNull(layout.getSourcePrototypeLayoutUuid())) {
+				if (Validator.isNull(layout.getLayoutSetPrototypeLayoutERC())) {
 					continue;
 				}
 
@@ -1063,9 +1083,9 @@ public class LayoutImportController implements ImportController {
 				}
 
 				Layout sourcePrototypeLayout =
-					_layoutLocalService.fetchLayoutByUuidAndGroupId(
-						layout.getSourcePrototypeLayoutUuid(),
-						layoutSetPrototype.getGroupId(), true);
+					_layoutLocalService.fetchLayoutByExternalReferenceCode(
+						layout.getLayoutSetPrototypeLayoutERC(),
+						layoutSetPrototype.getGroupId());
 
 				if (sourcePrototypeLayout == null) {
 					_layoutLocalService.deleteLayout(layout, serviceContext);
@@ -1375,8 +1395,8 @@ public class LayoutImportController implements ImportController {
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
-	private final DeletionSystemEventImporter _deletionSystemEventImporter =
-		DeletionSystemEventImporter.getInstance();
+	@Reference
+	private DeletionSystemEventImporter _deletionSystemEventImporter;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;

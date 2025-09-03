@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
@@ -63,6 +64,11 @@ public class DateTimeObjectFieldBusinessType
 
 	@Override
 	public String getDDMFormFieldTypeName() {
+		return DDMFormFieldTypeConstants.DATE_TIME;
+	}
+
+	@Override
+	public String getDDMFormFieldTypeName(boolean localized) {
 		return DDMFormFieldTypeConstants.DATE_TIME;
 	}
 
@@ -175,13 +181,14 @@ public class DateTimeObjectFieldBusinessType
 
 	@Override
 	public Timestamp getValue(
-			ObjectField objectField, long userId, Map<String, Object> values)
+			Long groupId, ObjectField objectField, long userId,
+			Map<String, Object> values)
 		throws PortalException {
 
 		Object value = ObjectFieldBusinessType.super.getValue(
-			objectField, userId, values);
+			groupId, objectField, userId, values);
 
-		if (value == null) {
+		if (Validator.isNull(value)) {
 			return null;
 		}
 
@@ -196,18 +203,27 @@ public class DateTimeObjectFieldBusinessType
 			_userLocalService.getUser(userId), String.valueOf(value));
 	}
 
-	@Override
-	public boolean isLocalizable() {
-		return true;
+	private boolean _containsTimeZoneId(String pattern) {
+		if (pattern.contains("X") || pattern.contains("Z") ||
+			pattern.contains("z")) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private LocalDateTime _getLocalDateTime(
 		String sourceTimeZoneId, String targetTimeZoneId, String value) {
 
+		String pattern = StringUtil.replace(
+			ObjectFieldUtil.getDateTimePattern(value), "'Z'", "X");
+
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+			pattern);
+
 		LocalDateTime localDateTime = LocalDateTime.parse(
-			value,
-			DateTimeFormatter.ofPattern(
-				ObjectFieldUtil.getDateTimePattern(value)));
+			value, dateTimeFormatter);
 
 		if (Validator.isNull(sourceTimeZoneId) ||
 			Validator.isNull(targetTimeZoneId)) {
@@ -215,8 +231,15 @@ public class DateTimeObjectFieldBusinessType
 			return localDateTime;
 		}
 
-		ZonedDateTime zonedDateTime = ZonedDateTime.of(
-			localDateTime, ZoneId.of(sourceTimeZoneId));
+		ZonedDateTime zonedDateTime = null;
+
+		if (_containsTimeZoneId(pattern)) {
+			zonedDateTime = ZonedDateTime.parse(value, dateTimeFormatter);
+		}
+		else {
+			zonedDateTime = ZonedDateTime.of(
+				localDateTime, ZoneId.of(sourceTimeZoneId));
+		}
 
 		return LocalDateTime.ofInstant(
 			zonedDateTime.toInstant(), ZoneId.of(targetTimeZoneId));

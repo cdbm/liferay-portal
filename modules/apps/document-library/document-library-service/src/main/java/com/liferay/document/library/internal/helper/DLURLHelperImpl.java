@@ -5,6 +5,7 @@
 
 package com.liferay.document.library.internal.helper;
 
+import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.processor.ImageProcessorUtil;
@@ -42,12 +43,12 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.webdav.DLWebDAVUtil;
 import com.liferay.trash.TrashHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -213,6 +214,14 @@ public class DLURLHelperImpl implements DLURLHelper {
 
 		String previewURLPrefix = _getPreviewURLPrefix(
 			themeDisplay, absoluteURL);
+
+		if (fileVersion.getCtCollectionId() !=
+				CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+
+			queryString = StringBundler.concat(
+				"&previewCTCollectionId=", fileVersion.getCtCollectionId(),
+				queryString);
+		}
 
 		String previewURL = _getFriendlyURL(
 			fileEntry, previewURLPrefix, queryString, appendVersion);

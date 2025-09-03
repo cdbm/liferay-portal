@@ -77,7 +77,6 @@ public class CPConfigurationEntryWrapper
 		attributes.put("shippingExtraPrice", getShippingExtraPrice());
 		attributes.put("shipSeparately", isShipSeparately());
 		attributes.put("taxExempt", isTaxExempt());
-		attributes.put("visible", isVisible());
 		attributes.put("weight", getWeight());
 		attributes.put("width", getWidth());
 
@@ -301,12 +300,6 @@ public class CPConfigurationEntryWrapper
 
 		if (taxExempt != null) {
 			setTaxExempt(taxExempt);
-		}
-
-		Boolean visible = (Boolean)attributes.get("visible");
-
-		if (visible != null) {
-			setVisible(visible);
 		}
 
 		Double weight = (Double)attributes.get("weight");
@@ -717,16 +710,6 @@ public class CPConfigurationEntryWrapper
 	}
 
 	/**
-	 * Returns the visible of this cp configuration entry.
-	 *
-	 * @return the visible of this cp configuration entry
-	 */
-	@Override
-	public boolean getVisible() {
-		return model.getVisible();
-	}
-
-	/**
 	 * Returns the weight of this cp configuration entry.
 	 *
 	 * @return the weight of this cp configuration entry
@@ -786,6 +769,13 @@ public class CPConfigurationEntryWrapper
 		return model.isFreeShipping();
 	}
 
+	@Override
+	public boolean isMaster()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.isMaster();
+	}
+
 	/**
 	 * Returns <code>true</code> if this cp configuration entry is purchasable.
 	 *
@@ -824,16 +814,6 @@ public class CPConfigurationEntryWrapper
 	@Override
 	public boolean isTaxExempt() {
 		return model.isTaxExempt();
-	}
-
-	/**
-	 * Returns <code>true</code> if this cp configuration entry is visible.
-	 *
-	 * @return <code>true</code> if this cp configuration entry is visible; <code>false</code> otherwise
-	 */
-	@Override
-	public boolean isVisible() {
-		return model.isVisible();
 	}
 
 	@Override
@@ -1208,16 +1188,6 @@ public class CPConfigurationEntryWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
-	}
-
-	/**
-	 * Sets whether this cp configuration entry is visible.
-	 *
-	 * @param visible the visible of this cp configuration entry
-	 */
-	@Override
-	public void setVisible(boolean visible) {
-		model.setVisible(visible);
 	}
 
 	/**

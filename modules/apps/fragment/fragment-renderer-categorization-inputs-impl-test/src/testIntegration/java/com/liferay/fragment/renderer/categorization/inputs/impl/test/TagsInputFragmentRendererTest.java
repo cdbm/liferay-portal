@@ -19,12 +19,12 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -48,7 +48,7 @@ public class TagsInputFragmentRendererTest
 	@Override
 	protected ObjectEntry addObjectEntry() throws Exception {
 		return _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,

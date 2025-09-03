@@ -43,6 +43,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -223,12 +223,12 @@ public abstract class BaseAccountForecastResourceTestCase {
 	public void testGetAccountForecastsByMonthlyRevenuePageWithPagination()
 		throws Exception {
 
-		Page<AccountForecast> accountForecastPage =
+		Page<AccountForecast> accountForecastsPage =
 			accountForecastResource.getAccountForecastsByMonthlyRevenuePage(
 				null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountForecastPage.getTotalCount());
+			accountForecastsPage.getTotalCount());
 
 		AccountForecast accountForecast1 =
 			testGetAccountForecastsByMonthlyRevenuePage_addAccountForecast(
@@ -324,6 +324,11 @@ public abstract class BaseAccountForecastResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

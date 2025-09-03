@@ -223,6 +223,30 @@ public class CommerceOrderItemServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
+			getParentCommerceOrderItems(
+				long commerceOrderId, long parentCommerceOrderItemId, int start,
+				int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.commerce.model.CommerceOrderItem>
+						orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemService.getParentCommerceOrderItems(
+			commerceOrderId, parentCommerceOrderItemId, start, end,
+			orderByComparator);
+	}
+
+	@Override
+	public int getParentCommerceOrderItemsCount(
+			long commerceOrderId, long parentCommerceOrderItemId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemService.getParentCommerceOrderItemsCount(
+			commerceOrderId, parentCommerceOrderItemId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
 			getSupplierCommerceOrderItems(
 				long customerCommerceOrderItemId, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -235,8 +259,8 @@ public class CommerceOrderItemServiceWrapper
 	public com.liferay.commerce.model.CommerceOrderItem importCommerceOrderItem(
 			String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, java.math.BigDecimal quantity,
-			java.math.BigDecimal shippedQuantity,
+			String cpMeasurementUnitKey, String json,
+			java.math.BigDecimal quantity, java.math.BigDecimal shippedQuantity,
 			java.math.BigDecimal unitOfMeasureIncrementalOrderQuantity,
 			String unitOfMeasureKey,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -244,7 +268,7 @@ public class CommerceOrderItemServiceWrapper
 
 		return _commerceOrderItemService.importCommerceOrderItem(
 			externalReferenceCode, commerceOrderItemId, commerceOrderId,
-			cpInstanceId, cpMeasurementUnitKey, quantity, shippedQuantity,
+			cpInstanceId, cpMeasurementUnitKey, json, quantity, shippedQuantity,
 			unitOfMeasureIncrementalOrderQuantity, unitOfMeasureKey,
 			serviceContext);
 	}

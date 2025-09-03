@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Roberto Díaz
@@ -217,6 +217,51 @@ public class UserGroup implements Serializable {
 	private Supplier<Map<String, String>> _name_i18nSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of this user group's associated users."
+	)
+	public Integer getNumberOfUserAccounts() {
+		if (_numberOfUserAccountsSupplier != null) {
+			numberOfUserAccounts = _numberOfUserAccountsSupplier.get();
+
+			_numberOfUserAccountsSupplier = null;
+		}
+
+		return numberOfUserAccounts;
+	}
+
+	public void setNumberOfUserAccounts(Integer numberOfUserAccounts) {
+		this.numberOfUserAccounts = numberOfUserAccounts;
+
+		_numberOfUserAccountsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setNumberOfUserAccounts(
+		UnsafeSupplier<Integer, Exception> numberOfUserAccountsUnsafeSupplier) {
+
+		_numberOfUserAccountsSupplier = () -> {
+			try {
+				return numberOfUserAccountsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The number of this user group's associated users."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Integer numberOfUserAccounts;
+
+	@JsonIgnore
+	private Supplier<Integer> _numberOfUserAccountsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The list of roles associated with this user group."
 	)
 	@Valid
@@ -343,6 +388,18 @@ public class UserGroup implements Serializable {
 			sb.append("\"name_i18n\": ");
 
 			sb.append(_toJSON(name_i18n));
+		}
+
+		Integer numberOfUserAccounts = getNumberOfUserAccounts();
+
+		if (numberOfUserAccounts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfUserAccounts\": ");
+
+			sb.append(numberOfUserAccounts);
 		}
 
 		Role[] roles = getRoles();

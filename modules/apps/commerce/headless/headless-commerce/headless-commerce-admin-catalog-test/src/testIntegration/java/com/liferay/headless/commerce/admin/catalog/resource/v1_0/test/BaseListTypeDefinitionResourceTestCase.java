@@ -41,6 +41,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -182,6 +182,36 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteSpecificationListTypeDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ListTypeDefinition listTypeDefinition =
+			testDeleteSpecificationListTypeDefinition_addListTypeDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			listTypeDefinitionResource.
+				deleteSpecificationListTypeDefinitionHttpResponse(
+					testDeleteSpecificationListTypeDefinition_getSpecificationId(),
+					listTypeDefinition.getId()));
+	}
+
+	protected ListTypeDefinition
+			testDeleteSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetSpecificationIdListTypeDefinitionsPage()
 		throws Exception {
 
@@ -295,36 +325,6 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteSpecificationListTypeDefinition() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ListTypeDefinition listTypeDefinition =
-			testDeleteSpecificationListTypeDefinition_addListTypeDefinition();
-
-		assertHttpResponseStatusCode(
-			204,
-			listTypeDefinitionResource.
-				deleteSpecificationListTypeDefinitionHttpResponse(
-					testDeleteSpecificationListTypeDefinition_getSpecificationId(),
-					listTypeDefinition.getId()));
-	}
-
-	protected Long
-			testDeleteSpecificationListTypeDefinition_getSpecificationId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected ListTypeDefinition
-			testDeleteSpecificationListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testPostSpecificationListTypeDefinition() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		ListTypeDefinition listTypeDefinition =
@@ -334,12 +334,22 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			204,
 			listTypeDefinitionResource.
 				postSpecificationListTypeDefinitionHttpResponse(
-					null, listTypeDefinition.getId()));
+					testPostSpecificationListTypeDefinition_getSpecificationId(),
+					listTypeDefinition.getId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			listTypeDefinitionResource.
-				postSpecificationListTypeDefinitionHttpResponse(null, 0L));
+				postSpecificationListTypeDefinitionHttpResponse(
+					testPostSpecificationListTypeDefinition_getSpecificationId(),
+					0L));
+	}
+
+	protected Long testPostSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected ListTypeDefinition
@@ -350,12 +360,9 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	protected ListTypeDefinition
-			testGraphQLListTypeDefinition_addListTypeDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

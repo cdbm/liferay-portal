@@ -60,14 +60,14 @@ import com.liferay.portal.odata.filter.expression.PrimitivePropertyExpression;
 import com.liferay.portal.odata.filter.expression.PropertyExpression;
 import com.liferay.portal.odata.filter.expression.UnaryExpression;
 
+import jakarta.ws.rs.ServerErrorException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.ServerErrorException;
 
 /**
  * @author Marco Leo
@@ -382,10 +382,11 @@ public class PredicateExpressionVisitorImpl
 	}
 
 	private Predicate _contains(Column<?, ?> column, Object value) {
-		return DSLFunctionFactoryUtil.castText(
-			column
+		return DSLFunctionFactoryUtil.lower(
+			DSLFunctionFactoryUtil.castText(column)
 		).like(
-			StringPool.PERCENT + value + StringPool.PERCENT
+			StringPool.PERCENT + StringUtil.toLowerCase(String.valueOf(value)) +
+				StringPool.PERCENT
 		);
 	}
 
@@ -686,7 +687,7 @@ public class PredicateExpressionVisitorImpl
 					objectField.getBusinessType());
 
 			Object value = objectFieldBusinessType.getValue(
-				objectField, PrincipalThreadLocal.getUserId(),
+				null, objectField, PrincipalThreadLocal.getUserId(),
 				Collections.singletonMap(entityField.getName(), right));
 
 			if (value == null) {

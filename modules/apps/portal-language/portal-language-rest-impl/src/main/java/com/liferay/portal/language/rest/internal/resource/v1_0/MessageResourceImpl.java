@@ -25,6 +25,8 @@ import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.BadRequestException;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -39,8 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ResourceBundle;
-
-import javax.ws.rs.BadRequestException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -111,6 +111,19 @@ public class MessageResourceImpl extends BaseMessageResourceImpl {
 
 			_ploEntryService.importPLOEntries(languageId, properties);
 		}
+	}
+
+	@Override
+	public Page<Message> postMessagesExportPage(
+		String languageId, String[] keys) {
+
+		List<Message> messages = new ArrayList<>();
+
+		for (String key : keys) {
+			messages.add(getMessage(key, languageId));
+		}
+
+		return Page.of(messages);
 	}
 
 	@Override

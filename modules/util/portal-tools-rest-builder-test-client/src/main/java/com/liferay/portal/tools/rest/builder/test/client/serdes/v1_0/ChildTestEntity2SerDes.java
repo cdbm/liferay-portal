@@ -5,8 +5,11 @@
 
 package com.liferay.portal.tools.rest.builder.test.client.serdes.v1_0;
 
+import com.liferay.portal.tools.rest.builder.test.client.constant.v1_0.StringTestEntity;
 import com.liferay.portal.tools.rest.builder.test.client.dto.v1_0.ChildTestEntity2;
 import com.liferay.portal.tools.rest.builder.test.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -16,8 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Alejandro Tardín
@@ -184,6 +185,38 @@ public class ChildTestEntity2SerDes {
 			sb.append("\"");
 		}
 
+		if (childTestEntity2.getStringTestEntities() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"stringTestEntities\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < childTestEntity2.getStringTestEntities().length;
+				 i++) {
+
+				sb.append(childTestEntity2.getStringTestEntities()[i]);
+
+				if ((i + 1) < childTestEntity2.getStringTestEntities().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (childTestEntity2.getStringTestEntity() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"stringTestEntity\": ");
+
+			sb.append(childTestEntity2.getStringTestEntity());
+		}
+
 		if (childTestEntity2.getTestEntities() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -314,6 +347,24 @@ public class ChildTestEntity2SerDes {
 			map.put("self", String.valueOf(childTestEntity2.getSelf()));
 		}
 
+		if (childTestEntity2.getStringTestEntities() == null) {
+			map.put("stringTestEntities", null);
+		}
+		else {
+			map.put(
+				"stringTestEntities",
+				String.valueOf(childTestEntity2.getStringTestEntities()));
+		}
+
+		if (childTestEntity2.getStringTestEntity() == null) {
+			map.put("stringTestEntity", null);
+		}
+		else {
+			map.put(
+				"stringTestEntity",
+				String.valueOf(childTestEntity2.getStringTestEntity()));
+		}
+
 		if (childTestEntity2.getTestEntities() == null) {
 			map.put("testEntities", null);
 		}
@@ -376,6 +427,14 @@ public class ChildTestEntity2SerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "self")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "stringTestEntities")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "stringTestEntity")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "testEntities")) {
@@ -449,6 +508,20 @@ public class ChildTestEntity2SerDes {
 			else if (Objects.equals(jsonParserFieldName, "self")) {
 				if (jsonParserFieldValue != null) {
 					childTestEntity2.setSelf((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "stringTestEntities")) {
+
+				if (jsonParserFieldValue != null) {
+					childTestEntity2.setStringTestEntities(
+						(StringTestEntity[])jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "stringTestEntity")) {
+				if (jsonParserFieldValue != null) {
+					childTestEntity2.setStringTestEntity(
+						StringTestEntity.create((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "testEntities")) {

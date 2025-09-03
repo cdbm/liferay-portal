@@ -36,6 +36,8 @@ import com.liferay.style.book.service.StyleBookEntryService;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry;
 
+import jakarta.portlet.PortletException;
+
 import java.io.File;
 import java.io.InputStream;
 
@@ -45,8 +47,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -369,11 +369,7 @@ public class StyleBookEntryZipProcessorImpl
 	}
 
 	private boolean _isStyleBookEntry(String fileName) {
-		if (Objects.equals(_getFileName(fileName), "style-book.json")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getFileName(fileName), "style-book.json");
 	}
 
 	@Reference

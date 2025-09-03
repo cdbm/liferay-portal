@@ -74,6 +74,11 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -86,11 +91,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -908,19 +908,19 @@ public class JournalTransformer {
 			if (portletRequestModel != null) {
 				originalPortletRequest =
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST);
+						JavaConstants.JAKARTA_PORTLET_REQUEST);
 				originalPortletResponse =
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE);
+						JavaConstants.JAKARTA_PORTLET_RESPONSE);
 				originalLifecyclePhase =
 					(String)httpServletRequest.getAttribute(
 						PortletRequest.LIFECYCLE_PHASE);
 
 				httpServletRequest.setAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST,
+					JavaConstants.JAKARTA_PORTLET_REQUEST,
 					portletRequestModel.getPortletRequest());
 				httpServletRequest.setAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE,
+					JavaConstants.JAKARTA_PORTLET_RESPONSE,
 					portletRequestModel.getPortletResponse());
 				httpServletRequest.setAttribute(
 					PortletRequest.LIFECYCLE_PHASE,
@@ -1026,10 +1026,10 @@ public class JournalTransformer {
 		finally {
 			if ((httpServletRequest != null) && (portletRequestModel != null)) {
 				httpServletRequest.setAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST,
+					JavaConstants.JAKARTA_PORTLET_REQUEST,
 					originalPortletRequest);
 				httpServletRequest.setAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE,
+					JavaConstants.JAKARTA_PORTLET_RESPONSE,
 					originalPortletResponse);
 				httpServletRequest.setAttribute(
 					PortletRequest.LIFECYCLE_PHASE, originalLifecyclePhase);

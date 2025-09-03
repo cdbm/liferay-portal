@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -254,11 +254,11 @@ public abstract class BaseTransitionResourceTestCase {
 		Long workflowInstanceId =
 			testGetWorkflowInstanceNextTransitionsPage_getWorkflowInstanceId();
 
-		Page<Transition> transitionPage =
+		Page<Transition> transitionsPage =
 			transitionResource.getWorkflowInstanceNextTransitionsPage(
 				workflowInstanceId, null);
 
-		int totalCount = GetterUtil.getInteger(transitionPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(transitionsPage.getTotalCount());
 
 		Transition transition1 =
 			testGetWorkflowInstanceNextTransitionsPage_addTransition(
@@ -431,11 +431,11 @@ public abstract class BaseTransitionResourceTestCase {
 		Long workflowTaskId =
 			testGetWorkflowTaskNextTransitionsPage_getWorkflowTaskId();
 
-		Page<Transition> transitionPage =
+		Page<Transition> transitionsPage =
 			transitionResource.getWorkflowTaskNextTransitionsPage(
 				workflowTaskId, null);
 
-		int totalCount = GetterUtil.getInteger(transitionPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(transitionsPage.getTotalCount());
 
 		Transition transition1 =
 			testGetWorkflowTaskNextTransitionsPage_addTransition(
@@ -534,6 +534,11 @@ public abstract class BaseTransitionResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

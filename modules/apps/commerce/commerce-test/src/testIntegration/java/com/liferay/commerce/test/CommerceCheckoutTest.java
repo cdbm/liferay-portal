@@ -84,11 +84,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.frutilla.FrutillaRule;
 
@@ -236,7 +236,7 @@ public class CommerceCheckoutTest {
 
 			AccountEntry accountEntry =
 				_accountEntryLocalService.addAccountEntry(
-					user1.getUserId(),
+					StringPool.BLANK, user1.getUserId(),
 					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 					RandomTestUtil.randomString(), null, null, null, null,
 					StringPool.BLANK, AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST,
@@ -834,12 +834,13 @@ public class CommerceCheckoutTest {
 		}
 
 		return CommerceAddressLocalServiceUtil.addCommerceAddress(
-			AccountEntry.class.getName(), commerceOrder.getCommerceAccountId(),
+			StringPool.BLANK, AccountEntry.class.getName(),
+			commerceOrder.getCommerceAccountId(), country.getCountryId(), 0,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), 0, country.getCountryId(),
-			RandomTestUtil.randomString(), addressType, _serviceContext);
+			RandomTestUtil.randomString(), StringPool.BLANK, addressType,
+			RandomTestUtil.randomString(), _serviceContext);
 	}
 
 	private static Company _company;

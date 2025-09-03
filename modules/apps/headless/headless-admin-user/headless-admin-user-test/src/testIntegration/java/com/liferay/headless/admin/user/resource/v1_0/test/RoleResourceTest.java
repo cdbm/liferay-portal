@@ -11,20 +11,27 @@ import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.exportimport.test.rule.LazyReferencing;
+import com.liferay.exportimport.test.rule.LazyReferencingTestRule;
 import com.liferay.headless.admin.user.client.dto.v1_0.Role;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
+import com.liferay.headless.admin.user.client.permission.Permission;
 import com.liferay.headless.admin.user.client.resource.v1_0.RoleResource;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -34,15 +41,18 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.permission.PermissionUtil;
 
 import java.text.DateFormat;
 
@@ -64,6 +74,11 @@ import org.junit.runner.RunWith;
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class RoleResourceTest extends BaseRoleResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LazyReferencingTestRule lazyReferencingTestRule =
+		LazyReferencingTestRule.INSTANCE;
 
 	@ClassRule
 	@Rule
@@ -248,6 +263,16 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 						_getRoleId(_addRole(true, RoleConstants.TYPE_SITE)),
 						_user.getUserId(), _organization.getOrganizationId()));
 		}
+	}
+
+	@FeatureFlag("LPD-47858")
+	@LazyReferencing
+	@Override
+	@Test
+	public void testPostRole() throws Exception {
+		super.testPostRole();
+
+		_testPostRoleBatch();
 	}
 
 	@Override
@@ -708,7 +733,18 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 
 		long totalCount = page.getTotalCount();
 
+		// Sleep for 1 second to ensure that role 1 and existing roles are
+		// created 1 second apart
+
+		Thread.sleep(1000);
+
 		Role role1 = _addRole(false, randomRole());
+
+		// Sleep for 1 second to ensure that role 1 and role 2 are created 1
+		// second apart
+
+		Thread.sleep(1000);
+
 		Role role2 = _addRole(false, randomRole());
 
 		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
@@ -727,6 +763,11 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			Pagination.of(1, 2));
 
 		Assert.assertEquals(2, page.getTotalCount());
+
+		// Sleep for 1 second to ensure that role 1 and role 2 are modified 1
+		// second apart
+
+		Thread.sleep(1000);
 
 		role1.setDescription(
 			StringUtil.toLowerCase(RandomTestUtil.randomString()));
@@ -756,7 +797,8 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 		String prefix = RandomTestUtil.randomString();
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
+			StringPool.BLANK, _user.getUserId(),
+			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST,
@@ -852,6 +894,105 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 					Objects.equals(permission.getActionIds()[0], "DELETE")));
 	}
 
+	private void _testPostRoleBatch() throws Exception {
+		Role role = randomRole();
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole1 =
+			RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		Permission permission1 = new Permission() {
+			{
+				actionIds = new String[] {ActionKeys.VIEW};
+				roleExternalReferenceCode =
+					serviceBuilderRole1.getExternalReferenceCode();
+				roleName = serviceBuilderRole1.getName();
+				roleType = RoleConstants.getTypeLabel(
+					serviceBuilderRole1.getType());
+			}
+		};
+		Permission permission2 = new Permission() {
+			{
+				actionIds = new String[] {ActionKeys.UPDATE};
+				roleExternalReferenceCode = RandomTestUtil.randomString();
+				roleName = RandomTestUtil.randomString();
+				roleType = RoleConstants.getTypeLabel(
+					RoleConstants.TYPE_REGULAR);
+			}
+		};
+
+		role.setPermissions(new Permission[] {permission1, permission2});
+
+		waitForFinish(
+			"COMPLETED",
+			HTTPTestUtil.invokeToJSONObject(
+				JSONUtil.put(
+					"items",
+					JSONUtil.put(_jsonFactory.createJSONObject(role.toString()))
+				).toString(),
+				"headless-admin-user/v1.0/roles/batch", Http.Method.POST));
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole2 =
+			_roleLocalService.fetchRoleByExternalReferenceCode(
+				permission1.getRoleExternalReferenceCode(),
+				TestPropsValues.getCompanyId());
+
+		com.liferay.portal.kernel.model.Role createdRole =
+			_roleLocalService.fetchRoleByExternalReferenceCode(
+				role.getExternalReferenceCode(),
+				TestPropsValues.getCompanyId());
+
+		List<com.liferay.portal.vulcan.permission.Permission> permissions =
+			ListUtil.fromCollection(
+				PermissionUtil.getPermissions(
+					TestPropsValues.getCompanyId(),
+					_resourceActionLocalService.getResourceActions(
+						com.liferay.portal.kernel.model.Role.class.getName()),
+					createdRole.getRoleId(),
+					com.liferay.portal.kernel.model.Role.class.getName(),
+					null));
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				permissions,
+				permission -> {
+					String[] actionIds = permission.getActionIds();
+
+					return (actionIds.length == 1) &&
+						   Objects.equals(ActionKeys.VIEW, actionIds[0]) &&
+						   Objects.equals(
+							   serviceBuilderRole2.getExternalReferenceCode(),
+							   permission.getRoleExternalReferenceCode());
+				}));
+
+		Assert.assertEquals(
+			serviceBuilderRole1.getRoleId(), serviceBuilderRole2.getRoleId());
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole3 =
+			_roleLocalService.fetchRoleByExternalReferenceCode(
+				permission2.getRoleExternalReferenceCode(),
+				TestPropsValues.getCompanyId());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				permissions,
+				permission -> {
+					String[] actionIds = permission.getActionIds();
+
+					return (actionIds.length == 1) &&
+						   Objects.equals(ActionKeys.UPDATE, actionIds[0]) &&
+						   Objects.equals(
+							   serviceBuilderRole3.getExternalReferenceCode(),
+							   permission.getRoleExternalReferenceCode());
+				}));
+		Assert.assertEquals(
+			permission2.getRoleName(), serviceBuilderRole3.getName());
+		Assert.assertEquals(
+			RoleConstants.getLabelType(permission2.getRoleType()),
+			serviceBuilderRole3.getType());
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EMPTY, serviceBuilderRole3.getStatus());
+	}
+
 	private Role _toRole(com.liferay.portal.kernel.model.Role role) {
 		return new Role() {
 			{
@@ -890,7 +1031,13 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	@Inject
 	private AccountRoleLocalService _accountRoleLocalService;
 
+	@Inject
+	private JSONFactory _jsonFactory;
+
 	private Organization _organization;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

@@ -8,21 +8,25 @@ package com.liferay.journal.web.internal.display.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalFolderFixture;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFunction;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
@@ -39,15 +43,19 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.test.MockLiferayPortletContext;
 
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletURL;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.Portlet;
-import javax.portlet.PortletURL;
+import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,7 +73,9 @@ public class JournalDisplayContextTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -108,6 +118,24 @@ public class JournalDisplayContextTest {
 	}
 
 	@Test
+	public void testGetSearchContainerWithJournalFolderFixture()
+		throws Exception {
+
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			_journalFolderLocalService);
+
+		for (int i = 1; i <= 21; i++) {
+			journalFolderFixture.addFolder(_group.getGroupId(), "Folder " + i);
+		}
+
+		SearchContainer<Object> searchContainer = _getSearchContainer();
+
+		List<Object> results = searchContainer.getResults();
+
+		Assert.assertEquals(results.toString(), 20, results.size());
+	}
+
+	@Test
 	public void testGetSearchContainerWithKeywordsAndDelta() throws Exception {
 		int count = 5;
 
@@ -142,6 +170,33 @@ public class JournalDisplayContextTest {
 				"test",
 				journalFolderFixture.addFolder(
 					_group.getGroupId(), RandomTestUtil.randomString())));
+	}
+
+	@Test
+	public void testIsShowComments() throws Exception {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		JournalFolder journalFolder = JournalTestUtil.addFolder(
+			_group.getGroupId(), RandomTestUtil.randomString());
+
+		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
+			new MockLiferayPortletRenderRequest();
+
+		mockLiferayPortletRenderRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay());
+
+		Function<String, ServiceContext> function = new ServiceContextFunction(
+			mockLiferayPortletRenderRequest);
+
+		_commentManager.addComment(
+			_user.getUserId(), _group.getGroupId(),
+			JournalArticle.class.getName(), journalArticle.getResourcePrimKey(),
+			"test", function);
+
+		Assert.assertFalse(_isShowComments(journalFolder, StringPool.BLANK));
+		Assert.assertTrue(_isShowComments(journalFolder, "test"));
 	}
 
 	private void _addJournalArticle(String title) throws Exception {
@@ -223,6 +278,9 @@ public class JournalDisplayContextTest {
 		mockLiferayPortletRenderRequest.setParameter(
 			SearchContainer.DEFAULT_DELTA_PARAM, String.valueOf(delta));
 
+		mockLiferayPortletRenderRequest.setParameter(
+			Field.STATUS, String.valueOf(WorkflowConstants.STATUS_APPROVED));
+
 		if (Validator.isNotNull(keywords)) {
 			mockLiferayPortletRenderRequest.setParameter("keywords", keywords);
 		}
@@ -265,6 +323,24 @@ public class JournalDisplayContextTest {
 			journalFolder);
 	}
 
+	private boolean _isShowComments(
+			JournalFolder journalFolder, String keywords)
+		throws Exception {
+
+		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
+			_renderPortlet();
+
+		mockLiferayPortletRenderRequest.setParameter(
+			"folderId", String.valueOf(journalFolder.getFolderId()));
+		mockLiferayPortletRenderRequest.setParameter("keywords", keywords);
+
+		return ReflectionTestUtil.invoke(
+			mockLiferayPortletRenderRequest.getAttribute(
+				"com.liferay.journal.web.internal.display.context." +
+					"JournalDisplayContext"),
+			"isShowComments", new Class<?>[0]);
+	}
+
 	private MockLiferayPortletRenderRequest _renderPortlet() throws Exception {
 		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
 			_getMockLiferayPortletRenderRequest();
@@ -277,6 +353,9 @@ public class JournalDisplayContextTest {
 
 		return mockLiferayPortletRenderRequest;
 	}
+
+	@Inject
+	private CommentManager _commentManager;
 
 	private Company _company;
 

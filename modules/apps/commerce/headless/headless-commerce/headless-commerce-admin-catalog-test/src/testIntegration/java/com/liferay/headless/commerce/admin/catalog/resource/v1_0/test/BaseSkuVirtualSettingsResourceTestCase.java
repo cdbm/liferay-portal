@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -203,16 +203,16 @@ public abstract class BaseSkuVirtualSettingsResourceTestCase {
 		assertValid(getSkuVirtualSettings);
 	}
 
-	protected String
-			testGetSkuByExternalReferenceCodeSkuVirtualSettings_getExternalReferenceCode()
+	protected SkuVirtualSettings
+			testGetSkuByExternalReferenceCodeSkuVirtualSettings_addSkuVirtualSettings()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected SkuVirtualSettings
-			testGetSkuByExternalReferenceCodeSkuVirtualSettings_addSkuVirtualSettings()
+	protected String
+			testGetSkuByExternalReferenceCodeSkuVirtualSettings_getExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -352,15 +352,16 @@ public abstract class BaseSkuVirtualSettingsResourceTestCase {
 		assertValid(getSkuVirtualSettings);
 	}
 
-	protected Long testGetSkuIdSkuVirtualSettings_getId(
-			SkuVirtualSettings skuVirtualSettings)
-		throws Exception {
-
-		return skuVirtualSettings.getId();
-	}
-
 	protected SkuVirtualSettings
 			testGetSkuIdSkuVirtualSettings_addSkuVirtualSettings()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetSkuIdSkuVirtualSettings_getId(
+			SkuVirtualSettings skuVirtualSettings)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -423,7 +424,8 @@ public abstract class BaseSkuVirtualSettingsResourceTestCase {
 			SkuVirtualSettings skuVirtualSettings)
 		throws Exception {
 
-		return skuVirtualSettings.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test

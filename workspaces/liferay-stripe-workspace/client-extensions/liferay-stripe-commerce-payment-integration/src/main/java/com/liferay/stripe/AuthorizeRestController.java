@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Crescenzo Rega
@@ -96,41 +97,43 @@ public class AuthorizeRestController extends BaseRestController {
 			HttpStatus.OK);
 	}
 
-	private Session _createSession(
-			JSONObject commercePaymentEntryJSONObject, Jwt jwt)
+	private Session _createSession(JSONObject jsonObject, Jwt jwt)
 		throws Exception {
 
 		SessionCreateParams sessionCreateParams = null;
 
 		if (Objects.equals(
-				commercePaymentEntryJSONObject.getString("className"),
+				jsonObject.getString("className"),
 				"com.liferay.commerce.model.CommerceOrder")) {
 
 			JSONObject orderJSONObject = new JSONObject(
 				Objects.requireNonNull(
 					get(
 						"Bearer " + jwt.getTokenValue(),
-						StringBundler.concat(
-							"/o/headless-commerce-admin-order/v1.0/orders/",
-							commercePaymentEntryJSONObject.getLong("classPK"),
-							"?nestedFields=orderItems"))));
+						UriComponentsBuilder.fromPath(
+							"/o/headless-commerce-admin-order/v1.0/orders/" +
+								jsonObject.getLong("classPK")
+						).queryParam(
+							"nestedFields", "orderItems"
+						).build(
+						).toUri())));
 
 			SessionCreateParams.Builder builder = SessionCreateParams.builder(
 			).addAllLineItem(
 				_getLineItems(
 					orderJSONObject.getString("currencyCode"),
-					commercePaymentEntryJSONObject.getString("languageId"),
+					jsonObject.getString("languageId"),
 					orderJSONObject.getJSONArray("orderItems"))
 			).addPaymentMethodType(
 				SessionCreateParams.PaymentMethodType.CARD
 			).setCancelUrl(
-				commercePaymentEntryJSONObject.getString("cancelURL")
+				jsonObject.getString("cancelURL")
 			).setCurrency(
 				orderJSONObject.getString("currencyCode")
 			).setMode(
 				SessionCreateParams.Mode.PAYMENT
 			).setSuccessUrl(
-				commercePaymentEntryJSONObject.getString("callbackURL")
+				jsonObject.getString("callbackURL")
 			);
 
 			if (orderJSONObject.getBoolean("shippable")) {
@@ -146,17 +149,17 @@ public class AuthorizeRestController extends BaseRestController {
 		else {
 			sessionCreateParams = SessionCreateParams.builder(
 			).addAllLineItem(
-				_getLineItems(commercePaymentEntryJSONObject)
+				_getLineItems(jsonObject)
 			).addPaymentMethodType(
 				SessionCreateParams.PaymentMethodType.CARD
 			).setCancelUrl(
-				commercePaymentEntryJSONObject.getString("cancelURL")
+				jsonObject.getString("cancelURL")
 			).setCurrency(
-				commercePaymentEntryJSONObject.getString("currencyCode")
+				jsonObject.getString("currencyCode")
 			).setMode(
 				SessionCreateParams.Mode.PAYMENT
 			).setSuccessUrl(
-				commercePaymentEntryJSONObject.getString("callbackURL")
+				jsonObject.getString("callbackURL")
 			).build();
 		}
 
@@ -178,26 +181,24 @@ public class AuthorizeRestController extends BaseRestController {
 	}
 
 	private List<SessionCreateParams.LineItem> _getLineItems(
-		JSONObject commercePaymentEntryJSONObject) {
+		JSONObject jsonObject) {
 
 		return Collections.singletonList(
 			SessionCreateParams.LineItem.builder(
 			).setPriceData(
 				SessionCreateParams.LineItem.PriceData.builder(
 				).setCurrency(
-					commercePaymentEntryJSONObject.getString("currencyCode")
+					jsonObject.getString("currencyCode")
 				).setProductData(
 					SessionCreateParams.LineItem.PriceData.ProductData.builder(
 					).setName(
 						StringBundler.concat(
-							commercePaymentEntryJSONObject.getString(
-								"classNameLabel"),
-							" ",
-							commercePaymentEntryJSONObject.getString("classPK"))
+							jsonObject.getString("classNameLabel"), " ",
+							jsonObject.getString("classPK"))
 					).build()
 				).setUnitAmount(
 					BigDecimal.valueOf(
-						commercePaymentEntryJSONObject.getDouble("amount")
+						jsonObject.getDouble("amount")
 					).multiply(
 						BigDecimal.valueOf(100)
 					).longValue()

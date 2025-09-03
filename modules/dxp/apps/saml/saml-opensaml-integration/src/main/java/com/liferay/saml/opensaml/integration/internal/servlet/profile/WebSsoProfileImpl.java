@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -73,16 +74,17 @@ import com.liferay.saml.runtime.exception.StatusException;
 import com.liferay.saml.runtime.exception.SubjectException;
 import com.liferay.saml.runtime.servlet.profile.WebSsoProfile;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -922,16 +924,20 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			}
 
 			if (samlSpMessage != null) {
-				_samlSpMessageLocalService.deleteSamlSpMessage(samlSpMessage);
+				samlSpMessage.setCreateDate(new Date());
+				samlSpMessage.setExpirationDate(notOnOrAfterDateTime.toDate());
+
+				_samlSpMessageLocalService.updateSamlSpMessage(samlSpMessage);
 			}
+			else {
+				ServiceContext serviceContext = new ServiceContext();
 
-			ServiceContext serviceContext = new ServiceContext();
+				serviceContext.setCompanyId(CompanyThreadLocal.getCompanyId());
 
-			serviceContext.setCompanyId(CompanyThreadLocal.getCompanyId());
-
-			_samlSpMessageLocalService.addSamlSpMessage(
-				idpEntityId, messageKey, notOnOrAfterDateTime.toDate(),
-				serviceContext);
+				_samlSpMessageLocalService.addSamlSpMessage(
+					idpEntityId, messageKey, notOnOrAfterDateTime.toDate(),
+					serviceContext);
+			}
 		}
 		catch (SystemException systemException) {
 			throw new SamlException(systemException);
@@ -1263,6 +1269,44 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		return messageContext;
 	}
 
+	private String _fetchSamlIdpSPNameIdFormat(
+		long companyId, String entityId) {
+
+		try {
+			SamlIdpSpConnection samlIdpSpConnection =
+				samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+					companyId, entityId);
+
+			return samlIdpSpConnection.getNameIdFormat();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return null;
+	}
+
+	private String _fetchSamlSpIdpNameIdFormat(
+		long companyId, String entityId) {
+
+		try {
+			SamlSpIdpConnection samlSpIdpConnection =
+				samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
+					companyId, entityId);
+
+			return samlSpIdpConnection.getNameIdFormat();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return null;
+	}
+
 	private int _getAssertionLifetime(String entityId) {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
@@ -1357,33 +1401,21 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	private String _getNameIdFormat(String entityId) {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
-		if (samlProviderConfigurationHelper.isRoleIdp()) {
-			try {
-				SamlIdpSpConnection samlIdpSpConnection =
-					samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
-						companyId, entityId);
+		if (samlProviderConfigurationHelper.isRoleIb()) {
+			String nameIdFormat = _fetchSamlIdpSPNameIdFormat(
+				companyId, entityId);
 
-				return samlIdpSpConnection.getNameIdFormat();
+			if (Validator.isNotNull(nameIdFormat)) {
+				return nameIdFormat;
 			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-			}
+
+			return _fetchSamlSpIdpNameIdFormat(companyId, entityId);
+		}
+		else if (samlProviderConfigurationHelper.isRoleIdp()) {
+			return _fetchSamlIdpSPNameIdFormat(companyId, entityId);
 		}
 		else if (samlProviderConfigurationHelper.isRoleSp()) {
-			try {
-				SamlSpIdpConnection samlSpIdpConnection =
-					samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
-						companyId, entityId);
-
-				return samlSpIdpConnection.getNameIdFormat();
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-			}
+			return _fetchSamlSpIdpNameIdFormat(companyId, entityId);
 		}
 
 		return null;
@@ -1821,10 +1853,22 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			httpServletRequest);
 
-		User user = _userResolver.resolveUser(
-			new UserResolverSAMLContextImpl(
-				(MessageContext<Response>)messageContext),
-			serviceContext);
+		serviceContext.setAttribute(
+			"SamlIdpEntityId", samlSpIdpConnection.getSamlIdpEntityId());
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		User user = null;
+
+		try {
+			user = _userResolver.resolveUser(
+				new UserResolverSAMLContextImpl(
+					(MessageContext<Response>)messageContext),
+				serviceContext);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
 
 		if (user == null) {
 			throw new SubjectException(

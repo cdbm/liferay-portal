@@ -11,7 +11,7 @@ create table ObjectAction (
 	objectDefinitionId LONG,
 	active_ BOOLEAN,
 	conditionExpression TEXT null,
-	description VARCHAR(75) null,
+	description STRING null,
 	errorMessage STRING null,
 	label STRING null,
 	name VARCHAR(75) null,
@@ -35,7 +35,6 @@ create table ObjectDefinition (
 	accountERObjectFieldId LONG,
 	descriptionObjectFieldId LONG,
 	objectFolderId LONG,
-	rootObjectDefinitionId LONG,
 	titleObjectFieldId LONG,
 	accountEntryRestricted BOOLEAN,
 	active_ BOOLEAN,
@@ -48,6 +47,10 @@ create table ObjectDefinition (
 	enableLocalization BOOLEAN,
 	enableObjectEntryDraft BOOLEAN,
 	enableObjectEntryHistory BOOLEAN,
+	enableObjectEntrySchedule BOOLEAN,
+	enableObjectEntrySubscription BOOLEAN,
+	enableObjectEntryVersioning BOOLEAN,
+	friendlyURLSeparator VARCHAR(75) null,
 	label STRING null,
 	modifiable BOOLEAN,
 	name VARCHAR(75) null,
@@ -93,6 +96,9 @@ create table ObjectEntry (
 	objectEntryFolderId LONG,
 	rootObjectEntryId LONG,
 	defaultLanguageId VARCHAR(75) null,
+	displayDate DATE null,
+	expirationDate DATE null,
+	reviewDate DATE null,
 	treePath STRING null,
 	version INTEGER,
 	lastPublishDate DATE null,
@@ -114,9 +120,11 @@ create table ObjectEntryFolder (
 	createDate DATE null,
 	modifiedDate DATE null,
 	parentObjectEntryFolderId LONG,
+	description STRING null,
 	label STRING null,
 	name VARCHAR(75) null,
-	treePath STRING null
+	treePath STRING null,
+	status INTEGER
 );
 
 create table ObjectEntryVersion (
@@ -128,10 +136,17 @@ create table ObjectEntryVersion (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
+	objectDefinitionId LONG,
 	objectEntryId LONG,
 	content TEXT null,
+	displayDate DATE null,
+	expirationDate DATE null,
+	reviewDate DATE null,
 	version INTEGER,
-	status INTEGER
+	status INTEGER,
+	statusByUserId LONG,
+	statusByUserName VARCHAR(75) null,
+	statusDate DATE null
 );
 
 create table ObjectField (

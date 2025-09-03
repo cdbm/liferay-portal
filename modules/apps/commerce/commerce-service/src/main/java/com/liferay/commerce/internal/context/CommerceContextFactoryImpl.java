@@ -12,17 +12,17 @@ import com.liferay.commerce.context.BaseCommerceContextHttp;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

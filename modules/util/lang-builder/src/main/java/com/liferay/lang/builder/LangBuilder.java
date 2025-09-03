@@ -153,17 +153,20 @@ public class LangBuilder {
 		_createProperties(content, "ar"); // Arabic
 		_createProperties(content, "eu"); // Basque
 		_createProperties(content, "bg"); // Bulgarian
+		_createProperties(content, "my"); // Burmese (Myanmar)
 		_createProperties(content, "km"); // Cambodian
 		_createProperties(content, "ca"); // Catalan
 		_createProperties(content, "zh_CN"); // Chinese (China)
 		_createProperties(content, "zh_TW"); // Chinese (Taiwan)
 		_createProperties(content, "hr"); // Croatian
+		_createProperties(content, "hr_BA"); // Croatian (Bosnia and Herzegovina)
 		_createProperties(content, "cs"); // Czech
 		_createProperties(content, "da"); // Danish
 		_createProperties(content, "nl"); // Dutch (Netherlands)
 		_createProperties(content, "nl_BE", "nl"); // Dutch (Belgium)
 		_createProperties(content, "en_AU"); // English (Australia)
 		_createProperties(content, "en_CA"); // English (Canada)
+		_createProperties(content, "en_IE"); // English (Ireland)
 		_createProperties(content, "en_GB"); // English (United Kingdom)
 		_createProperties(content, "et"); // Estonian
 		_createProperties(content, "fi"); // Finnish
@@ -396,20 +399,8 @@ public class LangBuilder {
 							value + LanguageBuilderUtil.AUTOMATIC_COPY;
 					}
 					else if (line.contains("[")) {
-						int pos = line.indexOf("[");
-
-						String baseKey = line.substring(0, pos);
-
-						String translatedBaseKey = properties.getProperty(
-							baseKey);
-
-						if (Validator.isNotNull(translatedBaseKey)) {
-							translatedText = translatedBaseKey;
-						}
-						else {
-							translatedText =
-								value + LanguageBuilderUtil.AUTOMATIC_COPY;
-						}
+						translatedText =
+							value + LanguageBuilderUtil.AUTOMATIC_COPY;
 					}
 					else if (!automaticCopy && key.endsWith("-delimiter")) {
 						translatedText = "";

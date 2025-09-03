@@ -156,7 +156,7 @@ function ListTypeEntriesModal() {
 			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
-		if (specialCharactersInString(key as string)) {
+		if (key && specialCharactersInString(key)) {
 			errors.key = Liferay.Language.get(
 				'key-must-only-contain-letters-and-digits'
 			);
@@ -255,6 +255,7 @@ function ListTypeEntriesModal() {
 					<Input
 						disabled={system}
 						error={errors.externalReferenceCode}
+						id="externalReferenceCodeInput"
 						label={Liferay.Language.get('external-reference-code')}
 						name="externalReferenceCode"
 						onChange={({target}) =>

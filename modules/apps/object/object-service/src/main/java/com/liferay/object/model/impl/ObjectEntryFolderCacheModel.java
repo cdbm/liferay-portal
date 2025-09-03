@@ -69,7 +69,7 @@ public class ObjectEntryFolderCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(33);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -93,12 +93,16 @@ public class ObjectEntryFolderCacheModel
 		sb.append(modifiedDate);
 		sb.append(", parentObjectEntryFolderId=");
 		sb.append(parentObjectEntryFolderId);
+		sb.append(", description=");
+		sb.append(description);
 		sb.append(", label=");
 		sb.append(label);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", treePath=");
 		sb.append(treePath);
+		sb.append(", status=");
+		sb.append(status);
 		sb.append("}");
 
 		return sb.toString();
@@ -155,6 +159,13 @@ public class ObjectEntryFolderCacheModel
 		objectEntryFolderImpl.setParentObjectEntryFolderId(
 			parentObjectEntryFolderId);
 
+		if (description == null) {
+			objectEntryFolderImpl.setDescription("");
+		}
+		else {
+			objectEntryFolderImpl.setDescription(description);
+		}
+
 		if (label == null) {
 			objectEntryFolderImpl.setLabel("");
 		}
@@ -175,6 +186,8 @@ public class ObjectEntryFolderCacheModel
 		else {
 			objectEntryFolderImpl.setTreePath(treePath);
 		}
+
+		objectEntryFolderImpl.setStatus(status);
 
 		objectEntryFolderImpl.resetOriginalValues();
 
@@ -199,9 +212,12 @@ public class ObjectEntryFolderCacheModel
 		modifiedDate = objectInput.readLong();
 
 		parentObjectEntryFolderId = objectInput.readLong();
+		description = objectInput.readUTF();
 		label = objectInput.readUTF();
 		name = objectInput.readUTF();
 		treePath = objectInput.readUTF();
+
+		status = objectInput.readInt();
 	}
 
 	@Override
@@ -242,6 +258,13 @@ public class ObjectEntryFolderCacheModel
 
 		objectOutput.writeLong(parentObjectEntryFolderId);
 
+		if (description == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(description);
+		}
+
 		if (label == null) {
 			objectOutput.writeUTF("");
 		}
@@ -262,6 +285,8 @@ public class ObjectEntryFolderCacheModel
 		else {
 			objectOutput.writeUTF(treePath);
 		}
+
+		objectOutput.writeInt(status);
 	}
 
 	public long mvccVersion;
@@ -275,8 +300,10 @@ public class ObjectEntryFolderCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long parentObjectEntryFolderId;
+	public String description;
 	public String label;
 	public String name;
 	public String treePath;
+	public int status;
 
 }

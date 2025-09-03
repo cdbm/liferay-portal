@@ -18,6 +18,7 @@ import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.account.configuration.manager.AccountEntryAddressSubtypeConfigurationManagerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -32,15 +33,15 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -124,6 +125,22 @@ public class MultishippingFragmentRenderer implements FragmentRenderer {
 					"/fragment/renderer/multishipping/page.jsp");
 
 			httpServletRequest.setAttribute(
+				StringBundler.concat(
+					"liferay-commerce:multishipping:",
+					"billingAddressSubtypeListTypeDefinition",
+					"ExternalReferenceCode"),
+				AccountEntryAddressSubtypeConfigurationManagerUtil.
+					getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+						commerceOrder.getCompanyId(), "billing"));
+			httpServletRequest.setAttribute(
+				StringBundler.concat(
+					"liferay-commerce:multishipping:",
+					"billingAndShippingAddressSubtypeListTypeDefinition",
+					"ExternalReferenceCode"),
+				AccountEntryAddressSubtypeConfigurationManagerUtil.
+					getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+						commerceOrder.getCompanyId(), "billing-and-shipping"));
+			httpServletRequest.setAttribute(
 				"liferay-commerce:multishipping:commerceAccountId",
 				commerceOrder.getCommerceAccountId());
 			httpServletRequest.setAttribute(
@@ -132,6 +149,14 @@ public class MultishippingFragmentRenderer implements FragmentRenderer {
 			httpServletRequest.setAttribute(
 				"liferay-commerce:multishipping:readOnly",
 				!commerceOrder.isOpen());
+			httpServletRequest.setAttribute(
+				StringBundler.concat(
+					"liferay-commerce:multishipping:",
+					"shippingAddressSubtypeListTypeDefinition",
+					"ExternalReferenceCode"),
+				AccountEntryAddressSubtypeConfigurationManagerUtil.
+					getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+						commerceOrder.getCompanyId(), "shipping"));
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}

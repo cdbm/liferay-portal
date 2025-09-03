@@ -8,6 +8,8 @@ package com.liferay.commerce.product.service.test;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.product.constants.CPConfigurationEntrySettingConstants;
+import com.liferay.commerce.product.exception.CPConfigurationEntryAllowedOrderQuantitiesException;
+import com.liferay.commerce.product.exception.RequiredCPConfigurationEntryException;
 import com.liferay.commerce.product.model.CPConfigurationEntry;
 import com.liferay.commerce.product.model.CPConfigurationEntrySetting;
 import com.liferay.commerce.product.model.CPConfigurationList;
@@ -87,11 +89,11 @@ public class CPConfigurationEntryLocalServiceTest {
 
 		_cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				RandomTestUtil.randomString(), _commerceCatalog.getGroupId(),
-				_user.getUserId(),
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_commerceCatalog.getGroupId(),
 				masterCPConfigurationList.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 2, 1, 1, 2024, 0, 0, 0, 0, 0, 0,
-				0, true);
+				0, true, new ServiceContext());
 
 		_cpDefinition = CPTestUtil.addCPDefinition(
 			_commerceCatalog.getGroupId());
@@ -125,10 +127,10 @@ public class CPConfigurationEntryLocalServiceTest {
 				_cpConfigurationList.getGroupId(),
 				_portal.getClassNameId(CPDefinition.class),
 				_cpDefinition.getCPDefinitionId(),
-				_cpConfigurationList.getCPConfigurationListId(), 0, "123", true,
-				0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
+				_cpConfigurationList.getCPConfigurationListId(), 0, "123.00",
+				true, 0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
 				BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
-				true, true, 1.0, true, true, true, 1.0, 1.0);
+				true, true, 1.0, true, true, 1.0, 1.0);
 
 		Assert.assertNotNull(cpConfigurationEntry1);
 		Assert.assertEquals(
@@ -197,10 +199,10 @@ public class CPConfigurationEntryLocalServiceTest {
 				_cpConfigurationList.getGroupId(),
 				_portal.getClassNameId(CPDefinition.class),
 				_cpDefinition.getCPDefinitionId(),
-				_cpConfigurationList.getCPConfigurationListId(), 0, "123", true,
-				0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
+				_cpConfigurationList.getCPConfigurationListId(), 0, "123.00",
+				true, 0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
 				BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
-				true, true, 1.0, true, true, true, 1.0, 1.0);
+				true, true, 1.0, true, true, 1.0, 1.0);
 
 		Assert.assertNotNull(cpConfigurationEntry1);
 		Assert.assertEquals(
@@ -219,12 +221,13 @@ public class CPConfigurationEntryLocalServiceTest {
 
 		CPConfigurationList cpConfigurationList1 =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, _cpConfigurationList.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), _cpConfigurationList.getGroupId(),
 				_cpConfigurationList.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 1, calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		_cpConfigurationLists.add(cpConfigurationList1);
 
@@ -248,12 +251,13 @@ public class CPConfigurationEntryLocalServiceTest {
 
 		CPConfigurationList cpConfigurationList2 =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, _cpConfigurationList.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), _cpConfigurationList.getGroupId(),
 				cpConfigurationList1.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 1, calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		_cpConfigurationLists.add(cpConfigurationList2);
 
@@ -283,10 +287,10 @@ public class CPConfigurationEntryLocalServiceTest {
 				cpConfigurationList2.getGroupId(),
 				_portal.getClassNameId(CPDefinition.class),
 				_cpDefinition.getCPDefinitionId(),
-				cpConfigurationList2.getCPConfigurationListId(), 0, "123", true,
-				0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
+				cpConfigurationList2.getCPConfigurationListId(), 0, "123.00",
+				true, 0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
 				BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
-				true, true, 1.0, true, true, true, 1.0, 1.0);
+				true, true, 1.0, true, true, 1.0, 1.0);
 
 		Assert.assertFalse(
 			ListUtil.isEmpty(
@@ -308,12 +312,13 @@ public class CPConfigurationEntryLocalServiceTest {
 
 		CPConfigurationList cpConfigurationList3 =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, _cpConfigurationList.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), _cpConfigurationList.getGroupId(),
 				cpConfigurationList2.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 1, calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		_cpConfigurationLists.add(cpConfigurationList3);
 
@@ -363,52 +368,136 @@ public class CPConfigurationEntryLocalServiceTest {
 	}
 
 	@Test
-	public void testForceDeleteCPConfigurationEntry() throws Exception {
+	public void testCPConfigurationEntryAllowedOrderQuantitiesValidation()
+		throws Exception {
+
+		frutillaRule.scenario(
+			"Add Product Configuration Entry"
+		).given(
+			"There is a Commerce Catalog and a configuration"
+		).when(
+			"A Configuration Entry allowedOrderQuantities is added or updated"
+		).then(
+			"The Configuration Entry is created or updated"
+		);
+
 		CPConfigurationEntry cpConfigurationEntry =
 			_cpConfigurationEntryLocalService.addCPConfigurationEntry(
 				RandomTestUtil.randomString(), _user.getUserId(),
 				_cpConfigurationList.getGroupId(),
 				_portal.getClassNameId(CPDefinition.class),
 				_cpDefinition.getCPDefinitionId(),
-				_cpConfigurationList.getCPConfigurationListId(), 0, "123", true,
-				0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
+				_cpConfigurationList.getCPConfigurationListId(), 0,
+				"701.78 2,333.00", true, 0, "cpde", 1.0, true, true, true, 1.0,
+				"lowstoc", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE,
+				BigDecimal.ONE, true, true, 1.0, true, true, 1.0, 1.0);
+
+		Assert.assertEquals(
+			"701.78 2,333.00",
+			cpConfigurationEntry.getAllowedOrderQuantities());
+
+		cpConfigurationEntry.setAllowedOrderQuantities("1.001 2,333");
+
+		Assert.assertThrows(
+			CPConfigurationEntryAllowedOrderQuantitiesException.class,
+			() -> _cpConfigurationEntryLocalService.updateCPConfigurationEntry(
+				cpConfigurationEntry.getExternalReferenceCode(),
+				cpConfigurationEntry.getCPConfigurationEntryId(),
+				cpConfigurationEntry.getCPTaxCategoryId(),
+				cpConfigurationEntry.getAllowedOrderQuantities(),
+				cpConfigurationEntry.isBackOrders(),
+				cpConfigurationEntry.getCommerceAvailabilityEstimateId(),
+				cpConfigurationEntry.getCPDefinitionInventoryEngine(),
+				cpConfigurationEntry.getDepth(),
+				cpConfigurationEntry.isDisplayAvailability(),
+				cpConfigurationEntry.isDisplayStockQuantity(),
+				cpConfigurationEntry.isFreeShipping(),
+				cpConfigurationEntry.getHeight(),
+				cpConfigurationEntry.getLowStockActivity(),
+				cpConfigurationEntry.getMaxOrderQuantity(),
+				cpConfigurationEntry.getMinOrderQuantity(),
+				cpConfigurationEntry.getMinStockQuantity(),
+				cpConfigurationEntry.getMultipleOrderQuantity(),
+				cpConfigurationEntry.isPurchasable(),
+				cpConfigurationEntry.isShippable(),
+				cpConfigurationEntry.getShippingExtraPrice(),
+				cpConfigurationEntry.isShipSeparately(),
+				cpConfigurationEntry.isTaxExempt(),
+				cpConfigurationEntry.getWeight(),
+				cpConfigurationEntry.getWidth()));
+
+		cpConfigurationEntry.setAllowedOrderQuantities(
+			" <div onclick=\"alert('test')\"></div>");
+
+		Assert.assertThrows(
+			CPConfigurationEntryAllowedOrderQuantitiesException.class,
+			() -> _cpConfigurationEntryLocalService.updateCPConfigurationEntry(
+				cpConfigurationEntry.getExternalReferenceCode(),
+				cpConfigurationEntry.getCPConfigurationEntryId(),
+				cpConfigurationEntry.getCPTaxCategoryId(),
+				cpConfigurationEntry.getAllowedOrderQuantities(),
+				cpConfigurationEntry.isBackOrders(),
+				cpConfigurationEntry.getCommerceAvailabilityEstimateId(),
+				cpConfigurationEntry.getCPDefinitionInventoryEngine(),
+				cpConfigurationEntry.getDepth(),
+				cpConfigurationEntry.isDisplayAvailability(),
+				cpConfigurationEntry.isDisplayStockQuantity(),
+				cpConfigurationEntry.isFreeShipping(),
+				cpConfigurationEntry.getHeight(),
+				cpConfigurationEntry.getLowStockActivity(),
+				cpConfigurationEntry.getMaxOrderQuantity(),
+				cpConfigurationEntry.getMinOrderQuantity(),
+				cpConfigurationEntry.getMinStockQuantity(),
+				cpConfigurationEntry.getMultipleOrderQuantity(),
+				cpConfigurationEntry.isPurchasable(),
+				cpConfigurationEntry.isShippable(),
+				cpConfigurationEntry.getShippingExtraPrice(),
+				cpConfigurationEntry.isShipSeparately(),
+				cpConfigurationEntry.isTaxExempt(),
+				cpConfigurationEntry.getWeight(),
+				cpConfigurationEntry.getWidth()));
+	}
+
+	@Test
+	public void testDeleteCPConfigurationEntry() throws Exception {
+		CPConfigurationEntry cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.addCPConfigurationEntry(
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_cpConfigurationList.getGroupId(),
+				_portal.getClassNameId(CPDefinition.class),
+				_cpDefinition.getCPDefinitionId(),
+				_cpConfigurationList.getCPConfigurationListId(), 0, "123.00",
+				true, 0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
 				BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
-				true, true, 1.0, true, true, true, 1.0, 1.0);
+				true, true, 1.0, true, true, 1.0, 1.0);
 
-		CPConfigurationEntrySetting cpConfigurationEntrySetting =
-			_cpConfigurationEntrySettingLocalService.
-				fetchCPConfigurationEntrySetting(
-					cpConfigurationEntry.getCPConfigurationEntryId(),
-					CPConfigurationEntrySettingConstants.TYPE_CHANGE_LOG);
+		_cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
+			cpConfigurationEntry.getCPConfigurationEntryId());
 
-		Assert.assertNotNull(cpConfigurationEntrySetting);
+		CPConfigurationList masterCPConfigurationList =
+			_cpConfigurationListLocalService.getMasterCPConfigurationList(
+				_commerceCatalog.getGroupId());
 
-		cpConfigurationEntrySetting =
-			_cpConfigurationEntrySettingLocalService.
-				fetchCPConfigurationEntrySetting(
-					cpConfigurationEntry.getCPConfigurationEntryId(),
-					CPConfigurationEntrySettingConstants.TYPE_INDEX_IDS);
+		cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.getCPConfigurationEntry(
+				_portal.getClassNameId(CPDefinition.class),
+				_cpDefinition.getCPDefinitionId(),
+				masterCPConfigurationList.getCPConfigurationListId());
 
-		Assert.assertNotNull(cpConfigurationEntrySetting);
+		try {
+			_cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
+				cpConfigurationEntry);
 
-		_cpConfigurationEntryLocalService.forceDeleteCPConfigurationEntry(
-			cpConfigurationEntry);
+			Assert.fail();
+		}
+		catch (RequiredCPConfigurationEntryException
+					requiredCPConfigurationEntryException) {
 
-		cpConfigurationEntrySetting =
-			_cpConfigurationEntrySettingLocalService.
-				fetchCPConfigurationEntrySetting(
-					cpConfigurationEntry.getCPConfigurationEntryId(),
-					CPConfigurationEntrySettingConstants.TYPE_CHANGE_LOG);
+			Assert.assertNotNull(requiredCPConfigurationEntryException);
+		}
 
-		Assert.assertNull(cpConfigurationEntrySetting);
-
-		cpConfigurationEntrySetting =
-			_cpConfigurationEntrySettingLocalService.
-				fetchCPConfigurationEntrySetting(
-					cpConfigurationEntry.getCPConfigurationEntryId(),
-					CPConfigurationEntrySettingConstants.TYPE_INDEX_IDS);
-
-		Assert.assertNull(cpConfigurationEntrySetting);
+		_cpConfigurationEntryLocalService.deleteCPConfigurationEntry(
+			cpConfigurationEntry, true);
 	}
 
 	@Test
@@ -435,10 +524,10 @@ public class CPConfigurationEntryLocalServiceTest {
 				_cpConfigurationList.getGroupId(),
 				_portal.getClassNameId(CPDefinition.class),
 				_cpDefinition.getCPDefinitionId(),
-				_cpConfigurationList.getCPConfigurationListId(), 0, "123", true,
-				0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
+				_cpConfigurationList.getCPConfigurationListId(), 0, "123.00",
+				true, 0, "cpde", 1.0, true, true, true, 1.0, "lowstoc",
 				BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
-				true, true, 1.0, true, true, true, 1.0, 1.0);
+				true, true, 1.0, true, true, 1.0, 1.0);
 
 		Assert.assertNotNull(cpConfigurationEntry);
 		Assert.assertEquals(
@@ -457,12 +546,13 @@ public class CPConfigurationEntryLocalServiceTest {
 
 		CPConfigurationList cpConfigurationList =
 			_cpConfigurationListLocalService.addCPConfigurationList(
-				null, _cpConfigurationList.getGroupId(), _user.getUserId(),
+				null, _user.getUserId(), _cpConfigurationList.getGroupId(),
 				_cpConfigurationList.getCPConfigurationListId(), false,
 				RandomTestUtil.randomString(), 1, calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), displayDateHour,
-				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true);
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
 
 		_cpConfigurationLists.add(cpConfigurationList);
 

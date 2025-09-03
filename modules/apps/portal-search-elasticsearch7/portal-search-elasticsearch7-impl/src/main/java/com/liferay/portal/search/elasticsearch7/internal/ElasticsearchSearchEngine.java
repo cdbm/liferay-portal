@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.search.IndexSearcher;
 import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -30,6 +31,7 @@ import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationObserver;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIndexHelper;
 import com.liferay.portal.search.elasticsearch7.internal.index.IndexFactory;
 import com.liferay.portal.search.engine.ConnectionInformation;
 import com.liferay.portal.search.engine.NodeInformation;
@@ -63,6 +65,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
@@ -81,6 +84,7 @@ import org.elasticsearch.xcontent.XContentType;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -331,6 +335,11 @@ public class ElasticsearchSearchEngine
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
+		_indexFactory = new IndexFactory(
+			_companyIndexHelper, _companyLocalService,
+			_elasticsearchConfigurationWrapper,
+			_elasticsearchConnectionManager);
+
 		_elasticsearchConfigurationWrapper.register(this);
 
 		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
@@ -352,8 +361,43 @@ public class ElasticsearchSearchEngine
 		}
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_indexFactory.close();
+	}
+
 	private void _checkNodeVersions() {
-		if (!_elasticsearchConfigurationWrapper.productionModeEnabled()) {
+		List<ConnectionInformation> connectionInformationList =
+			_searchEngineInformation.getConnectionInformationList();
+
+		if (_log.isWarnEnabled()) {
+			StringBundler sb = new StringBundler(
+				connectionInformationList.size());
+
+			for (ConnectionInformation connectionInformation :
+					connectionInformationList) {
+
+				Set<String> labels = connectionInformation.getLabels();
+
+				if (labels.contains("deprecated")) {
+					sb.append(connectionInformation.getConnectionId());
+					sb.append(StringPool.COMMA_AND_SPACE);
+				}
+			}
+
+			if (sb.length() > 0) {
+				sb.setIndex(sb.index() - 1);
+
+				_log.warn(
+					StringBundler.concat(
+						"Connecting to Elasticsearch 7 nodes is now ",
+						"deprecated. Upgrade the Elasticsearch nodes ",
+						"corresponding to the following connection IDs: ", sb,
+						"."));
+			}
+		}
+
+		if (_elasticsearchConfigurationWrapper.isDevelopmentModeEnabled()) {
 			return;
 		}
 
@@ -369,9 +413,6 @@ public class ElasticsearchSearchEngine
 		}
 
 		Version minimumVersion = Version.parseVersion(minimumVersionString);
-
-		List<ConnectionInformation> connectionInformationList =
-			_searchEngineInformation.getConnectionInformationList();
 
 		for (ConnectionInformation connectionInformation :
 				connectionInformationList) {
@@ -506,11 +547,7 @@ public class ElasticsearchSearchEngine
 		List<SnapshotRepositoryDetails> snapshotRepositoryDetailsList =
 			getSnapshotRepositoriesResponse.getSnapshotRepositoryDetails();
 
-		if (snapshotRepositoryDetailsList.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !snapshotRepositoryDetailsList.isEmpty();
 	}
 
 	private void _putTimestampPipeline() {
@@ -617,13 +654,18 @@ public class ElasticsearchSearchEngine
 			CrossClusterReplicationHelper.class, null, true);
 
 	@Reference
+	private CompanyIndexHelper _companyIndexHelper;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private ElasticsearchConfigurationWrapper
 		_elasticsearchConfigurationWrapper;
 
 	@Reference
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
 
-	@Reference
 	private IndexFactory _indexFactory;
 
 	@Reference

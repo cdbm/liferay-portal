@@ -7,23 +7,23 @@ package com.liferay.object.rest.internal.jaxrs.param.converter.provider;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.scope.util.GroupUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.util.GroupUtil;
+
+import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverterProvider;
+import jakarta.ws.rs.ext.Provider;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.Provider;
 
 import org.apache.cxf.jaxrs.utils.AnnotationUtils;
 

@@ -9,18 +9,17 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {AccountAndAppCard} from '../../components/Card/AccountAndAppCard';
 import {Header} from '../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
-import {ORDER_TYPES} from '../../enums/Order';
+import {OrderTypes, PaymentStatus} from '../../enums/Order';
 import withProviders from '../../hoc/withProviders';
 import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
 import {baseURL} from '../../utils/api';
+import {getProductPriceModel} from '../../utils/productUtils';
 import {
 	getAccountImage,
 	getThumbnailByProductAttachment,
 	showAppImage,
 } from '../../utils/util';
-import {PaymentStatus} from '../GetApp/enums/PaymentStatus';
-import getProductPriceModel from '../GetApp/utils/getProductPriceModel';
 import useNextSteps from './useNextSteps';
 
 import './NextSteps.scss';
@@ -30,18 +29,12 @@ export function NextSteps() {
 	const urlParams = new URLSearchParams(queryString);
 	const orderId = urlParams.get('orderId');
 
-	const {
-		accountCommerce,
-		cart,
-		cartItems,
-		firstCartItem,
-		isLoading,
-		product,
-	} = useNextSteps(orderId as string);
+	const {accountCommerce, firstPlacedOrder, isLoading, placedOrder, product} =
+		useNextSteps(orderId as string);
 
-	const {name: appName = ''} = firstCartItem ?? {};
+	const {name: appName = ''} = firstPlacedOrder ?? {};
 
-	const isTrial = cartItems?.items?.some(
+	const isTrial = placedOrder?.placedOrderItems?.some(
 		(item: any) =>
 			item.sku.endsWith('ts') || item.sku.toLowerCase().includes('trial')
 	);
@@ -53,14 +46,38 @@ export function NextSteps() {
 		baseURL
 	);
 
-	const paymentStatus = cart?.paymentStatusLabel;
-	const orderTypeExternalReferenceCode = cart?.orderTypeExternalReferenceCode;
+	const paymentStatus = placedOrder?.paymentStatus;
+	const orderTypeExternalReferenceCode =
+		placedOrder?.orderTypeExternalReferenceCode;
 
-	const isCloudApp = orderTypeExternalReferenceCode === ORDER_TYPES.CLOUDAPP;
+	const isCloudApp = orderTypeExternalReferenceCode === OrderTypes.CLOUDAPP;
 
-	const {isPaidApp} = getProductPriceModel(product);
+	const {isPaidApp} = getProductPriceModel(product as DeliveryProduct);
 
 	const nextStepBody = {
+		[PaymentStatus.FAILED]: (
+			<Header
+				description={
+					<>
+						<p>
+							We were unable to process the payment for{' '}
+							<strong>{appName}</strong>.
+						</p>
+
+						<p>
+							If you need help or believe this is an error,
+							contact our support team.
+						</p>
+
+						<p>
+							Your Order ID is: <strong>{orderId}</strong>
+						</p>
+					</>
+				}
+				title="Payment Failed"
+			/>
+		),
+
 		[PaymentStatus.PAID]: (
 			<Header
 				description={
@@ -229,6 +246,14 @@ export function NextSteps() {
 					}}
 					showContinueButton={true}
 				/>
+
+				{paymentStatus === PaymentStatus.FAILED && (
+					<div className="d-flex justify-content-end">
+						<a href="#">
+							<ins>Contact Support</ins>
+						</a>
+					</div>
+				)}
 
 				{(paymentStatus === PaymentStatus.PAID || isTrial) && (
 					<div className="d-flex justify-content-end">

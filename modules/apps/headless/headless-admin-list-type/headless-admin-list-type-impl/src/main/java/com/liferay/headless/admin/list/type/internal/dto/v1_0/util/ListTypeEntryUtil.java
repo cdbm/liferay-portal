@@ -7,6 +7,7 @@ package com.liferay.headless.admin.list.type.internal.dto.v1_0.util;
 
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
@@ -37,6 +38,9 @@ public class ListTypeEntryUtil {
 
 		serviceBuilderListTypeEntry.setNameMap(nameMap);
 
+		serviceBuilderListTypeEntry.setSystem(
+			GetterUtil.getBoolean(listTypeEntry.getSystem()));
+
 		return serviceBuilderListTypeEntry;
 	}
 
@@ -56,6 +60,7 @@ public class ListTypeEntryUtil {
 				setName_i18n(
 					() -> LocalizedMapUtil.getI18nMap(
 						serviceBuilderListTypeEntry.getNameMap()));
+				setSystem(serviceBuilderListTypeEntry::getSystem);
 				setType(serviceBuilderListTypeEntry::getType);
 			}
 		};

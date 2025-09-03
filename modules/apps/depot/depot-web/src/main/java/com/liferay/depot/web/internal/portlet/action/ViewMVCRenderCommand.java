@@ -5,13 +5,13 @@
 
 package com.liferay.depot.web.internal.portlet.action;
 
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.util.DepotAdminGroupSearchProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -21,7 +21,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
+		"jakarta.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
 		"mvc.command.name=/"
 	},
 	service = MVCRenderCommand.class

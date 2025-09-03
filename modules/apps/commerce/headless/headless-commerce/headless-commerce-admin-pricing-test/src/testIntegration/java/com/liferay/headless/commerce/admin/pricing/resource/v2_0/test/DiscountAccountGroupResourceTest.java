@@ -17,6 +17,7 @@ import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountLocalServiceUtil;
 import com.liferay.commerce.test.util.CommerceAccountGroupTestUtil;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.DiscountAccountGroup;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -274,6 +275,22 @@ public class DiscountAccountGroupResourceTest
 
 	@Override
 	protected DiscountAccountGroup
+			testBatchEngineDeleteImportTask_addDiscountAccountGroup()
+		throws Exception {
+
+		return _addDiscountAccountGroup(randomDiscountAccountGroup());
+	}
+
+	@Override
+	protected DiscountAccountGroup
+			testDeleteDiscountAccountGroupBatch_addDiscountAccountGroup()
+		throws Exception {
+
+		return _addDiscountAccountGroup(randomDiscountAccountGroup());
+	}
+
+	@Override
+	protected DiscountAccountGroup
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_addDiscountAccountGroup(
 				String externalReferenceCode,
 				DiscountAccountGroup discountAccountGroup)
@@ -338,10 +355,9 @@ public class DiscountAccountGroupResourceTest
 
 		AccountGroup accountGroup =
 			AccountGroupLocalServiceUtil.addAccountGroup(
-				_serviceContext.getUserId(), null,
+				StringPool.BLANK, _serviceContext.getUserId(), null,
 				RandomTestUtil.randomString(), _serviceContext);
 
-		accountGroup.setExternalReferenceCode(null);
 		accountGroup.setDefaultAccountGroup(false);
 		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
 		accountGroup.setExpandoBridgeAttributes(_serviceContext);

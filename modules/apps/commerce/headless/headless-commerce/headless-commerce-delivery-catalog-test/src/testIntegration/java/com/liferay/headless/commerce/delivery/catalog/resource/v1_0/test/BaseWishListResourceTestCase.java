@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.WishList;
 import com.liferay.headless.commerce.delivery.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.delivery.catalog.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseWishListResourceTestCase {
 			testCompany.getCompanyId());
 
 		wishListResource = WishListResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -202,6 +215,136 @@ public abstract class BaseWishListResourceTestCase {
 		wishList = WishListSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, wishList.getName());
+	}
+
+	@Test
+	public void testDeleteWishList() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		WishList wishList = testDeleteWishList_addWishList();
+
+		assertHttpResponseStatusCode(
+			204, wishListResource.deleteWishListHttpResponse(wishList.getId()));
+
+		assertHttpResponseStatusCode(
+			404, wishListResource.getWishListHttpResponse(wishList.getId()));
+		assertHttpResponseStatusCode(
+			404, wishListResource.getWishListHttpResponse(0L));
+	}
+
+	protected WishList testDeleteWishList_addWishList() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteWishList() throws Exception {
+
+		// No namespace
+
+		WishList wishList1 = testGraphQLDeleteWishList_addWishList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteWishList",
+						new HashMap<String, Object>() {
+							{
+								put("wishListId", wishList1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteWishList"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"wishList",
+					new HashMap<String, Object>() {
+						{
+							put("wishListId", wishList1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		WishList wishList2 = testGraphQLDeleteWishList_addWishList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"deleteWishList",
+							new HashMap<String, Object>() {
+								{
+									put("wishListId", wishList2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+				"Object/deleteWishList"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCatalog_v1_0",
+					new GraphQLField(
+						"wishList",
+						new HashMap<String, Object>() {
+							{
+								put("wishListId", wishList2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected WishList testGraphQLDeleteWishList_addWishList()
+		throws Exception {
+
+		return testGraphQLWishList_addWishList();
+	}
+
+	@Test
+	public void testDeleteWishListBatch() throws Exception {
+		WishList wishList1 = testDeleteWishListBatch_addWishList();
+
+		testDeleteWishListBatch_deleteWishList(202, null, wishList1.getId());
+
+		assertHttpResponseStatusCode(
+			404, wishListResource.getWishListHttpResponse(wishList1.getId()));
+	}
+
+	protected WishList testDeleteWishListBatch_addWishList() throws Exception {
+		return testDeleteWishList_addWishList();
+	}
+
+	protected void testDeleteWishListBatch_deleteWishList(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			wishListResource.deleteWishListBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -282,11 +425,11 @@ public abstract class BaseWishListResourceTestCase {
 		String externalReferenceCode =
 			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode();
 
-		Page<WishList> wishListPage =
+		Page<WishList> wishListsPage =
 			wishListResource.getChannelByExternalReferenceCodeWishListsPage(
 				externalReferenceCode, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(wishListPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(wishListsPage.getTotalCount());
 
 		WishList wishList1 =
 			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
@@ -392,29 +535,6 @@ public abstract class BaseWishListResourceTestCase {
 	}
 
 	@Test
-	public void testPostChannelByExternalReferenceCodeWishList()
-		throws Exception {
-
-		WishList randomWishList = randomWishList();
-
-		WishList postWishList =
-			testPostChannelByExternalReferenceCodeWishList_addWishList(
-				randomWishList);
-
-		assertEquals(randomWishList, postWishList);
-		assertValid(postWishList);
-	}
-
-	protected WishList
-			testPostChannelByExternalReferenceCodeWishList_addWishList(
-				WishList wishList)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetChannelWishListsPage() throws Exception {
 		Long channelId = testGetChannelWishListsPage_getChannelId();
 		Long irrelevantChannelId =
@@ -478,10 +598,10 @@ public abstract class BaseWishListResourceTestCase {
 	public void testGetChannelWishListsPageWithPagination() throws Exception {
 		Long channelId = testGetChannelWishListsPage_getChannelId();
 
-		Page<WishList> wishListPage = wishListResource.getChannelWishListsPage(
+		Page<WishList> wishListsPage = wishListResource.getChannelWishListsPage(
 			channelId, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(wishListPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(wishListsPage.getTotalCount());
 
 		WishList wishList1 = testGetChannelWishListsPage_addWishList(
 			channelId, randomWishList());
@@ -567,120 +687,6 @@ public abstract class BaseWishListResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostChannelWishList() throws Exception {
-		WishList randomWishList = randomWishList();
-
-		WishList postWishList = testPostChannelWishList_addWishList(
-			randomWishList);
-
-		assertEquals(randomWishList, postWishList);
-		assertValid(postWishList);
-	}
-
-	protected WishList testPostChannelWishList_addWishList(WishList wishList)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteWishList() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		WishList wishList = testDeleteWishList_addWishList();
-
-		assertHttpResponseStatusCode(
-			204, wishListResource.deleteWishListHttpResponse(wishList.getId()));
-
-		assertHttpResponseStatusCode(
-			404, wishListResource.getWishListHttpResponse(wishList.getId()));
-
-		assertHttpResponseStatusCode(
-			404, wishListResource.getWishListHttpResponse(0L));
-	}
-
-	protected WishList testDeleteWishList_addWishList() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteWishList() throws Exception {
-
-		// No namespace
-
-		WishList wishList1 = testGraphQLDeleteWishList_addWishList();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteWishList",
-						new HashMap<String, Object>() {
-							{
-								put("wishListId", wishList1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteWishList"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"wishList",
-					new HashMap<String, Object>() {
-						{
-							put("wishListId", wishList1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
-
-		WishList wishList2 = testGraphQLDeleteWishList_addWishList();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceDeliveryCatalog_v1_0",
-						new GraphQLField(
-							"deleteWishList",
-							new HashMap<String, Object>() {
-								{
-									put("wishListId", wishList2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
-				"Object/deleteWishList"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceDeliveryCatalog_v1_0",
-					new GraphQLField(
-						"wishList",
-						new HashMap<String, Object>() {
-							{
-								put("wishListId", wishList2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected WishList testGraphQLDeleteWishList_addWishList()
-		throws Exception {
-
-		return testGraphQLWishList_addWishList();
 	}
 
 	@Test
@@ -1007,6 +1013,99 @@ public abstract class BaseWishListResourceTestCase {
 	protected Long testPatchWishList_getAccountId() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostChannelByExternalReferenceCodeWishList()
+		throws Exception {
+
+		WishList randomWishList = randomWishList();
+
+		WishList postWishList =
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				randomWishList);
+
+		assertEquals(randomWishList, postWishList);
+		assertValid(postWishList);
+	}
+
+	protected WishList
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostChannelWishList() throws Exception {
+		WishList randomWishList = randomWishList();
+
+		WishList postWishList = testPostChannelWishList_addWishList(
+			randomWishList);
+
+		assertEquals(randomWishList, postWishList);
+		assertValid(postWishList);
+	}
+
+	protected WishList testPostChannelWishList_addWishList(WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		WishList wishList1 = testBatchEngineDeleteImportTask_addWishList();
+
+		testBatchEngineDeleteImportTask_deleteWishList(
+			200, null, wishList1.getId());
+
+		assertHttpResponseStatusCode(
+			404, wishListResource.getWishListHttpResponse(wishList1.getId()));
+	}
+
+	protected WishList testBatchEngineDeleteImportTask_addWishList()
+		throws Exception {
+
+		return testDeleteWishList_addWishList();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteWishList(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishList",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected WishList testGraphQLWishList_addWishList() throws Exception {
@@ -1497,7 +1596,30 @@ public abstract class BaseWishListResourceTestCase {
 		return randomWishList();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected WishListResource wishListResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

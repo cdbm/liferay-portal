@@ -255,22 +255,14 @@ AUI.add(
 							schedulerEvent.get('calendarBookingId');
 					}
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy() {
-									scheduler.load();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: 'dialog-with-footer',
+						onClose: function destroy() {
+							scheduler.load();
 						},
-						dialogIframe: {
-							bodyCssClass: 'dialog-with-footer',
-						},
-						refreshWindow: window,
 						title: Liferay.Language.get('edit-calendar-booking'),
-						uri: CalendarUtil.fillURLParameters(
+						url: CalendarUtil.fillURLParameters(
 							editCalendarBookingURL,
 							data
 						),
@@ -353,21 +345,16 @@ AUI.add(
 					data.calendarBookingId =
 						schedulerEvent.get('calendarBookingId');
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy() {
-									schedulerEvent.syncWithServer();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: '',
+						onClose: function destroy() {
+							schedulerEvent.syncWithServer();
 						},
-						refreshWindow: window,
 						title: Liferay.Language.get(
 							'view-calendar-booking-details'
 						),
-						uri: CalendarUtil.fillURLParameters(
+						url: CalendarUtil.fillURLParameters(
 							viewCalendarBookingURL,
 							data
 						),

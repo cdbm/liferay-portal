@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -106,7 +106,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 />
 
 <clay:container-fluid
-	fullWidth="<%= true %>"
+	size="xxxl"
 >
 	<aui:form method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />

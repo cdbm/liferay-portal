@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseRelatedProductResourceTestCase {
 			testCompany.getCompanyId());
 
 		relatedProductResource = RelatedProductResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -205,6 +218,151 @@ public abstract class BaseRelatedProductResourceTestCase {
 		Assert.assertEquals(
 			regex, relatedProduct.getProductExternalReferenceCode());
 		Assert.assertEquals(regex, relatedProduct.getType());
+	}
+
+	@Test
+	public void testDeleteRelatedProduct() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		RelatedProduct relatedProduct =
+			testDeleteRelatedProduct_addRelatedProduct();
+
+		assertHttpResponseStatusCode(
+			204,
+			relatedProductResource.deleteRelatedProductHttpResponse(
+				relatedProduct.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			relatedProductResource.getRelatedProductHttpResponse(
+				relatedProduct.getId()));
+		assertHttpResponseStatusCode(
+			404, relatedProductResource.getRelatedProductHttpResponse(0L));
+	}
+
+	protected RelatedProduct testDeleteRelatedProduct_addRelatedProduct()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteRelatedProduct() throws Exception {
+
+		// No namespace
+
+		RelatedProduct relatedProduct1 =
+			testGraphQLDeleteRelatedProduct_addRelatedProduct();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteRelatedProduct",
+						new HashMap<String, Object>() {
+							{
+								put("id", relatedProduct1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteRelatedProduct"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"relatedProduct",
+					new HashMap<String, Object>() {
+						{
+							put("id", relatedProduct1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		RelatedProduct relatedProduct2 =
+			testGraphQLDeleteRelatedProduct_addRelatedProduct();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteRelatedProduct",
+							new HashMap<String, Object>() {
+								{
+									put("id", relatedProduct2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteRelatedProduct"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"relatedProduct",
+						new HashMap<String, Object>() {
+							{
+								put("id", relatedProduct2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected RelatedProduct testGraphQLDeleteRelatedProduct_addRelatedProduct()
+		throws Exception {
+
+		return testGraphQLRelatedProduct_addRelatedProduct();
+	}
+
+	@Test
+	public void testDeleteRelatedProductBatch() throws Exception {
+		RelatedProduct relatedProduct1 =
+			testDeleteRelatedProductBatch_addRelatedProduct();
+
+		testDeleteRelatedProductBatch_deleteRelatedProduct(
+			202, null, relatedProduct1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			relatedProductResource.getRelatedProductHttpResponse(
+				relatedProduct1.getId()));
+	}
+
+	protected RelatedProduct testDeleteRelatedProductBatch_addRelatedProduct()
+		throws Exception {
+
+		return testDeleteRelatedProduct_addRelatedProduct();
+	}
+
+	protected void testDeleteRelatedProductBatch_deleteRelatedProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			relatedProductResource.deleteRelatedProductBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -291,13 +449,13 @@ public abstract class BaseRelatedProductResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeRelatedProductsPage_getExternalReferenceCode();
 
-		Page<RelatedProduct> relatedProductPage =
+		Page<RelatedProduct> relatedProductsPage =
 			relatedProductResource.
 				getProductByExternalReferenceCodeRelatedProductsPage(
 					externalReferenceCode, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			relatedProductPage.getTotalCount());
+			relatedProductsPage.getTotalCount());
 
 		RelatedProduct relatedProduct1 =
 			testGetProductByExternalReferenceCodeRelatedProductsPage_addRelatedProduct(
@@ -419,29 +577,6 @@ public abstract class BaseRelatedProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeRelatedProduct()
-		throws Exception {
-
-		RelatedProduct randomRelatedProduct = randomRelatedProduct();
-
-		RelatedProduct postRelatedProduct =
-			testPostProductByExternalReferenceCodeRelatedProduct_addRelatedProduct(
-				randomRelatedProduct);
-
-		assertEquals(randomRelatedProduct, postRelatedProduct);
-		assertValid(postRelatedProduct);
-	}
-
-	protected RelatedProduct
-			testPostProductByExternalReferenceCodeRelatedProduct_addRelatedProduct(
-				RelatedProduct relatedProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdRelatedProductsPage() throws Exception {
 		Long id = testGetProductIdRelatedProductsPage_getId();
 		Long irrelevantId =
@@ -510,12 +645,12 @@ public abstract class BaseRelatedProductResourceTestCase {
 
 		Long id = testGetProductIdRelatedProductsPage_getId();
 
-		Page<RelatedProduct> relatedProductPage =
+		Page<RelatedProduct> relatedProductsPage =
 			relatedProductResource.getProductIdRelatedProductsPage(
 				id, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			relatedProductPage.getTotalCount());
+			relatedProductsPage.getTotalCount());
 
 		RelatedProduct relatedProduct1 =
 			testGetProductIdRelatedProductsPage_addRelatedProduct(
@@ -623,133 +758,6 @@ public abstract class BaseRelatedProductResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostProductIdRelatedProduct() throws Exception {
-		RelatedProduct randomRelatedProduct = randomRelatedProduct();
-
-		RelatedProduct postRelatedProduct =
-			testPostProductIdRelatedProduct_addRelatedProduct(
-				randomRelatedProduct);
-
-		assertEquals(randomRelatedProduct, postRelatedProduct);
-		assertValid(postRelatedProduct);
-	}
-
-	protected RelatedProduct testPostProductIdRelatedProduct_addRelatedProduct(
-			RelatedProduct relatedProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteRelatedProduct() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		RelatedProduct relatedProduct =
-			testDeleteRelatedProduct_addRelatedProduct();
-
-		assertHttpResponseStatusCode(
-			204,
-			relatedProductResource.deleteRelatedProductHttpResponse(
-				relatedProduct.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			relatedProductResource.getRelatedProductHttpResponse(
-				relatedProduct.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			relatedProductResource.getRelatedProductHttpResponse(
-				relatedProduct.getId()));
-	}
-
-	protected RelatedProduct testDeleteRelatedProduct_addRelatedProduct()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteRelatedProduct() throws Exception {
-
-		// No namespace
-
-		RelatedProduct relatedProduct1 =
-			testGraphQLDeleteRelatedProduct_addRelatedProduct();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteRelatedProduct",
-						new HashMap<String, Object>() {
-							{
-								put("id", relatedProduct1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteRelatedProduct"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"relatedProduct",
-					new HashMap<String, Object>() {
-						{
-							put("id", relatedProduct1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		RelatedProduct relatedProduct2 =
-			testGraphQLDeleteRelatedProduct_addRelatedProduct();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"deleteRelatedProduct",
-							new HashMap<String, Object>() {
-								{
-									put("id", relatedProduct2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminCatalog_v1_0",
-				"Object/deleteRelatedProduct"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminCatalog_v1_0",
-					new GraphQLField(
-						"relatedProduct",
-						new HashMap<String, Object>() {
-							{
-								put("id", relatedProduct2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected RelatedProduct testGraphQLDeleteRelatedProduct_addRelatedProduct()
-		throws Exception {
-
-		return testGraphQLRelatedProduct_addRelatedProduct();
 	}
 
 	@Test
@@ -1055,6 +1063,104 @@ public abstract class BaseRelatedProductResourceTestCase {
 		throws Exception {
 
 		return testGraphQLRelatedProduct_addRelatedProduct();
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeRelatedProduct()
+		throws Exception {
+
+		RelatedProduct randomRelatedProduct = randomRelatedProduct();
+
+		RelatedProduct postRelatedProduct =
+			testPostProductByExternalReferenceCodeRelatedProduct_addRelatedProduct(
+				randomRelatedProduct);
+
+		assertEquals(randomRelatedProduct, postRelatedProduct);
+		assertValid(postRelatedProduct);
+	}
+
+	protected RelatedProduct
+			testPostProductByExternalReferenceCodeRelatedProduct_addRelatedProduct(
+				RelatedProduct relatedProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductIdRelatedProduct() throws Exception {
+		RelatedProduct randomRelatedProduct = randomRelatedProduct();
+
+		RelatedProduct postRelatedProduct =
+			testPostProductIdRelatedProduct_addRelatedProduct(
+				randomRelatedProduct);
+
+		assertEquals(randomRelatedProduct, postRelatedProduct);
+		assertValid(postRelatedProduct);
+	}
+
+	protected RelatedProduct testPostProductIdRelatedProduct_addRelatedProduct(
+			RelatedProduct relatedProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		RelatedProduct relatedProduct1 =
+			testBatchEngineDeleteImportTask_addRelatedProduct();
+
+		testBatchEngineDeleteImportTask_deleteRelatedProduct(
+			200, null, relatedProduct1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			relatedProductResource.getRelatedProductHttpResponse(
+				relatedProduct1.getId()));
+	}
+
+	protected RelatedProduct testBatchEngineDeleteImportTask_addRelatedProduct()
+		throws Exception {
+
+		return testDeleteRelatedProduct_addRelatedProduct();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteRelatedProduct(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected RelatedProduct testGraphQLRelatedProduct_addRelatedProduct()
@@ -1635,7 +1741,30 @@ public abstract class BaseRelatedProductResourceTestCase {
 		return randomRelatedProduct();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected RelatedProductResource relatedProductResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

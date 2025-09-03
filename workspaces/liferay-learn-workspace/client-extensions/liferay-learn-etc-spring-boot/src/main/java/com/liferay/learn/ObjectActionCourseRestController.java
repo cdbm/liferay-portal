@@ -6,7 +6,6 @@
 package com.liferay.learn;
 
 import com.liferay.client.extension.util.spring.boot3.BaseRestController;
-import com.liferay.petra.string.StringBundler;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,7 +13,6 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author José Abelenda
@@ -38,12 +37,18 @@ public class ObjectActionCourseRestController extends BaseRestController {
 		JSONObject responseJSONObject = new JSONObject(
 			get(
 				"Bearer " + jwt.getTokenValue(),
-				StringBundler.concat(
-					"/o/c/courses/scopes/", _siteGroupId,
-					"?fields=id,module.lessonDurationMinutes,module.lessons,",
-					"module.quizDurationMinutes,module.quizzes&filter=",
-					"module/id eq '", _getModuleId(json),
-					"'&nestedFields=module")));
+				UriComponentsBuilder.fromPath(
+					"/o/c/courses"
+				).queryParam(
+					"fields",
+					"id,module.lessonDurationMinutes,module.lessons," +
+						"module.quizDurationMinutes,module.quizzes"
+				).queryParam(
+					"filter", "module/id eq '" + _getModuleId(json) + "'"
+				).queryParam(
+					"nestedFields", "module"
+				).build(
+				).toUri()));
 
 		JSONArray itemsJSONArray = responseJSONObject.getJSONArray("items");
 
@@ -54,7 +59,10 @@ public class ObjectActionCourseRestController extends BaseRestController {
 			_getPayloadJSONObject(
 				itemJSONObject.getJSONArray("module")
 			).toString(),
-			"/o/c/courses/" + itemJSONObject.getLong("id"));
+			UriComponentsBuilder.fromPath(
+				"/o/c/courses/" + itemJSONObject.getLong("id")
+			).build(
+			).toUri());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Updated course " + itemJSONObject.getLong("id"));
@@ -109,8 +117,5 @@ public class ObjectActionCourseRestController extends BaseRestController {
 
 	private static final Log _log = LogFactory.getLog(
 		ObjectActionCourseRestController.class);
-
-	@Value("${liferay.learn.dxp.site.group.id}")
-	private long _siteGroupId;
 
 }

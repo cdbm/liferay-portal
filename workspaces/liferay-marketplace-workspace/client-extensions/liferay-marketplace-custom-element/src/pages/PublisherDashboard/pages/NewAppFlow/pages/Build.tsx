@@ -4,6 +4,7 @@
  */
 
 import ClayButton from '@clayui/button';
+import ClayDropDown, {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {useState} from 'react';
 
@@ -13,28 +14,41 @@ import {
 	NewAppTypes,
 	useNewAppContext,
 } from '../../../../../context/NewAppContext';
-import {ProductType} from '../../../../../enums/ProductType';
+import {
+	ProductType,
+	ProductWorkflowStatusCode,
+} from '../../../../../enums/Product';
 import i18n from '../../../../../i18n';
+import {ProductTypeOptions} from '../../Apps/AppCreationFlow/ProvideAppBuildPage/constants/productTypes';
 import CloudResourceRequirements from '../components/CloudResourceRequirements';
 import {NewAppPackageVersionModal} from '../components/NewAppPackagesModal';
 import NewAppUploadAppPackagesComponent from '../components/NewAppUploadPackage';
-import {BUILD_UPLOAD_OPTIONS, COMPATIBLE_OFFERING_CARDS} from '../constants';
+import {BUILD_UPLOAD_OPTIONS} from '../constants';
 
-const Content = () => {
+type ProductTypeOption = {
+	description: string;
+	label: string;
+	value: ProductType;
+};
+
+const BuildContent = () => {
 	const [
 		{
-			build: {cloudCompatible, liferayPackages},
+			_product,
+			build: {appType, liferayPackages},
 			loading,
 		},
 		dispatch,
 	] = useNewAppContext();
+
+	const isDraft = _product?.productStatus === ProductWorkflowStatusCode.DRAFT;
 
 	const [visibleSelectVersionModal, setVisibleSelectVersionModal] =
 		useState(false);
 
 	return (
 		<>
-			{cloudCompatible && (
+			{appType === ProductType.CLOUD && (
 				<Section
 					className="d-flex justify-content-between mt-4"
 					label={i18n.translate('resource-requirements')}
@@ -48,7 +62,9 @@ const Content = () => {
 				label={i18n.translate('app-build')}
 			>
 				{BUILD_UPLOAD_OPTIONS[
-					cloudCompatible ? ProductType.CLOUD : ProductType.DXP
+					appType === ProductType.CLOUD
+						? ProductType.CLOUD
+						: ProductType.DXP
 				].map((card, index) => (
 					<RadioCard
 						description={card.description}
@@ -62,14 +78,25 @@ const Content = () => {
 					/>
 				))}
 			</Section>
-
-			<Section label={i18n.translate('upload-liferay-plugin-packages')}>
-				<small>
-					{i18n.translate(
-						'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-compatibility-range'
-					)}
-				</small>
-
+			<Section
+				description={i18n.translate(
+					appType === ProductType.DXP
+						? 'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-compatibility-range'
+						: 'select-a-local-file-to-upload'
+				)}
+				label={i18n.translate(
+					appType === ProductType.DXP
+						? 'upload-liferay-plugin-packages'
+						: 'upload-zip-files'
+				)}
+				required
+				tooltip={i18n.translate(
+					appType === ProductType.DXP
+						? 'only-jar-war-files-are-allowed-max-file-size-is-500mb'
+						: 'you-can-upload-one-or-many-zip-files-max-total-size-is-500-mb'
+				)}
+				tooltipText={i18n.translate('more-info')}
+			>
 				<hr />
 
 				{liferayPackages.map((liferayPackage, index) => (
@@ -78,34 +105,65 @@ const Content = () => {
 						key={index}
 					>
 						<div className="align-center d-flex font-weight-bold justify-content-between p-3 provide-app-build-page-dropzone-container-header">
-							<span>{liferayPackage.version}</span>
+							<span>
+								{i18n.translate('package')} {index + 1}
+							</span>
+							{(!liferayPackage.uploaded || isDraft) && (
+								<ClayButton
+									displayType="unstyled"
+									onClick={() => {
+										const updatedLiferayPackages =
+											liferayPackages.filter(
+												(_, itemIndex) =>
+													itemIndex !== index
+											);
 
-							<ClayButton
-								displayType="unstyled"
-								onClick={() => {
-									const updatedLiferayPackages =
-										liferayPackages.filter(
-											(_, itemIndex) =>
-												itemIndex !== index
-										);
+										if (isDraft) {
+											const liferayPackagesToRemove =
+												liferayPackages.filter(
+													(_, itemIndex) =>
+														itemIndex === index
+												);
 
-									dispatch({
-										payload: {
-											liferayPackages:
-												updatedLiferayPackages,
-										},
-										type: NewAppTypes.SET_BUILD,
-									});
-								}}
-							>
-								{i18n.translate('remove-a-version')}
-							</ClayButton>
+											dispatch({
+												payload:
+													liferayPackagesToRemove[0],
+												type: NewAppTypes.SET_DELETE_BUILD,
+											});
+										}
+
+										dispatch({
+											payload: {
+												liferayPackages:
+													updatedLiferayPackages,
+											},
+											type: NewAppTypes.SET_BUILD,
+										});
+									}}
+								>
+									{i18n.translate('remove')}
+								</ClayButton>
+							)}
 						</div>
 
 						<NewAppUploadAppPackagesComponent
 							isProcessing={loading}
-							versionName={liferayPackage.version}
+							liferayPackage={liferayPackage}
 						/>
+
+						<div className="p-4">
+							<p className="font-weight-bold">
+								{i18n.translate('compatible-versions')}
+							</p>
+							{liferayPackage.versions.map((version, index) => (
+								<small key={index}>
+									{version}
+									{index + 1 <
+										liferayPackage.versions.length &&
+										','}{' '}
+								</small>
+							))}
+						</div>
 					</div>
 				))}
 
@@ -132,44 +190,96 @@ const Content = () => {
 };
 
 const Build = () => {
+	const [active, setActive] = useState(false);
+
 	const [
 		{
-			build: {cloudCompatible},
+			_product,
+			build: {appType},
 		},
 		dispatch,
 	] = useNewAppContext();
 
+	const getType = (value: ProductType) => {
+		if (!value) {
+			return i18n.translate('choose-an-option');
+		}
+
+		const type = ProductTypeOptions.find(
+			(option: ProductTypeOption) => option.value === value
+		);
+
+		return type ? type.label : 'Unknown';
+	};
+
+	const handleAppTypeChange = (value: ProductType) => {
+		dispatch({
+			payload: {
+				appType: value,
+			},
+			type: NewAppTypes.SET_BUILD,
+		});
+
+		// handleResetAppPackages();
+
+	};
+
 	return (
 		<div className="new-app-form-build">
-			<Section label={i18n.translate('cloud-compatible')} required>
-				<div className="d-flex form-radio-card justify-content-between">
-					{COMPATIBLE_OFFERING_CARDS.map(
-						(compatibleOffering, index) => (
-							<RadioCard
-								description={compatibleOffering.description}
-								icon={compatibleOffering.icon}
-								key={index}
-								onChange={() => {
-									dispatch({
-										payload: {
-											cloudCompatible:
-												compatibleOffering.value,
-										},
-										type: NewAppTypes.SET_BUILD,
-									});
-								}}
-								selected={
-									cloudCompatible === compatibleOffering.value
-								}
-								title={compatibleOffering.title}
-								tooltip={compatibleOffering.tooltip}
-							/>
-						)
-					)}
+			<Section
+				label={i18n.translate('app-type')}
+				required
+				tooltipText={i18n.translate('more-info')}
+			>
+				<div className="provide-app-build-page-cloud-compatible-container">
+					<ClayDropDown
+						active={
+							active &&
+							(!_product?.id ||
+								_product?.productStatus ===
+									ProductWorkflowStatusCode.DRAFT)
+						}
+						alignmentPosition={Align.BottomLeft}
+						className="app-type-dropdown"
+						onActiveChange={setActive}
+						trigger={
+							<ClayButton
+								className="align-items-center app-type-dropdown d-flex justify-content-between"
+								displayType="secondary"
+								onClick={() => setActive(!active)}
+							>
+								<div className="align-items-center d-flex justify-content-between w-100">
+									<span>{getType(appType)}</span>
+
+									<ClayIcon symbol="caret-bottom" />
+								</div>
+							</ClayButton>
+						}
+					>
+						<ClayDropDown.ItemList className="app-type-list-unstyled">
+							{ProductTypeOptions.map(
+								(option: ProductTypeOption) => (
+									<ClayDropDown.Item
+										key={option.value}
+										onClick={() => {
+											setActive(false);
+
+											handleAppTypeChange(option.value);
+										}}
+									>
+										<span className="d-flex flex-column">
+											<strong>{option.label}</strong>
+											<span>{option.description}</span>
+										</span>
+									</ClayDropDown.Item>
+								)
+							)}
+						</ClayDropDown.ItemList>
+					</ClayDropDown>
 				</div>
 			</Section>
 
-			{typeof cloudCompatible === 'boolean' && <Content />}
+			{appType && <BuildContent />}
 		</div>
 	);
 };

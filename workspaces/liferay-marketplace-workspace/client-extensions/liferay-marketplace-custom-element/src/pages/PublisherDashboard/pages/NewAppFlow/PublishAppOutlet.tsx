@@ -6,41 +6,46 @@
 import ClayButton from '@clayui/button';
 import {useModal} from '@clayui/modal';
 import {useMemo} from 'react';
-import {Link, Outlet} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 
-import AppPublish from '../../../../components/AppPublish';
 import Modal from '../../../../components/Modal';
 import {useNewAppContext} from '../../../../context/NewAppContext';
-import {PRODUCT_WORKFLOW_STATUS_CODE} from '../../../../enums/Product';
-import {useAccount} from '../../../../hooks/data/useAccounts';
+import {ProductWorkflowStatusCode} from '../../../../enums/Product';
 import i18n from '../../../../i18n';
+import BasePublishAppOutlet from '../../BasePublishAppOutlet';
+import usePublishAppSubmission from '../../hooks/usePublishAppSubmission';
 import usePublishHeader from '../../hooks/usePublishHeader';
 import usePublishNavigation from '../../hooks/usePublishNavigation';
 import {APP_FLOW_ITEMS} from './constants';
 
-import './PublishAppOutlet.scss';
-import usePublishAppSubmission from '../../hooks/usePublishAppSubmission';
+type Context = ReturnType<typeof useNewAppContext>[0];
+
+const getFlowItems = (context: Context) =>
+	APP_FLOW_ITEMS.filter((item) => item.visible(context));
+
+const isRequiredDraftFormFilled = (context: Context) =>
+	APP_FLOW_ITEMS.filter((item) => item.saveAsDraftRequired).every(
+		(item) => item.parseSchema && item.parseSchema(context).success
+	);
 
 const PublishAppOutlet = () => {
 	usePublishHeader();
 
-	const {data: account} = useAccount();
 	const [context, dispatch] = useNewAppContext();
-
-	const {
-		activeIndex,
-		activeRoute,
-		isLastStep,
-		onClickContinue,
-		onClickPrevious,
-		onExit,
-		steps,
-	} = usePublishNavigation({exitLink: '/apps', flowItems: APP_FLOW_ITEMS});
-
-	const {onSave, onSaveAsDraft} = usePublishAppSubmission(context, dispatch);
-
 	const {observer, onOpenChange, open} = useModal();
+	const {onSave, onSaveAsDraft} = usePublishAppSubmission(context, dispatch);
 	const onExitModal = useModal();
+	const isEditingApp =
+		context?._product &&
+		context._product.productStatus === ProductWorkflowStatusCode.APPROVED;
+
+	const {activeRoute, onExit} = usePublishNavigation({
+		exitLink: '/',
+		flowItems: getFlowItems(context),
+	});
+
+	const canSaveAsDraft =
+		!context?._product && isRequiredDraftFormFilled(context);
 
 	const parsedSchema = useMemo(() => {
 		const parseSchema = activeRoute?.parseSchema;
@@ -52,94 +57,34 @@ const PublishAppOutlet = () => {
 		return null;
 	}, [activeRoute, context]);
 
-	const isDisabled = parsedSchema ? !parsedSchema.success : false;
+	const isValidSchema = parsedSchema ? !parsedSchema.success : false;
 
-	const isDraft = (status: number) =>
-		status === PRODUCT_WORKFLOW_STATUS_CODE.DRAFT;
-
-	const isSaveAsDraft =
-		!context._product || isDraft(context._product.productStatus);
+	if (context.loading) {
+		return null;
+	}
 
 	return (
-		<AppPublish>
-			<AppPublish.Navbar
-				accountImage={account?.logoURL}
-				accountName={account?.name as string}
-				appImage={context.profile.file?.preview}
-				appName={context.profile.name}
-				display={{
-					preview: true,
-					saveAsDraft: isSaveAsDraft,
-					submit:
-						!!context._product &&
-						!isDraft(context._product.productStatus),
-				}}
-				exitProps={{
-					onClick: () => {
-						isSaveAsDraft
-							? onOpenChange(true)
-							: onExitModal.onOpenChange(true);
-					},
-				}}
-				previewProps={{
-					disabled: false,
-					onClick: () => alert('Preview...'),
-				}}
-				saveAsDraftProps={{
-					disabled: isDisabled,
-					onClick: onSaveAsDraft,
-				}}
-			/>
-
-			<AppPublish.Body>
-				<AppPublish.Sidebar activeIndex={activeIndex} items={steps} />
-
-				<AppPublish.Content>
-					<details>
-						<pre>{JSON.stringify(context, null, 2)}</pre>
-					</details>
-
-					<h1 className="header-title mb-4">{activeRoute.title}</h1>
-					{activeRoute.description}
-
-					<div className="mt-6 new-app-form">
-						<Outlet />
-					</div>
-
-					<hr className="my-6" />
-
-					<div className="d-flex justify-content-end">
-						{activeIndex !== 0 && (
-							<ClayButton
-								className="mr-4"
-								displayType="secondary"
-								onClick={onClickPrevious}
-							>
-								{i18n.translate('back')}
-							</ClayButton>
-						)}
-
-						<ClayButton
-							disabled={isDisabled}
-							displayType="primary"
-							onClick={() => {
-								if (isLastStep) {
-									return onSave().then(onExit);
-								}
-
-								onClickContinue();
-							}}
-						>
-							{i18n.translate(isLastStep ? 'submit' : 'continue')}
-						</ClayButton>
-					</div>
-				</AppPublish.Content>
-			</AppPublish.Body>
-
+		<BasePublishAppOutlet
+			canSaveAsDraft={canSaveAsDraft}
+			context={context}
+			flowItems={getFlowItems(context)}
+			isEditingApp={!!isEditingApp}
+			onClickExit={
+				canSaveAsDraft
+					? () => onOpenChange(true)
+					: () => onExitModal.onOpenChange(true)
+			}
+			onSave={onSave}
+			onSaveAsDraft={onSaveAsDraft}
+		>
 			<Modal
 				last={
 					<>
-						<ClayButton displayType="secondary">
+						<ClayButton
+							disabled={isValidSchema || !canSaveAsDraft}
+							displayType="secondary"
+							onClick={() => onSaveAsDraft().then(onExit)}
+						>
 							{i18n.translate('save-as-a-draft-exit')}
 						</ClayButton>
 
@@ -183,8 +128,7 @@ const PublishAppOutlet = () => {
 					</p>
 				</Modal>
 			)}
-		</AppPublish>
+		</BasePublishAppOutlet>
 	);
 };
-
 export default PublishAppOutlet;

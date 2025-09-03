@@ -17,6 +17,8 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -128,13 +130,28 @@ public class ObjectEntryVersionPersistenceTest {
 
 		newObjectEntryVersion.setModifiedDate(RandomTestUtil.nextDate());
 
+		newObjectEntryVersion.setObjectDefinitionId(RandomTestUtil.nextLong());
+
 		newObjectEntryVersion.setObjectEntryId(RandomTestUtil.nextLong());
 
 		newObjectEntryVersion.setContent(RandomTestUtil.randomString());
 
+		newObjectEntryVersion.setDisplayDate(RandomTestUtil.nextDate());
+
+		newObjectEntryVersion.setExpirationDate(RandomTestUtil.nextDate());
+
+		newObjectEntryVersion.setReviewDate(RandomTestUtil.nextDate());
+
 		newObjectEntryVersion.setVersion(RandomTestUtil.nextInt());
 
 		newObjectEntryVersion.setStatus(RandomTestUtil.nextInt());
+
+		newObjectEntryVersion.setStatusByUserId(RandomTestUtil.nextLong());
+
+		newObjectEntryVersion.setStatusByUserName(
+			RandomTestUtil.randomString());
+
+		newObjectEntryVersion.setStatusDate(RandomTestUtil.nextDate());
 
 		_objectEntryVersions.add(_persistence.update(newObjectEntryVersion));
 
@@ -168,17 +185,39 @@ public class ObjectEntryVersionPersistenceTest {
 				existingObjectEntryVersion.getModifiedDate()),
 			Time.getShortTimestamp(newObjectEntryVersion.getModifiedDate()));
 		Assert.assertEquals(
+			existingObjectEntryVersion.getObjectDefinitionId(),
+			newObjectEntryVersion.getObjectDefinitionId());
+		Assert.assertEquals(
 			existingObjectEntryVersion.getObjectEntryId(),
 			newObjectEntryVersion.getObjectEntryId());
 		Assert.assertEquals(
 			existingObjectEntryVersion.getContent(),
 			newObjectEntryVersion.getContent());
 		Assert.assertEquals(
+			Time.getShortTimestamp(existingObjectEntryVersion.getDisplayDate()),
+			Time.getShortTimestamp(newObjectEntryVersion.getDisplayDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(
+				existingObjectEntryVersion.getExpirationDate()),
+			Time.getShortTimestamp(newObjectEntryVersion.getExpirationDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingObjectEntryVersion.getReviewDate()),
+			Time.getShortTimestamp(newObjectEntryVersion.getReviewDate()));
+		Assert.assertEquals(
 			existingObjectEntryVersion.getVersion(),
 			newObjectEntryVersion.getVersion());
 		Assert.assertEquals(
 			existingObjectEntryVersion.getStatus(),
 			newObjectEntryVersion.getStatus());
+		Assert.assertEquals(
+			existingObjectEntryVersion.getStatusByUserId(),
+			newObjectEntryVersion.getStatusByUserId());
+		Assert.assertEquals(
+			existingObjectEntryVersion.getStatusByUserName(),
+			newObjectEntryVersion.getStatusByUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingObjectEntryVersion.getStatusDate()),
+			Time.getShortTimestamp(newObjectEntryVersion.getStatusDate()));
 	}
 
 	@Test
@@ -200,10 +239,33 @@ public class ObjectEntryVersionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByObjectDefinitionId() throws Exception {
+		_persistence.countByObjectDefinitionId(RandomTestUtil.nextLong());
+
+		_persistence.countByObjectDefinitionId(0L);
+	}
+
+	@Test
 	public void testCountByObjectEntryId() throws Exception {
 		_persistence.countByObjectEntryId(RandomTestUtil.nextLong());
 
 		_persistence.countByObjectEntryId(0L);
+	}
+
+	@Test
+	public void testCountByC_CD() throws Exception {
+		_persistence.countByC_CD(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextDate());
+
+		_persistence.countByC_CD(0L, RandomTestUtil.nextDate());
+	}
+
+	@Test
+	public void testCountByOEI_V() throws Exception {
+		_persistence.countByOEI_V(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+
+		_persistence.countByOEI_V(0L, 0);
 	}
 
 	@Test
@@ -235,7 +297,10 @@ public class ObjectEntryVersionPersistenceTest {
 			"ObjectEntryVersion", "mvccVersion", true, "uuid", true,
 			"objectEntryVersionId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
-			"objectEntryId", true, "version", true, "status", true);
+			"objectDefinitionId", true, "objectEntryId", true, "displayDate",
+			true, "expirationDate", true, "reviewDate", true, "version", true,
+			"status", true, "statusByUserId", true, "statusByUserName", true,
+			"statusDate", true);
 	}
 
 	@Test
@@ -461,6 +526,71 @@ public class ObjectEntryVersionPersistenceTest {
 		Assert.assertEquals(0, result.size());
 	}
 
+	@Test
+	public void testResetOriginalValues() throws Exception {
+		ObjectEntryVersion newObjectEntryVersion = addObjectEntryVersion();
+
+		_persistence.clearCache();
+
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(
+				newObjectEntryVersion.getPrimaryKey()));
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		ObjectEntryVersion newObjectEntryVersion = addObjectEntryVersion();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			ObjectEntryVersion.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"objectEntryVersionId",
+				newObjectEntryVersion.getObjectEntryVersionId()));
+
+		List<ObjectEntryVersion> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(ObjectEntryVersion objectEntryVersion) {
+		Assert.assertEquals(
+			Long.valueOf(objectEntryVersion.getObjectEntryId()),
+			ReflectionTestUtil.<Long>invoke(
+				objectEntryVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "objectEntryId"));
+		Assert.assertEquals(
+			Integer.valueOf(objectEntryVersion.getVersion()),
+			ReflectionTestUtil.<Integer>invoke(
+				objectEntryVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
+	}
+
 	protected ObjectEntryVersion addObjectEntryVersion() throws Exception {
 		long pk = RandomTestUtil.nextLong();
 
@@ -480,13 +610,27 @@ public class ObjectEntryVersionPersistenceTest {
 
 		objectEntryVersion.setModifiedDate(RandomTestUtil.nextDate());
 
+		objectEntryVersion.setObjectDefinitionId(RandomTestUtil.nextLong());
+
 		objectEntryVersion.setObjectEntryId(RandomTestUtil.nextLong());
 
 		objectEntryVersion.setContent(RandomTestUtil.randomString());
 
+		objectEntryVersion.setDisplayDate(RandomTestUtil.nextDate());
+
+		objectEntryVersion.setExpirationDate(RandomTestUtil.nextDate());
+
+		objectEntryVersion.setReviewDate(RandomTestUtil.nextDate());
+
 		objectEntryVersion.setVersion(RandomTestUtil.nextInt());
 
 		objectEntryVersion.setStatus(RandomTestUtil.nextInt());
+
+		objectEntryVersion.setStatusByUserId(RandomTestUtil.nextLong());
+
+		objectEntryVersion.setStatusByUserName(RandomTestUtil.randomString());
+
+		objectEntryVersion.setStatusDate(RandomTestUtil.nextDate());
 
 		_objectEntryVersions.add(_persistence.update(objectEntryVersion));
 

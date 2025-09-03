@@ -20,12 +20,11 @@ import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.order.internal.odata.entity.v1_0.OrderItemEntityModel;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.OrderItemUtil;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderItemResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -38,12 +37,16 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
+
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 
 import java.io.Serializable;
 
@@ -53,9 +56,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -232,19 +232,15 @@ public class OrderItemResourceImpl extends BaseOrderItemResourceImpl {
 	}
 
 	@Override
-	public Response patchOrderItem(Long id, OrderItem orderItem)
+	public OrderItem patchOrderItem(Long id, OrderItem orderItem)
 		throws Exception {
 
-		_updateOrderItem(
+		return _updateOrderItem(
 			_commerceOrderItemService.getCommerceOrderItem(id), orderItem);
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
 	}
 
 	@Override
-	public Response patchOrderItemByExternalReferenceCode(
+	public OrderItem patchOrderItemByExternalReferenceCode(
 			String externalReferenceCode, OrderItem orderItem)
 		throws Exception {
 
@@ -259,11 +255,7 @@ public class OrderItemResourceImpl extends BaseOrderItemResourceImpl {
 					externalReferenceCode);
 		}
 
-		_updateOrderItem(commerceOrderItem, orderItem);
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
+		return _updateOrderItem(commerceOrderItem, orderItem);
 	}
 
 	@Override

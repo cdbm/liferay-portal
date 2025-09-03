@@ -278,14 +278,16 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), new Date(),
-				WorkflowConstants.STATUS_APPROVED, 100);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), new Date(),
+					WorkflowConstants.STATUS_APPROVED, 100);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -314,17 +316,18 @@ public class BlogsEntryServiceTest {
 
 			calendar = Calendar.getInstance();
 
+			calendar.add(Calendar.HOUR, 3);
 			calendar.set(Calendar.YEAR, 2000);
 
-			calendar.add(Calendar.HOUR, 3);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), calendar.getTime(),
+					WorkflowConstants.STATUS_APPROVED, 2);
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), calendar.getTime(),
-				WorkflowConstants.STATUS_APPROVED, 2);
+			Assert.assertEquals(
+				blogsEntries.toString(), 1, blogsEntries.size());
 
-			Assert.assertEquals(entries.toString(), 1, entries.size());
-
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -341,14 +344,16 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), new Date(),
-				WorkflowConstants.STATUS_APPROVED, 2);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), new Date(),
+					WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -361,15 +366,17 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), new Date(),
-				WorkflowConstants.STATUS_APPROVED, 100);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), new Date(),
+					WorkflowConstants.STATUS_APPROVED, 100);
 
-			Assert.assertEquals(entries.toString(), 3, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 3, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry2));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -396,18 +403,19 @@ public class BlogsEntryServiceTest {
 
 			calendar = Calendar.getInstance();
 
+			calendar.add(Calendar.HOUR, 3);
 			calendar.set(Calendar.YEAR, 2000);
 
-			calendar.add(Calendar.HOUR, 3);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), calendar.getTime(),
+					WorkflowConstants.STATUS_APPROVED, 2);
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), calendar.getTime(),
-				WorkflowConstants.STATUS_APPROVED, 2);
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
-
-			Assert.assertTrue(entries.contains(entry1));
-			Assert.assertTrue(entries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry2));
 		}
 	}
 
@@ -423,14 +431,16 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getCompanyEntries(
-				TestPropsValues.getCompanyId(), new Date(),
-				WorkflowConstants.STATUS_APPROVED, 2);
+			List<BlogsEntry> blogsEntries =
+				_blogsEntryService.getCompanyEntries(
+					TestPropsValues.getCompanyId(), new Date(),
+					WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry2));
 		}
 	}
 
@@ -724,14 +734,15 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), new Date(),
 				WorkflowConstants.STATUS_APPROVED, 100);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -760,17 +771,17 @@ public class BlogsEntryServiceTest {
 
 			calendar = Calendar.getInstance();
 
+			calendar.add(Calendar.HOUR, 3);
 			calendar.set(Calendar.YEAR, 2000);
 
-			calendar.add(Calendar.HOUR, 3);
-
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), calendar.getTime(),
 				WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 1, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 1, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -787,14 +798,15 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), new Date(),
 				WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -807,15 +819,16 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), new Date(),
 				WorkflowConstants.STATUS_APPROVED, 100);
 
-			Assert.assertEquals(entries.toString(), 3, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 3, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry2));
-			Assert.assertTrue(entries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry1));
 		}
 	}
 
@@ -842,18 +855,18 @@ public class BlogsEntryServiceTest {
 
 			calendar = Calendar.getInstance();
 
+			calendar.add(Calendar.HOUR, 3);
 			calendar.set(Calendar.YEAR, 2000);
 
-			calendar.add(Calendar.HOUR, 3);
-
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), calendar.getTime(),
 				WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry1));
-			Assert.assertTrue(entries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry1));
+			Assert.assertTrue(blogsEntries.contains(entry2));
 		}
 	}
 
@@ -867,14 +880,15 @@ public class BlogsEntryServiceTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, _permissionChecker)) {
 
-			List<BlogsEntry> entries = _blogsEntryService.getGroupEntries(
+			List<BlogsEntry> blogsEntries = _blogsEntryService.getGroupEntries(
 				_group.getGroupId(), new Date(),
 				WorkflowConstants.STATUS_APPROVED, 2);
 
-			Assert.assertEquals(entries.toString(), 2, entries.size());
+			Assert.assertEquals(
+				blogsEntries.toString(), 2, blogsEntries.size());
 
-			Assert.assertTrue(entries.contains(entry3));
-			Assert.assertTrue(entries.contains(entry2));
+			Assert.assertTrue(blogsEntries.contains(entry3));
+			Assert.assertTrue(blogsEntries.contains(entry2));
 		}
 	}
 

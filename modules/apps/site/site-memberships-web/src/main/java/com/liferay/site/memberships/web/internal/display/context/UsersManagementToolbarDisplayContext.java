@@ -38,14 +38,14 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.site.memberships.web.internal.util.GroupUtil;
-import com.liferay.site.teams.item.selector.criterion.SiteTeamsItemSelectorCriterion;
+import com.liferay.site.teams.item.selector.SiteTeamsItemSelectorCriterion;
 import com.liferay.users.admin.item.selector.UserSiteMembershipItemSelectorCriterion;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso

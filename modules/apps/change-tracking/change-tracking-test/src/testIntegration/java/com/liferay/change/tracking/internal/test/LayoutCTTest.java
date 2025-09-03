@@ -69,7 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -98,11 +97,6 @@ public class LayoutCTTest {
 		_group = GroupTestUtil.addGroup();
 		_layoutClassNameId = _classNameLocalService.getClassNameId(
 			Layout.class);
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		GroupTestUtil.deleteGroup(_group);
 	}
 
 	@Test
@@ -329,6 +323,29 @@ public class LayoutCTTest {
 
 			_layoutLocalService.deleteLayout(layout);
 		}
+
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
+	}
+
+	@Test
+	public void testDeleteLayoutWithModificationInProduction()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					_ctCollection.getCtCollectionId())) {
+
+			_layoutLocalService.deleteLayout(layout.getPlid());
+		}
+
+		layout = _layoutLocalService.updateName(
+			layout, RandomTestUtil.randomString(),
+			LocaleUtil.toLanguageId(LocaleUtil.BRAZIL));
+
+		_ctProcessLocalService.addCTProcess(
+			TestPropsValues.getUserId(), _ctCollection.getCtCollectionId());
 
 		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
 	}

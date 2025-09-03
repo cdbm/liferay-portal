@@ -36,7 +36,7 @@ public class MapDevelopToDeployScanCodePipeline extends BaseScanCodePipeline {
 
 		downloadResultFiles();
 
-		sendSlackNotification(getS3URL());
+		sendSlackNotification(getCloudBucketURL());
 	}
 
 	public JSONObject getJSONObject() throws IOException {
@@ -122,12 +122,13 @@ public class MapDevelopToDeployScanCodePipeline extends BaseScanCodePipeline {
 	}
 
 	protected MapDevelopToDeployScanCodePipeline(
-		String buildURL, String pipelineName) {
+		String buildURL, String pipelineName, String releaseBuildURL) {
 
-		super(buildURL, pipelineName);
+		super(buildURL, pipelineName, releaseBuildURL);
 
 		_buildURL = buildURL;
 		_pipelineName = pipelineName;
+		_releaseBuildURL = releaseBuildURL;
 	}
 
 	private static final String _GCP_URL_REGEX =
@@ -135,5 +136,6 @@ public class MapDevelopToDeployScanCodePipeline extends BaseScanCodePipeline {
 
 	private final String _buildURL;
 	private final String _pipelineName;
+	private final String _releaseBuildURL;
 
 }

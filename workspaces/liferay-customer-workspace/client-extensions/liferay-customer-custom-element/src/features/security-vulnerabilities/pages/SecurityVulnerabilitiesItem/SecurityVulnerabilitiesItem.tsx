@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {jira_to_html as jiraToHtml} from 'jira2md';
 import {Link, useParams} from 'react-router-dom';
 import {JiraEnum} from '~/features/security-vulnerabilities/utils/constants/jiraEnum';
 import i18n from '~/utils/I18n';
@@ -109,14 +108,10 @@ const SecurityVulnerabilitiesItem = () => {
 							</div>
 
 							<div className="font-weight-bold sv-name">
-								<Link
-									className="sv-name-link"
-									to={`/${issue?.[JiraEnum.KEY]}`}
-								>
-									{issue[JiraEnum.FIELDS]?.[JiraEnum.CVE_IDS]}
-								</Link>
+								{issue[JiraEnum.FIELDS]?.[JiraEnum.CVE_IDS]}
 							</div>
 						</div>
+
 						<div className="sv-summary">
 							{issue[JiraEnum.FIELDS]?.[JiraEnum.SUMMARY]}
 						</div>
@@ -187,11 +182,10 @@ const SecurityVulnerabilitiesItem = () => {
 						<div
 							className="sv-structured-data"
 							dangerouslySetInnerHTML={{
-								__html: jiraToHtml(
+								__html:
 									jiraIssue[JiraEnum.FIELDS]?.[
 										JiraEnum.DESCRIPTION
-									]?.replace(/\n(?!\||\n)/g, '<br>') || ''
-								),
+									] || '',
 							}}
 						/>
 					</div>

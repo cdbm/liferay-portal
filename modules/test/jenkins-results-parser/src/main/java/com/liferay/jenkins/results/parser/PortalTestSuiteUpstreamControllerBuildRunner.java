@@ -64,18 +64,23 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 		return buildData.getCohortName();
 	}
 
-	protected String getJobURL(String testSuite) {
+	protected String getInvocationJobName() {
 		S buildData = getBuildData();
 
-		String jobName = JenkinsResultsParserUtil.combine(
+		return JenkinsResultsParserUtil.combine(
 			"test-portal-testsuite-upstream(",
 			buildData.getPortalUpstreamBranchName(), ")");
+	}
+
+	protected String getInvocationJobURL(String testSuite) {
+		String invocationJobName = getInvocationJobName();
 
 		String masterURL = null;
 
 		try {
 			masterURL = JenkinsResultsParserUtil.getBuildProperty(
-				"jenkins.osb.jenkins.web.master.url", jobName, testSuite);
+				"jenkins.osb.jenkins.web.master.url", invocationJobName,
+				testSuite);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
@@ -83,12 +88,43 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 
 		if (masterURL == null) {
 			masterURL = JenkinsResultsParserUtil.getMostAvailableMasterURL(
-				JenkinsResultsParserUtil.combine(
-					"http://" + getInvocationCohortName() + ".liferay.com"),
-				null, 1, 24, 2);
+				"http://" + getInvocationCohortName() + ".liferay.com", null, 1,
+				invocationJobName, getSlaveLabel(testSuite), 24, 2);
 		}
 
-		return JenkinsResultsParserUtil.combine(masterURL, "/job/", jobName);
+		return JenkinsResultsParserUtil.combine(
+			masterURL, "/job/", invocationJobName);
+	}
+
+	protected String getSlaveLabel(String testSuite) {
+		String slaveLabel = null;
+
+		String invocationJobName = getInvocationJobName();
+
+		try {
+			slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label", invocationJobName,
+				testSuite);
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"cloud.fleet.primary.label");
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"master.auto.scaling.group.name");
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			slaveLabel = SLAVE_LABEL_DEFAULT;
+		}
+
+		return slaveLabel;
 	}
 
 	protected String getTestPortalBuildProfile(String testSuite) {
@@ -154,16 +190,18 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 				continue;
 			}
 
-			String jobURL = getJobURL(testSuiteName);
+			String invocationJobURL = getInvocationJobURL(testSuiteName);
 
 			StringBuilder sb = new StringBuilder();
 
-			sb.append(jobURL);
+			sb.append(invocationJobURL);
 			sb.append("/buildWithParameters?");
 			sb.append("token=");
 			sb.append(jenkinsAuthenticationToken);
 
 			Map<String, String> invocationParameters = new HashMap<>();
+
+			invocationParameters.putAll(buildData.getBuildParameters());
 
 			invocationParameters.put("CI_TEST_SUITE", testSuiteName);
 			invocationParameters.put(
@@ -175,6 +213,8 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 			invocationParameters.put("PORTAL_GIT_COMMIT", portalBranchSHA);
 			invocationParameters.put(
 				"PORTAL_GITHUB_URL", buildData.getPortalGitHubURL());
+			invocationParameters.put(
+				"SLAVE_LABEL", getSlaveLabel(testSuiteName));
 			invocationParameters.put(
 				"TEST_PORTAL_BUILD_PROFILE",
 				getTestPortalBuildProfile(testSuiteName));
@@ -215,8 +255,6 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 				"TESTRAY_SLACK_USERNAME",
 				getTestraySlackUsername(testSuiteName));
 
-			invocationParameters.putAll(buildData.getBuildParameters());
-
 			for (Map.Entry<String, String> invocationParameter :
 					invocationParameters.entrySet()) {
 
@@ -239,7 +277,9 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 				JenkinsResultsParserUtil.toString(sb.toString());
 
 				System.out.println(
-					"Job for '" + testSuiteName + "' was invoked at " + jobURL);
+					JenkinsResultsParserUtil.combine(
+						"Job for '", testSuiteName, "' was invoked at ",
+						invocationJobURL));
 
 				_invokedTestSuiteNames.add(testSuiteName);
 			}
@@ -284,6 +324,8 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 
 		updateBuildDescription();
 	}
+
+	protected static final String SLAVE_LABEL_DEFAULT = "slave";
 
 	private List<Build> _getBuildHistory() {
 		S buildData = getBuildData();
@@ -503,11 +545,7 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 
 		String previousPortalBranchSHA = matcher.group("branchSHA");
 
-		if (portalBranchSHA.equals(previousPortalBranchSHA)) {
-			return true;
-		}
-
-		return false;
+		return portalBranchSHA.equals(previousPortalBranchSHA);
 	}
 
 	private static final Pattern _portalBranchSHAPattern = Pattern.compile(

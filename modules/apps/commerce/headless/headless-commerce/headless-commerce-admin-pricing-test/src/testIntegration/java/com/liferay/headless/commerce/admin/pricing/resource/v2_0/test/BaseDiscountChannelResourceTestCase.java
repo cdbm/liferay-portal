@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.DiscountChannel;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -45,6 +48,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,6 +107,16 @@ public abstract class BaseDiscountChannelResourceTestCase {
 			testCompany.getCompanyId());
 
 		discountChannelResource = DiscountChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -187,12 +200,112 @@ public abstract class BaseDiscountChannelResourceTestCase {
 
 	@Test
 	public void testDeleteDiscountChannel() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DiscountChannel discountChannel =
+			testDeleteDiscountChannel_addDiscountChannel();
+
+		assertHttpResponseStatusCode(
+			204,
+			discountChannelResource.deleteDiscountChannelHttpResponse(
+				discountChannel.getDiscountChannelId()));
+	}
+
+	protected DiscountChannel testDeleteDiscountChannel_addDiscountChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteDiscountChannel() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		DiscountChannel discountChannel1 =
+			testGraphQLDeleteDiscountChannel_addDiscountChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDiscountChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"discountChannelId",
+									discountChannel1.getDiscountChannelId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDiscountChannel"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		DiscountChannel discountChannel2 =
+			testGraphQLDeleteDiscountChannel_addDiscountChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deleteDiscountChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"discountChannelId",
+										discountChannel2.
+											getDiscountChannelId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deleteDiscountChannel"));
+	}
+
+	protected DiscountChannel
+			testGraphQLDeleteDiscountChannel_addDiscountChannel()
+		throws Exception {
+
+		return testGraphQLDiscountChannel_addDiscountChannel();
+	}
+
+	@Test
+	public void testDeleteDiscountChannelBatch() throws Exception {
+		DiscountChannel discountChannel1 =
+			testDeleteDiscountChannelBatch_addDiscountChannel();
+
+		testDeleteDiscountChannelBatch_deleteDiscountChannel(
+			202, null, discountChannel1.getDiscountChannelId());
+	}
+
+	protected DiscountChannel
+			testDeleteDiscountChannelBatch_addDiscountChannel()
+		throws Exception {
+
+		return testDeleteDiscountChannel_addDiscountChannel();
+	}
+
+	protected void testDeleteDiscountChannelBatch_deleteDiscountChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			discountChannelResource.deleteDiscountChannelBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"discountChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -257,6 +370,12 @@ public abstract class BaseDiscountChannelResourceTestCase {
 			page,
 			testGetDiscountByExternalReferenceCodeDiscountChannelsPage_getExpectedActions(
 				externalReferenceCode));
+
+		discountChannelResource.deleteDiscountChannel(
+			discountChannel1.getDiscountChannelId());
+
+		discountChannelResource.deleteDiscountChannel(
+			discountChannel2.getDiscountChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -276,13 +395,13 @@ public abstract class BaseDiscountChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountChannelsPage_getExternalReferenceCode();
 
-		Page<DiscountChannel> discountChannelPage =
+		Page<DiscountChannel> discountChannelsPage =
 			discountChannelResource.
 				getDiscountByExternalReferenceCodeDiscountChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountChannelPage.getTotalCount());
+			discountChannelsPage.getTotalCount());
 
 		DiscountChannel discountChannel1 =
 			testGetDiscountByExternalReferenceCodeDiscountChannelsPage_addDiscountChannel(
@@ -404,29 +523,6 @@ public abstract class BaseDiscountChannelResourceTestCase {
 	}
 
 	@Test
-	public void testPostDiscountByExternalReferenceCodeDiscountChannel()
-		throws Exception {
-
-		DiscountChannel randomDiscountChannel = randomDiscountChannel();
-
-		DiscountChannel postDiscountChannel =
-			testPostDiscountByExternalReferenceCodeDiscountChannel_addDiscountChannel(
-				randomDiscountChannel);
-
-		assertEquals(randomDiscountChannel, postDiscountChannel);
-		assertValid(postDiscountChannel);
-	}
-
-	protected DiscountChannel
-			testPostDiscountByExternalReferenceCodeDiscountChannel_addDiscountChannel(
-				DiscountChannel discountChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetDiscountIdDiscountChannelsPage() throws Exception {
 		Long id = testGetDiscountIdDiscountChannelsPage_getId();
 		Long irrelevantId =
@@ -477,6 +573,12 @@ public abstract class BaseDiscountChannelResourceTestCase {
 			discountChannel2, (List<DiscountChannel>)page.getItems());
 		assertValid(
 			page, testGetDiscountIdDiscountChannelsPage_getExpectedActions(id));
+
+		discountChannelResource.deleteDiscountChannel(
+			discountChannel1.getDiscountChannelId());
+
+		discountChannelResource.deleteDiscountChannel(
+			discountChannel2.getDiscountChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -592,12 +694,12 @@ public abstract class BaseDiscountChannelResourceTestCase {
 
 		Long id = testGetDiscountIdDiscountChannelsPage_getId();
 
-		Page<DiscountChannel> discountChannelPage =
+		Page<DiscountChannel> discountChannelsPage =
 			discountChannelResource.getDiscountIdDiscountChannelsPage(
 				id, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountChannelPage.getTotalCount());
+			discountChannelsPage.getTotalCount());
 
 		DiscountChannel discountChannel1 =
 			testGetDiscountIdDiscountChannelsPage_addDiscountChannel(
@@ -866,6 +968,29 @@ public abstract class BaseDiscountChannelResourceTestCase {
 	}
 
 	@Test
+	public void testPostDiscountByExternalReferenceCodeDiscountChannel()
+		throws Exception {
+
+		DiscountChannel randomDiscountChannel = randomDiscountChannel();
+
+		DiscountChannel postDiscountChannel =
+			testPostDiscountByExternalReferenceCodeDiscountChannel_addDiscountChannel(
+				randomDiscountChannel);
+
+		assertEquals(randomDiscountChannel, postDiscountChannel);
+		assertValid(postDiscountChannel);
+	}
+
+	protected DiscountChannel
+			testPostDiscountByExternalReferenceCodeDiscountChannel_addDiscountChannel(
+				DiscountChannel discountChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostDiscountIdDiscountChannel() throws Exception {
 		DiscountChannel randomDiscountChannel = randomDiscountChannel();
 
@@ -886,8 +1011,66 @@ public abstract class BaseDiscountChannelResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DiscountChannel discountChannel1 =
+			testBatchEngineDeleteImportTask_addDiscountChannel();
+
+		testBatchEngineDeleteImportTask_deleteDiscountChannel(
+			200, null, discountChannel1.getDiscountChannelId());
+	}
+
+	protected DiscountChannel
+			testBatchEngineDeleteImportTask_addDiscountChannel()
+		throws Exception {
+
+		return testDeleteDiscountChannel_addDiscountChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDiscountChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"discountChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected DiscountChannel testGraphQLDiscountChannel_addDiscountChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		DiscountChannel discountChannel,
@@ -965,6 +1148,10 @@ public abstract class BaseDiscountChannelResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (discountChannel.getDiscountChannelId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1534,7 +1721,30 @@ public abstract class BaseDiscountChannelResourceTestCase {
 		return randomDiscountChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DiscountChannelResource discountChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

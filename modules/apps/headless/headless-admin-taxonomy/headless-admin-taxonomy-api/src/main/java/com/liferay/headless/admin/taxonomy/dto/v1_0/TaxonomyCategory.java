@@ -19,6 +19,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -30,13 +37,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -105,6 +105,47 @@ public class TaxonomyCategory implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getAssetLibraryKey() {
+		if (_assetLibraryKeySupplier != null) {
+			assetLibraryKey = _assetLibraryKeySupplier.get();
+
+			_assetLibraryKeySupplier = null;
+		}
+
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+
+		_assetLibraryKeySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		_assetLibraryKeySupplier = () -> {
+			try {
+				return assetLibraryKeyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String assetLibraryKey;
+
+	@JsonIgnore
+	private Supplier<String> _assetLibraryKeySupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A list of languages the category has a translation for."
@@ -675,7 +716,7 @@ public class TaxonomyCategory implements Serializable {
 	@GraphQLField(
 		description = "The parent category's `TaxonomyVocabulary`, if such a parent category exists."
 	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ParentTaxonomyVocabulary parentTaxonomyVocabulary;
 
 	@JsonIgnore
@@ -1058,6 +1099,22 @@ public class TaxonomyCategory implements Serializable {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(actions));
+		}
+
+		String assetLibraryKey = getAssetLibraryKey();
+
+		if (assetLibraryKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetLibraryKey));
+
+			sb.append("\"");
 		}
 
 		String[] availableLanguages = getAvailableLanguages();

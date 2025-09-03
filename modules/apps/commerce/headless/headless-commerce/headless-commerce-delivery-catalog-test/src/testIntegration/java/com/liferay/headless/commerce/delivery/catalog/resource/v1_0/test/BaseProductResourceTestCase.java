@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -199,6 +199,306 @@ public abstract class BaseProductResourceTestCase {
 		Assert.assertEquals(regex, product.getShortDescription());
 		Assert.assertEquals(regex, product.getSlug());
 		Assert.assertEquals(regex, product.getUrlImage());
+	}
+
+	@Test
+	public void testGetChannelProduct() throws Exception {
+		Product postProduct = testGetChannelProduct_addProduct();
+
+		Product getProduct = productResource.getChannelProduct(
+			testGetChannelProduct_getChannelId(), postProduct.getId(), null);
+
+		assertEquals(postProduct, getProduct);
+		assertValid(getProduct);
+	}
+
+	protected Product testGetChannelProduct_addProduct() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetChannelProduct_getChannelId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetChannelProduct() throws Exception {
+		Product product = testGraphQLGetChannelProduct_addProduct();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				product,
+				ProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"channelProduct",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"channelId",
+											testGraphQLGetChannelProduct_getChannelId());
+										put("productId", product.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/channelProduct"))));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				product,
+				ProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCatalog_v1_0",
+								new GraphQLField(
+									"channelProduct",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"channelId",
+												testGraphQLGetChannelProduct_getChannelId());
+											put("productId", product.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+						"Object/channelProduct"))));
+	}
+
+	protected Long testGraphQLGetChannelProduct_getChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetChannelProductNotFound() throws Exception {
+		Long irrelevantChannelId = RandomTestUtil.randomLong();
+		Long irrelevantProductId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"channelProduct",
+						new HashMap<String, Object>() {
+							{
+								put("channelId", irrelevantChannelId);
+								put("productId", irrelevantProductId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"channelProduct",
+							new HashMap<String, Object>() {
+								{
+									put("channelId", irrelevantChannelId);
+									put("productId", irrelevantProductId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Product testGraphQLGetChannelProduct_addProduct()
+		throws Exception {
+
+		return testGraphQLProduct_addProduct();
+	}
+
+	@Test
+	public void testGetChannelProductByFriendlyUrlPath() throws Exception {
+		Product postProduct =
+			testGetChannelProductByFriendlyUrlPath_addProduct();
+
+		Product getProduct = productResource.getChannelProductByFriendlyUrlPath(
+			testGetChannelProductByFriendlyUrlPath_getChannelId(),
+			testGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath(), null);
+
+		assertEquals(postProduct, getProduct);
+		assertValid(getProduct);
+	}
+
+	protected Product testGetChannelProductByFriendlyUrlPath_addProduct()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetChannelProductByFriendlyUrlPath_getChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String testGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetChannelProductByFriendlyUrlPath()
+		throws Exception {
+
+		Product product =
+			testGraphQLGetChannelProductByFriendlyUrlPath_addProduct();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				product,
+				ProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"channelProductByFriendlyUrlPath",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"channelId",
+											testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId());
+
+										put(
+											"friendlyUrlPath",
+											"\"" +
+												testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath() +
+													"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/channelProductByFriendlyUrlPath"))));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				product,
+				ProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCatalog_v1_0",
+								new GraphQLField(
+									"channelProductByFriendlyUrlPath",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"channelId",
+												testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId());
+
+											put(
+												"friendlyUrlPath",
+												"\"" +
+													testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath() +
+														"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+						"Object/channelProductByFriendlyUrlPath"))));
+	}
+
+	protected Long testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetChannelProductByFriendlyUrlPathNotFound()
+		throws Exception {
+
+		Long irrelevantChannelId = RandomTestUtil.randomLong();
+		String irrelevantFriendlyUrlPath =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"channelProductByFriendlyUrlPath",
+						new HashMap<String, Object>() {
+							{
+								put("channelId", irrelevantChannelId);
+								put(
+									"friendlyUrlPath",
+									irrelevantFriendlyUrlPath);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"channelProductByFriendlyUrlPath",
+							new HashMap<String, Object>() {
+								{
+									put("channelId", irrelevantChannelId);
+									put(
+										"friendlyUrlPath",
+										irrelevantFriendlyUrlPath);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Product testGraphQLGetChannelProductByFriendlyUrlPath_addProduct()
+		throws Exception {
+
+		return testGraphQLProduct_addProduct();
 	}
 
 	@Test
@@ -349,10 +649,10 @@ public abstract class BaseProductResourceTestCase {
 	public void testGetChannelProductsPageWithPagination() throws Exception {
 		Long channelId = testGetChannelProductsPage_getChannelId();
 
-		Page<Product> productPage = productResource.getChannelProductsPage(
+		Page<Product> productsPage = productResource.getChannelProductsPage(
 			channelId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(productPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(productsPage.getTotalCount());
 
 		Product product1 = testGetChannelProductsPage_addProduct(
 			channelId, randomProduct());
@@ -576,305 +876,8 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetChannelProductByFriendlyUrlPath() throws Exception {
-		Product postProduct =
-			testGetChannelProductByFriendlyUrlPath_addProduct();
-
-		Product getProduct = productResource.getChannelProductByFriendlyUrlPath(
-			testGetChannelProductByFriendlyUrlPath_getChannelId(),
-			testGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath(), null);
-
-		assertEquals(postProduct, getProduct);
-		assertValid(getProduct);
-	}
-
-	protected Long testGetChannelProductByFriendlyUrlPath_getChannelId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String testGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Product testGetChannelProductByFriendlyUrlPath_addProduct()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetChannelProductByFriendlyUrlPath()
-		throws Exception {
-
-		Product product =
-			testGraphQLGetChannelProductByFriendlyUrlPath_addProduct();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				product,
-				ProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"channelProductByFriendlyUrlPath",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"channelId",
-											testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId());
-
-										put(
-											"friendlyUrlPath",
-											"\"" +
-												testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath() +
-													"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/channelProductByFriendlyUrlPath"))));
-
-		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				product,
-				ProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceDeliveryCatalog_v1_0",
-								new GraphQLField(
-									"channelProductByFriendlyUrlPath",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"channelId",
-												testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId());
-
-											put(
-												"friendlyUrlPath",
-												"\"" +
-													testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath() +
-														"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
-						"Object/channelProductByFriendlyUrlPath"))));
-	}
-
-	protected Long testGraphQLGetChannelProductByFriendlyUrlPath_getChannelId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGraphQLGetChannelProductByFriendlyUrlPath_getFriendlyUrlPath()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetChannelProductByFriendlyUrlPathNotFound()
-		throws Exception {
-
-		Long irrelevantChannelId = RandomTestUtil.randomLong();
-		String irrelevantFriendlyUrlPath =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"channelProductByFriendlyUrlPath",
-						new HashMap<String, Object>() {
-							{
-								put("channelId", irrelevantChannelId);
-								put(
-									"friendlyUrlPath",
-									irrelevantFriendlyUrlPath);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceDeliveryCatalog_v1_0",
-						new GraphQLField(
-							"channelProductByFriendlyUrlPath",
-							new HashMap<String, Object>() {
-								{
-									put("channelId", irrelevantChannelId);
-									put(
-										"friendlyUrlPath",
-										irrelevantFriendlyUrlPath);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Product testGraphQLGetChannelProductByFriendlyUrlPath_addProduct()
-		throws Exception {
-
-		return testGraphQLProduct_addProduct();
-	}
-
-	@Test
-	public void testGetChannelProduct() throws Exception {
-		Product postProduct = testGetChannelProduct_addProduct();
-
-		Product getProduct = productResource.getChannelProduct(
-			testGetChannelProduct_getChannelId(), postProduct.getId(), null);
-
-		assertEquals(postProduct, getProduct);
-		assertValid(getProduct);
-	}
-
-	protected Long testGetChannelProduct_getChannelId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Product testGetChannelProduct_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetChannelProduct() throws Exception {
-		Product product = testGraphQLGetChannelProduct_addProduct();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				product,
-				ProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"channelProduct",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"channelId",
-											testGraphQLGetChannelProduct_getChannelId());
-
-										put("productId", product.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/channelProduct"))));
-
-		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				product,
-				ProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceDeliveryCatalog_v1_0",
-								new GraphQLField(
-									"channelProduct",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"channelId",
-												testGraphQLGetChannelProduct_getChannelId());
-
-											put("productId", product.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
-						"Object/channelProduct"))));
-	}
-
-	protected Long testGraphQLGetChannelProduct_getChannelId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetChannelProductNotFound() throws Exception {
-		Long irrelevantChannelId = RandomTestUtil.randomLong();
-		Long irrelevantProductId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"channelProduct",
-						new HashMap<String, Object>() {
-							{
-								put("channelId", irrelevantChannelId);
-								put("productId", irrelevantProductId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceDeliveryCatalog_v1_0",
-						new GraphQLField(
-							"channelProduct",
-							new HashMap<String, Object>() {
-								{
-									put("channelId", irrelevantChannelId);
-									put("productId", irrelevantProductId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Product testGraphQLGetChannelProduct_addProduct()
-		throws Exception {
-
-		return testGraphQLProduct_addProduct();
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule

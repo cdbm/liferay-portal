@@ -46,13 +46,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Tom Wang
@@ -269,7 +269,7 @@ public class JournalUtil {
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		long classNameId = BeanPropertiesUtil.getLong(
 			journalArticle, "classNameId",

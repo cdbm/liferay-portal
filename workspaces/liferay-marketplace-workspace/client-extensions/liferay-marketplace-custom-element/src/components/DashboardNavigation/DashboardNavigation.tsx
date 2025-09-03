@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {DashboardNavigationList} from './DashboardNavigationList';
+import useAccounts from '../../hooks/data/useAccounts';
+import AccountSearchDropdown from './AccountSearchDropdown';
+import DashboardNavigationItem from './DashboardNavigationItem';
 
 import './DashboardNavigation.scss';
-import useAccounts from '../../hooks/data/useAccounts';
-import {AppProps} from '../DashboardTable/DashboardTable';
-import AccountSearchDropdown from './AccountSearchDropdown';
+import {useMarketplaceContext} from '../../context/MarketplaceContext';
 
 export type DashboardListItems = {
+	active?: boolean;
 	itemTitle: string;
-	items?: AppProps[];
 	path: string;
 	symbol: string;
+	visible?: boolean;
 };
 
 export type DashboardNavigationProps = {
@@ -32,20 +33,23 @@ export function DashboardNavigation({
 	currentAccount,
 	dashboardNavigationItems,
 }: DashboardNavigationProps) {
+	const {properties} = useMarketplaceContext();
+
 	return (
 		<div className="dashboard-navigation-container">
-			{accountsSearch && (
-				<AccountSearchDropdown
-					accountAppsNumber={accountAppsNumber}
-					accountIcon={accountIcon}
-					accountsSearch={accountsSearch}
-					currentAccount={currentAccount}
-				/>
-			)}
+			{!properties.featureFlags.includes('LPD-51092') &&
+				accountsSearch && (
+					<AccountSearchDropdown
+						accountAppsNumber={accountAppsNumber}
+						accountIcon={accountIcon}
+						accountsSearch={accountsSearch}
+						currentAccount={currentAccount}
+					/>
+				)}
 
-			<div className="dashboard-navigation-body">
+			<div className="dashboard-navigation-body dashboard-navigation-container-dropdown">
 				{dashboardNavigationItems.map((dashboardNavigation, index) => (
-					<DashboardNavigationList
+					<DashboardNavigationItem
 						dashboardNavigation={dashboardNavigation}
 						key={index}
 					/>

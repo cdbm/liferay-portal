@@ -19,22 +19,21 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListMergeable;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.BodyContent;
+
 import java.io.IOException;
 
 import java.util.Locale;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyContent;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -384,31 +383,28 @@ public class MetaTagsTagTest {
 
 		if (Validator.isNull(metaContent)) {
 			Assert.assertFalse(
-				content,
-				StringUtil.contains(
-					content, " name=\"" + metaName + "\" />",
-					StringPool.BLANK));
+				content, content.contains(" name=\"" + metaName + "\" />"));
+
+			return;
 		}
-		else if (Validator.isNotNull(metaLang)) {
+
+		if (Validator.isNotNull(metaLang)) {
 			Assert.assertTrue(
 				content,
-				StringUtil.contains(
-					content,
+				content.contains(
 					StringBundler.concat(
 						"<meta content=\"", metaContent, "\" lang=\"", metaLang,
-						"\" name=\"", metaName, "\" />"),
-					StringPool.BLANK));
+						"\" name=\"", metaName, "\" />")));
+
+			return;
 		}
-		else {
-			Assert.assertTrue(
-				content,
-				StringUtil.contains(
-					content,
-					StringBundler.concat(
-						"<meta content=\"", metaContent, "\" name=\"", metaName,
-						"\" />"),
-					StringPool.BLANK));
-		}
+
+		Assert.assertTrue(
+			content,
+			content.contains(
+				StringBundler.concat(
+					"<meta content=\"", metaContent, "\" name=\"", metaName,
+					"\" />")));
 	}
 
 	private void _testMetaTagsTagResponseStatus(

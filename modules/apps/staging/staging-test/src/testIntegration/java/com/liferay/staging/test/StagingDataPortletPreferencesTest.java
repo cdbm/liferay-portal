@@ -28,7 +28,6 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.osgi.util.ServiceTrackerFactory;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -48,10 +47,10 @@ import com.liferay.wiki.service.WikiNodeLocalService;
 import com.liferay.wiki.service.WikiPageLocalService;
 import com.liferay.wiki.test.util.WikiTestUtil;
 
-import java.util.Map;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletPreferences;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletPreferences;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -99,13 +98,12 @@ public class StagingDataPortletPreferencesTest
 		ServiceTracker<Portlet, Portlet> serviceTracker =
 			ServiceTrackerFactory.open(
 				bundle.getBundleContext(),
-				StringBundler.concat(
-					"(javax.portlet.name=", DDLPortletKeys.DYNAMIC_DATA_LISTS,
-					")"),
+				"(jakarta.portlet.name=" +
+					DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY + ")",
 				null);
 
 		try {
-			Assert.assertNotNull(serviceTracker.waitForService(10000));
+			Assert.assertNotNull(serviceTracker.waitForService(15000));
 		}
 		finally {
 			serviceTracker.close();

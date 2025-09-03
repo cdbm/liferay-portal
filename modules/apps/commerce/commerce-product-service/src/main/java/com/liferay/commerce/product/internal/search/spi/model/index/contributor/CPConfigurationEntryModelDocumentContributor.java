@@ -91,8 +91,6 @@ public class CPConfigurationEntryModelDocumentContributor
 				cpConfigurationEntry.getCPConfigurationEntryId());
 			document.addKeyword(
 				Field.ENTRY_CLASS_PK, cpConfigurationEntry.getClassPK());
-			document.addKeyword(
-				Field.HIDDEN, !cpConfigurationEntry.isVisible());
 
 			CPDefinition cpDefinition = null;
 
@@ -123,7 +121,7 @@ public class CPConfigurationEntryModelDocumentContributor
 						String::toLowerCase, String.class));
 				document.addKeyword(
 					CPField.PRODUCT_TYPE_NAME,
-					cpDefinition.getProductTypeName());
+					cpDefinition.getProductTypeName(), true);
 				document.addKeyword(
 					Field.ASSET_CATEGORY_IDS,
 					_assetCategoryLocalService.getCategoryIds(
@@ -133,7 +131,8 @@ public class CPConfigurationEntryModelDocumentContributor
 					Field.NAME,
 					cpDefinition.getName(
 						_localization.getDefaultLanguageId(
-							cpDefinition.getName())));
+							cpDefinition.getName())),
+					true);
 
 				List<String> languageIds =
 					_cpDefinitionLocalService.
@@ -143,7 +142,7 @@ public class CPConfigurationEntryModelDocumentContributor
 				for (String languageId : languageIds) {
 					document.addKeyword(
 						_localization.getLocalizedName(Field.NAME, languageId),
-						cpDefinition.getName(languageId));
+						cpDefinition.getName(languageId), true);
 				}
 			}
 

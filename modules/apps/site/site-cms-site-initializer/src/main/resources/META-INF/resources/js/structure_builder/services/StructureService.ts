@@ -3,75 +3,117 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {State} from '../contexts/StateContext';
+import ApiHelper from '../../common/services/ApiHelper';
+import {Structure} from '../types/Structure';
+import buildGroupObjectDefinitions from '../utils/buildGroupObjectDefinitions';
 import buildObjectDefinition from '../utils/buildObjectDefinition';
-import {Field} from '../utils/field';
 import getRandomId from '../utils/getRandomId';
-import ApiHelper from './ApiHelper';
 
 async function createStructure({
+	children,
 	erc = getRandomId(),
-	fields,
 	label,
 	name,
+	spaces,
+	status,
 }: {
-	erc?: State['erc'];
-	fields: Field[];
-	label: State['label'];
-	name?: State['name'];
+	children: Structure['children'];
+	erc?: Structure['erc'];
+	label: Structure['label'];
+	name: Structure['name'];
+	spaces: Structure['spaces'];
+	status: Structure['status'];
 }) {
-	const objectDefinition = buildObjectDefinition({
-		erc,
-		fields,
-		label,
-		name,
-	});
 
-	return await ApiHelper.post(
-		'/o/object-admin/v1.0/object-definitions',
-		objectDefinition
-	);
-}
+	// Publish object definitions for repeatable groups
 
-async function publishStructure({id}: {id: State['id']}) {
-	if (!id) {
-		return;
+	const objectDefinitions = buildGroupObjectDefinitions({children});
+
+	for (const objectDefinition of objectDefinitions) {
+		const {error} = await ApiHelper.put(
+			`/o/object-admin/v1.0/object-definitions/by-external-reference-code/${objectDefinition.externalReferenceCode}`,
+			objectDefinition
+		);
+
+		if (error) {
+			return {
+				error: Liferay.Language.get(
+					'an-unexpected-error-occurred-while-saving-or-publishing-the-structure'
+				),
+			};
+		}
 	}
 
-	return await ApiHelper.post(
-		`/o/object-admin/v1.0/object-definitions/${id}/publish`
+	// Publish the main object definition
+
+	const mainObjectDefinition = buildObjectDefinition({
+		children,
+		erc,
+		label,
+		name,
+		spaces,
+		status,
+	});
+
+	return await ApiHelper.post<{id: number}>(
+		'/o/object-admin/v1.0/object-definitions',
+		mainObjectDefinition
 	);
 }
 
 async function updateStructure({
+	children,
 	erc,
-	fields,
-	id,
 	label,
 	name,
+	spaces,
+	status,
 }: {
-	erc: State['erc'];
-	fields: Field[];
-	id: State['id'];
-	label: State['label'];
-	name: State['name'];
+	children: Structure['children'];
+	erc: Structure['erc'];
+	label: Structure['label'];
+	name: Structure['name'];
+	spaces: Structure['spaces'];
+	status: Structure['status'];
 }) {
-	const objectDefinition = buildObjectDefinition({
+
+	// Publish object definitions for repeatable groups
+
+	const objectDefinitions = buildGroupObjectDefinitions({children});
+
+	for (const objectDefinition of objectDefinitions) {
+		const {error} = await ApiHelper.put(
+			`/o/object-admin/v1.0/object-definitions/by-external-reference-code/${objectDefinition.externalReferenceCode}`,
+			objectDefinition
+		);
+
+		if (error) {
+			return {
+				error: Liferay.Language.get(
+					'an-unexpected-error-occurred-while-saving-or-publishing-the-structure'
+				),
+			};
+		}
+	}
+
+	// Publish the main object definition
+
+	const mainObjectDefinition = buildObjectDefinition({
+		children,
 		erc,
-		fields,
-		id,
 		label,
 		name,
+		spaces,
+		status,
 	});
 
 	return await ApiHelper.put(
-		`/o/object-admin/v1.0/object-definitions/${id}`,
-		objectDefinition
+		`/o/object-admin/v1.0/object-definitions/by-external-reference-code/${erc}`,
+		mainObjectDefinition
 	);
 }
 
 export default {
 	createStructure,
-	publishStructure,
 	updateStructure,
 };

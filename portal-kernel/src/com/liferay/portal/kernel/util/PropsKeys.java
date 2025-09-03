@@ -124,6 +124,9 @@ public interface PropsKeys {
 	public static final String ANALYTICS_CLOUD_CLIENT_JS_VERSION =
 		"analytics.cloud.client.js.version";
 
+	public static final String ANALYTICS_CLOUD_CONFIGURATION_DELETE_ON_STARTUP =
+		"analytics.cloud.configuration.delete.on.startup";
+
 	public static final String ANALYTICS_CLOUD_DOMAIN_ALLOWED =
 		"analytics.cloud.domain.allowed";
 
@@ -881,10 +884,6 @@ public interface PropsKeys {
 	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH =
 		"dl.file.entry.preview.video.width";
 
-	public static final String
-		DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES =
-			"dl.file.entry.raw.metadata.processor.excluded.mime.types";
-
 	public static final String DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT =
 		"dl.file.entry.thumbnail.custom1.max.height";
 
@@ -1256,6 +1255,9 @@ public interface PropsKeys {
 	public static final String JDBC_DEFAULT_URL = "jdbc.default.url";
 
 	public static final String JDBC_DEFAULT_USERNAME = "jdbc.default.username";
+
+	public static final String JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT =
+		"jdbc.read.data.source.unavailable.timeout";
 
 	public static final String JNDI_ENVIRONMENT = "jndi.environment.";
 
@@ -2729,6 +2731,20 @@ public interface PropsKeys {
 
 	public static final String UPGRADE_DATABASE_AUTO_RUN =
 		"upgrade.database.auto.run";
+
+	public static final String UPGRADE_DATABASE_DL_STORAGE_CHECK_DISABLED =
+		"upgrade.database.dl.storage.check.disabled";
+
+	public static final String
+		UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_BLACKLIST =
+			"upgrade.database.preupgrade.data.cleanup.blacklist";
+
+	public static final String
+		UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_ENABLED =
+			"upgrade.database.preupgrade.data.cleanup.enabled";
+
+	public static final String UPGRADE_DATABASE_PREUPGRADE_VERIFY_ENABLED =
+		"upgrade.database.preupgrade.verify.enabled";
 
 	public static final String UPGRADE_DATABASE_TRANSACTIONS_DISABLED =
 		"upgrade.database.transactions.disabled";

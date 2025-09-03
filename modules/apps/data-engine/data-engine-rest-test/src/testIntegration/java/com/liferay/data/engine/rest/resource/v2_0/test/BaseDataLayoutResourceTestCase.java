@@ -19,6 +19,9 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataLayoutResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataLayoutSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseDataLayoutResourceTestCase {
 			testCompany.getCompanyId());
 
 		dataLayoutResource = DataLayoutResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -223,18 +236,155 @@ public abstract class BaseDataLayoutResourceTestCase {
 					dataLayout)));
 	}
 
+	protected DataLayout testDeleteDataDefinitionDataLayout_addDataLayout()
+		throws Exception {
+
+		return testPostDataDefinitionDataLayout_addDataLayout(
+			randomDataLayout());
+	}
+
 	protected Long testDeleteDataDefinitionDataLayout_getDataDefinitionId(
 			DataLayout dataLayout)
 		throws Exception {
 
-		return dataLayout.getDataDefinitionId();
-	}
-
-	protected DataLayout testDeleteDataDefinitionDataLayout_addDataLayout()
-		throws Exception {
-
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteDataLayout() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataLayout dataLayout = testDeleteDataLayout_addDataLayout();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataLayoutResource.deleteDataLayoutHttpResponse(
+				dataLayout.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			dataLayoutResource.getDataLayoutHttpResponse(dataLayout.getId()));
+		assertHttpResponseStatusCode(
+			404, dataLayoutResource.getDataLayoutHttpResponse(0L));
+	}
+
+	protected DataLayout testDeleteDataLayout_addDataLayout() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDataLayout() throws Exception {
+
+		// No namespace
+
+		DataLayout dataLayout1 = testGraphQLDeleteDataLayout_addDataLayout();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDataLayout",
+						new HashMap<String, Object>() {
+							{
+								put("dataLayoutId", dataLayout1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDataLayout"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataLayout",
+					new HashMap<String, Object>() {
+						{
+							put("dataLayoutId", dataLayout1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace dataEngine_v2_0
+
+		DataLayout dataLayout2 = testGraphQLDeleteDataLayout_addDataLayout();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"deleteDataLayout",
+							new HashMap<String, Object>() {
+								{
+									put("dataLayoutId", dataLayout2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/dataEngine_v2_0",
+				"Object/deleteDataLayout"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataEngine_v2_0",
+					new GraphQLField(
+						"dataLayout",
+						new HashMap<String, Object>() {
+							{
+								put("dataLayoutId", dataLayout2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected DataLayout testGraphQLDeleteDataLayout_addDataLayout()
+		throws Exception {
+
+		return testGraphQLDataLayout_addDataLayout();
+	}
+
+	@Test
+	public void testDeleteDataLayoutBatch() throws Exception {
+		DataLayout dataLayout1 = testDeleteDataLayoutBatch_addDataLayout();
+
+		testDeleteDataLayoutBatch_deleteDataLayout(
+			202, null, dataLayout1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataLayoutResource.getDataLayoutHttpResponse(dataLayout1.getId()));
+	}
+
+	protected DataLayout testDeleteDataLayoutBatch_addDataLayout()
+		throws Exception {
+
+		return testDeleteDataLayout_addDataLayout();
+	}
+
+	protected void testDeleteDataLayoutBatch_deleteDataLayout(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			dataLayoutResource.deleteDataLayoutBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -246,8 +396,7 @@ public abstract class BaseDataLayoutResourceTestCase {
 
 		Page<DataLayout> page =
 			dataLayoutResource.getDataDefinitionDataLayoutsPage(
-				dataDefinitionId, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
+				dataDefinitionId, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -322,11 +471,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataLayoutsPage_getDataDefinitionId();
 
-		Page<DataLayout> dataLayoutPage =
+		Page<DataLayout> dataLayoutsPage =
 			dataLayoutResource.getDataDefinitionDataLayoutsPage(
 				dataDefinitionId, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(dataLayoutPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(dataLayoutsPage.getTotalCount());
 
 		DataLayout dataLayout1 =
 			testGetDataDefinitionDataLayoutsPage_addDataLayout(
@@ -576,124 +725,6 @@ public abstract class BaseDataLayoutResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostDataDefinitionDataLayout() throws Exception {
-		DataLayout randomDataLayout = randomDataLayout();
-
-		DataLayout postDataLayout =
-			testPostDataDefinitionDataLayout_addDataLayout(randomDataLayout);
-
-		assertEquals(randomDataLayout, postDataLayout);
-		assertValid(postDataLayout);
-	}
-
-	protected DataLayout testPostDataDefinitionDataLayout_addDataLayout(
-			DataLayout dataLayout)
-		throws Exception {
-
-		return dataLayoutResource.postDataDefinitionDataLayout(
-			testGetDataDefinitionDataLayoutsPage_getDataDefinitionId(),
-			dataLayout);
-	}
-
-	@Test
-	public void testDeleteDataLayout() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataLayout dataLayout = testDeleteDataLayout_addDataLayout();
-
-		assertHttpResponseStatusCode(
-			204,
-			dataLayoutResource.deleteDataLayoutHttpResponse(
-				dataLayout.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			dataLayoutResource.getDataLayoutHttpResponse(dataLayout.getId()));
-
-		assertHttpResponseStatusCode(
-			404, dataLayoutResource.getDataLayoutHttpResponse(0L));
-	}
-
-	protected DataLayout testDeleteDataLayout_addDataLayout() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteDataLayout() throws Exception {
-
-		// No namespace
-
-		DataLayout dataLayout1 = testGraphQLDeleteDataLayout_addDataLayout();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDataLayout",
-						new HashMap<String, Object>() {
-							{
-								put("dataLayoutId", dataLayout1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDataLayout"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataLayout",
-					new HashMap<String, Object>() {
-						{
-							put("dataLayoutId", dataLayout1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace dataEngine_v2_0
-
-		DataLayout dataLayout2 = testGraphQLDeleteDataLayout_addDataLayout();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"deleteDataLayout",
-							new HashMap<String, Object>() {
-								{
-									put("dataLayoutId", dataLayout2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/dataEngine_v2_0",
-				"Object/deleteDataLayout"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataEngine_v2_0",
-					new GraphQLField(
-						"dataLayout",
-						new HashMap<String, Object>() {
-							{
-								put("dataLayoutId", dataLayout2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected DataLayout testGraphQLDeleteDataLayout_addDataLayout()
-		throws Exception {
-
-		return testGraphQLDataLayout_addDataLayout();
 	}
 
 	@Test
@@ -993,35 +1024,6 @@ public abstract class BaseDataLayoutResourceTestCase {
 	}
 
 	@Test
-	public void testPutDataLayout() throws Exception {
-		DataLayout postDataLayout = testPutDataLayout_addDataLayout();
-
-		DataLayout randomDataLayout = randomDataLayout();
-
-		DataLayout putDataLayout = dataLayoutResource.putDataLayout(
-			postDataLayout.getId(), randomDataLayout);
-
-		assertEquals(randomDataLayout, putDataLayout);
-		assertValid(putDataLayout);
-
-		DataLayout getDataLayout = dataLayoutResource.getDataLayout(
-			putDataLayout.getId());
-
-		assertEquals(randomDataLayout, getDataLayout);
-		assertValid(getDataLayout);
-	}
-
-	protected DataLayout testPutDataLayout_addDataLayout() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostDataLayoutContext() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetSiteDataLayoutByContentTypeByDataLayoutKey()
 		throws Exception {
 
@@ -1030,20 +1032,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 
 		DataLayout getDataLayout =
 			dataLayoutResource.getSiteDataLayoutByContentTypeByDataLayoutKey(
-				testGetSiteDataLayoutByContentTypeByDataLayoutKey_getSiteId(
-					postDataLayout),
-				postDataLayout.getContentType(),
+				postDataLayout.getSiteId(), postDataLayout.getContentType(),
 				postDataLayout.getDataLayoutKey());
 
 		assertEquals(postDataLayout, getDataLayout);
 		assertValid(getDataLayout);
-	}
-
-	protected Long testGetSiteDataLayoutByContentTypeByDataLayoutKey_getSiteId(
-			DataLayout dataLayout)
-		throws Exception {
-
-		return dataLayout.getSiteId();
 	}
 
 	protected DataLayout
@@ -1075,15 +1068,12 @@ public abstract class BaseDataLayoutResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" +
-												testGraphQLGetSiteDataLayoutByContentTypeByDataLayoutKey_getSiteId(
-													dataLayout) + "\"");
-
+											"\"" + dataLayout.getSiteId() +
+												"\"");
 										put(
 											"contentType",
 											"\"" + dataLayout.getContentType() +
 												"\"");
-
 										put(
 											"dataLayoutKey",
 											"\"" +
@@ -1111,17 +1101,14 @@ public abstract class BaseDataLayoutResourceTestCase {
 										{
 											put(
 												"siteKey",
-												"\"" +
-													testGraphQLGetSiteDataLayoutByContentTypeByDataLayoutKey_getSiteId(
-														dataLayout) + "\"");
-
+												"\"" + dataLayout.getSiteId() +
+													"\"");
 											put(
 												"contentType",
 												"\"" +
 													dataLayout.
 														getContentType() +
 															"\"");
-
 											put(
 												"dataLayoutKey",
 												"\"" +
@@ -1133,14 +1120,6 @@ public abstract class BaseDataLayoutResourceTestCase {
 									getGraphQLFields()))),
 						"JSONObject/data", "JSONObject/dataEngine_v2_0",
 						"Object/dataLayoutByContentTypeByDataLayoutKey"))));
-	}
-
-	protected Long
-			testGraphQLGetSiteDataLayoutByContentTypeByDataLayoutKey_getSiteId(
-				DataLayout dataLayout)
-		throws Exception {
-
-		return dataLayout.getSiteId();
 	}
 
 	@Test
@@ -1205,6 +1184,109 @@ public abstract class BaseDataLayoutResourceTestCase {
 		throws Exception {
 
 		return testGraphQLDataLayout_addDataLayout();
+	}
+
+	@Test
+	public void testPostDataDefinitionDataLayout() throws Exception {
+		DataLayout randomDataLayout = randomDataLayout();
+
+		DataLayout postDataLayout =
+			testPostDataDefinitionDataLayout_addDataLayout(randomDataLayout);
+
+		assertEquals(randomDataLayout, postDataLayout);
+		assertValid(postDataLayout);
+	}
+
+	protected DataLayout testPostDataDefinitionDataLayout_addDataLayout(
+			DataLayout dataLayout)
+		throws Exception {
+
+		return dataLayoutResource.postDataDefinitionDataLayout(
+			testGetDataDefinitionDataLayoutsPage_getDataDefinitionId(),
+			dataLayout);
+	}
+
+	@Test
+	public void testPostDataLayoutContext() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPutDataLayout() throws Exception {
+		DataLayout postDataLayout = testPutDataLayout_addDataLayout();
+
+		DataLayout randomDataLayout = randomDataLayout();
+
+		DataLayout putDataLayout = dataLayoutResource.putDataLayout(
+			postDataLayout.getId(), randomDataLayout);
+
+		assertEquals(randomDataLayout, putDataLayout);
+		assertValid(putDataLayout);
+
+		DataLayout getDataLayout = dataLayoutResource.getDataLayout(
+			putDataLayout.getId());
+
+		assertEquals(randomDataLayout, getDataLayout);
+		assertValid(getDataLayout);
+	}
+
+	protected DataLayout testPutDataLayout_addDataLayout() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DataLayout dataLayout1 =
+			testBatchEngineDeleteImportTask_addDataLayout();
+
+		testBatchEngineDeleteImportTask_deleteDataLayout(
+			200, null, dataLayout1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataLayoutResource.getDataLayoutHttpResponse(dataLayout1.getId()));
+	}
+
+	protected DataLayout testBatchEngineDeleteImportTask_addDataLayout()
+		throws Exception {
+
+		return testDeleteDataLayout_addDataLayout();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDataLayout(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.data.engine.rest.dto.v2_0.DataLayout", null, null,
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DataLayout testGraphQLDataLayout_addDataLayout()
@@ -2067,7 +2149,30 @@ public abstract class BaseDataLayoutResourceTestCase {
 		return randomDataLayout();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DataLayoutResource dataLayoutResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

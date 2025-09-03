@@ -33,9 +33,9 @@ import com.liferay.portal.model.impl.CompanyImpl;
 import com.liferay.portal.model.impl.LayoutImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -77,17 +77,11 @@ public class FriendlyURLSeparatorCompanyConfigurationDisplayContextTest {
 		_friendlyURLSeparatorConfigurationManager = Mockito.mock(
 			FriendlyURLSeparatorConfigurationManager.class);
 
-		Mockito.when(
-			_friendlyURLSeparatorConfigurationManager.
-				getFriendlyURLSeparatorsJSON(Mockito.anyLong())
-		).thenReturn(
-			StringPool.BLANK
-		);
-
 		_jsonFactory = Mockito.mock(JSONFactory.class);
 
 		Mockito.when(
-			_jsonFactory.createJSONObject(Mockito.anyString())
+			_friendlyURLSeparatorConfigurationManager.
+				getFriendlyURLSeparatorsJSONObject(Mockito.anyLong())
 		).thenReturn(
 			JSONUtil.put(
 				_SIMPLE_CLASS_NAME_BLOGS_ENTRY, "blog-test1"

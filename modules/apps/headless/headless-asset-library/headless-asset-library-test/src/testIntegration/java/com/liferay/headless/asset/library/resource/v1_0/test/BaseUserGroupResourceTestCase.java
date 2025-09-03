@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.asset.library.client.dto.v1_0.UserGroup;
@@ -21,7 +22,11 @@ import com.liferay.headless.asset.library.client.pagination.Page;
 import com.liferay.headless.asset.library.client.pagination.Pagination;
 import com.liferay.headless.asset.library.client.resource.v1_0.UserGroupResource;
 import com.liferay.headless.asset.library.client.serdes.v1_0.UserGroupSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,12 +47,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-import com.liferay.portal.vulcan.util.TransformUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
@@ -63,10 +70,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -102,16 +105,28 @@ public abstract class BaseUserGroupResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_userGroupResource.setContextCompany(testCompany);
 
@@ -119,6 +134,16 @@ public abstract class BaseUserGroupResourceTestCase {
 			testCompany.getCompanyId());
 
 		userGroupResource = UserGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -211,23 +236,20 @@ public abstract class BaseUserGroupResourceTestCase {
 			userGroupResource.
 				deleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCodeHttpResponse(
 					testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
-					testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getUserGroupExternalReferenceCode()));
-	}
+					userGroup.getExternalReferenceCode()));
 
-	protected String
-			testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getUserGroupExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.
+				getAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCodeHttpResponse(
+					testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
+					userGroup.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.
+				getAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCodeHttpResponse(
+					testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
+					"-"));
 	}
 
 	protected UserGroup
@@ -238,29 +260,77 @@ public abstract class BaseUserGroupResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testPostAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode()
+	protected String
+			testDeleteAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode()
 		throws Exception {
 
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAssetLibraryUserGroup() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup =
-			testPostAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup();
+		UserGroup userGroup = testDeleteAssetLibraryUserGroup_addUserGroup();
 
 		assertHttpResponseStatusCode(
 			204,
-			userGroupResource.
-				postAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCodeHttpResponse(
-					null, null));
+			userGroupResource.deleteAssetLibraryUserGroupHttpResponse(
+				testDeleteAssetLibraryUserGroup_getAssetLibraryId(),
+				userGroup.getId()));
 
 		assertHttpResponseStatusCode(
 			404,
+			userGroupResource.getAssetLibraryUserGroupHttpResponse(
+				testDeleteAssetLibraryUserGroup_getAssetLibraryId(),
+				userGroup.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getAssetLibraryUserGroupHttpResponse(
+				testDeleteAssetLibraryUserGroup_getAssetLibraryId(), 0L));
+	}
+
+	protected UserGroup testDeleteAssetLibraryUserGroup_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testDeleteAssetLibraryUserGroup_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode()
+		throws Exception {
+
+		UserGroup postUserGroup =
+			testGetAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup();
+
+		UserGroup getUserGroup =
 			userGroupResource.
-				postAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCodeHttpResponse(
-					null, null));
+				getAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode(
+					testGetAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
+					postUserGroup.getExternalReferenceCode());
+
+		assertEquals(postUserGroup, getUserGroup);
+		assertValid(getUserGroup);
 	}
 
 	protected UserGroup
-			testPostAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup()
+			testGetAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -279,8 +349,8 @@ public abstract class BaseUserGroupResourceTestCase {
 		Page<UserGroup> page =
 			userGroupResource.
 				getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-					externalReferenceCode, RandomTestUtil.randomString(), null,
-					null, Pagination.of(1, 10), null);
+					externalReferenceCode, null, null, Pagination.of(1, 10),
+					null);
 
 		long totalCount = page.getTotalCount();
 
@@ -293,7 +363,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			page =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						irrelevantExternalReferenceCode, null, null, null,
+						irrelevantExternalReferenceCode, null, null,
 						Pagination.of(1, (int)totalCount + 1), null);
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
@@ -317,8 +387,8 @@ public abstract class BaseUserGroupResourceTestCase {
 		page =
 			userGroupResource.
 				getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-					externalReferenceCode, null, null, null,
-					Pagination.of(1, 10), null);
+					externalReferenceCode, null, null, Pagination.of(1, 10),
+					null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -341,121 +411,18 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String externalReferenceCode =
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_getExternalReferenceCode();
-
-		UserGroup userGroup1 = randomUserGroup();
-
-		userGroup1 =
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_addUserGroup(
-				externalReferenceCode, userGroup1);
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page =
-				userGroupResource.
-					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null,
-						getFilterString(entityField, "between", userGroup1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilter(
-			"eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilter(
-			"contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilter(
-			"eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilter(
-			"startswith", EntityField.Type.STRING);
-	}
-
-	protected void
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithFilter(
-				String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String externalReferenceCode =
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_getExternalReferenceCode();
-
-		UserGroup userGroup1 =
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_addUserGroup(
-				externalReferenceCode, randomUserGroup());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup2 =
-			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_addUserGroup(
-				externalReferenceCode, randomUserGroup());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page =
-				userGroupResource.
-					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null,
-						getFilterString(entityField, operator, userGroup1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
 	public void testGetAssetLibraryByExternalReferenceCodeUserGroupsPageWithPagination()
 		throws Exception {
 
 		String externalReferenceCode =
 			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_getExternalReferenceCode();
 
-		Page<UserGroup> userGroupPage =
+		Page<UserGroup> userGroupsPage =
 			userGroupResource.
 				getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-					externalReferenceCode, null, null, null, null, null);
+					externalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(userGroupPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(userGroupsPage.getTotalCount());
 
 		UserGroup userGroup1 =
 			testGetAssetLibraryByExternalReferenceCodeUserGroupsPage_addUserGroup(
@@ -477,7 +444,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page1 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 							pageSizeLimit),
@@ -490,7 +457,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page2 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 							pageSizeLimit),
@@ -501,7 +468,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page3 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 							pageSizeLimit),
@@ -513,7 +480,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page1 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(1, totalCount + 2), null);
 
 			List<UserGroup> userGroups1 = (List<UserGroup>)page1.getItems();
@@ -524,7 +491,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page2 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(2, totalCount + 2), null);
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
@@ -536,7 +503,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> page3 =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(1, (int)totalCount + 3), null);
 
 			assertContains(userGroup1, (List<UserGroup>)page3.getItems());
@@ -671,13 +638,13 @@ public abstract class BaseUserGroupResourceTestCase {
 		Page<UserGroup> page =
 			userGroupResource.
 				getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-					externalReferenceCode, null, null, null, null, null);
+					externalReferenceCode, null, null, null, null);
 
 		for (EntityField entityField : entityFields) {
 			Page<UserGroup> ascPage =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
@@ -687,7 +654,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			Page<UserGroup> descPage =
 				userGroupResource.
 					getAssetLibraryByExternalReferenceCodeUserGroupsPage(
-						externalReferenceCode, null, null, null,
+						externalReferenceCode, null, null,
 						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
@@ -721,6 +688,32 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
+	public void testGetAssetLibraryUserGroup() throws Exception {
+		UserGroup postUserGroup = testGetAssetLibraryUserGroup_addUserGroup();
+
+		UserGroup getUserGroup = userGroupResource.getAssetLibraryUserGroup(
+			testGetAssetLibraryUserGroup_getAssetLibraryId(),
+			postUserGroup.getId());
+
+		assertEquals(postUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testGetAssetLibraryUserGroup_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAssetLibraryUserGroup_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetAssetLibraryUserGroupsPage() throws Exception {
 		Long assetLibraryId =
 			testGetAssetLibraryUserGroupsPage_getAssetLibraryId();
@@ -728,8 +721,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			testGetAssetLibraryUserGroupsPage_getIrrelevantAssetLibraryId();
 
 		Page<UserGroup> page = userGroupResource.getAssetLibraryUserGroupsPage(
-			assetLibraryId, RandomTestUtil.randomString(), null, null,
-			Pagination.of(1, 10), null);
+			assetLibraryId, null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -739,7 +731,7 @@ public abstract class BaseUserGroupResourceTestCase {
 					irrelevantAssetLibraryId, randomIrrelevantUserGroup());
 
 			page = userGroupResource.getAssetLibraryUserGroupsPage(
-				irrelevantAssetLibraryId, null, null, null,
+				irrelevantAssetLibraryId, null, null,
 				Pagination.of(1, (int)totalCount + 1), null);
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
@@ -759,7 +751,7 @@ public abstract class BaseUserGroupResourceTestCase {
 			assetLibraryId, randomUserGroup());
 
 		page = userGroupResource.getAssetLibraryUserGroupsPage(
-			assetLibraryId, null, null, null, Pagination.of(1, 10), null);
+			assetLibraryId, null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -782,114 +774,17 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testGetAssetLibraryUserGroupsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long assetLibraryId =
-			testGetAssetLibraryUserGroupsPage_getAssetLibraryId();
-
-		UserGroup userGroup1 = randomUserGroup();
-
-		userGroup1 = testGetAssetLibraryUserGroupsPage_addUserGroup(
-			assetLibraryId, userGroup1);
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page =
-				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null,
-					getFilterString(entityField, "between", userGroup1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAssetLibraryUserGroupsPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetAssetLibraryUserGroupsPageWithFilter(
-			"eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetAssetLibraryUserGroupsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetAssetLibraryUserGroupsPageWithFilter(
-			"contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAssetLibraryUserGroupsPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetAssetLibraryUserGroupsPageWithFilter(
-			"eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAssetLibraryUserGroupsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetAssetLibraryUserGroupsPageWithFilter(
-			"startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetAssetLibraryUserGroupsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long assetLibraryId =
-			testGetAssetLibraryUserGroupsPage_getAssetLibraryId();
-
-		UserGroup userGroup1 = testGetAssetLibraryUserGroupsPage_addUserGroup(
-			assetLibraryId, randomUserGroup());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup2 = testGetAssetLibraryUserGroupsPage_addUserGroup(
-			assetLibraryId, randomUserGroup());
-
-		for (EntityField entityField : entityFields) {
-			Page<UserGroup> page =
-				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null,
-					getFilterString(entityField, operator, userGroup1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(userGroup1),
-				(List<UserGroup>)page.getItems());
-		}
-	}
-
-	@Test
 	public void testGetAssetLibraryUserGroupsPageWithPagination()
 		throws Exception {
 
 		Long assetLibraryId =
 			testGetAssetLibraryUserGroupsPage_getAssetLibraryId();
 
-		Page<UserGroup> userGroupPage =
+		Page<UserGroup> userGroupsPage =
 			userGroupResource.getAssetLibraryUserGroupsPage(
-				assetLibraryId, null, null, null, null, null);
+				assetLibraryId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(userGroupPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(userGroupsPage.getTotalCount());
 
 		UserGroup userGroup1 = testGetAssetLibraryUserGroupsPage_addUserGroup(
 			assetLibraryId, randomUserGroup());
@@ -907,7 +802,7 @@ public abstract class BaseUserGroupResourceTestCase {
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<UserGroup> page1 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -919,7 +814,7 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			Page<UserGroup> page2 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -929,7 +824,7 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			Page<UserGroup> page3 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -940,7 +835,7 @@ public abstract class BaseUserGroupResourceTestCase {
 		else {
 			Page<UserGroup> page1 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(1, totalCount + 2), null);
 
 			List<UserGroup> userGroups1 = (List<UserGroup>)page1.getItems();
@@ -950,7 +845,7 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			Page<UserGroup> page2 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(2, totalCount + 2), null);
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
@@ -961,7 +856,7 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			Page<UserGroup> page3 =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(1, (int)totalCount + 3), null);
 
 			assertContains(userGroup1, (List<UserGroup>)page3.getItems());
@@ -1091,12 +986,12 @@ public abstract class BaseUserGroupResourceTestCase {
 			assetLibraryId, userGroup2);
 
 		Page<UserGroup> page = userGroupResource.getAssetLibraryUserGroupsPage(
-			assetLibraryId, null, null, null, null, null);
+			assetLibraryId, null, null, null, null);
 
 		for (EntityField entityField : entityFields) {
 			Page<UserGroup> ascPage =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
@@ -1105,7 +1000,7 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			Page<UserGroup> descPage =
 				userGroupResource.getAssetLibraryUserGroupsPage(
-					assetLibraryId, null, null, null,
+					assetLibraryId, null, null,
 					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
@@ -1132,29 +1027,47 @@ public abstract class BaseUserGroupResourceTestCase {
 			testGetAssetLibraryUserGroupsPage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
+		return irrelevantDepotEntry.getDepotEntryId();
 	}
 
 	@Test
-	public void testDeleteAssetLibraryUserGroup() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testDeleteAssetLibraryUserGroup_addUserGroup();
+	public void testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode()
+		throws Exception {
 
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.deleteAssetLibraryUserGroupHttpResponse(
-				testDeleteAssetLibraryUserGroup_getAssetLibraryId(),
-				userGroup.getId()));
+		UserGroup postUserGroup =
+			testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup();
+
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup putUserGroup =
+			userGroupResource.
+				putAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode(
+					testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
+					postUserGroup.getExternalReferenceCode());
+
+		assertEquals(randomUserGroup, putUserGroup);
+		assertValid(putUserGroup);
+
+		UserGroup getUserGroup =
+			userGroupResource.
+				getAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode(
+					testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode(),
+					putUserGroup.getExternalReferenceCode());
+
+		assertEquals(randomUserGroup, getUserGroup);
+		assertValid(getUserGroup);
 	}
 
-	protected Long testDeleteAssetLibraryUserGroup_getAssetLibraryId()
+	protected UserGroup
+			testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_addUserGroup()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected UserGroup testDeleteAssetLibraryUserGroup_addUserGroup()
+	protected String
+			testPutAssetLibraryByExternalReferenceCodeAssetLibraryExternalReferenceCodeUserGroupByExternalReferenceCodeUserGroupExternalReferenceCode_getAssetLibraryExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1162,32 +1075,99 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testPostAssetLibraryUserGroup() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testPostAssetLibraryUserGroup_addUserGroup();
+	public void testPutAssetLibraryUserGroup() throws Exception {
+		UserGroup postUserGroup = testPutAssetLibraryUserGroup_addUserGroup();
 
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.postAssetLibraryUserGroupHttpResponse(
-				testDepotEntry.getDepotEntryId(), userGroup.getId()));
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup putUserGroup = userGroupResource.putAssetLibraryUserGroup(
+			testPutAssetLibraryUserGroup_getAssetLibraryId(),
+			postUserGroup.getId());
+
+		assertEquals(randomUserGroup, putUserGroup);
+		assertValid(putUserGroup);
+
+		UserGroup getUserGroup = userGroupResource.getAssetLibraryUserGroup(
+			testPutAssetLibraryUserGroup_getAssetLibraryId(),
+			putUserGroup.getId());
+
+		assertEquals(randomUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testPutAssetLibraryUserGroup_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testPutAssetLibraryUserGroup_getAssetLibraryId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		UserGroup userGroup1 =
+			testBatchEngineDeleteImportTask_addAssetLibraryUserGroup();
+
+		testBatchEngineDeleteImportTask_deleteUserGroup(
+			200, userGroup1.getExternalReferenceCode(),
+			"assetLibraryExternalReferenceCode",
+			testDepotEntryGroup.getExternalReferenceCode());
 
 		assertHttpResponseStatusCode(
 			404,
-			userGroupResource.postAssetLibraryUserGroupHttpResponse(
-				testDepotEntry.getDepotEntryId(), 0L));
+			userGroupResource.getAssetLibraryUserGroupHttpResponse(
+				testBatchEngineDeleteImportTask_getAssetLibraryId(),
+				userGroup1.getId()));
 	}
 
-	protected UserGroup testPostAssetLibraryUserGroup_addUserGroup()
+	protected UserGroup
+			testBatchEngineDeleteImportTask_addAssetLibraryUserGroup()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testDeleteAssetLibraryUserGroup_addUserGroup();
 	}
 
-	@Rule
-	public SearchTestRule searchTestRule = new SearchTestRule();
+	protected void testBatchEngineDeleteImportTask_deleteUserGroup(
+			int expectedStatusCode, String externalReferenceCode,
+			String... parameters)
+		throws Exception {
 
-	protected UserGroup testGraphQLUserGroup_addUserGroup() throws Exception {
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.asset.library.dto.v1_0.UserGroup", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	protected Long testBatchEngineDeleteImportTask_getAssetLibraryId()
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -1287,6 +1267,16 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			if (Objects.equals("name_i18n", additionalAssertFieldName)) {
 				if (userGroup.getName_i18n() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserAccounts", additionalAssertFieldName)) {
+
+				if (userGroup.getNumberOfUserAccounts() == null) {
 					valid = false;
 				}
 
@@ -1455,6 +1445,19 @@ public abstract class BaseUserGroupResourceTestCase {
 				if (!equals(
 						(Map)userGroup1.getName_i18n(),
 						(Map)userGroup2.getName_i18n())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserAccounts", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						userGroup1.getNumberOfUserAccounts(),
+						userGroup2.getNumberOfUserAccounts())) {
 
 					return false;
 				}
@@ -1681,6 +1684,12 @@ public abstract class BaseUserGroupResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("numberOfUserAccounts")) {
+			sb.append(String.valueOf(userGroup.getNumberOfUserAccounts()));
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("roles")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1735,6 +1744,7 @@ public abstract class BaseUserGroupResourceTestCase {
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				numberOfUserAccounts = RandomTestUtil.randomInt();
 			}
 		};
 	}
@@ -1749,10 +1759,36 @@ public abstract class BaseUserGroupResourceTestCase {
 		return randomUserGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected UserGroupResource userGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {

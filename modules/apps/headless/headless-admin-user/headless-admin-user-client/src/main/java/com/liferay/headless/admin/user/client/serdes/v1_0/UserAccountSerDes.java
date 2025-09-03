@@ -7,7 +7,6 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.AssetLibraryBrief;
-import com.liferay.headless.admin.user.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.user.client.dto.v1_0.OrganizationBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.RoleBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.SiteBrief;
@@ -15,6 +14,8 @@ import com.liferay.headless.admin.user.client.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserGroupBrief;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -24,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -190,7 +189,7 @@ public class UserAccountSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < userAccount.getCustomFields().length; i++) {
-				sb.append(String.valueOf(userAccount.getCustomFields()[i]));
+				sb.append(userAccount.getCustomFields()[i]);
 
 				if ((i + 1) < userAccount.getCustomFields().length) {
 					sb.append(", ");
@@ -1248,12 +1247,16 @@ public class UserAccountSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.admin.user.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.admin.user.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.admin.user.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					userAccount.setCustomFields(customFieldsArray);

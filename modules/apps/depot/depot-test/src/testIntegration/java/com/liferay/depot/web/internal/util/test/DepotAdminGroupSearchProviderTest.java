@@ -6,6 +6,7 @@
 package com.liferay.depot.web.internal.util.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
@@ -33,12 +34,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.site.search.GroupSearch;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -140,6 +141,7 @@ public class DepotAdminGroupSearchProviderTest {
 			Collections.singletonMap(LocaleUtil.getDefault(), depotEntryName),
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
 		_depotEntries.add(depotEntry);

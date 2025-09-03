@@ -82,6 +82,8 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletPreferencesImpl;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.File;
 import java.io.Serializable;
 
@@ -91,8 +93,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -356,7 +356,7 @@ public class SitesImpl implements Sites {
 	@Override
 	public boolean isLayoutModifiedSinceLastMerge(Layout layout) {
 		if ((layout == null) ||
-			Validator.isNull(layout.getSourcePrototypeLayoutUuid()) ||
+			Validator.isNull(layout.getLayoutSetPrototypeLayoutERC()) ||
 			layout.isLayoutPrototypeLinkActive() ||
 			(layout instanceof VirtualLayout) || !layout.isLayoutUpdateable()) {
 
@@ -474,10 +474,10 @@ public class SitesImpl implements Sites {
 	public void mergeLayoutPrototypeLayout(Group group, Layout layout)
 		throws Exception {
 
-		String sourcePrototypeLayoutUuid =
-			layout.getSourcePrototypeLayoutUuid();
+		String layoutSetPrototypeLayoutERC =
+			layout.getLayoutSetPrototypeLayoutERC();
 
-		if (Validator.isNull(sourcePrototypeLayoutUuid)) {
+		if (Validator.isNull(layoutSetPrototypeLayoutERC)) {
 			doMergeLayoutPrototypeLayout(group, layout);
 
 			return;
@@ -493,9 +493,9 @@ public class SitesImpl implements Sites {
 					layout.getCompanyId(), layoutSetPrototypeId);
 
 			Layout sourcePrototypeLayout =
-				_layoutLocalService.fetchLayoutByUuidAndGroupId(
-					sourcePrototypeLayoutUuid,
-					layoutSetPrototypeGroup.getGroupId(), true);
+				_layoutLocalService.fetchLayoutByExternalReferenceCode(
+					layoutSetPrototypeLayoutERC,
+					layoutSetPrototypeGroup.getGroupId());
 
 			if (sourcePrototypeLayout != null) {
 				doMergeLayoutPrototypeLayout(
@@ -851,6 +851,9 @@ public class SitesImpl implements Sites {
 				PortletDataHandlerKeys.DATA_STRATEGY,
 				new String[] {PortletDataHandlerKeys.DATA_STRATEGY_MIRROR});
 			parameterMap.put(
+				PortletDataHandlerKeys.FAVICON,
+				new String[] {Boolean.TRUE.toString()});
+			parameterMap.put(
 				PortletDataHandlerKeys.LOGO,
 				new String[] {Boolean.TRUE.toString()});
 			parameterMap.put(
@@ -867,6 +870,9 @@ public class SitesImpl implements Sites {
 			parameterMap.put(
 				PortletDataHandlerKeys.DELETIONS,
 				new String[] {Boolean.TRUE.toString()});
+			parameterMap.put(
+				PortletDataHandlerKeys.FAVICON,
+				new String[] {Boolean.FALSE.toString()});
 
 			if (PropsValues.LAYOUT_SET_PROTOTYPE_PROPAGATE_LOGO) {
 				parameterMap.put(

@@ -11,10 +11,10 @@ import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSampleFDSNames;
 import com.liferay.portal.kernel.language.Language;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,7 +40,10 @@ public class CustomInternalViewFDSItemsActions implements FDSItemsActions {
 			new FDSActionDropdownItem(
 				null, null, null, "#", "document", "openDocument",
 				_language.get(httpServletRequest, "document"), null, null, null,
-				null, null, "link", null, "item"));
+				null, null, "link", null, "item"),
+			new FDSActionDropdownItem(
+				null, null, null, "#", "cog", "turnGreen", "Turn Green", null,
+				null, null, null, null, "link", null, "item"));
 	}
 
 	@Override

@@ -9,26 +9,26 @@ import './BusinessEvents.css';
 
 import Button from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useModal} from '@clayui/modal';
+import {useCallback, useMemo, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ButtonDropDown} from '~/components';
-import {IFilterOption} from '~/components/Filter/Filter';
 import Table, {IRow} from '~/components/Table';
 import TableHeader from '~/components/Table/TableHeader';
-import {useCustomerPortal} from '~/features/project/context';
-import {getBusinessEvents} from '~/services/liferay/api';
+import {useAppPropertiesContext} from '~/contexts/AppPropertiesContext';
+import {useAppContext} from '~/features/project/context';
+import {Liferay} from '~/services/liferay';
 import {getFormattedDate} from '~/utils/getFormattedDate';
 import {getFormattedTime} from '~/utils/getFormattedTime';
+import getKebabCase from '~/utils/getKebabCase';
 import {IBusinessEvent} from '~/utils/types';
 
+import ManageEventModal from './components/ManageEventModal';
+import useFilters from './hooks/useFilters';
+import useGetBusinessEvents from './hooks/useGetBusinessEvents';
 import useHasAllEventsPermissions from './hooks/useHasAllEventsPermissions';
-import {INITIAL_FILTER} from './utils/constants/initialFilter';
-
-export interface IState {
-	availableFilters?: IFilterOption[];
-	searchTerm?: string;
-	selectedFilters?: IFilterOption[];
-}
+import useIsSaasOnly from './utils/useIsSaasOnly';
 
 const columns = [
 	{
@@ -59,85 +59,114 @@ const columns = [
 ];
 
 const BusinessEvents = () => {
-	const [{project}] = useCustomerPortal();
+	const [{project, subscriptionGroups}] = useAppContext();
 
-	const [filters, setFilters] = useState<IState>({
-		availableFilters: INITIAL_FILTER,
-		searchTerm: '',
-		selectedFilters: [],
-	});
+	const {filterQuery, filters, handleFilterChange, handleSearchChange} =
+		useFilters(project);
 
-	const [businessEvents, setBusinessEvents] = useState<IBusinessEvent[]>([]);
+	const {businessEvents, fetchBusinessEvents, loading} =
+		useGetBusinessEvents(filterQuery);
+	const [modalType, setModalType] = useState('');
+
+	const {client} = useAppPropertiesContext();
 
 	const {hasAllEventsPermissions} = useHasAllEventsPermissions();
 
+	const {isSaasOnly} = useIsSaasOnly(subscriptionGroups);
+
 	const navigate = useNavigate();
 
-	const generateFilterQuery = useCallback((filters: IState) => {
-		const queryParams: string[] = [];
+	const [selectedBusinessEvent, setSelectedBusinessEvent] = useState<
+		IBusinessEvent | undefined
+	>(undefined);
 
-		if (filters.selectedFilters && !!filters.selectedFilters.length) {
-			filters.selectedFilters.forEach((filter) => {
-				if (filter.values && !!filter.values.length) {
-					const filterQuery = `(${filter.values
-						.map(
-							(value: {key: string; name: string}) =>
-								`${filter.key} eq '${value.key}'`
-						)
-						.join(' or ')})`;
-					queryParams.push(filterQuery);
-				}
-			});
-		}
-
-		if (filters.searchTerm?.trim()) {
-			queryParams.push(`(contains(name, '${filters.searchTerm}'))`);
-		}
-
-		return queryParams.length ? `filter=${queryParams.join(' and ')}` : '';
-	}, []);
-
-	const filterQuery = useMemo(
-		() => generateFilterQuery(filters),
-		[filters, generateFilterQuery]
-	);
-
-	const handleFilterChange = useCallback(
-		(newFilterOptions: IFilterOption[]) => {
-			setFilters((prevFilters) => ({
-				...prevFilters,
-				selectedFilters: newFilterOptions,
-			}));
+	const {observer, onOpenChange, open} = useModal({
+		onClose: () => {
+			setSelectedBusinessEvent(undefined);
 		},
-		[]
-	);
+	});
 
-	const handleSearchChange = useCallback((searchTerm: string) => {
-		setFilters((prevFilters) => ({
-			...prevFilters,
-			searchTerm,
-		}));
-	}, []);
-
-	useEffect(() => {
-		const fetchBusinessEvents = async () => {
-			try {
-				const businessEventsResponse =
-					await getBusinessEvents(filterQuery);
-
-				setBusinessEvents(businessEventsResponse.items);
-			}
-			catch (error) {
-				console.error('Error', error);
-			}
-		};
-
+	const handleOnCancel = useCallback(() => {
 		fetchBusinessEvents();
-	}, [filterQuery]);
+
+		Liferay.Util.openToast({
+			message: i18n.translate('business-event-canceled-successfully'),
+			type: 'success',
+		});
+	}, [fetchBusinessEvents]);
+
+	const handleOnCompleted = useCallback(() => {
+		fetchBusinessEvents();
+
+		Liferay.Util.openToast({
+			message: i18n.translate(
+				'business-event-actual-go-live-date-recorded-successfully'
+			),
+			type: 'success',
+		});
+	}, [fetchBusinessEvents]);
 
 	const rows = useMemo(() => {
 		if (businessEvents?.length > 0) {
 			return businessEvents.map((businessEvent) => {
+				const associatedTicketsCount = JSON.parse(
+					businessEvent.associatedTickets!
+				).length;
+
+				const associatedTicketsString =
+					associatedTicketsCount > 0
+						? associatedTicketsCount > 1
+							? `${associatedTicketsCount} Tickets`
+							: `1 Ticket`
+						: '';
+
+				const isGoLiveType = businessEvent?.eventType?.key === 'goLive';
+
+				const isOtherEventType =
+					businessEvent?.eventType?.key === 'otherEvent';
+
+				const DetailsColumn = () => {
+					if (isGoLiveType) {
+						return (
+							<div className="text-neutral-10">
+								{businessEvent?.currentLiferayVersion?.name}
+							</div>
+						);
+					}
+
+					if (isOtherEventType) {
+						return (
+							<div className="text-neutral-10">
+								{businessEvent?.description}
+							</div>
+						);
+					}
+
+					return (
+						<div className="align-items-center d-flex">
+							{!isSaasOnly && (
+								<>
+									<div className="text-neutral-10">
+										{
+											businessEvent?.currentLiferayVersion
+												?.name
+										}
+									</div>
+
+									<ClayIcon
+										className="mx-2 text-neutral-4"
+										symbol="order-arrow-right"
+									/>
+								</>
+							)}
+
+							<div className="text-neutral-10">
+								{businessEvent?.newLiferayVersion?.name}
+							</div>
+						</div>
+					);
+				};
+
 				const userOptions = [
 					{
 						customOptionStyle: 'pr-5',
@@ -150,7 +179,12 @@ const BusinessEvents = () => {
 					},
 				];
 
-				if (hasAllEventsPermissions) {
+				if (
+					hasAllEventsPermissions &&
+					!['canceled', 'completed'].includes(
+						businessEvent.eventStatus?.key!
+					)
+				) {
 					userOptions.push(
 						{
 							customOptionStyle: 'pr-5',
@@ -164,12 +198,20 @@ const BusinessEvents = () => {
 						{
 							customOptionStyle: 'pr-5',
 							label: i18n.translate('record-actual-go-live'),
-							onClick: () => {},
+							onClick: () => {
+								setModalType('goLiveEvent');
+								onOpenChange(true);
+								setSelectedBusinessEvent(businessEvent);
+							},
 						},
 						{
-							customOptionStyle: 'pr-5 be-cancel-event-option',
+							customOptionStyle: 'be-cancel-event-option pr-5',
 							label: i18n.translate('cancel-event'),
-							onClick: () => {},
+							onClick: () => {
+								setModalType('cancelEvent');
+								onOpenChange(true);
+								setSelectedBusinessEvent(businessEvent);
+							},
 						}
 					);
 				}
@@ -193,19 +235,18 @@ const BusinessEvents = () => {
 								}
 								items={userOptions}
 								label="Options"
+								menuElementAttrs={{
+									className: 'p-0',
+								}}
 							/>
 						</div>
 					),
 					associatedTickets: (
 						<div className="text-neutral-10">
-							{businessEvent?.associatedTickets}
+							{associatedTicketsString}
 						</div>
 					),
-					details: (
-						<div className="text-neutral-10">
-							{businessEvent?.description}
-						</div>
-					),
+					details: <DetailsColumn />,
 					eventName: (
 						<div>
 							<div className="font-weight-semi-bold text-neutral-10">
@@ -213,7 +254,11 @@ const BusinessEvents = () => {
 							</div>
 
 							<div className="be-subtitle text-neutral-7">
-								{businessEvent?.eventType?.name}
+								{i18n.translate(
+									getKebabCase(
+										businessEvent?.eventType?.key as string
+									) as string
+								)}
 							</div>
 						</div>
 					),
@@ -222,7 +267,12 @@ const BusinessEvents = () => {
 							<div
 								className={`align-items-center font-weight-semi-bold be-status be-status-${businessEvent?.eventStatus?.key} px-2 py-1`}
 							>
-								{businessEvent?.eventStatus?.name}
+								{i18n.translate(
+									getKebabCase(
+										businessEvent?.eventStatus
+											?.key as string
+									) as string
+								)}
 							</div>
 						</div>
 					),
@@ -232,14 +282,14 @@ const BusinessEvents = () => {
 								{getFormattedDate(
 									businessEvent?.targetGoLiveDateTime,
 									'day2DMonthSYearN',
-									'GMT'
+									'UTC'
 								)}
 							</div>
 
 							<div className="be-subtitle text-neutral-7">
 								{getFormattedTime(
 									businessEvent?.targetGoLiveDateTime,
-									'GMT'
+									'UTC'
 								)}
 							</div>
 						</div>
@@ -252,11 +302,17 @@ const BusinessEvents = () => {
 	}, [
 		businessEvents,
 		hasAllEventsPermissions,
+		isSaasOnly,
 		navigate,
+		onOpenChange,
 		project?.accountKey,
 	]);
 
-	return (
+	return loading ? (
+		<div className="mx-auto">
+			<ClayLoadingIndicator size="sm" />
+		</div>
+	) : (
 		<div className="py-4">
 			<div>
 				<h1 className="font-weight-bold text-neutral-10">
@@ -283,7 +339,33 @@ const BusinessEvents = () => {
 			</div>
 
 			<div>
-				<Table columns={columns} rows={rows as unknown as IRow[]} />
+				{businessEvents.length ? (
+					<>
+						<Table
+							columns={columns}
+							rows={rows as unknown as IRow[]}
+						/>
+
+						{selectedBusinessEvent && open && (
+							<ManageEventModal
+								accountExternalReferenceCode={
+									project?.accountKey || ''
+								}
+								businessEvent={selectedBusinessEvent}
+								client={client}
+								closeFunction={onOpenChange}
+								modalType={modalType}
+								observer={observer}
+								onCancel={handleOnCancel}
+								onCompleted={handleOnCompleted}
+							/>
+						)}
+					</>
+				) : (
+					<div className="p-3">
+						{i18n.translate('no-business-events-were-found')}
+					</div>
+				)}
 			</div>
 		</div>
 	);

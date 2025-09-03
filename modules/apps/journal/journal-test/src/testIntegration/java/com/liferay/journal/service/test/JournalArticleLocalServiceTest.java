@@ -57,11 +57,13 @@ import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalFolderFixture;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.journal.util.JournalConverter;
+import com.liferay.journal.util.comparator.ArticleVersionComparator;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchImageException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -81,6 +83,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
@@ -130,7 +133,13 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.InputStream;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -142,8 +151,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -536,13 +544,74 @@ public class JournalArticleLocalServiceTest {
 	}
 
 	@Test
+	public void testArticleStatusHistoryAfterTrashAndRestore()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		Date displayDate = _getDateWithOffset(1);
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), 0,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, StringPool.BLANK,
+			true, RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), null,
+			LocaleUtil.getSiteDefault(), displayDate, null, true, true,
+			serviceContext);
+
+		displayDate = _getDateWithOffset(-1);
+
+		journalArticle = JournalTestUtil.updateArticle(
+			TestPropsValues.getUserId(), journalArticle,
+			journalArticle.getTitleMap(), journalArticle.getContent(),
+			displayDate, false, true, serviceContext);
+
+		displayDate = _getDateWithOffset(2);
+
+		journalArticle = JournalTestUtil.updateArticle(
+			TestPropsValues.getUserId(), journalArticle,
+			journalArticle.getTitleMap(), journalArticle.getContent(),
+			displayDate, false, true, serviceContext);
+
+		journalArticle = _journalArticleLocalService.moveArticleToTrash(
+			TestPropsValues.getUserId(), journalArticle);
+
+		journalArticle = _journalArticleLocalService.restoreArticleFromTrash(
+			TestPropsValues.getUserId(), journalArticle);
+
+		List<JournalArticle> journalArticles =
+			_journalArticleLocalService.getArticles(
+				journalArticle.getGroupId(), journalArticle.getArticleId(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				ArticleVersionComparator.getInstance(false));
+
+		journalArticle = journalArticles.get(0);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_SCHEDULED, journalArticle.getStatus());
+
+		journalArticle = journalArticles.get(1);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, journalArticle.getStatus());
+
+		journalArticle = journalArticles.get(2);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_SCHEDULED, journalArticle.getStatus());
+	}
+
+	@Test
 	public void testCopyArticle() throws Exception {
 		JournalArticle oldJournalArticle = JournalTestUtil.addArticle(
 			_group.getGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test-1",
 			RandomTestUtil.randomString());
 
-		JournalArticle thirdArticle = JournalTestUtil.addArticle(
+		JournalArticle thirdJournalArticle = JournalTestUtil.addArticle(
 			_group.getGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test-2",
 			oldJournalArticle.getContent());
@@ -555,7 +624,7 @@ public class JournalArticleLocalServiceTest {
 
 		Assert.assertNotEquals(oldJournalArticle, newJournalArticle);
 		Assert.assertNotEquals(
-			thirdArticle.getUrlTitle(), newJournalArticle.getUrlTitle());
+			thirdJournalArticle.getUrlTitle(), newJournalArticle.getUrlTitle());
 
 		List<ResourcePermission> oldResourcePermissions =
 			_resourcePermissionLocalService.getResourcePermissions(
@@ -1679,6 +1748,40 @@ public class JournalArticleLocalServiceTest {
 	}
 
 	@Test
+	public void testGetArticleDisplayWithSmallImage() throws Exception {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString() + ".png", ContentTypes.IMAGE_PNG,
+			FileUtil.getBytes(getClass(), "dependencies/liferay.png"), null,
+			null, null, new ServiceContext());
+
+		journalArticle.setSmallImage(true);
+		journalArticle.setSmallImageId(fileEntry.getFileEntryId());
+		journalArticle.setSmallImageSource(
+			JournalArticleConstants.SMALL_IMAGE_SOURCE_DOCUMENTS_AND_MEDIA);
+
+		journalArticle = _journalArticleLocalService.updateJournalArticle(
+			journalArticle);
+
+		JournalArticleDisplay journalArticleDisplay =
+			_journalArticleLocalService.getArticleDisplay(
+				journalArticle.getGroupId(), journalArticle.getArticleId(),
+				null, null, _themeDisplay);
+
+		String articleDisplayImageURL =
+			journalArticleDisplay.getArticleDisplayImageURL(_themeDisplay);
+
+		Assert.assertNotNull(articleDisplayImageURL);
+		Assert.assertTrue(
+			articleDisplayImageURL.contains(fileEntry.getFileName()));
+	}
+
+	@Test
 	public void testGetArticlesByReviewDate() throws Exception {
 		JournalFolder folder = JournalTestUtil.addFolder(
 			_group.getGroupId(), RandomTestUtil.randomString());
@@ -1978,6 +2081,34 @@ public class JournalArticleLocalServiceTest {
 	}
 
 	@Test
+	public void testRevertArticle() throws Exception {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
+
+		JournalArticle updatedJournalArticle = JournalTestUtil.updateArticle(
+			journalArticle, RandomTestUtil.randomString());
+
+		_journalArticleLocalService.revertArticle(
+			journalArticle.getUserId(), _group.getGroupId(),
+			journalArticle.getArticleId(), journalArticle.getVersion());
+
+		JournalArticle latestArticle =
+			_journalArticleLocalService.getLatestArticle(
+				journalArticle.getGroupId(), journalArticle.getArticleId());
+
+		Assert.assertEquals(
+			journalArticle.getResourcePrimKey(),
+			latestArticle.getResourcePrimKey());
+		Assert.assertTrue(
+			updatedJournalArticle.getVersion() < latestArticle.getVersion());
+		Assert.assertEquals(
+			journalArticle.getTitle(), latestArticle.getTitle());
+		Assert.assertEquals(
+			journalArticle.getContent(), latestArticle.getContent());
+	}
+
+	@Test
 	public void testTrashArticleExternalReferenceCode() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
@@ -2197,6 +2328,35 @@ public class JournalArticleLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateArticleWithoutDisplayDate() throws Exception {
+		JournalArticle journalArticle1 = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		Assert.assertNotNull(journalArticle1.getDisplayDate());
+
+		JournalArticle journalArticle2 = JournalTestUtil.updateArticle(
+			journalArticle1);
+
+		Assert.assertEquals(
+			journalArticle1.getDisplayDate(), journalArticle2.getDisplayDate());
+
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+
+		Date date = calendar.getTime();
+
+		journalArticle2 = JournalTestUtil.updateArticle(
+			journalArticle2.getUserId(), journalArticle2,
+			journalArticle2.getTitleMap(), journalArticle2.getContent(), date,
+			false, true, ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(date, journalArticle2.getDisplayDate());
+	}
+
+	@Test
 	public void testUpdateDDMStructurePredefinedValues() throws Exception {
 		Tuple tuple = _createJournalArticleWithPredefinedValues("Test Article");
 
@@ -2239,6 +2399,9 @@ public class JournalArticleLocalServiceTest {
 				fileName);
 
 		return TempFileEntryUtil.addTempFileEntry(
+			String.valueOf(
+				new UUID(
+					SecureRandomUtil.nextLong(), SecureRandomUtil.nextLong())),
 			_group.getGroupId(), TestPropsValues.getUserId(),
 			JournalArticle.class.getName(), fileName, inputStream,
 			ContentTypes.IMAGE_JPEG);
@@ -2402,6 +2565,17 @@ public class JournalArticleLocalServiceTest {
 		assetVocabularySettingsHelper.setMultiValued(multiValued);
 
 		return assetVocabularySettingsHelper;
+	}
+
+	private Date _getDateWithOffset(int years) {
+		LocalDateTime localDateTime = LocalDateTime.now();
+
+		localDateTime = localDateTime.plusYears(years);
+
+		ZonedDateTime zonedDateTime = localDateTime.atZone(
+			ZoneId.systemDefault());
+
+		return Date.from(zonedDateTime.toInstant());
 	}
 
 	private String _getNewTitle(String title) {

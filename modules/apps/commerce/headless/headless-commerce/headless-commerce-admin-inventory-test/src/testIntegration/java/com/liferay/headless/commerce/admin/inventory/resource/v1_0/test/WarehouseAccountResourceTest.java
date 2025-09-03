@@ -15,6 +15,7 @@ import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.headless.commerce.admin.inventory.client.dto.v1_0.WarehouseAccount;
 import com.liferay.headless.commerce.admin.inventory.client.pagination.Page;
 import com.liferay.headless.commerce.admin.inventory.client.pagination.Pagination;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -71,6 +72,13 @@ public class WarehouseAccountResourceTest
 		}
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
 	@Override
 	@Test
 	public void testDeleteWarehouseAccount() throws Exception {
@@ -101,8 +109,8 @@ public class WarehouseAccountResourceTest
 	@Override
 	protected WarehouseAccount randomWarehouseAccount() throws Exception {
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -125,18 +133,23 @@ public class WarehouseAccountResourceTest
 
 	@Override
 	protected WarehouseAccount
+			testDeleteWarehouseAccountBatch_addWarehouseAccount()
+		throws Exception {
+
+		return warehouseAccountResource.postWarehouseIdWarehouseAccount(
+			_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			randomWarehouseAccount());
+	}
+
+	@Override
+	protected WarehouseAccount
 			testGetWarehouseByExternalReferenceCodeWarehouseAccountsPage_addWarehouseAccount(
 				String externalReferenceCode, WarehouseAccount warehouseAccount)
 		throws Exception {
 
-		WarehouseAccount postWarehouseAccount =
-			warehouseAccountResource.
-				postWarehouseByExternalReferenceCodeWarehouseAccount(
-					externalReferenceCode, warehouseAccount);
-
-		_warehouseAccountIds.add(postWarehouseAccount.getWarehouseAccountId());
-
-		return postWarehouseAccount;
+		return warehouseAccountResource.
+			postWarehouseByExternalReferenceCodeWarehouseAccount(
+				externalReferenceCode, warehouseAccount);
 	}
 
 	@Override
@@ -153,13 +166,8 @@ public class WarehouseAccountResourceTest
 				Long id, WarehouseAccount warehouseAccount)
 		throws Exception {
 
-		WarehouseAccount postWarehouseAccount =
-			warehouseAccountResource.postWarehouseIdWarehouseAccount(
-				id, warehouseAccount);
-
-		_warehouseAccountIds.add(postWarehouseAccount.getWarehouseAccountId());
-
-		return postWarehouseAccount;
+		return warehouseAccountResource.postWarehouseIdWarehouseAccount(
+			id, warehouseAccount);
 	}
 
 	@Override

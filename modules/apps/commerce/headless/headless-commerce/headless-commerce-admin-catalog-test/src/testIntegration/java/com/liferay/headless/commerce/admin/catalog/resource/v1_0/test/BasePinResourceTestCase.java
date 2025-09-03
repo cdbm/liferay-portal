@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Pin;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -44,6 +47,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,6 +106,16 @@ public abstract class BasePinResourceTestCase {
 			testCompany.getCompanyId());
 
 		pinResource = PinResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -239,8 +252,35 @@ public abstract class BasePinResourceTestCase {
 	}
 
 	@Test
-	public void testPatchPin() throws Exception {
-		Assert.assertTrue(false);
+	public void testDeletePinBatch() throws Exception {
+		Pin pin1 = testDeletePinBatch_addPin();
+
+		testDeletePinBatch_deletePin(202, null, pin1.getId());
+	}
+
+	protected Pin testDeletePinBatch_addPin() throws Exception {
+		return testDeletePin_addPin();
+	}
+
+	protected void testDeletePinBatch_deletePin(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			pinResource.deletePinBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -315,11 +355,11 @@ public abstract class BasePinResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodePinsPage_getExternalReferenceCode();
 
-		Page<Pin> pinPage =
+		Page<Pin> pinsPage =
 			pinResource.getProductByExternalReferenceCodePinsPage(
 				externalReferenceCode, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(pinsPage.getTotalCount());
 
 		Pin pin1 = testGetProductByExternalReferenceCodePinsPage_addPin(
 			externalReferenceCode, randomPin());
@@ -565,24 +605,6 @@ public abstract class BasePinResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodePin() throws Exception {
-		Pin randomPin = randomPin();
-
-		Pin postPin = testPostProductByExternalReferenceCodePin_addPin(
-			randomPin);
-
-		assertEquals(randomPin, postPin);
-		assertValid(postPin);
-	}
-
-	protected Pin testPostProductByExternalReferenceCodePin_addPin(Pin pin)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdPinsPage() throws Exception {
 		Long id = testGetProductIdPinsPage_getId();
 		Long irrelevantId = testGetProductIdPinsPage_getIrrelevantId();
@@ -639,10 +661,10 @@ public abstract class BasePinResourceTestCase {
 	public void testGetProductIdPinsPageWithPagination() throws Exception {
 		Long id = testGetProductIdPinsPage_getId();
 
-		Page<Pin> pinPage = pinResource.getProductIdPinsPage(
+		Page<Pin> pinsPage = pinResource.getProductIdPinsPage(
 			id, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(pinsPage.getTotalCount());
 
 		Pin pin1 = testGetProductIdPinsPage_addPin(id, randomPin());
 
@@ -853,6 +875,29 @@ public abstract class BasePinResourceTestCase {
 	}
 
 	@Test
+	public void testPatchPin() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodePin() throws Exception {
+		Pin randomPin = randomPin();
+
+		Pin postPin = testPostProductByExternalReferenceCodePin_addPin(
+			randomPin);
+
+		assertEquals(randomPin, postPin);
+		assertValid(postPin);
+	}
+
+	protected Pin testPostProductByExternalReferenceCodePin_addPin(Pin pin)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostProductIdPin() throws Exception {
 		Pin randomPin = randomPin();
 
@@ -865,6 +910,52 @@ public abstract class BasePinResourceTestCase {
 	protected Pin testPostProductIdPin_addPin(Pin pin) throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Pin pin1 = testBatchEngineDeleteImportTask_addPin();
+
+		testBatchEngineDeleteImportTask_deletePin(200, null, pin1.getId());
+	}
+
+	protected Pin testBatchEngineDeleteImportTask_addPin() throws Exception {
+		return testDeletePin_addPin();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePin(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Pin",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected Pin testGraphQLPin_addPin() throws Exception {
@@ -1372,7 +1463,30 @@ public abstract class BasePinResourceTestCase {
 		return randomPin();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PinResource pinResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

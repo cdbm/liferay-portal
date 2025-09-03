@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Specification;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -166,6 +166,16 @@ public class SpecificationSerDes {
 			sb.append(_toJSON(specification.getTitle()));
 		}
 
+		if (specification.getVisible() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(specification.getVisible());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -264,6 +274,13 @@ public class SpecificationSerDes {
 			map.put("title", String.valueOf(specification.getTitle()));
 		}
 
+		if (specification.getVisible() == null) {
+			map.put("visible", null);
+		}
+		else {
+			map.put("visible", String.valueOf(specification.getVisible()));
+		}
+
 		return map;
 	}
 
@@ -317,6 +334,9 @@ public class SpecificationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				return false;
 			}
 
 			return false;
@@ -390,6 +410,11 @@ public class SpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					specification.setTitle(
 						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				if (jsonParserFieldValue != null) {
+					specification.setVisible((Boolean)jsonParserFieldValue);
 				}
 			}
 		}

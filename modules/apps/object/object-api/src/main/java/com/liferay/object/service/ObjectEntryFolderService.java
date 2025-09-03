@@ -47,15 +47,34 @@ public interface ObjectEntryFolderService extends BaseService {
 	 */
 	public ObjectEntryFolder addObjectEntryFolder(
 			String externalReferenceCode, long groupId,
-			long parentObjectEntryFolderId, Map<Locale, String> labelMap,
-			String name, ServiceContext serviceContext)
+			long parentObjectEntryFolderId, String description,
+			Map<Locale, String> labelMap, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public ObjectEntryFolder deleteObjectEntryFolder(long objectEntryFolderId)
 		throws PortalException;
 
+	public ObjectEntryFolder deleteObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder fetchObjectEntryFolder(long objectEntryFolderId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder fetchObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
+		throws PortalException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntryFolder getObjectEntryFolder(long objectEntryFolderId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder getObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -76,9 +95,28 @@ public interface ObjectEntryFolderService extends BaseService {
 	 */
 	public String getOSGiServiceIdentifier();
 
+	public ObjectEntryFolder moveObjectEntryFolderToTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public ObjectEntryFolder restoreObjectEntryFolderFromTrash(
+			long userId, ObjectEntryFolder objectEntryFolder,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public void subscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException;
+
+	public void unsubscribeObjectEntryFolder(
+			long userId, long groupId, long objectEntryFolderId)
+		throws PortalException;
+
 	public ObjectEntryFolder updateObjectEntryFolder(
 			long objectEntryFolderId, long parentObjectEntryFolderId,
-			Map<Locale, String> labelMap, String name)
+			String description, Map<Locale, String> labelMap, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 }

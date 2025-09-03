@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentTemplate;
@@ -50,6 +51,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -64,10 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,16 +104,28 @@ public abstract class BaseContentTemplateResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_contentTemplateResource.setContextCompany(testCompany);
 
@@ -381,12 +394,12 @@ public abstract class BaseContentTemplateResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryContentTemplatesPage_getAssetLibraryId();
 
-		Page<ContentTemplate> contentTemplatePage =
+		Page<ContentTemplate> contentTemplatesPage =
 			contentTemplateResource.getAssetLibraryContentTemplatesPage(
 				assetLibraryId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			contentTemplatePage.getTotalCount());
+			contentTemplatesPage.getTotalCount());
 
 		ContentTemplate contentTemplate1 =
 			testGetAssetLibraryContentTemplatesPage_addContentTemplate(
@@ -654,7 +667,147 @@ public abstract class BaseContentTemplateResourceTestCase {
 			testGetAssetLibraryContentTemplatesPage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
+		return irrelevantDepotEntry.getDepotEntryId();
+	}
+
+	@Test
+	public void testGetSiteContentTemplate() throws Exception {
+		ContentTemplate postContentTemplate =
+			testGetSiteContentTemplate_addContentTemplate();
+
+		ContentTemplate getContentTemplate =
+			contentTemplateResource.getSiteContentTemplate(
+				postContentTemplate.getSiteId(), postContentTemplate.getId());
+
+		assertEquals(postContentTemplate, getContentTemplate);
+		assertValid(getContentTemplate);
+	}
+
+	protected ContentTemplate testGetSiteContentTemplate_addContentTemplate()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteContentTemplate() throws Exception {
+		ContentTemplate contentTemplate =
+			testGraphQLGetSiteContentTemplate_addContentTemplate();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				contentTemplate,
+				ContentTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"contentTemplate",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" + contentTemplate.getSiteId() +
+												"\"");
+										put(
+											"contentTemplateId",
+											"\"" + contentTemplate.getId() +
+												"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/contentTemplate"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				contentTemplate,
+				ContentTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"contentTemplate",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													contentTemplate.
+														getSiteId() + "\"");
+											put(
+												"contentTemplateId",
+												"\"" + contentTemplate.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/contentTemplate"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteContentTemplateNotFound() throws Exception {
+		String irrelevantContentTemplateId =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"contentTemplate",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put(
+									"contentTemplateId",
+									irrelevantContentTemplateId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"contentTemplate",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"contentTemplateId",
+										irrelevantContentTemplateId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ContentTemplate
+			testGraphQLGetSiteContentTemplate_addContentTemplate()
+		throws Exception {
+
+		return testGraphQLContentTemplate_addContentTemplate();
 	}
 
 	@Test
@@ -822,12 +975,12 @@ public abstract class BaseContentTemplateResourceTestCase {
 
 		Long siteId = testGetSiteContentTemplatesPage_getSiteId();
 
-		Page<ContentTemplate> contentTemplatePage =
+		Page<ContentTemplate> contentTemplatesPage =
 			contentTemplateResource.getSiteContentTemplatesPage(
 				siteId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			contentTemplatePage.getTotalCount());
+			contentTemplatesPage.getTotalCount());
 
 		ContentTemplate contentTemplate1 =
 			testGetSiteContentTemplatesPage_addContentTemplate(
@@ -1173,162 +1326,8 @@ public abstract class BaseContentTemplateResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteContentTemplate() throws Exception {
-		ContentTemplate postContentTemplate =
-			testGetSiteContentTemplate_addContentTemplate();
-
-		ContentTemplate getContentTemplate =
-			contentTemplateResource.getSiteContentTemplate(
-				testGetSiteContentTemplate_getSiteId(postContentTemplate),
-				postContentTemplate.getId());
-
-		assertEquals(postContentTemplate, getContentTemplate);
-		assertValid(getContentTemplate);
-	}
-
-	protected Long testGetSiteContentTemplate_getSiteId(
-			ContentTemplate contentTemplate)
-		throws Exception {
-
-		return contentTemplate.getSiteId();
-	}
-
-	protected ContentTemplate testGetSiteContentTemplate_addContentTemplate()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetSiteContentTemplate() throws Exception {
-		ContentTemplate contentTemplate =
-			testGraphQLGetSiteContentTemplate_addContentTemplate();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				contentTemplate,
-				ContentTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"contentTemplate",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"siteKey",
-											"\"" +
-												testGraphQLGetSiteContentTemplate_getSiteId(
-													contentTemplate) + "\"");
-
-										put(
-											"contentTemplateId",
-											"\"" + contentTemplate.getId() +
-												"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/contentTemplate"))));
-
-		// Using the namespace headlessDelivery_v1_0
-
-		Assert.assertTrue(
-			equals(
-				contentTemplate,
-				ContentTemplateSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessDelivery_v1_0",
-								new GraphQLField(
-									"contentTemplate",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"siteKey",
-												"\"" +
-													testGraphQLGetSiteContentTemplate_getSiteId(
-														contentTemplate) +
-															"\"");
-
-											put(
-												"contentTemplateId",
-												"\"" + contentTemplate.getId() +
-													"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
-						"Object/contentTemplate"))));
-	}
-
-	protected Long testGraphQLGetSiteContentTemplate_getSiteId(
-			ContentTemplate contentTemplate)
-		throws Exception {
-
-		return contentTemplate.getSiteId();
-	}
-
-	@Test
-	public void testGraphQLGetSiteContentTemplateNotFound() throws Exception {
-		String irrelevantContentTemplateId =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"contentTemplate",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"siteKey",
-									"\"" + irrelevantGroup.getGroupId() + "\"");
-								put(
-									"contentTemplateId",
-									irrelevantContentTemplateId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessDelivery_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessDelivery_v1_0",
-						new GraphQLField(
-							"contentTemplate",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"siteKey",
-										"\"" + irrelevantGroup.getGroupId() +
-											"\"");
-									put(
-										"contentTemplateId",
-										irrelevantContentTemplateId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ContentTemplate
-			testGraphQLGetSiteContentTemplate_addContentTemplate()
-		throws Exception {
-
-		return testGraphQLContentTemplate_addContentTemplate();
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule
@@ -1430,10 +1429,9 @@ public abstract class BaseContentTemplateResourceTestCase {
 			valid = false;
 		}
 
-		com.liferay.portal.kernel.model.Group group = testDepotEntry.getGroup();
-
 		if (!Objects.equals(
-				contentTemplate.getAssetLibraryKey(), group.getGroupKey()) &&
+				contentTemplate.getAssetLibraryKey(),
+				testDepotEntryGroup.getGroupKey()) &&
 			!Objects.equals(
 				contentTemplate.getSiteId(), testGroup.getGroupId())) {
 
@@ -2329,8 +2327,8 @@ public abstract class BaseContentTemplateResourceTestCase {
 	protected ContentTemplate randomContentTemplate() throws Exception {
 		return new ContentTemplate() {
 			{
-				assetLibraryKey = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				assetLibraryKey = String.valueOf(
+					testDepotEntry.getDepotEntryId());
 				contentStructureId = RandomTestUtil.randomLong();
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
@@ -2353,6 +2351,9 @@ public abstract class BaseContentTemplateResourceTestCase {
 		ContentTemplate randomIrrelevantContentTemplate =
 			randomContentTemplate();
 
+		randomIrrelevantContentTemplate.setAssetLibraryKey(
+			String.valueOf(irrelevantDepotEntry.getDepotEntryId()));
+
 		randomIrrelevantContentTemplate.setSiteId(irrelevantGroup.getGroupId());
 
 		return randomIrrelevantContentTemplate;
@@ -2365,7 +2366,10 @@ public abstract class BaseContentTemplateResourceTestCase {
 	protected ContentTemplateResource contentTemplateResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {

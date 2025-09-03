@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -178,6 +178,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		placedOrderAddress.setStreet1(regex);
 		placedOrderAddress.setStreet2(regex);
 		placedOrderAddress.setStreet3(regex);
+		placedOrderAddress.setSubtype(regex);
 		placedOrderAddress.setType(regex);
 		placedOrderAddress.setVatNumber(regex);
 		placedOrderAddress.setZip(regex);
@@ -201,6 +202,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		Assert.assertEquals(regex, placedOrderAddress.getStreet1());
 		Assert.assertEquals(regex, placedOrderAddress.getStreet2());
 		Assert.assertEquals(regex, placedOrderAddress.getStreet3());
+		Assert.assertEquals(regex, placedOrderAddress.getSubtype());
 		Assert.assertEquals(regex, placedOrderAddress.getType());
 		Assert.assertEquals(regex, placedOrderAddress.getVatNumber());
 		Assert.assertEquals(regex, placedOrderAddress.getZip());
@@ -223,16 +225,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		assertValid(getPlacedOrderAddress);
 	}
 
+	protected PlacedOrderAddress
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_addPlacedOrderAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected String
 			testGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_getExternalReferenceCode(
 				PlacedOrderAddress placedOrderAddress)
-		throws Exception {
-
-		return placedOrderAddress.getExternalReferenceCode();
-	}
-
-	protected PlacedOrderAddress
-			testGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -302,7 +305,8 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				PlacedOrderAddress placedOrderAddress)
 		throws Exception {
 
-		return placedOrderAddress.getExternalReferenceCode();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -377,16 +381,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		assertValid(getPlacedOrderAddress);
 	}
 
+	protected PlacedOrderAddress
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_addPlacedOrderAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected String
 			testGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_getExternalReferenceCode(
 				PlacedOrderAddress placedOrderAddress)
-		throws Exception {
-
-		return placedOrderAddress.getExternalReferenceCode();
-	}
-
-	protected PlacedOrderAddress
-			testGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -456,7 +461,8 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				PlacedOrderAddress placedOrderAddress)
 		throws Exception {
 
-		return placedOrderAddress.getExternalReferenceCode();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -527,16 +533,16 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		assertValid(getPlacedOrderAddress);
 	}
 
-	protected Long
-			testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
+	protected PlacedOrderAddress
+			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
+	protected Long
+			testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -671,16 +677,16 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		assertValid(getPlacedOrderAddress);
 	}
 
-	protected Long
-			testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
+	protected PlacedOrderAddress
+			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
+	protected Long
+			testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1014,6 +1020,14 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (placedOrderAddress.getSubtype() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("type", additionalAssertFieldName)) {
 				if (placedOrderAddress.getType() == null) {
 					valid = false;
@@ -1327,6 +1341,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				if (!Objects.deepEquals(
 						placedOrderAddress1.getStreet3(),
 						placedOrderAddress2.getStreet3())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						placedOrderAddress1.getSubtype(),
+						placedOrderAddress2.getSubtype())) {
 
 					return false;
 				}
@@ -2055,6 +2080,52 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("subtype")) {
+			Object object = placedOrderAddress.getSubtype();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("type")) {
 			Object object = placedOrderAddress.getType();
 
@@ -2264,6 +2335,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				street1 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street2 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street3 = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				subtype = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				type = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				typeId = RandomTestUtil.randomInt();
 				vatNumber = StringUtil.toLowerCase(

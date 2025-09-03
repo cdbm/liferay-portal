@@ -19,6 +19,9 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataListViewResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataListViewSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -56,6 +59,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +86,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -129,6 +132,16 @@ public abstract class BaseDataListViewResourceTestCase {
 			testCompany.getCompanyId());
 
 		dataListViewResource = DataListViewResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -219,19 +232,165 @@ public abstract class BaseDataListViewResourceTestCase {
 					dataListView)));
 	}
 
-	protected Long testDeleteDataDefinitionDataListView_getDataDefinitionId(
-			DataListView dataListView)
-		throws Exception {
-
-		return dataListView.getDataDefinitionId();
-	}
-
 	protected DataListView
 			testDeleteDataDefinitionDataListView_addDataListView()
 		throws Exception {
 
+		return testPostDataDefinitionDataListView_addDataListView(
+			randomDataListView());
+	}
+
+	protected Long testDeleteDataDefinitionDataListView_getDataDefinitionId(
+			DataListView dataListView)
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteDataListView() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataListView dataListView = testDeleteDataListView_addDataListView();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataListViewResource.deleteDataListViewHttpResponse(
+				dataListView.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			dataListViewResource.getDataListViewHttpResponse(
+				dataListView.getId()));
+		assertHttpResponseStatusCode(
+			404, dataListViewResource.getDataListViewHttpResponse(0L));
+	}
+
+	protected DataListView testDeleteDataListView_addDataListView()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDataListView() throws Exception {
+
+		// No namespace
+
+		DataListView dataListView1 =
+			testGraphQLDeleteDataListView_addDataListView();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDataListView",
+						new HashMap<String, Object>() {
+							{
+								put("dataListViewId", dataListView1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDataListView"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataListView",
+					new HashMap<String, Object>() {
+						{
+							put("dataListViewId", dataListView1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace dataEngine_v2_0
+
+		DataListView dataListView2 =
+			testGraphQLDeleteDataListView_addDataListView();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"deleteDataListView",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"dataListViewId",
+										dataListView2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/dataEngine_v2_0",
+				"Object/deleteDataListView"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataEngine_v2_0",
+					new GraphQLField(
+						"dataListView",
+						new HashMap<String, Object>() {
+							{
+								put("dataListViewId", dataListView2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected DataListView testGraphQLDeleteDataListView_addDataListView()
+		throws Exception {
+
+		return testGraphQLDataListView_addDataListView();
+	}
+
+	@Test
+	public void testDeleteDataListViewBatch() throws Exception {
+		DataListView dataListView1 =
+			testDeleteDataListViewBatch_addDataListView();
+
+		testDeleteDataListViewBatch_deleteDataListView(
+			202, null, dataListView1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataListViewResource.getDataListViewHttpResponse(
+				dataListView1.getId()));
+	}
+
+	protected DataListView testDeleteDataListViewBatch_addDataListView()
+		throws Exception {
+
+		return testDeleteDataListView_addDataListView();
+	}
+
+	protected void testDeleteDataListViewBatch_deleteDataListView(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			dataListViewResource.deleteDataListViewBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -243,8 +402,7 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		Page<DataListView> page =
 			dataListViewResource.getDataDefinitionDataListViewsPage(
-				dataDefinitionId, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
+				dataDefinitionId, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -319,12 +477,12 @@ public abstract class BaseDataListViewResourceTestCase {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataListViewsPage_getDataDefinitionId();
 
-		Page<DataListView> dataListViewPage =
+		Page<DataListView> dataListViewsPage =
 			dataListViewResource.getDataDefinitionDataListViewsPage(
 				dataDefinitionId, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			dataListViewPage.getTotalCount());
+			dataListViewsPage.getTotalCount());
 
 		DataListView dataListView1 =
 			testGetDataDefinitionDataListViewsPage_addDataListView(
@@ -585,132 +743,6 @@ public abstract class BaseDataListViewResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostDataDefinitionDataListView() throws Exception {
-		DataListView randomDataListView = randomDataListView();
-
-		DataListView postDataListView =
-			testPostDataDefinitionDataListView_addDataListView(
-				randomDataListView);
-
-		assertEquals(randomDataListView, postDataListView);
-		assertValid(postDataListView);
-	}
-
-	protected DataListView testPostDataDefinitionDataListView_addDataListView(
-			DataListView dataListView)
-		throws Exception {
-
-		return dataListViewResource.postDataDefinitionDataListView(
-			testGetDataDefinitionDataListViewsPage_getDataDefinitionId(),
-			dataListView);
-	}
-
-	@Test
-	public void testDeleteDataListView() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataListView dataListView = testDeleteDataListView_addDataListView();
-
-		assertHttpResponseStatusCode(
-			204,
-			dataListViewResource.deleteDataListViewHttpResponse(
-				dataListView.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			dataListViewResource.getDataListViewHttpResponse(
-				dataListView.getId()));
-
-		assertHttpResponseStatusCode(
-			404, dataListViewResource.getDataListViewHttpResponse(0L));
-	}
-
-	protected DataListView testDeleteDataListView_addDataListView()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteDataListView() throws Exception {
-
-		// No namespace
-
-		DataListView dataListView1 =
-			testGraphQLDeleteDataListView_addDataListView();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDataListView",
-						new HashMap<String, Object>() {
-							{
-								put("dataListViewId", dataListView1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDataListView"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataListView",
-					new HashMap<String, Object>() {
-						{
-							put("dataListViewId", dataListView1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace dataEngine_v2_0
-
-		DataListView dataListView2 =
-			testGraphQLDeleteDataListView_addDataListView();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"deleteDataListView",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"dataListViewId",
-										dataListView2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/dataEngine_v2_0",
-				"Object/deleteDataListView"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataEngine_v2_0",
-					new GraphQLField(
-						"dataListView",
-						new HashMap<String, Object>() {
-							{
-								put("dataListViewId", dataListView2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected DataListView testGraphQLDeleteDataListView_addDataListView()
-		throws Exception {
-
-		return testGraphQLDataListView_addDataListView();
 	}
 
 	@Test
@@ -1019,6 +1051,27 @@ public abstract class BaseDataListViewResourceTestCase {
 	}
 
 	@Test
+	public void testPostDataDefinitionDataListView() throws Exception {
+		DataListView randomDataListView = randomDataListView();
+
+		DataListView postDataListView =
+			testPostDataDefinitionDataListView_addDataListView(
+				randomDataListView);
+
+		assertEquals(randomDataListView, postDataListView);
+		assertValid(postDataListView);
+	}
+
+	protected DataListView testPostDataDefinitionDataListView_addDataListView(
+			DataListView dataListView)
+		throws Exception {
+
+		return dataListViewResource.postDataDefinitionDataListView(
+			testGetDataDefinitionDataListViewsPage_getDataDefinitionId(),
+			dataListView);
+	}
+
+	@Test
 	public void testPutDataListView() throws Exception {
 		DataListView postDataListView = testPutDataListView_addDataListView();
 
@@ -1042,6 +1095,61 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DataListView dataListView1 =
+			testBatchEngineDeleteImportTask_addDataListView();
+
+		testBatchEngineDeleteImportTask_deleteDataListView(
+			200, null, dataListView1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataListViewResource.getDataListViewHttpResponse(
+				dataListView1.getId()));
+	}
+
+	protected DataListView testBatchEngineDeleteImportTask_addDataListView()
+		throws Exception {
+
+		return testDeleteDataListView_addDataListView();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDataListView(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.data.engine.rest.dto.v2_0.DataListView", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DataListView testGraphQLDataListView_addDataListView()
@@ -1727,7 +1835,30 @@ public abstract class BaseDataListViewResourceTestCase {
 		return randomDataListView();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DataListViewResource dataListViewResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v1_0.DiscountCategory;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
@@ -42,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +104,16 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 			testCompany.getCompanyId());
 
 		discountCategoryResource = DiscountCategoryResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -251,6 +264,43 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDiscountCategoryBatch() throws Exception {
+		DiscountCategory discountCategory1 =
+			testDeleteDiscountCategoryBatch_addDiscountCategory();
+
+		testDeleteDiscountCategoryBatch_deleteDiscountCategory(
+			202, null, discountCategory1.getId());
+	}
+
+	protected DiscountCategory
+			testDeleteDiscountCategoryBatch_addDiscountCategory()
+		throws Exception {
+
+		return testDeleteDiscountCategory_addDiscountCategory();
+	}
+
+	protected void testDeleteDiscountCategoryBatch_deleteDiscountCategory(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			discountCategoryResource.deleteDiscountCategoryBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetDiscountByExternalReferenceCodeDiscountCategoriesPage()
 		throws Exception {
 
@@ -337,13 +387,13 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountCategoriesPage_getExternalReferenceCode();
 
-		Page<DiscountCategory> discountCategoryPage =
+		Page<DiscountCategory> discountCategoriesPage =
 			discountCategoryResource.
 				getDiscountByExternalReferenceCodeDiscountCategoriesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountCategoryPage.getTotalCount());
+			discountCategoriesPage.getTotalCount());
 
 		DiscountCategory discountCategory1 =
 			testGetDiscountByExternalReferenceCodeDiscountCategoriesPage_addDiscountCategory(
@@ -465,29 +515,6 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 	}
 
 	@Test
-	public void testPostDiscountByExternalReferenceCodeDiscountCategory()
-		throws Exception {
-
-		DiscountCategory randomDiscountCategory = randomDiscountCategory();
-
-		DiscountCategory postDiscountCategory =
-			testPostDiscountByExternalReferenceCodeDiscountCategory_addDiscountCategory(
-				randomDiscountCategory);
-
-		assertEquals(randomDiscountCategory, postDiscountCategory);
-		assertValid(postDiscountCategory);
-	}
-
-	protected DiscountCategory
-			testPostDiscountByExternalReferenceCodeDiscountCategory_addDiscountCategory(
-				DiscountCategory discountCategory)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetDiscountIdDiscountCategoriesPage() throws Exception {
 		Long id = testGetDiscountIdDiscountCategoriesPage_getId();
 		Long irrelevantId =
@@ -561,12 +588,12 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 
 		Long id = testGetDiscountIdDiscountCategoriesPage_getId();
 
-		Page<DiscountCategory> discountCategoryPage =
+		Page<DiscountCategory> discountCategoriesPage =
 			discountCategoryResource.getDiscountIdDiscountCategoriesPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			discountCategoryPage.getTotalCount());
+			discountCategoriesPage.getTotalCount());
 
 		DiscountCategory discountCategory1 =
 			testGetDiscountIdDiscountCategoriesPage_addDiscountCategory(
@@ -677,6 +704,29 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 	}
 
 	@Test
+	public void testPostDiscountByExternalReferenceCodeDiscountCategory()
+		throws Exception {
+
+		DiscountCategory randomDiscountCategory = randomDiscountCategory();
+
+		DiscountCategory postDiscountCategory =
+			testPostDiscountByExternalReferenceCodeDiscountCategory_addDiscountCategory(
+				randomDiscountCategory);
+
+		assertEquals(randomDiscountCategory, postDiscountCategory);
+		assertValid(postDiscountCategory);
+	}
+
+	protected DiscountCategory
+			testPostDiscountByExternalReferenceCodeDiscountCategory_addDiscountCategory(
+				DiscountCategory discountCategory)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostDiscountIdDiscountCategory() throws Exception {
 		DiscountCategory randomDiscountCategory = randomDiscountCategory();
 
@@ -695,6 +745,57 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DiscountCategory discountCategory1 =
+			testBatchEngineDeleteImportTask_addDiscountCategory();
+
+		testBatchEngineDeleteImportTask_deleteDiscountCategory(
+			200, null, discountCategory1.getId());
+	}
+
+	protected DiscountCategory
+			testBatchEngineDeleteImportTask_addDiscountCategory()
+		throws Exception {
+
+		return testDeleteDiscountCategory_addDiscountCategory();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDiscountCategory(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountCategory",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected DiscountCategory testGraphQLDiscountCategory_addDiscountCategory()
@@ -1298,7 +1399,30 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 		return randomDiscountCategory();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DiscountCategoryResource discountCategoryResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -22,7 +22,10 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -261,8 +264,18 @@ public class DLReferencesExportImportContentProcessor
 			long groupId = MapUtil.getLong(map, "groupId");
 
 			if (Validator.isNotNull(uuid)) {
-				fileEntry = _dlAppLocalService.getFileEntryByUuidAndGroupId(
-					uuid, groupId);
+				try {
+					fileEntry = _dlAppLocalService.getFileEntryByUuidAndGroupId(
+						uuid, groupId);
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug("Unable to get file entry", portalException);
+					}
+
+					return _dlAppLocalService.
+						getFileEntryByExternalReferenceCode(uuid, groupId);
+				}
 			}
 			else {
 				if (map.containsKey("friendlyURL")) {
@@ -329,6 +342,43 @@ public class DLReferencesExportImportContentProcessor
 		}
 
 		return fileEntry;
+	}
+
+	private FileEntry _getFileEntry(String content, int beginPos)
+		throws PortalException {
+
+		int jsonBeginPos = StringUtil.lastIndexOfAny(
+			content, new String[] {"<![CDATA["}, beginPos);
+
+		jsonBeginPos = StringUtil.indexOfAny(
+			content, new char[] {'{'}, jsonBeginPos);
+
+		int jsonEndPos = StringUtil.indexOfAny(
+			content, new String[] {"]]>"}, jsonBeginPos);
+
+		jsonEndPos = StringUtil.lastIndexOfAny(
+			content, new char[] {'}'}, jsonEndPos);
+
+		if ((jsonBeginPos == QueryUtil.ALL_POS) &&
+			(jsonEndPos == QueryUtil.ALL_POS)) {
+
+			return null;
+		}
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(
+			content.substring(jsonBeginPos, jsonEndPos + 1));
+
+		try {
+			return _dlAppLocalService.getFileEntryByUuidAndGroupId(
+				jsonObject.getString("uuid"), jsonObject.getLong("groupId"));
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return null;
 	}
 
 	private Group _getGroup(String name) throws Exception {
@@ -937,6 +987,10 @@ public class DLReferencesExportImportContentProcessor
 
 			FileEntry fileEntry = _getFileEntry(dlReferenceParameters);
 
+			if (fileEntry == null) {
+				fileEntry = _getFileEntry(content, beginPos);
+			}
+
 			if ((fileEntry == null) &&
 				!_isExternalURL(groupId, content, beginPos, endPos)) {
 
@@ -1020,6 +1074,9 @@ public class DLReferencesExportImportContentProcessor
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Portal _portal;

@@ -18,7 +18,9 @@ import {
 } from '@liferay/marketplace-js-components-web';
 import React, {useEffect, useRef, useState} from 'react';
 
+import {config} from '../../../app/config';
 import {LIST_ITEM_TYPES} from '../../../app/config/constants/listItemTypes';
+import {useSelector} from '../../../app/contexts/StoreContext';
 import {useKeyboardNavigation} from '../../../app/js-index';
 import MarketplaceTabItem from './MarketplaceTabItem';
 
@@ -27,7 +29,9 @@ export default function MarketplaceSearchResults({
 }: {
 	searchValue: string;
 }) {
-	const baseResourceURL = MarketplaceRest.getBaseResourceURL();
+	const baseResourceURL = MarketplaceRest.getBaseResourceURL(
+		config.portletNamespace
+	);
 
 	const marketplaceConfiguration =
 		useMarketplaceConfiguration(baseResourceURL);
@@ -63,7 +67,9 @@ export default function MarketplaceSearchResults({
 }
 
 function SearchResultsPanel({searchValue}: {searchValue: string}) {
-	const baseResourceURL = MarketplaceRest.getBaseResourceURL();
+	const baseResourceURL = MarketplaceRest.getBaseResourceURL(
+		config.portletNamespace
+	);
 
 	const marketplaceConfiguration =
 		useMarketplaceConfiguration(baseResourceURL);
@@ -95,8 +101,9 @@ function SearchResultsPanel({searchValue}: {searchValue: string}) {
 			'attachments.accountId': '-1',
 			'filter': marketplaceRest.settings?.references?.fragmentsFilter,
 			'images.accountId': '-1',
-			'nestedFields': 'productSpecifications,skus,categories,images',
-			'page': String(page),
+			'nestedFields':
+				'attachments,productSpecifications,skus,categories,images',
+			'page': `${page}`,
 			'pageSize': '20',
 			'search': searchValueRef.current,
 			'skus.accountId': '-1',
@@ -159,10 +166,17 @@ function SearchResults({
 	loading: boolean | undefined;
 	results?: APIResponse<Product>;
 }) {
+	const permissions = useSelector((state) => state.permissions);
+
 	const listRef = useRef<HTMLUListElement | null>(null);
 
 	useEffect(() => {
-		if (listRef.current && results?.items.length) {
+		if (
+			listRef.current &&
+			results &&
+			results.page === 1 &&
+			results.items.length
+		) {
 			const firstListItem = listRef.current.firstChild as HTMLLIElement;
 
 			firstListItem?.focus();
@@ -171,20 +185,38 @@ function SearchResults({
 
 	return (
 		<>
-			{!loading && results?.items.length ? (
-				<ul
-					aria-label={Liferay.Language.get('marketplace-fragments')}
-					className="list-unstyled px-3"
-					ref={listRef}
-					role="menubar"
+			{results?.items.length ? (
+				<MarketplaceModal
+					fragmentPortletNamespace={config.fragmentPortletNamespace}
+					fragmentsImportURL={config.fragmentsImportURL}
+					hideBackButton={true}
+					permissions={{
+						installFreeApps:
+							permissions.INSTALL_FREE_BUNDLED_APPS_MARKETPLACE,
+						manageFragmentsEntries:
+							permissions.MANAGE_FRAGMENT_ENTRIES,
+						purchaseAndInstallPaidApps:
+							permissions.PURCHASE_AND_INSTALL_PAID_APPS_MARKETPLACE,
+					}}
+					portletNamespace={config.portletNamespace}
+					trigger={null}
 				>
-					{results.items.map((item: Product) => (
-						<MarketplaceSearchResultsList
-							item={item}
-							key={item.id}
-						/>
-					))}
-				</ul>
+					<ul
+						aria-label={Liferay.Language.get(
+							'marketplace-fragments'
+						)}
+						className="list-unstyled px-3"
+						ref={listRef}
+						role="menubar"
+					>
+						{results.items.map((item: Product) => (
+							<MarketplaceSearchResultsList
+								item={item}
+								key={item.id}
+							/>
+						))}
+					</ul>
+				</MarketplaceModal>
 			) : null}
 
 			{!loading && !results?.items.length ? (
@@ -221,7 +253,7 @@ function MarketplaceSearchResultsList({item}: {item: Product}) {
 			className="card-interactive rounded"
 			onClick={() => onClickRef.current?.()}
 			onKeyDown={(event) => {
-				if (event.key === 'Enter' || event.key === 'Space') {
+				if (['Enter', 'Space', ' '].includes(event.key)) {
 					onClickRef.current?.();
 				}
 			}}
@@ -229,11 +261,7 @@ function MarketplaceSearchResultsList({item}: {item: Product}) {
 			role="menuitem"
 			tabIndex={isTarget ? 0 : -1}
 		>
-			<MarketplaceModal
-				trigger={
-					<MarketplaceTabItem item={item} onClickRef={onClickRef} />
-				}
-			/>
+			<MarketplaceTabItem item={item} onClickRef={onClickRef} />
 		</li>
 	);
 }

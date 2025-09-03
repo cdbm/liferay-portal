@@ -65,15 +65,15 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.ActionRequestFactory;
 import com.liferay.users.admin.constants.UsersAdminPortletKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.Event;
+import jakarta.portlet.Portlet;
+
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.Event;
-import javax.portlet.Portlet;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -583,10 +583,11 @@ public class UsersAdminPortletTest {
 
 		Address address = _addressLocalService.addAddress(
 			null, user.getUserId(), Contact.class.getName(),
-			user.getContactId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, RandomTestUtil.randomString(), null, 0, 0, listTypeId, false,
-			false, null, ServiceContextTestUtil.getServiceContext());
+			user.getContactId(), 0, listTypeId, 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), false, RandomTestUtil.randomString(),
+			null, null, null, null, null,
+			ServiceContextTestUtil.getServiceContext());
 
 		_processActionRequestInPublication(
 			_ctCollection, "/users_admin/update_contact_information",

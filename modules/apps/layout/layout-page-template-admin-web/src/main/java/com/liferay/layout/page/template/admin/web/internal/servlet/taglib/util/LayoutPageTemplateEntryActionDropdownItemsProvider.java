@@ -18,7 +18,7 @@ import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutP
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -48,15 +48,15 @@ import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -427,7 +427,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 
 		RenderResponse renderResponse =
 			(RenderResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		LayoutPageTemplateCollectionItemSelectorCriterion
 			layoutPageTemplateCollectionItemSelectorCriterion =

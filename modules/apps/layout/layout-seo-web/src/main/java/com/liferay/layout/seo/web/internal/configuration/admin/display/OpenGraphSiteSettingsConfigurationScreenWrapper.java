@@ -25,15 +25,15 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.site.settings.configuration.admin.display.SiteSettingsConfigurationScreenContributor;
 import com.liferay.site.settings.configuration.admin.display.SiteSettingsConfigurationScreenFactory;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -148,10 +148,10 @@ public class OpenGraphSiteSettingsConfigurationScreenWrapper
 
 			PortletRequest portletRequest =
 				(PortletRequest)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST);
+					JavaConstants.JAKARTA_PORTLET_REQUEST);
 			PortletResponse portletResponse =
 				(PortletResponse)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE);
+					JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 			httpServletRequest.setAttribute(
 				OpenGraphSettingsDisplayContext.class.getName(),

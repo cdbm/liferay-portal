@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.test.portlet.MockRenderRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -22,11 +23,10 @@ import com.liferay.portal.search.cluster.StatsInformationFactory;
 import com.liferay.portal.search.configuration.ReindexConfiguration;
 import com.liferay.portal.search.index.IndexInformation;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockRenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;

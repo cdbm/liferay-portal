@@ -30,11 +30,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -265,6 +267,44 @@ public class JournalEditArticleDisplayContextTest {
 		).get(
 			_httpServletRequest, "home"
 		);
+	}
+
+	@Test
+	public void testGetTimeZoneMap() {
+		TimeZone timeZone = Mockito.mock(TimeZone.class);
+
+		String timeZoneName = RandomTestUtil.randomString();
+
+		Mockito.when(
+			timeZone.getDisplayName(false, TimeZone.SHORT)
+		).thenReturn(
+			timeZoneName
+		);
+
+		String timeZoneId = RandomTestUtil.randomString();
+
+		Mockito.when(
+			timeZone.getID()
+		).thenReturn(
+			timeZoneId
+		);
+
+		Mockito.when(
+			_themeDisplay.getTimeZone()
+		).thenReturn(
+			timeZone
+		);
+
+		_journalEditArticleDisplayContext =
+			new JournalEditArticleDisplayContext(
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
+
+		Map<String, Object> timeZoneMap =
+			_journalEditArticleDisplayContext.getTimeZoneMap();
+
+		Assert.assertEquals(timeZoneId, timeZoneMap.get("id"));
+		Assert.assertEquals(timeZoneName, timeZoneMap.get("name"));
 	}
 
 	@Test

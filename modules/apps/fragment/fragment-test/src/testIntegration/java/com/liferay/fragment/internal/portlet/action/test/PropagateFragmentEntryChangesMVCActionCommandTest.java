@@ -48,8 +48,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -146,7 +146,7 @@ public class PropagateFragmentEntryChangesMVCActionCommandTest {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 
 		Portlet portlet = _portletLocalService.getPortletById(
@@ -157,7 +157,7 @@ public class PropagateFragmentEntryChangesMVCActionCommandTest {
 				portlet, null);
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, liferayPortletConfig);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, liferayPortletConfig);
 
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay());

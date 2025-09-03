@@ -23,7 +23,6 @@ import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
-import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.info.item.renderer.InfoItemTemplatedRenderer;
@@ -43,13 +42,13 @@ import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.PrintWriter;
 
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,7 +65,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		return JSONUtil.put(
@@ -90,8 +89,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 					_language.format(
 						fragmentRendererContext.getLocale(), "x-options",
 						"content-display", true)
-				))
-		).toString();
+				)));
 	}
 
 	@Override
@@ -128,9 +126,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			className = jsonObject.getString("className");
 
 			displayObject = _getDisplayObject(
-				className, jsonObject.getLong("classPK"),
-				jsonObject.getString("externalReferenceCode"),
-				httpServletRequest, infoItemReference);
+				httpServletRequest, infoItemReference, jsonObject);
 		}
 		else {
 			displayObject = _getInfoItem(infoItemReference);
@@ -180,16 +176,11 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			return;
 		}
 
-		String className = StringPool.BLANK;
 		Object displayObject = null;
 
 		if (jsonObject != null) {
-			className = jsonObject.getString("className");
-
 			displayObject = _getDisplayObject(
-				className, jsonObject.getLong("classPK"),
-				jsonObject.getString("externalReferenceCode"),
-				httpServletRequest, infoItemReference);
+				httpServletRequest, infoItemReference, jsonObject);
 		}
 		else {
 			displayObject = _getInfoItem(infoItemReference);
@@ -204,6 +195,12 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			}
 
 			return;
+		}
+
+		String className = StringPool.BLANK;
+
+		if (jsonObject != null) {
+			className = jsonObject.getString("className");
 		}
 
 		if (Validator.isNull(className) && (infoItemReference != null)) {
@@ -234,8 +231,12 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		long classPK = _getClassPK(infoItemReference, jsonObject);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-39437") ||
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-39437") ||
 			!fragmentRendererContext.isViewMode() || (classPK <= 0)) {
 
 			_render(
@@ -343,15 +344,17 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 	}
 
 	private Object _getDisplayObject(
-		String className, long classPK, String externalReferenceCode,
 		HttpServletRequest httpServletRequest,
-		InfoItemReference infoItemReference) {
+		InfoItemReference infoItemReference, JSONObject jsonObject) {
+
+		long classPK = jsonObject.getLong("classPK");
 
 		InfoItemDetails infoItemDetails =
 			(InfoItemDetails)httpServletRequest.getAttribute(
 				InfoDisplayWebKeys.INFO_ITEM_DETAILS);
 
-		if ((infoItemReference != null) &&
+		if ((classPK <= 0) && (infoItemDetails != null) &&
+			(infoItemReference != null) &&
 			infoItemReference.equals(infoItemDetails.getInfoItemReference())) {
 
 			Object infoItem = httpServletRequest.getAttribute(
@@ -362,52 +365,40 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		InfoItemServiceFilter infoItemServiceFilter = null;
+		String externalReferenceCode = jsonObject.getString(
+			"externalReferenceCode");
 
-		if (classPK > 0) {
-			infoItemServiceFilter =
-				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER;
-		}
-		else {
-			infoItemServiceFilter =
-				ERCInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER;
-		}
-
-		if (infoItemReference != null) {
-			InfoItemIdentifier infoItemIdentifier =
-				infoItemReference.getInfoItemIdentifier();
-
-			infoItemServiceFilter =
-				infoItemIdentifier.getInfoItemServiceFilter();
-		}
-
-		InfoItemObjectProvider<?> infoItemObjectProvider =
-			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className, infoItemServiceFilter);
-
-		if (infoItemObjectProvider == null) {
+		if ((classPK <= 0) && Validator.isNull(externalReferenceCode)) {
 			return _getInfoItem(infoItemReference);
 		}
 
+		String className = jsonObject.getString("className");
+		InfoItemIdentifier infoItemIdentifier = null;
+		InfoItemObjectProvider<?> infoItemObjectProvider = null;
+
+		if (classPK > 0) {
+			infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
+			infoItemObjectProvider =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemObjectProvider.class, className,
+					ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+		}
+		else {
+			infoItemIdentifier = new ERCInfoItemIdentifier(
+				externalReferenceCode,
+				jsonObject.getString("scopeExternalReferenceCode", null));
+			infoItemObjectProvider =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemObjectProvider.class, className,
+					ERCInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+		}
+
+		if (infoItemObjectProvider == null) {
+			return null;
+		}
+
 		try {
-			InfoItemIdentifier infoItemIdentifier = null;
-
-			if (classPK > 0) {
-				infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
-			}
-			else {
-				infoItemIdentifier = new ERCInfoItemIdentifier(
-					externalReferenceCode);
-			}
-
-			Object infoItem = infoItemObjectProvider.getInfoItem(
-				infoItemIdentifier);
-
-			if (infoItem == null) {
-				return _getInfoItem(infoItemReference);
-			}
-
-			return infoItem;
+			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -415,7 +406,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		return _getInfoItem(infoItemReference);
+		return null;
 	}
 
 	private JSONObject _getFieldValueJSONObject(
@@ -425,8 +416,8 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			fragmentRendererContext.getFragmentEntryLink();
 
 		return (JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
-			getConfiguration(fragmentRendererContext),
-			fragmentEntryLink.getEditableValues(),
+			getConfigurationJSONObject(fragmentRendererContext),
+			fragmentEntryLink.getEditableValuesJSONObject(),
 			fragmentRendererContext.getLocale(), "itemSelector");
 	}
 
@@ -442,6 +433,10 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemObjectProvider.class, infoItemReference.getClassName(),
 				infoItemIdentifier.getInfoItemServiceFilter());
+
+		if (infoItemObjectProvider == null) {
+			return null;
+		}
 
 		try {
 			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);

@@ -19,6 +19,7 @@ import com.liferay.application.list.display.context.logic.PersonalMenuEntryHelpe
 import com.liferay.application.list.util.PanelCategoryRegistryUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
@@ -49,6 +50,11 @@ import com.liferay.portal.util.WebAppPool;
 import com.liferay.product.navigation.personal.menu.BasePersonalMenuEntry;
 import com.liferay.roles.admin.constants.RolesAdminWebKeys;
 
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,11 +66,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Evan Thibodeau
@@ -173,6 +174,22 @@ public class EditRolePermissionsNavigationDisplayContext {
 		).setParameter(
 			"p_p_isolated", "true"
 		).buildString();
+	}
+
+	private List<NavigationItem> _getMarketplaceNavigationItems() {
+		return TransformUtil.transform(
+			_panelAppRegistry.getPanelApps(PanelCategoryKeys.MARKETPLACE),
+			panelApp -> {
+				Portlet panelAppPortlet =
+					PortletLocalServiceUtil.getPortletById(
+						_themeDisplay.getCompanyId(), panelApp.getPortletId());
+
+				return NavigationItem.create(
+					PortalUtil.getPortletLongTitle(
+						panelAppPortlet, _servletContext, _locale),
+					_getPortletResourceNavigationItemConsumer(
+						panelAppPortlet.getPortletId()));
+			});
 	}
 
 	private List<NavigationItem> _getObjectsNavigationItems() {
@@ -381,6 +398,15 @@ public class EditRolePermissionsNavigationDisplayContext {
 						navigationItem.addNavigationItems(
 							_getPanelCategoryNavigationItems(
 								PanelCategoryKeys.COMMERCE));
+						navigationItem.setInitialExpanded(true);
+					}));
+
+			topLevelNavigationItem.addNavigationItems(
+				NavigationItem.create(
+					LanguageUtil.get(_locale, "marketplace"),
+					navigationItem -> {
+						navigationItem.addNavigationItems(
+							_getMarketplaceNavigationItems());
 						navigationItem.setInitialExpanded(true);
 					}));
 

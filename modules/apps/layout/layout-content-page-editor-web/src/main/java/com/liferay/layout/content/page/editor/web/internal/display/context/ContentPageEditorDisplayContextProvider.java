@@ -6,6 +6,7 @@
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
@@ -47,14 +49,14 @@ import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -93,7 +95,7 @@ public class ContentPageEditorDisplayContextProvider {
 				_layoutPageTemplateStructureLocalService,
 				_layoutPageTemplateStructureRelLocalService, _layoutPermission,
 				_pageEditorConfiguration, _portal, portletRequest,
-				_portletURLFactory, renderResponse,
+				_portletResourcePermission, _portletURLFactory, renderResponse,
 				_segmentsConfigurationProvider,
 				new SegmentsExperienceManager(_segmentsExperienceLocalService),
 				_segmentsExperienceLocalService,
@@ -114,7 +116,7 @@ public class ContentPageEditorDisplayContextProvider {
 				_layoutPageTemplateEntryLocalService,
 				_layoutPageTemplateEntryService, _layoutPermission,
 				_pageEditorConfiguration, _portal, portletRequest,
-				_portletURLFactory, renderResponse,
+				_portletResourcePermission, _portletURLFactory, renderResponse,
 				_segmentsConfigurationProvider,
 				new SegmentsExperienceManager(_segmentsExperienceLocalService),
 				_segmentsExperienceLocalService,
@@ -149,8 +151,8 @@ public class ContentPageEditorDisplayContextProvider {
 			_layoutSetLocalService, _layoutPageTemplateEntryLocalService,
 			_layoutPageTemplateEntryService, _layoutPermission,
 			_pageEditorConfiguration, pageIsDisplayPage, _portal,
-			portletRequest, _portletURLFactory, renderResponse,
-			_segmentsConfigurationProvider,
+			portletRequest, _portletResourcePermission, _portletURLFactory,
+			renderResponse, _segmentsConfigurationProvider,
 			new SegmentsExperienceManager(_segmentsExperienceLocalService),
 			_segmentsExperienceLocalService, _segmentsExperimentRelLocalService,
 			_segmentsEntryService, _staging, _stagingGroupHelper,
@@ -243,6 +245,11 @@ public class ContentPageEditorDisplayContextProvider {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + FragmentConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 	@Reference
 	private PortletURLFactory _portletURLFactory;

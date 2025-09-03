@@ -19,6 +19,7 @@ export class CommerceLayoutsPage {
 	readonly backLink: Locator;
 	readonly cancelButton: Locator;
 	readonly changeCurrentThemeButton: Locator;
+	readonly closeFrameButton: Locator;
 	readonly closeProductMenuButton: Locator;
 	readonly configureMenuItem: Locator;
 	readonly createNewOrderButton: Locator;
@@ -34,6 +35,7 @@ export class CommerceLayoutsPage {
 	readonly displayPageTemplateCheckBox: (displayPageName: string) => Locator;
 	readonly displayPageTemplateLink: (name: string) => Locator;
 	readonly displayPageTemplatesLink: Locator;
+	readonly downloadCsvTemplateButton: Locator;
 	readonly editMenuItem: Locator;
 	readonly firstFragment: Locator;
 	readonly fragmentsAndWidgetsTab: Locator;
@@ -54,8 +56,9 @@ export class CommerceLayoutsPage {
 	readonly labelField: Locator;
 	readonly markAsDefaultMenuItem: Locator;
 	readonly moreActionsButton: Locator;
-	readonly orderActionsButton: (orderActionName: string) => Locator;
 	readonly openProductMenuButton: Locator;
+	readonly orderActionsButton: (orderActionName: string) => Locator;
+	readonly orderActionDropDownButton: Locator;
 	readonly orderItemCardButton: Locator;
 	readonly page: Page;
 	readonly pageEditorCollectionItem: Locator;
@@ -79,6 +82,11 @@ export class CommerceLayoutsPage {
 	readonly stepTrackerItem: (name: string) => Locator;
 	readonly submitButton: Locator;
 	readonly widgetPageTemplateButton: Locator;
+
+	readonly orderTypeModal: Locator;
+	readonly orderTypeModalHeading: Locator;
+	readonly orderTypeModalInput: Locator;
+	readonly orderTypeModalButton: Locator;
 
 	constructor(page: Page) {
 		this.accountSelectorButton = (name) => {
@@ -110,7 +118,7 @@ export class CommerceLayoutsPage {
 		this.availableThemesFrame = page.frameLocator(
 			'iframe[title="Available Themes"]'
 		);
-		this.backLink = page.getByRole('link', {exact: true, name: 'Back'});
+		this.backLink = page.locator('span[title="Back"]');
 		this.cancelButton = page.getByRole('button', {
 			exact: true,
 			name: 'Cancel',
@@ -119,6 +127,7 @@ export class CommerceLayoutsPage {
 			exact: true,
 			name: 'Change Current Theme',
 		});
+		this.closeFrameButton = page.getByLabel('close', {exact: true});
 		this.closeProductMenuButton = page.getByRole('tab', {
 			exact: true,
 			name: 'Close Product Menu',
@@ -190,6 +199,9 @@ export class CommerceLayoutsPage {
 			name: 'Cancel',
 		});
 		this.iconLock = page.locator('.lexicon-icon-lock');
+		this.downloadCsvTemplateButton = page
+			.frameLocator('iframe[title="Import from CSV"]')
+			.getByRole('button', {name: 'Download Template'});
 		this.infoBoxDeletePurchaseOrderDocumentButton = page.getByTestId(
 			'purchaseOrderDocument-infoBoxDeleteButton'
 		);
@@ -211,15 +223,31 @@ export class CommerceLayoutsPage {
 		});
 		this.labelField = page.getByLabel('Field', {exact: true});
 		this.moreActionsButton = page.getByLabel('More actions');
-		this.orderActionsButton = (orderActionName: string) =>
-			page.getByRole('button', {exact: true, name: orderActionName});
 		this.openProductMenuButton = page.getByRole('tab', {
 			exact: true,
 			name: 'Open Product Menu',
 		});
+		this.orderActionsButton = (orderActionName: string) =>
+			page.getByRole('button', {exact: true, name: orderActionName});
+		this.orderActionDropDownButton = page
+			.locator(
+				'.lfr-layout-structure-item-com-liferay-commerce-order-content-web-internal-fragment-renderer-orderactionsfragmentrenderer'
+			)
+			.locator('.dropdown-toggle');
 		this.orderItemCardButton = page
 			.frameLocator('iframe[title="Select"]')
 			.getByRole('button', {name: 'Select Order Items'});
+		this.orderTypeModal = page.locator('.modal-content');
+		this.orderTypeModalHeading = this.orderTypeModal.getByRole('heading', {
+			name: 'Select Order Type',
+		});
+		this.orderTypeModalInput = this.orderTypeModal.getByLabel(
+			'Order Type',
+			{exact: true}
+		);
+		this.orderTypeModalButton = this.orderTypeModal.getByRole('button', {
+			name: 'Add Order',
+		});
 		this.page = page;
 		this.pageEditorCollectionItem = page
 			.locator('.page-editor__collection-item')
@@ -357,15 +385,6 @@ export class CommerceLayoutsPage {
 		await this.addWidgetButton.click();
 		await this.searchFormInput.fill(widgetName);
 		await this.addWidgetLabel(widgetName).click();
-	}
-
-	async checkValueOrderSummary(nameValue: string, value: string) {
-		await expect(
-			this.page.getByText(nameValue, {exact: true})
-		).toBeVisible();
-		await expect(
-			this.page.locator('span').filter({hasText: value})
-		).toBeVisible();
 	}
 
 	async createDisplayPageTemplate(
@@ -540,13 +559,22 @@ export class CommerceLayoutsPage {
 		}
 	}
 
-	async selectDisplayPageTemplatePreviewItem(itemName: string) {
+	async selectDisplayPageTemplatePreviewItem(
+		itemName: string,
+		visible: boolean = true
+	) {
 		await this.previewItemSelectorButton.click();
 		await this.selectOtherItemDropdownItem.click();
 
 		const itemButton = await this.page
 			.frameLocator('iframe[title="Select"]')
 			.getByRole('button', {name: itemName});
+
+		if (!visible) {
+			await expect(itemButton).toHaveCount(0);
+
+			return;
+		}
 
 		await expect(itemButton).toBeVisible();
 

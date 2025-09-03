@@ -5,8 +5,8 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
+import com.liferay.headless.admin.site.dto.v1_0.CollectionPageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.EmptyCollectionConfig;
-import com.liferay.headless.admin.site.dto.v1_0.PageCollectionDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
@@ -41,38 +41,40 @@ public class CollectionLayoutStructureItemImporter
 							pageElement, layoutStructure),
 						pageElement.getPosition());
 
-		PageCollectionDefinition pageCollectionDefinition =
-			(PageCollectionDefinition)pageElement.getDefinition();
+		CollectionPageElementDefinition collectionPageElementDefinition =
+			(CollectionPageElementDefinition)
+				pageElement.getPageElementDefinition();
 
-		if (pageCollectionDefinition == null) {
+		if (collectionPageElementDefinition == null) {
 			return collectionStyledLayoutStructureItem;
 		}
 
 		collectionStyledLayoutStructureItem.setDisplayAllItems(
-			pageCollectionDefinition.getDisplayAllItems());
+			collectionPageElementDefinition.getDisplayAllItems());
 		collectionStyledLayoutStructureItem.setEmptyCollectionOptions(
 			_toEmptyCollectionOptions(
-				pageCollectionDefinition.getEmptyCollectionConfig()));
+				collectionPageElementDefinition.getEmptyCollectionConfig()));
 		collectionStyledLayoutStructureItem.setDisplayAllPages(
-			pageCollectionDefinition.getDisplayAllPages());
+			collectionPageElementDefinition.getDisplayAllPages());
 		collectionStyledLayoutStructureItem.setListItemStyle(
-			pageCollectionDefinition.getListItemStyle());
+			collectionPageElementDefinition.getListItemStyle());
 		collectionStyledLayoutStructureItem.setListStyle(
-			pageCollectionDefinition.getListStyle());
+			collectionPageElementDefinition.getListStyle());
 		collectionStyledLayoutStructureItem.setNumberOfColumns(
-			pageCollectionDefinition.getNumberOfColumns());
+			collectionPageElementDefinition.getNumberOfColumns());
 		collectionStyledLayoutStructureItem.setNumberOfItems(
-			pageCollectionDefinition.getNumberOfItems());
+			collectionPageElementDefinition.getNumberOfItems());
 		collectionStyledLayoutStructureItem.setNumberOfItemsPerPage(
-			pageCollectionDefinition.getNumberOfItemsPerPage());
+			collectionPageElementDefinition.getNumberOfItemsPerPage());
 		collectionStyledLayoutStructureItem.setNumberOfPages(
-			pageCollectionDefinition.getNumberOfPages());
+			collectionPageElementDefinition.getNumberOfPages());
 		collectionStyledLayoutStructureItem.setPaginationType(
-			_toPaginationType(pageCollectionDefinition.getPaginationType()));
+			_toPaginationType(
+				collectionPageElementDefinition.getPaginationType()));
 		collectionStyledLayoutStructureItem.setTemplateKey(
-			pageCollectionDefinition.getTemplateKey());
+			collectionPageElementDefinition.getTemplateKey());
 		collectionStyledLayoutStructureItem.setName(
-			pageCollectionDefinition.getName());
+			collectionPageElementDefinition.getName());
 
 		return collectionStyledLayoutStructureItem;
 	}
@@ -93,18 +95,18 @@ public class CollectionLayoutStructureItemImporter
 	}
 
 	private String _toPaginationType(
-		PageCollectionDefinition.PaginationType paginationType) {
+		CollectionPageElementDefinition.PaginationType paginationType) {
 
 		if (Objects.equals(
 				paginationType,
-				PageCollectionDefinition.PaginationType.NUMERIC)) {
+				CollectionPageElementDefinition.PaginationType.NUMERIC)) {
 
 			return CollectionPaginationUtil.PAGINATION_TYPE_NUMERIC;
 		}
 
 		if (Objects.equals(
 				paginationType,
-				PageCollectionDefinition.PaginationType.REGULAR)) {
+				CollectionPageElementDefinition.PaginationType.REGULAR)) {
 
 			return CollectionPaginationUtil.PAGINATION_TYPE_REGULAR;
 		}

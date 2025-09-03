@@ -14,7 +14,7 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrder;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrderItem;
 import com.liferay.headless.commerce.delivery.order.internal.dto.v1_0.converter.PlacedOrderItemDTOConverterContext;
-import com.liferay.headless.commerce.delivery.order.internal.odate.entity.v1_0.PlacedOrderItemEntityModel;
+import com.liferay.headless.commerce.delivery.order.internal.odata.entity.v1_0.PlacedOrderItemEntityModel;
 import com.liferay.headless.commerce.delivery.order.resource.v1_0.PlacedOrderItemResource;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -27,7 +27,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

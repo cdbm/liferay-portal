@@ -46,35 +46,36 @@ public class DepotRoleContributor implements RoleContributor {
 			Group group = _groupLocalService.getGroup(
 				roleCollection.getGroupId());
 
-			if (!group.isDepot()) {
-				return;
-			}
+			if (group.isDepot()) {
+				UserBag userBag = roleCollection.getUserBag();
 
-			UserBag userBag = roleCollection.getUserBag();
-
-			if (userBag.hasUserGroup(group) ||
-				_hasInheritedMemberships(group.getGroupId(), userBag)) {
-
-				_addRoleId(
-					roleCollection, DepotRolesConstants.ASSET_LIBRARY_MEMBER);
-			}
-
-			List<DepotEntryGroupRel> depotEntryGroupRels =
-				_depotEntryGroupRelLocalService.getDepotEntryGroupRels(
-					_depotEntryLocalService.getGroupDepotEntry(
-						group.getGroupId()));
-
-			for (DepotEntryGroupRel depotEntryGroupRel : depotEntryGroupRels) {
-				if (userBag.hasUserGroup(
-						_groupLocalService.getGroup(
-							depotEntryGroupRel.getToGroupId()))) {
+				if (userBag.hasUserGroup(group) ||
+					_hasInheritedMemberships(group.getGroupId(), userBag)) {
 
 					_addRoleId(
 						roleCollection,
-						DepotRolesConstants.
-							ASSET_LIBRARY_CONNECTED_SITE_MEMBER);
+						DepotRolesConstants.ASSET_LIBRARY_MEMBER);
+				}
 
-					break;
+				List<DepotEntryGroupRel> depotEntryGroupRels =
+					_depotEntryGroupRelLocalService.getDepotEntryGroupRels(
+						_depotEntryLocalService.getGroupDepotEntry(
+							group.getGroupId()));
+
+				for (DepotEntryGroupRel depotEntryGroupRel :
+						depotEntryGroupRels) {
+
+					if (userBag.hasUserGroup(
+							_groupLocalService.getGroup(
+								depotEntryGroupRel.getToGroupId()))) {
+
+						_addRoleId(
+							roleCollection,
+							DepotRolesConstants.
+								ASSET_LIBRARY_CONNECTED_SITE_MEMBER);
+
+						break;
+					}
 				}
 			}
 		}

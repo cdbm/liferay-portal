@@ -15,8 +15,6 @@ import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -28,20 +26,23 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.servlet.PageContextFactoryUtil;
+import com.liferay.translation.translator.Translator;
+import com.liferay.translation.translator.TranslatorRegistry;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,7 +59,7 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
@@ -79,7 +80,7 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 				_log.debug(exception);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -112,10 +113,6 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public boolean isSelectable(HttpServletRequest httpServletRequest) {
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-37927")) {
-			return false;
-		}
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -158,7 +155,8 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 
 			ComponentTag componentTag = new ComponentTag();
 
-			componentTag.setModule("{LocalizationSelect} from fragment-impl");
+			componentTag.setModule(
+				"{LocalizationSelect} from fragment-impl/api");
 			componentTag.setPageContext(
 				PageContextFactoryUtil.create(
 					httpServletRequest, httpServletResponse));
@@ -169,6 +167,32 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 
 			componentTag.setProps(
 				HashMapBuilder.<String, Object>put(
+					"allowLocalizationManagement",
+					GetterUtil.getBoolean(
+						_fragmentEntryConfigurationParser.getFieldValue(
+							fragmentEntryLink.getConfigurationJSONObject(),
+							fragmentEntryLink.getEditableValuesJSONObject(),
+							LocaleUtil.getMostRelevantLocale(),
+							"allowLocalizationManagement"))
+				).put(
+					"autoTranslateURL",
+					PortalUtil.getPortalURL(httpServletRequest) +
+						PortalUtil.getPathModule() +
+							"/translation/auto_translate"
+				).put(
+					"autoTranslationEnabled",
+					() -> {
+						Translator translator =
+							_translatorRegistry.getCompanyTranslator(
+								themeDisplay.getCompanyId());
+
+						if (translator != null) {
+							return true;
+						}
+
+						return false;
+					}
+				).put(
 					"defaultLanguageId",
 					LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale())
 				).put(
@@ -177,8 +201,8 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 					"hideLanguageLabel",
 					GetterUtil.getBoolean(
 						_fragmentEntryConfigurationParser.getFieldValue(
-							fragmentEntryLink.getConfiguration(),
-							fragmentEntryLink.getEditableValues(),
+							fragmentEntryLink.getConfigurationJSONObject(),
+							fragmentEntryLink.getEditableValuesJSONObject(),
 							LocaleUtil.getMostRelevantLocale(),
 							"hideLanguageLabel"))
 				).put(
@@ -204,8 +228,8 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 					"size",
 					GetterUtil.getString(
 						_fragmentEntryConfigurationParser.getFieldValue(
-							fragmentEntryLink.getConfiguration(),
-							fragmentEntryLink.getEditableValues(),
+							fragmentEntryLink.getConfigurationJSONObject(),
+							fragmentEntryLink.getEditableValuesJSONObject(),
 							LocaleUtil.getMostRelevantLocale(), "size"),
 						"normal")
 				).build());
@@ -240,5 +264,8 @@ public class LocalizationSelectFragmentRenderer implements FragmentRenderer {
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.fragment.impl)")
 	private ServletContext _servletContext;
+
+	@Reference
+	private TranslatorRegistry _translatorRegistry;
 
 }

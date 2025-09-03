@@ -7,6 +7,8 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -40,6 +42,8 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.QueryConfig;
@@ -317,6 +321,14 @@ public class OrganizationLocalServiceImpl
 		organization.setCountryId(countryId);
 		organization.setStatusListTypeId(statusListTypeId);
 		organization.setComments(comments);
+
+		if (EmptyModelManagerUtil.isEmptyModel()) {
+			organization.setStatus(WorkflowConstants.STATUS_EMPTY);
+		}
+		else {
+			organization.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		organization.setExpandoBridgeAttributes(serviceContext);
 
 		organization = organizationPersistence.update(organization);
@@ -700,6 +712,39 @@ public class OrganizationLocalServiceImpl
 		return organizationFinder.findO_ByNoAssets();
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, long companyId, long userId,
+			String name)
+		throws Exception {
+
+		return EmptyModelManagerUtil.getOrAddEmptyModel(
+			Organization.class, companyId, externalReferenceCode,
+			this::fetchOrganizationByExternalReferenceCode,
+			this::getOrganizationByExternalReferenceCode,
+			() -> {
+				String organizationName = name;
+
+				if (Validator.isNull(name) ||
+					(fetchOrganization(companyId, name) != null)) {
+
+					organizationName = externalReferenceCode;
+				}
+
+				String[] types = getTypes();
+
+				ListType listType = _listTypeLocalService.getListType(
+					companyId, ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+					ListTypeConstants.ORGANIZATION_STATUS);
+
+				return addOrganization(
+					externalReferenceCode, userId, 0, organizationName,
+					types[0], 0, 0, listType.getListTypeId(), StringPool.BLANK,
+					false, null);
+			});
+	}
+
 	/**
 	 * Returns the organization with the name.
 	 *
@@ -1064,15 +1109,15 @@ public class OrganizationLocalServiceImpl
 		List<Organization> allOrganizations,
 		List<Organization> availableOrganizations) {
 
-		List<Organization> subsetOrganizations = new ArrayList<>();
+		return TransformUtil.transform(
+			allOrganizations,
+			organization -> {
+				if (availableOrganizations.contains(organization)) {
+					return organization;
+				}
 
-		for (Organization organization : allOrganizations) {
-			if (availableOrganizations.contains(organization)) {
-				subsetOrganizations.add(organization);
-			}
-		}
-
-		return subsetOrganizations;
+				return null;
+			});
 	}
 
 	@Override
@@ -2126,6 +2171,10 @@ public class OrganizationLocalServiceImpl
 			userFileUploadsSettings.getImageMaxHeight(),
 			userFileUploadsSettings.getImageMaxWidth());
 
+		if (organization.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			organization.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		organization.setExpandoBridgeAttributes(serviceContext);
 
 		organization = organizationPersistence.update(organization);
@@ -2503,21 +2552,12 @@ public class OrganizationLocalServiceImpl
 
 		String treePath = organization.getTreePath();
 
-		if (treePath.contains(
-				StringPool.SLASH + parentOrganizationId + StringPool.SLASH)) {
-
-			return true;
-		}
-
-		return false;
+		return treePath.contains(
+			StringPool.SLASH + parentOrganizationId + StringPool.SLASH);
 	}
 
 	protected boolean isUseCustomSQL(LinkedHashMap<String, Object> params) {
-		if (MapUtil.isEmpty(params)) {
-			return false;
-		}
-
-		return true;
+		return MapUtil.isNotEmpty(params);
 	}
 
 	protected void reindex(long companyId, long[] userIds)
@@ -2649,7 +2689,9 @@ public class OrganizationLocalServiceImpl
 		boolean countryRequired = organizationTypesSettings.isCountryRequired(
 			type);
 
-		if (countryRequired || (countryId > 0)) {
+		if ((countryRequired && !EmptyModelManagerUtil.isEmptyModel()) ||
+			(countryId > 0)) {
+
 			_countryPersistence.findByPrimaryKey(countryId);
 		}
 

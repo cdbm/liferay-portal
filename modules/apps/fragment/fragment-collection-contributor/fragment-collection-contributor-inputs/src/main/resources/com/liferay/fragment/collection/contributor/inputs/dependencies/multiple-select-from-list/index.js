@@ -39,165 +39,205 @@ else if (layoutMode === 'edit') {
 	button.setAttribute('disabled', true);
 }
 else {
-	if (Liferay.FeatureFlags['LPD-37927']) {
-		import('@liferay/fragment-impl').then(
-			({
-				getOrCreateTranslationInput,
-				registerLocalizedInput,
-				registerUnlocalizedInput,
-			}) => {
-				const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+	import('@liferay/fragment-impl/api').then(
+		({
+			getTranslationInput,
+			registerLocalizedInput,
+			registerUnlocalizedInput,
+		}) => {
+			const defaultLanguageId = themeDisplay.getDefaultLanguageId();
 
-				let currentLanguageId = defaultLanguageId;
+			let currentLanguageId = defaultLanguageId;
 
-				if (input.localizable) {
+			if (input.localizable) {
 
-					// Set initial values
+				// Set initial values
 
-					allInputs.forEach((inputElement) => {
-						Object.entries(input.valueI18n).forEach(
-							([languageId, value]) => {
-								const input = getOrCreateTranslationInput(
-									inputElement.id,
-									inputElement.name,
-									languageId,
+				allInputs.forEach((inputElement) => {
+					Object.entries(input.valueI18n).forEach(
+						([languageId, value]) => {
+							const input = getTranslationInput({
+								inputId: inputElement.id,
+								inputName: inputElement.name,
+								languageId,
+								localizationInputsContainer:
 									inputElement.parentNode,
-									fragmentNamespace
-								);
-
-								input.value = value.includes(inputElement.value)
-									? inputElement.value
-									: '';
-							}
-						);
-					});
-
-					const {onChange} = registerLocalizedInput({
-						changeTextDirection: false,
-						customLocaleChangeHandler: true,
-						defaultLanguageId,
-						onLocaleChange: ({languageId}) => {
-							currentLanguageId = languageId;
-
-							allInputs.forEach((input) => {
-								const translationInput =
-									getOrCreateTranslationInput(
-										input.id,
-										input.name,
-										languageId,
-										input.parentNode,
-										fragmentNamespace
-									);
-
-								if (translationInput) {
-									if (
-										translationInput.getAttribute(
-											'value'
-										) !== null
-									) {
-										input.checked = Boolean(
-											translationInput.value
-										);
-									}
-								}
-								else {
-									const defaultLanguageInput =
-										getOrCreateTranslationInput(
-											input.id,
-											input.name,
-											defaultLanguageId,
-											input.parentNode,
-											fragmentNamespace
-										);
-
-									if (defaultLanguageInput) {
-										input.checked = Boolean(
-											defaultLanguageInput.value
-										);
-									}
-								}
+								namespace: fragmentNamespace,
 							});
-						},
-					});
 
-					fieldSet.addEventListener('change', () => {
-						allInputs.forEach((input) => {
-							const translationInput =
-								getOrCreateTranslationInput(
-									input.id,
-									input.name,
-									currentLanguageId,
-									input.parentNode,
-									fragmentNamespace
-								);
-
-							translationInput.value = input.checked
-								? input.value
+							input.value = value.includes(inputElement.value)
+								? inputElement.value
 								: '';
+						}
+					);
+				});
+
+				const {onChange} = registerLocalizedInput({
+					changeTextDirection: false,
+					customLocaleChangeHandler: true,
+					defaultLanguageId,
+					inputName: input.name,
+					localizationInputsContainer: fieldSet,
+					namespace: fragmentNamespace,
+					onLocaleChange: ({languageId}) => {
+						currentLanguageId = languageId;
+
+						allInputs.forEach((input) => {
+							const translationInput = getTranslationInput({
+								inputId: input.id,
+								inputName: input.name,
+								languageId,
+								localizationInputsContainer: input.parentNode,
+								namespace: fragmentNamespace,
+							});
+
+							if (translationInput) {
+								if (
+									translationInput.getAttribute('value') !==
+									null
+								) {
+									input.checked = Boolean(
+										translationInput.value
+									);
+								}
+							}
+							else {
+								const defaultLanguageInput =
+									getTranslationInput({
+										inputId: input.id,
+										inputName: input.name,
+										languageId: defaultLanguageId,
+										localizationInputsContainer:
+											input.parentNode,
+										namespace: fragmentNamespace,
+									});
+
+								if (defaultLanguageInput) {
+									input.checked = Boolean(
+										defaultLanguageInput.value
+									);
+								}
+							}
+						});
+					},
+					onMarkAsTranslated: () => {
+						allInputs.forEach((input) => {
+							const defaultLanguageInput = getTranslationInput({
+								inputId: input.id,
+								inputName: input.name,
+								languageId: defaultLanguageId,
+								localizationInputsContainer: input.parentNode,
+								namespace: fragmentNamespace,
+							});
+
+							const translationInput = getTranslationInput({
+								inputId: input.id,
+								inputName: input.name,
+								languageId: currentLanguageId,
+								localizationInputsContainer: input.parentNode,
+								namespace: fragmentNamespace,
+							});
+
+							input.checked = Boolean(defaultLanguageInput.value);
+
+							translationInput.value = defaultLanguageInput.value;
+						});
+					},
+					onResetTranslation: () => {
+						allInputs.forEach((input) => {
+							const defaultLanguageInput = getTranslationInput({
+								inputId: input.id,
+								inputName: input.name,
+								languageId: defaultLanguageId,
+								localizationInputsContainer: input.parentNode,
+								namespace: fragmentNamespace,
+							});
+
+							const translationInput = getTranslationInput({
+								inputId: input.id,
+								inputName: input.name,
+								languageId: currentLanguageId,
+								localizationInputsContainer: input.parentNode,
+								namespace: fragmentNamespace,
+							});
+
+							input.checked = Boolean(defaultLanguageInput.value);
+
+							translationInput.value = '';
+						});
+					},
+				});
+
+				fieldSet.addEventListener('change', () => {
+					allInputs.forEach((input) => {
+						const translationInput = getTranslationInput({
+							inputId: input.id,
+							inputName: input.name,
+							languageId: currentLanguageId,
+							localizationInputsContainer: input.parentNode,
+							namespace: fragmentNamespace,
 						});
 
-						onChange();
+						translationInput.value = input.checked
+							? input.value
+							: '';
 					});
-				}
-				else {
-					const unlocalizedFieldsState =
-						input.attributes.unlocalizedFieldsState;
 
-					registerUnlocalizedInput({
-						changeTextDirection: false,
-						customLocaleChangeHandler: true,
-						defaultLanguageId,
-						onLocaleChange: (languageId) => {
-							const editingDefaultLanguage =
-								defaultLanguageId === languageId;
-							const isReadOnlyFieldState =
-								unlocalizedFieldsState === 'read-only';
-
-							allInputs.forEach((inputElement) => {
-								if (editingDefaultLanguage) {
-									inputElement?.removeAttribute(
-										isReadOnlyFieldState
-											? 'readonly'
-											: 'disabled'
-									);
-								}
-								else {
-									inputElement?.setAttribute(
-										isReadOnlyFieldState
-											? 'readonly'
-											: 'disabled',
-										''
-									);
-								}
-
-								inputElement.addEventListener(
-									'click',
-									(event) => {
-										if (
-											!editingDefaultLanguage &&
-											isReadOnlyFieldState
-										) {
-											event.preventDefault();
-										}
-									}
-								);
-							});
-						},
-						readOnlyInputLabel: document.getElementById(
-							`${fragmentNamespace}-multiselect-list-read-only`
-						),
-						unlocalizedFieldsState,
-						unlocalizedMessageContainer: document.getElementById(
-							`${fragmentNamespace}-unlocalized-info`
-						),
-					});
-				}
+					onChange();
+				});
 			}
-		);
-	}
-	else {
-		fieldSet.addEventListener('change', updateInputStatus);
-	}
+			else {
+				const unlocalizedFieldsState =
+					input.attributes.unlocalizedFieldsState;
+
+				registerUnlocalizedInput({
+					changeTextDirection: false,
+					customLocaleChangeHandler: true,
+					defaultLanguageId,
+					onLocaleChange: (languageId) => {
+						const editingDefaultLanguage =
+							defaultLanguageId === languageId;
+						const isReadOnlyFieldState =
+							unlocalizedFieldsState === 'read-only';
+
+						allInputs.forEach((inputElement) => {
+							if (editingDefaultLanguage) {
+								inputElement?.removeAttribute(
+									isReadOnlyFieldState
+										? 'readonly'
+										: 'disabled'
+								);
+							}
+							else {
+								inputElement?.setAttribute(
+									isReadOnlyFieldState
+										? 'readonly'
+										: 'disabled',
+									''
+								);
+							}
+
+							inputElement.addEventListener('click', (event) => {
+								if (
+									!editingDefaultLanguage &&
+									isReadOnlyFieldState
+								) {
+									event.preventDefault();
+								}
+							});
+						});
+					},
+					readOnlyInputLabel: document.getElementById(
+						`${fragmentNamespace}-multiselect-list-read-only`
+					),
+					unlocalizedFieldsState,
+					unlocalizedMessageContainer: document.getElementById(
+						`${fragmentNamespace}-unlocalized-info`
+					),
+				});
+			}
+		}
+	);
 }
 
 updateInputStatus();

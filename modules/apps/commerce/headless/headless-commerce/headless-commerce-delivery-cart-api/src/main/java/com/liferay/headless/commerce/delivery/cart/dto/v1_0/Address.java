@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -665,6 +665,47 @@ public class Address implements Serializable {
 	private Supplier<String> _street3Supplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public String getSubtype() {
+		if (_subtypeSupplier != null) {
+			subtype = _subtypeSupplier.get();
+
+			_subtypeSupplier = null;
+		}
+
+		return subtype;
+	}
+
+	public void setSubtype(String subtype) {
+		this.subtype = subtype;
+
+		_subtypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSubtype(
+		UnsafeSupplier<String, Exception> subtypeUnsafeSupplier) {
+
+		_subtypeSupplier = () -> {
+			try {
+				return subtypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String subtype;
+
+	@JsonIgnore
+	private Supplier<String> _subtypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getType() {
 		if (_typeSupplier != null) {
 			type = _typeSupplier.get();
@@ -1075,6 +1116,22 @@ public class Address implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(street3));
+
+			sb.append("\"");
+		}
+
+		String subtype = getSubtype();
+
+		if (subtype != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"subtype\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(subtype));
 
 			sb.append("\"");
 		}

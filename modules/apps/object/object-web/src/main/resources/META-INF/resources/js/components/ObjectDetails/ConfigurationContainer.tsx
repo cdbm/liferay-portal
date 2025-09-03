@@ -10,8 +10,8 @@ import React from 'react';
 
 interface ConfigurationContainerProps {
 	hasUpdateObjectDefinitionPermission: boolean;
+	isEnableObjectEntrySchedule: boolean;
 	isLinkedObjectDefinition?: boolean;
-	isRootDescendantNode: boolean;
 	onSubmit?: (editedObjectDefinition?: Partial<ObjectDefinition>) => void;
 	setValues: (values: Partial<ObjectDefinition>) => void;
 	values: Partial<ObjectDefinition>;
@@ -19,8 +19,8 @@ interface ConfigurationContainerProps {
 
 export function ConfigurationContainer({
 	hasUpdateObjectDefinitionPermission,
+	isEnableObjectEntrySchedule,
 	isLinkedObjectDefinition,
-	isRootDescendantNode,
 	onSubmit,
 	setValues,
 	values,
@@ -36,7 +36,7 @@ export function ConfigurationContainer({
 		<div className="lfr-objects__object-definition-details-configuration">
 			<ClayForm.Group>
 				<Toggle
-					disabled={disabled || isRootDescendantNode}
+					disabled={disabled}
 					label={sub(
 						Liferay.Language.get('show-widget-in-x'),
 						Liferay.Language.get('page-builder')
@@ -153,9 +153,7 @@ export function ConfigurationContainer({
 
 			<ClayForm.Group>
 				<Toggle
-					disabled={
-						isReadOnly || !hasUpdateObjectDefinitionPermission
-					}
+					disabled={disabled}
 					label={Liferay.Language.get(
 						'allow-users-to-save-entries-as-draft'
 					)}
@@ -176,6 +174,35 @@ export function ConfigurationContainer({
 					toggled={values.enableObjectEntryDraft}
 				/>
 			</ClayForm.Group>
+
+			{Liferay.FeatureFlags['LPD-17564'] && (
+				<ClayForm.Group>
+					<Toggle
+						disabled={
+							disabled ||
+							(isEnableObjectEntrySchedule && values.active)
+						}
+						label={Liferay.Language.get(
+							'allow-users-to-schedule-a-display-expiration-and-review-date-for-entries'
+						)}
+						name="enableObjectEntrySchedule"
+						onBlur={(event) => {
+							event.stopPropagation();
+
+							if (onSubmit) {
+								onSubmit();
+							}
+						}}
+						onToggle={() => {
+							setValues({
+								enableObjectEntrySchedule:
+									!values.enableObjectEntrySchedule,
+							});
+						}}
+						toggled={values.enableObjectEntrySchedule}
+					/>
+				</ClayForm.Group>
+			)}
 		</div>
 	);
 }

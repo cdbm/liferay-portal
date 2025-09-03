@@ -7,17 +7,21 @@ package com.liferay.portal.util.mail.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.mail.kernel.model.MailMessage;
+import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.test.ReloadURLClassLoader;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
-import com.liferay.portal.util.PropsUtil;
+
+import jakarta.mail.internet.InternetAddress;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,8 +32,6 @@ import java.lang.reflect.Method;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.mail.internet.InternetAddress;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -132,6 +134,9 @@ public class MailEngineTest {
 		}
 	}
 
+	@Inject
+	private static MailService _mailService;
+
 	private static class TestMailEngine implements Closeable {
 
 		@Override
@@ -146,7 +151,7 @@ public class MailEngineTest {
 
 		public void send(MailMessage mailMessage) throws Throwable {
 			try {
-				_sendMethod.invoke(null, mailMessage);
+				_sendMethod.invoke(null, _mailService, mailMessage);
 			}
 			catch (InvocationTargetException invocationTargetException) {
 				throw invocationTargetException.getTargetException();
@@ -208,7 +213,8 @@ public class MailEngineTest {
 				mailEngineClass.getName());
 
 			_sendMethod = ReflectionUtil.getDeclaredMethod(
-				reloadMailEngineClass, "send", MailMessage.class);
+				reloadMailEngineClass, "send", MailService.class,
+				MailMessage.class);
 
 			Field field = ReflectionUtil.getDeclaredField(
 				reloadMailEngineClass, "_lastResetTime");

@@ -892,69 +892,6 @@ definition {
 			selectedAsset = "Web Content Article");
 	}
 
-	@description = "This is a use case for LPS-189191 and LPS-190360. TC-1: Verify that the admin could configure staging to ignore previews and thumbnails during the local staging publish process."
-	@priority = 3
-	test ConfigureIgnorePreviewsAndThumbnails {
-		property test.liferay.virtual.instance = "false";
-
-		task ("Given: Verify that the checkbox Include Thumbnails And Previews During Staging is checked by default") {
-			StagingNavigator.openToConfigInSystemSettings(portlet = "Export/Import, Staging");
-
-			AssertChecked.assertCheckedNotVisible(
-				key_settingFieldName = "Include Thumbnails And Previews During Staging",
-				locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
-
-			SystemSettings.viewSettingsText(settingsText = "If checked, then the generated previews and thumbnails will be included during the staging process.");
-
-			StagingNavigator.openToConfigInInstanceSettings(portlet = "Export/Import, Staging");
-
-			AssertChecked.assertCheckedNotVisible(
-				key_settingFieldName = "Include Thumbnails And Previews During Staging",
-				locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
-
-			SystemSettings.viewSettingsText(settingsText = "If checked, then the generated previews and thumbnails will be included during the staging process.");
-		}
-
-		task ("And: Enable local staging and add a new file to DM") {
-			JSONStaging.enableLocalStaging(groupName = "Site Name");
-
-			JSONDocument.addFileWithUploadedFile(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "DM Document Title",
-				groupName = "Site Name-staging",
-				mimeType = "image/jpeg",
-				sourceFileName = "Document_1.jpg");
-		}
-
-		task ("When: Create a new publish process") {
-			Navigator.gotoStagedSitePage(
-				pageName = "Staging Test Page",
-				siteName = "Site Name");
-
-			Staging.gotoPublishToLive();
-
-			AssertTextEquals(
-				locator1 = "Message#WARNING",
-				value1 = "Recommendation:Publish small incremental changes to avoid large publishing processes that can take a long time to execute.");
-		}
-
-		task ("Then: Assert the Previews and Thumbnails are displayed under DM item") {
-			Staging.configurePublishToLive(
-				checkContentNameList = "Documents and Media",
-				includeThumbnailsAndPreviewsDuringStaging = "true");
-
-			AssertTextEquals(
-				locator1 = "Message#WARNING",
-				value1 = "Recommendation:Publish small incremental changes to avoid large publishing processes that can take a long time to execute.");
-
-			Staging.publishToLive();
-
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
-
-			DMDocument.viewPG(dmDocumentTitle = "DM Document Title");
-		}
-	}
-
 	@description = "This is a use case for LPS-92039 and LPS-92636."
 	@priority = 3
 	test CreateWidgetTemplateWhenNotStagedADT {
@@ -1263,8 +1200,6 @@ definition {
 
 	@priority = 3
 	test ImportLarFrom70ToCurrent {
-		property portal.acceptance = "true";
-
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		LAR.importPortlet(
@@ -1377,8 +1312,6 @@ definition {
 
 	@priority = 3
 	test NotStagedAssets {
-		property portal.acceptance = "true";
-
 		Staging.openStagingAdmin(siteURLKey = "site-name");
 
 		Staging.activateStagingCP(
@@ -2693,7 +2626,6 @@ definition {
 
 	@priority = 3
 	test StagingMultipleDM {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2750,7 +2682,7 @@ definition {
 
 	@priority = 3
 	test StagingOnlyApprovedPublishToLive {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -3280,40 +3212,6 @@ definition {
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
 				value1 = "Page Description");
 		}
-	}
-
-	@description = "This is a use case for LPS-89116."
-	@priority = 3
-	test ValidateFriendlyURLWithSpecialCharacters {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		WebContentNavigator.gotoAddCP();
-
-		WebContent.addCP(
-			webContentContent = "Web Content Content",
-			webContentTitle = '''Special Char aŐb''');
-
-		WebContent.publishWithPermissions();
-
-		WebContent.viewTitle(webContentTitle = '''Special Char aŐb''');
-
-		WebContentNavigator.gotoEditCP(webContentTitle = '''Special Char aŐb''');
-
-		WebContent.viewFriendlyURLCP(friendlyURL = '''special-char-aőb''');
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		WebContentNavigator.gotoAddCP();
-
-		WebContent.addWithFriendlyURL(
-			friendlyURL = "special-char-a-c5-90b",
-			webContentContent = "Web Content Content2",
-			webContentTitle = "Web Content Title");
-
-		JSONStaging.enableLocalStaging(groupName = "Site Name");
 	}
 
 	@priority = 3

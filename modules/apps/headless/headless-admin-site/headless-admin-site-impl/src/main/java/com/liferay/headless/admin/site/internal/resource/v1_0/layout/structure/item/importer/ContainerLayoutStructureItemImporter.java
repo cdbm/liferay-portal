@@ -5,7 +5,7 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
-import com.liferay.headless.admin.site.dto.v1_0.PageContainerDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.ContainerPageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
@@ -35,17 +35,18 @@ public class ContainerLayoutStructureItemImporter
 						pageElement, layoutStructure),
 					pageElement.getPosition());
 
-		PageContainerDefinition pageContainerDefinition =
-			(PageContainerDefinition)pageElement.getDefinition();
+		ContainerPageElementDefinition containerPageElementDefinition =
+			(ContainerPageElementDefinition)
+				pageElement.getPageElementDefinition();
 
-		if (pageContainerDefinition == null) {
+		if (containerPageElementDefinition == null) {
 			return containerStyledLayoutStructureItem;
 		}
 
 		containerStyledLayoutStructureItem.setIndexed(
-			pageContainerDefinition.getIndexed());
+			containerPageElementDefinition.getIndexed());
 		containerStyledLayoutStructureItem.setName(
-			pageContainerDefinition.getName());
+			containerPageElementDefinition.getName());
 
 		return containerStyledLayoutStructureItem;
 	}

@@ -394,7 +394,7 @@ public class OpenAPIParserUtil {
 		}
 
 		Map<String, Schema> globalEnumSchemas =
-			OpenAPIUtil.getGlobalEnumSchemas(configYAML, allSchemas);
+			OpenAPIUtil.getGlobalEnumSchemas(configYAML, openAPIYAML);
 
 		for (String schemaName : globalEnumSchemas.keySet()) {
 			javaDataTypeMap.put(
@@ -738,6 +738,9 @@ public class OpenAPIParserUtil {
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("boolean", null),
 					Boolean.class.getName());
+				put(
+					new AbstractMap.SimpleImmutableEntry<>("customField", null),
+					"com.liferay.portal.vulcan.custom.field.CustomField");
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("integer", "int32"),
 					Integer.class.getName());

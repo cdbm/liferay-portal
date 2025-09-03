@@ -24,11 +24,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -46,8 +46,8 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 
 		JSONObject jsonObject =
 			(JSONObject)fragmentEntryConfigurationParser.getFieldValue(
-				getConfiguration(fragmentRendererContext),
-				fragmentEntryLink.getEditableValues(),
+				getConfigurationJSONObject(fragmentRendererContext),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				fragmentRendererContext.getLocale(), "itemSelector");
 
 		if ((jsonObject != null) && jsonObject.has("className") &&
@@ -102,7 +102,7 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 
 					if (assetEntry != null) {
 						return new Tuple(
-							portal.getClassName(assetEntry.getClassNameId()),
+							portal.fetchClassName(assetEntry.getClassNameId()),
 							assetEntry.getClassPK());
 					}
 				}

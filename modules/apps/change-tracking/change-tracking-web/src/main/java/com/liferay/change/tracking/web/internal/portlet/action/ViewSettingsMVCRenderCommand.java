@@ -12,12 +12,14 @@ import com.liferay.change.tracking.web.internal.display.context.PublicationsConf
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -27,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/view_settings"
 	},
 	service = MVCRenderCommand.class
@@ -53,7 +55,8 @@ public class ViewSettingsMVCRenderCommand implements MVCRenderCommand {
 				new PublicationsConfigurationDisplayContext(
 					_ctSettingsConfigurationHelper,
 					_portal.getHttpServletRequest(renderRequest),
-					renderResponse);
+					renderResponse, _resourcePermissionLocalService,
+					_roleLocalService);
 
 		renderRequest.setAttribute(
 			CTWebKeys.PUBLICATIONS_CONFIGURATION_DISPLAY_CONTEXT,
@@ -67,5 +70,11 @@ public class ViewSettingsMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 }

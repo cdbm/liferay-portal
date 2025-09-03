@@ -227,6 +227,10 @@ public class AssetCategoryDocumentContributor
 						_assetVocabularyLocalService.fetchAssetVocabulary(
 							assetCategory.getVocabularyId());
 
+					if (assetVocabulary == null) {
+						return AssetVocabularyConstants.VISIBILITY_TYPE_EMPTY;
+					}
+
 					return assetVocabulary.getVisibilityType();
 				});
 

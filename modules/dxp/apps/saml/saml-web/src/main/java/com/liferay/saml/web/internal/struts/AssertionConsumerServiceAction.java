@@ -22,11 +22,13 @@ import com.liferay.saml.runtime.exception.EntityInteractionException;
 import com.liferay.saml.runtime.exception.SubjectException;
 import com.liferay.saml.runtime.servlet.profile.WebSsoProfile;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,8 +40,10 @@ import org.osgi.service.component.annotations.Reference;
 public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 
 	@Override
-	public boolean isEnabled() {
-		if (_samlProviderConfigurationHelper.isRoleSp()) {
+	public boolean isEnabled(HttpServletRequest httpServletRequest) {
+		if (!_samlProviderConfigurationHelper.isRoleIdp() &&
+			Objects.equals(httpServletRequest.getMethod(), "POST")) {
+
 			return _samlProviderConfigurationHelper.isEnabled();
 		}
 

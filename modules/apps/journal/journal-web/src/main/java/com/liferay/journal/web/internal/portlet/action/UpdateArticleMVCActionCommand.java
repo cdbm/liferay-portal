@@ -5,7 +5,6 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
-import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
@@ -54,6 +53,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -63,13 +69,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -78,7 +77,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/add_article",
 		"mvc.command.name=/journal/update_article"
 	},
@@ -112,8 +111,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		JournalArticle article = JournalArticleUtil.addOrUpdateArticle(
-			actionName, _assetDisplayPageEntryFormProcessor,
-			_ddmFormValuesFactory, _ddmFormValuesToFieldsConverter,
+			actionName, _ddmFormValuesFactory, _ddmFormValuesToFieldsConverter,
 			_ddmStructureLocalService, _journalArticleService,
 			_journalConverter, _journalHelper, _localization, _portal,
 			actionRequest);
@@ -573,7 +571,7 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 		LayoutClassedModelUsage layoutClassedModelUsage =
 			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
-				groupId, classNameId, classPK, StringPool.BLANK,
+				groupId, StringPool.BLANK, classNameId, classPK,
 				portletResource, _portal.getClassNameId(Portlet.class), plid);
 
 		if (layoutClassedModelUsage != null) {
@@ -581,13 +579,9 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			groupId, classNameId, classPK, StringPool.BLANK, portletResource,
+			groupId, StringPool.BLANK, classNameId, classPK, portletResource,
 			_portal.getClassNameId(Portlet.class), plid, serviceContext);
 	}
-
-	@Reference
-	private AssetDisplayPageEntryFormProcessor
-		_assetDisplayPageEntryFormProcessor;
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;

@@ -8,6 +8,7 @@ package com.liferay.osb.faro.web.internal.controller.main;
 import com.liferay.oauth2.provider.scope.RequiresNoScope;
 import com.liferay.osb.faro.engine.client.constants.FilterConstants;
 import com.liferay.osb.faro.engine.client.util.OrderByField;
+import com.liferay.osb.faro.util.DateUtil;
 import com.liferay.osb.faro.util.FaroThreadLocal;
 import com.liferay.osb.faro.web.internal.controller.BaseFaroController;
 import com.liferay.osb.faro.web.internal.controller.api.ReportControllerResponseFactory;
@@ -22,6 +23,17 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -31,17 +43,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -121,6 +122,10 @@ public class ReportController extends BaseFaroController {
 		else if (StringUtil.equals(type, "journal")) {
 			fileName = String.format(
 				"analytics-cloud-web-contents-list-%s", type, LocalDate.now());
+		}
+		else if (StringUtil.equals(type, "search-terms")) {
+			fileName = String.format(
+				"analytics-cloud-search-terms-list-%s", LocalDate.now());
 		}
 		else {
 			fileName = String.format(
@@ -231,7 +236,7 @@ public class ReportController extends BaseFaroController {
 					return _reportControllerResponseFactory.create(
 						"The \"fromDate\" and \"toDate\" query parameters " +
 							"are mandatory and must be ISO 8601 compliant " +
-								_ISO_8601_DATE_FORMAT,
+								DateUtil.PATTERN_DATE,
 						Response.Status.BAD_REQUEST);
 				}
 
@@ -249,7 +254,7 @@ public class ReportController extends BaseFaroController {
 
 					return _reportControllerResponseFactory.create(
 						"Both dates in range must be ISO 8601 compliant " +
-							_ISO_8601_DATE_FORMAT,
+							DateUtil.PATTERN_DATE,
 						Response.Status.BAD_REQUEST);
 				}
 
@@ -295,21 +300,16 @@ public class ReportController extends BaseFaroController {
 
 	private static final String _ESCAPED_CHARACTERS_REGEX = "[^a-zA-Z0-9\\.]+";
 
-	private static final String _ISO_8601_DATE_FORMAT = "yyyy-MM-dd";
-
-	private static final String _ISO_8601_DATE_TIME_FORMAT =
-		"yyyy-MM-dd'T'HH:mm[:ss.SSS'Z']";
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReportController.class);
 
 	private static final Set<String> _csvExportTypes = SetUtil.fromArray(
 		"blog", "document", "event", "form", "individual", "journal",
-		"membership", "page");
+		"membership", "page", "search-terms");
 	private static final DateTimeFormatter _dateDateTimeFormatter =
-		DateTimeFormatter.ofPattern(_ISO_8601_DATE_FORMAT);
+		DateTimeFormatter.ofPattern(DateUtil.PATTERN_DATE);
 	private static final DateTimeFormatter _dateTimeDateTimeFormatter =
-		DateTimeFormatter.ofPattern(_ISO_8601_DATE_TIME_FORMAT);
+		DateTimeFormatter.ofPattern(DateUtil.PATTERN_DATE_TIME);
 	private static final ReportControllerResponseFactory
 		_reportControllerResponseFactory =
 			new ReportControllerResponseFactory();

@@ -18,12 +18,12 @@ import com.liferay.commerce.order.importer.type.CommerceOrderImporterType;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.availability.CPAvailabilityChecker;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
@@ -48,6 +48,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.math.BigDecimal;
@@ -60,9 +63,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

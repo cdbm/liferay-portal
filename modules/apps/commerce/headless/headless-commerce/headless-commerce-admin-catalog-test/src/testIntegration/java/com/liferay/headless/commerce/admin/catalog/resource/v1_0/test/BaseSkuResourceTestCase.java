@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Sku;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseSkuResourceTestCase {
 			testCompany.getCompanyId());
 
 		skuResource = SkuResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -223,6 +236,183 @@ public abstract class BaseSkuResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteSku() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Sku sku = testDeleteSku_addSku();
+
+		assertHttpResponseStatusCode(
+			204, skuResource.deleteSkuHttpResponse(sku.getId()));
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku.getId()));
+		assertHttpResponseStatusCode(404, skuResource.getSkuHttpResponse(0L));
+	}
+
+	protected Sku testDeleteSku_addSku() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteSku() throws Exception {
+
+		// No namespace
+
+		Sku sku1 = testGraphQLDeleteSku_addSku();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteSku",
+						new HashMap<String, Object>() {
+							{
+								put("id", sku1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteSku"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"sku",
+					new HashMap<String, Object>() {
+						{
+							put("id", sku1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Sku sku2 = testGraphQLDeleteSku_addSku();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteSku",
+							new HashMap<String, Object>() {
+								{
+									put("id", sku2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteSku"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"sku",
+						new HashMap<String, Object>() {
+							{
+								put("id", sku2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Sku testGraphQLDeleteSku_addSku() throws Exception {
+		return testGraphQLSku_addSku();
+	}
+
+	@Test
+	public void testDeleteSkuBatch() throws Exception {
+		Sku sku1 = testDeleteSkuBatch_addSku();
+
+		testDeleteSkuBatch_deleteSku(
+			202, sku1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+
+		sku1 = testDeleteSkuBatch_addSku();
+
+		testDeleteSkuBatch_deleteSku(202, null, sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+
+		sku1 = testDeleteSkuBatch_addSku();
+		Sku sku2 = testDeleteSkuBatch_addSku();
+
+		testDeleteSkuBatch_deleteSku(
+			202, sku2.getExternalReferenceCode(), sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+		assertHttpResponseStatusCode(
+			200, skuResource.getSkuHttpResponse(sku2.getId()));
+
+		testDeleteSkuBatch_deleteSku(
+			202, sku2.getExternalReferenceCode(), sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku2.getId()));
+	}
+
+	protected Sku testDeleteSkuBatch_addSku() throws Exception {
+		return testDeleteSku_addSku();
+	}
+
+	protected void testDeleteSkuBatch_deleteSku(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			skuResource.deleteSkuBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteSkuByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Sku sku = testDeleteSkuByExternalReferenceCode_addSku();
+
+		assertHttpResponseStatusCode(
+			204,
+			skuResource.deleteSkuByExternalReferenceCodeHttpResponse(
+				sku.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			skuResource.getSkuByExternalReferenceCodeHttpResponse(
+				sku.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected Sku testDeleteSkuByExternalReferenceCode_addSku()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetProductByExternalReferenceCodeSkusPage()
 		throws Exception {
 
@@ -294,11 +484,11 @@ public abstract class BaseSkuResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeSkusPage_getExternalReferenceCode();
 
-		Page<Sku> skuPage =
+		Page<Sku> skusPage =
 			skuResource.getProductByExternalReferenceCodeSkusPage(
 				externalReferenceCode, null);
 
-		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(skusPage.getTotalCount());
 
 		Sku sku1 = testGetProductByExternalReferenceCodeSkusPage_addSku(
 			externalReferenceCode, randomSku());
@@ -397,24 +587,6 @@ public abstract class BaseSkuResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeSku() throws Exception {
-		Sku randomSku = randomSku();
-
-		Sku postSku = testPostProductByExternalReferenceCodeSku_addSku(
-			randomSku);
-
-		assertEquals(randomSku, postSku);
-		assertValid(postSku);
-	}
-
-	protected Sku testPostProductByExternalReferenceCodeSku_addSku(Sku sku)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdSkusPage() throws Exception {
 		Long id = testGetProductIdSkusPage_getId();
 		Long irrelevantId = testGetProductIdSkusPage_getIrrelevantId();
@@ -469,9 +641,9 @@ public abstract class BaseSkuResourceTestCase {
 	public void testGetProductIdSkusPageWithPagination() throws Exception {
 		Long id = testGetProductIdSkusPage_getId();
 
-		Page<Sku> skuPage = skuResource.getProductIdSkusPage(id, null);
+		Page<Sku> skusPage = skuResource.getProductIdSkusPage(id, null);
 
-		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(skusPage.getTotalCount());
 
 		Sku sku1 = testGetProductIdSkusPage_addSku(id, randomSku());
 
@@ -550,707 +722,6 @@ public abstract class BaseSkuResourceTestCase {
 
 	protected Long testGetProductIdSkusPage_getIrrelevantId() throws Exception {
 		return null;
-	}
-
-	@Test
-	public void testPostProductIdSku() throws Exception {
-		Sku randomSku = randomSku();
-
-		Sku postSku = testPostProductIdSku_addSku(randomSku);
-
-		assertEquals(randomSku, postSku);
-		assertValid(postSku);
-	}
-
-	protected Sku testPostProductIdSku_addSku(Sku sku) throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetSkusPage() throws Exception {
-		Page<Sku> page = skuResource.getSkusPage(
-			null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		Sku sku1 = testGetSkusPage_addSku(randomSku());
-
-		Sku sku2 = testGetSkusPage_addSku(randomSku());
-
-		page = skuResource.getSkusPage(null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(sku1, (List<Sku>)page.getItems());
-		assertContains(sku2, (List<Sku>)page.getItems());
-		assertValid(page, testGetSkusPage_getExpectedActions());
-
-		skuResource.deleteSku(sku1.getId());
-
-		skuResource.deleteSku(sku2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetSkusPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetSkusPageWithFilterDateTimeEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Sku sku1 = randomSku();
-
-		sku1 = testGetSkusPage_addSku(sku1);
-
-		for (EntityField entityField : entityFields) {
-			Page<Sku> page = skuResource.getSkusPage(
-				null, getFilterString(entityField, "between", sku1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(sku1), (List<Sku>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetSkusPageWithFilterDoubleEquals() throws Exception {
-		testGetSkusPageWithFilter("eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetSkusPageWithFilterStringContains() throws Exception {
-		testGetSkusPageWithFilter("contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetSkusPageWithFilterStringEquals() throws Exception {
-		testGetSkusPageWithFilter("eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetSkusPageWithFilterStringStartsWith() throws Exception {
-		testGetSkusPageWithFilter("startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetSkusPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Sku sku1 = testGetSkusPage_addSku(randomSku());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Sku sku2 = testGetSkusPage_addSku(randomSku());
-
-		for (EntityField entityField : entityFields) {
-			Page<Sku> page = skuResource.getSkusPage(
-				null, getFilterString(entityField, operator, sku1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(sku1), (List<Sku>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetSkusPageWithPagination() throws Exception {
-		Page<Sku> skuPage = skuResource.getSkusPage(null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
-
-		Sku sku1 = testGetSkusPage_addSku(randomSku());
-
-		Sku sku2 = testGetSkusPage_addSku(randomSku());
-
-		Sku sku3 = testGetSkusPage_addSku(randomSku());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Sku> page1 = skuResource.getSkusPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(sku1, (List<Sku>)page1.getItems());
-
-			Page<Sku> page2 = skuResource.getSkusPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(sku2, (List<Sku>)page2.getItems());
-
-			Page<Sku> page3 = skuResource.getSkusPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(sku3, (List<Sku>)page3.getItems());
-		}
-		else {
-			Page<Sku> page1 = skuResource.getSkusPage(
-				null, null, Pagination.of(1, totalCount + 2), null);
-
-			List<Sku> skus1 = (List<Sku>)page1.getItems();
-
-			Assert.assertEquals(skus1.toString(), totalCount + 2, skus1.size());
-
-			Page<Sku> page2 = skuResource.getSkusPage(
-				null, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<Sku> skus2 = (List<Sku>)page2.getItems();
-
-			Assert.assertEquals(skus2.toString(), 1, skus2.size());
-
-			Page<Sku> page3 = skuResource.getSkusPage(
-				null, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(sku1, (List<Sku>)page3.getItems());
-			assertContains(sku2, (List<Sku>)page3.getItems());
-			assertContains(sku3, (List<Sku>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetSkusPageWithSortDateTime() throws Exception {
-		testGetSkusPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, sku1, sku2) -> {
-				BeanTestUtil.setProperty(
-					sku1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetSkusPageWithSortDouble() throws Exception {
-		testGetSkusPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, sku1, sku2) -> {
-				BeanTestUtil.setProperty(sku1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(sku2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetSkusPageWithSortInteger() throws Exception {
-		testGetSkusPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, sku1, sku2) -> {
-				BeanTestUtil.setProperty(sku1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(sku2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetSkusPageWithSortString() throws Exception {
-		testGetSkusPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, sku1, sku2) -> {
-				Class<?> clazz = sku1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						sku1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						sku2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						sku1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						sku2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						sku1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						sku2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetSkusPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, Sku, Sku, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Sku sku1 = randomSku();
-		Sku sku2 = randomSku();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, sku1, sku2);
-		}
-
-		sku1 = testGetSkusPage_addSku(sku1);
-
-		sku2 = testGetSkusPage_addSku(sku2);
-
-		Page<Sku> page = skuResource.getSkusPage(null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<Sku> ascPage = skuResource.getSkusPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(sku1, (List<Sku>)ascPage.getItems());
-			assertContains(sku2, (List<Sku>)ascPage.getItems());
-
-			Page<Sku> descPage = skuResource.getSkusPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":desc");
-
-			assertContains(sku2, (List<Sku>)descPage.getItems());
-			assertContains(sku1, (List<Sku>)descPage.getItems());
-		}
-	}
-
-	protected Sku testGetSkusPage_addSku(Sku sku) throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetSkusPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"skus",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject skusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/skus");
-
-		long totalCount = skusJSONObject.getLong("totalCount");
-
-		Sku sku1 = testGraphQLGetSkusPage_addSku();
-		Sku sku2 = testGraphQLGetSkusPage_addSku();
-
-		skusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/skus");
-
-		Assert.assertEquals(
-			totalCount + 2, skusJSONObject.getLong("totalCount"));
-
-		assertContains(
-			sku1,
-			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
-		assertContains(
-			sku2,
-			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		skusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminCatalog_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessCommerceAdminCatalog_v1_0",
-			"JSONObject/skus");
-
-		Assert.assertEquals(
-			totalCount + 2, skusJSONObject.getLong("totalCount"));
-
-		assertContains(
-			sku1,
-			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
-		assertContains(
-			sku2,
-			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
-	}
-
-	protected Sku testGraphQLGetSkusPage_addSku() throws Exception {
-		return testGraphQLSku_addSku();
-	}
-
-	@Test
-	public void testDeleteSkuByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Sku sku = testDeleteSkuByExternalReferenceCode_addSku();
-
-		assertHttpResponseStatusCode(
-			204,
-			skuResource.deleteSkuByExternalReferenceCodeHttpResponse(
-				sku.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			skuResource.getSkuByExternalReferenceCodeHttpResponse(
-				sku.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			skuResource.getSkuByExternalReferenceCodeHttpResponse(
-				sku.getExternalReferenceCode()));
-	}
-
-	protected Sku testDeleteSkuByExternalReferenceCode_addSku()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetSkuByExternalReferenceCode() throws Exception {
-		Sku postSku = testGetSkuByExternalReferenceCode_addSku();
-
-		Sku getSku = skuResource.getSkuByExternalReferenceCode(
-			postSku.getExternalReferenceCode());
-
-		assertEquals(postSku, getSku);
-		assertValid(getSku);
-	}
-
-	protected Sku testGetSkuByExternalReferenceCode_addSku() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetSkuByExternalReferenceCode() throws Exception {
-		Sku sku = testGraphQLGetSkuByExternalReferenceCode_addSku();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				sku,
-				SkuSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"skuByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												sku.getExternalReferenceCode() +
-													"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/skuByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				sku,
-				SkuSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"skuByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													sku.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/skuByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetSkuByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"skuByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"skuByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Sku testGraphQLGetSkuByExternalReferenceCode_addSku()
-		throws Exception {
-
-		return testGraphQLSku_addSku();
-	}
-
-	@Test
-	public void testPatchSkuByExternalReferenceCode() throws Exception {
-		Sku postSku = testPatchSkuByExternalReferenceCode_addSku();
-
-		Sku randomPatchSku = randomPatchSku();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Sku patchSku = skuResource.patchSkuByExternalReferenceCode(
-			postSku.getExternalReferenceCode(), randomPatchSku);
-
-		Sku expectedPatchSku = postSku.clone();
-
-		BeanTestUtil.copyProperties(randomPatchSku, expectedPatchSku);
-
-		Sku getSku = skuResource.getSkuByExternalReferenceCode(
-			patchSku.getExternalReferenceCode());
-
-		assertEquals(expectedPatchSku, getSku);
-		assertValid(getSku);
-	}
-
-	protected Sku testPatchSkuByExternalReferenceCode_addSku()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutSkuByExternalReferenceCode() throws Exception {
-		Sku postSku = testPutSkuByExternalReferenceCode_addSku();
-
-		Sku randomSku = randomSku();
-
-		Sku putSku = skuResource.putSkuByExternalReferenceCode(
-			postSku.getExternalReferenceCode(), randomSku);
-
-		assertEquals(randomSku, putSku);
-		assertValid(putSku);
-
-		Sku getSku = skuResource.getSkuByExternalReferenceCode(
-			putSku.getExternalReferenceCode());
-
-		assertEquals(randomSku, getSku);
-		assertValid(getSku);
-
-		Sku newSku = testPutSkuByExternalReferenceCode_createSku();
-
-		putSku = skuResource.putSkuByExternalReferenceCode(
-			newSku.getExternalReferenceCode(), newSku);
-
-		assertEquals(newSku, putSku);
-		assertValid(putSku);
-
-		getSku = skuResource.getSkuByExternalReferenceCode(
-			putSku.getExternalReferenceCode());
-
-		assertEquals(newSku, getSku);
-
-		Assert.assertEquals(
-			newSku.getExternalReferenceCode(),
-			putSku.getExternalReferenceCode());
-	}
-
-	protected Sku testPutSkuByExternalReferenceCode_createSku()
-		throws Exception {
-
-		return randomSku();
-	}
-
-	protected Sku testPutSkuByExternalReferenceCode_addSku() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSku() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Sku sku = testDeleteSku_addSku();
-
-		assertHttpResponseStatusCode(
-			204, skuResource.deleteSkuHttpResponse(sku.getId()));
-
-		assertHttpResponseStatusCode(
-			404, skuResource.getSkuHttpResponse(sku.getId()));
-
-		assertHttpResponseStatusCode(
-			404, skuResource.getSkuHttpResponse(sku.getId()));
-	}
-
-	protected Sku testDeleteSku_addSku() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteSku() throws Exception {
-
-		// No namespace
-
-		Sku sku1 = testGraphQLDeleteSku_addSku();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteSku",
-						new HashMap<String, Object>() {
-							{
-								put("id", sku1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteSku"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"sku",
-					new HashMap<String, Object>() {
-						{
-							put("id", sku1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Sku sku2 = testGraphQLDeleteSku_addSku();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"deleteSku",
-							new HashMap<String, Object>() {
-								{
-									put("id", sku2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminCatalog_v1_0",
-				"Object/deleteSku"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminCatalog_v1_0",
-					new GraphQLField(
-						"sku",
-						new HashMap<String, Object>() {
-							{
-								put("id", sku2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Sku testGraphQLDeleteSku_addSku() throws Exception {
-		return testGraphQLSku_addSku();
 	}
 
 	@Test
@@ -1546,27 +1017,492 @@ public abstract class BaseSkuResourceTestCase {
 	}
 
 	@Test
-	public void testPatchSku() throws Exception {
-		Sku postSku = testPatchSku_addSku();
+	public void testGetSkuByExternalReferenceCode() throws Exception {
+		Sku postSku = testGetSkuByExternalReferenceCode_addSku();
 
-		Sku randomPatchSku = randomPatchSku();
+		Sku getSku = skuResource.getSkuByExternalReferenceCode(
+			postSku.getExternalReferenceCode());
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Sku patchSku = skuResource.patchSku(postSku.getId(), randomPatchSku);
-
-		Sku expectedPatchSku = postSku.clone();
-
-		BeanTestUtil.copyProperties(randomPatchSku, expectedPatchSku);
-
-		Sku getSku = skuResource.getSku(patchSku.getId());
-
-		assertEquals(expectedPatchSku, getSku);
+		assertEquals(postSku, getSku);
 		assertValid(getSku);
 	}
 
-	protected Sku testPatchSku_addSku() throws Exception {
+	protected Sku testGetSkuByExternalReferenceCode_addSku() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSkuByExternalReferenceCode() throws Exception {
+		Sku sku = testGraphQLGetSkuByExternalReferenceCode_addSku();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				sku,
+				SkuSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"skuByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												sku.getExternalReferenceCode() +
+													"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/skuByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				sku,
+				SkuSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"skuByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													sku.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/skuByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetSkuByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"skuByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"skuByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Sku testGraphQLGetSkuByExternalReferenceCode_addSku()
+		throws Exception {
+
+		return testGraphQLSku_addSku();
+	}
+
+	@Test
+	public void testGetSkusPage() throws Exception {
+		Page<Sku> page = skuResource.getSkusPage(
+			null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		Sku sku1 = testGetSkusPage_addSku(randomSku());
+
+		Sku sku2 = testGetSkusPage_addSku(randomSku());
+
+		page = skuResource.getSkusPage(null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(sku1, (List<Sku>)page.getItems());
+		assertContains(sku2, (List<Sku>)page.getItems());
+		assertValid(page, testGetSkusPage_getExpectedActions());
+
+		skuResource.deleteSku(sku1.getId());
+
+		skuResource.deleteSku(sku2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSkusPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetSkusPageWithFilterDateTimeEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Sku sku1 = randomSku();
+
+		sku1 = testGetSkusPage_addSku(sku1);
+
+		for (EntityField entityField : entityFields) {
+			Page<Sku> page = skuResource.getSkusPage(
+				null, getFilterString(entityField, "between", sku1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(sku1), (List<Sku>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSkusPageWithFilterDoubleEquals() throws Exception {
+		testGetSkusPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetSkusPageWithFilterStringContains() throws Exception {
+		testGetSkusPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSkusPageWithFilterStringEquals() throws Exception {
+		testGetSkusPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSkusPageWithFilterStringStartsWith() throws Exception {
+		testGetSkusPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSkusPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Sku sku1 = testGetSkusPage_addSku(randomSku());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Sku sku2 = testGetSkusPage_addSku(randomSku());
+
+		for (EntityField entityField : entityFields) {
+			Page<Sku> page = skuResource.getSkusPage(
+				null, getFilterString(entityField, operator, sku1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(sku1), (List<Sku>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSkusPageWithPagination() throws Exception {
+		Page<Sku> skusPage = skuResource.getSkusPage(null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(skusPage.getTotalCount());
+
+		Sku sku1 = testGetSkusPage_addSku(randomSku());
+
+		Sku sku2 = testGetSkusPage_addSku(randomSku());
+
+		Sku sku3 = testGetSkusPage_addSku(randomSku());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Sku> page1 = skuResource.getSkusPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(sku1, (List<Sku>)page1.getItems());
+
+			Page<Sku> page2 = skuResource.getSkusPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(sku2, (List<Sku>)page2.getItems());
+
+			Page<Sku> page3 = skuResource.getSkusPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(sku3, (List<Sku>)page3.getItems());
+		}
+		else {
+			Page<Sku> page1 = skuResource.getSkusPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Sku> skus1 = (List<Sku>)page1.getItems();
+
+			Assert.assertEquals(skus1.toString(), totalCount + 2, skus1.size());
+
+			Page<Sku> page2 = skuResource.getSkusPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Sku> skus2 = (List<Sku>)page2.getItems();
+
+			Assert.assertEquals(skus2.toString(), 1, skus2.size());
+
+			Page<Sku> page3 = skuResource.getSkusPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(sku1, (List<Sku>)page3.getItems());
+			assertContains(sku2, (List<Sku>)page3.getItems());
+			assertContains(sku3, (List<Sku>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSkusPageWithSortDateTime() throws Exception {
+		testGetSkusPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, sku1, sku2) -> {
+				BeanTestUtil.setProperty(
+					sku1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetSkusPageWithSortDouble() throws Exception {
+		testGetSkusPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, sku1, sku2) -> {
+				BeanTestUtil.setProperty(sku1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(sku2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetSkusPageWithSortInteger() throws Exception {
+		testGetSkusPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, sku1, sku2) -> {
+				BeanTestUtil.setProperty(sku1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(sku2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetSkusPageWithSortString() throws Exception {
+		testGetSkusPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, sku1, sku2) -> {
+				Class<?> clazz = sku1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						sku1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						sku2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						sku1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						sku2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						sku1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						sku2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetSkusPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, Sku, Sku, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Sku sku1 = randomSku();
+		Sku sku2 = randomSku();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, sku1, sku2);
+		}
+
+		sku1 = testGetSkusPage_addSku(sku1);
+
+		sku2 = testGetSkusPage_addSku(sku2);
+
+		Page<Sku> page = skuResource.getSkusPage(null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Sku> ascPage = skuResource.getSkusPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(sku1, (List<Sku>)ascPage.getItems());
+			assertContains(sku2, (List<Sku>)ascPage.getItems());
+
+			Page<Sku> descPage = skuResource.getSkusPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(sku2, (List<Sku>)descPage.getItems());
+			assertContains(sku1, (List<Sku>)descPage.getItems());
+		}
+	}
+
+	protected Sku testGetSkusPage_addSku(Sku sku) throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSkusPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"skus",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject skusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/skus");
+
+		long totalCount = skusJSONObject.getLong("totalCount");
+
+		Sku sku1 = testGraphQLGetSkusPage_addSku();
+		Sku sku2 = testGraphQLGetSkusPage_addSku();
+
+		skusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/skus");
+
+		Assert.assertEquals(
+			totalCount + 2, skusJSONObject.getLong("totalCount"));
+
+		assertContains(
+			sku1,
+			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
+		assertContains(
+			sku2,
+			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		skusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminCatalog_v1_0",
+			"JSONObject/skus");
+
+		Assert.assertEquals(
+			totalCount + 2, skusJSONObject.getLong("totalCount"));
+
+		assertContains(
+			sku1,
+			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
+		assertContains(
+			sku2,
+			Arrays.asList(SkuSerDes.toDTOs(skusJSONObject.getString("items"))));
+	}
+
+	protected Sku testGraphQLGetSkusPage_addSku() throws Exception {
+		return testGraphQLSku_addSku();
 	}
 
 	@Test
@@ -1685,10 +1621,10 @@ public abstract class BaseSkuResourceTestCase {
 
 	@Test
 	public void testGetUnitOfMeasureSkusPageWithPagination() throws Exception {
-		Page<Sku> skuPage = skuResource.getUnitOfMeasureSkusPage(
+		Page<Sku> skusPage = skuResource.getUnitOfMeasureSkusPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(skusPage.getTotalCount());
 
 		Sku sku1 = testGetUnitOfMeasureSkusPage_addSku(randomSku());
 
@@ -1888,6 +1824,212 @@ public abstract class BaseSkuResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchSku() throws Exception {
+		Sku postSku = testPatchSku_addSku();
+
+		Sku randomPatchSku = randomPatchSku();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Sku patchSku = skuResource.patchSku(postSku.getId(), randomPatchSku);
+
+		Sku expectedPatchSku = postSku.clone();
+
+		BeanTestUtil.copyProperties(randomPatchSku, expectedPatchSku);
+
+		Sku getSku = skuResource.getSku(patchSku.getId());
+
+		assertEquals(expectedPatchSku, getSku);
+		assertValid(getSku);
+	}
+
+	protected Sku testPatchSku_addSku() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchSkuByExternalReferenceCode() throws Exception {
+		Sku postSku = testPatchSkuByExternalReferenceCode_addSku();
+
+		Sku randomPatchSku = randomPatchSku();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Sku patchSku = skuResource.patchSkuByExternalReferenceCode(
+			postSku.getExternalReferenceCode(), randomPatchSku);
+
+		Sku expectedPatchSku = postSku.clone();
+
+		BeanTestUtil.copyProperties(randomPatchSku, expectedPatchSku);
+
+		Sku getSku = skuResource.getSkuByExternalReferenceCode(
+			patchSku.getExternalReferenceCode());
+
+		assertEquals(expectedPatchSku, getSku);
+		assertValid(getSku);
+	}
+
+	protected Sku testPatchSkuByExternalReferenceCode_addSku()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeSku() throws Exception {
+		Sku randomSku = randomSku();
+
+		Sku postSku = testPostProductByExternalReferenceCodeSku_addSku(
+			randomSku);
+
+		assertEquals(randomSku, postSku);
+		assertValid(postSku);
+	}
+
+	protected Sku testPostProductByExternalReferenceCodeSku_addSku(Sku sku)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductIdSku() throws Exception {
+		Sku randomSku = randomSku();
+
+		Sku postSku = testPostProductIdSku_addSku(randomSku);
+
+		assertEquals(randomSku, postSku);
+		assertValid(postSku);
+	}
+
+	protected Sku testPostProductIdSku_addSku(Sku sku) throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutSkuByExternalReferenceCode() throws Exception {
+		Sku postSku = testPutSkuByExternalReferenceCode_addSku();
+
+		Sku randomSku = randomSku();
+
+		Sku putSku = skuResource.putSkuByExternalReferenceCode(
+			postSku.getExternalReferenceCode(), randomSku);
+
+		assertEquals(randomSku, putSku);
+		assertValid(putSku);
+
+		Sku getSku = skuResource.getSkuByExternalReferenceCode(
+			putSku.getExternalReferenceCode());
+
+		assertEquals(randomSku, getSku);
+		assertValid(getSku);
+
+		Sku newSku = testPutSkuByExternalReferenceCode_createSku();
+
+		putSku = skuResource.putSkuByExternalReferenceCode(
+			newSku.getExternalReferenceCode(), newSku);
+
+		assertEquals(newSku, putSku);
+		assertValid(putSku);
+
+		getSku = skuResource.getSkuByExternalReferenceCode(
+			putSku.getExternalReferenceCode());
+
+		assertEquals(newSku, getSku);
+
+		Assert.assertEquals(
+			newSku.getExternalReferenceCode(),
+			putSku.getExternalReferenceCode());
+	}
+
+	protected Sku testPutSkuByExternalReferenceCode_addSku() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Sku testPutSkuByExternalReferenceCode_createSku()
+		throws Exception {
+
+		return randomSku();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Sku sku1 = testBatchEngineDeleteImportTask_addSku();
+
+		testBatchEngineDeleteImportTask_deleteSku(
+			200, sku1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+
+		sku1 = testBatchEngineDeleteImportTask_addSku();
+
+		testBatchEngineDeleteImportTask_deleteSku(200, null, sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+
+		sku1 = testBatchEngineDeleteImportTask_addSku();
+		Sku sku2 = testBatchEngineDeleteImportTask_addSku();
+
+		testBatchEngineDeleteImportTask_deleteSku(
+			200, sku2.getExternalReferenceCode(), sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku1.getId()));
+		assertHttpResponseStatusCode(
+			200, skuResource.getSkuHttpResponse(sku2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteSku(
+			200, sku2.getExternalReferenceCode(), sku1.getId());
+
+		assertHttpResponseStatusCode(
+			404, skuResource.getSkuHttpResponse(sku2.getId()));
+	}
+
+	protected Sku testBatchEngineDeleteImportTask_addSku() throws Exception {
+		return testDeleteSku_addSku();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteSku(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -3457,7 +3599,30 @@ public abstract class BaseSkuResourceTestCase {
 		return randomSku();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected SkuResource skuResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

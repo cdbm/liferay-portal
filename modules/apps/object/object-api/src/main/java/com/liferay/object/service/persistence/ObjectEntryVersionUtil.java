@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -465,6 +466,182 @@ public class ObjectEntryVersionUtil {
 	}
 
 	/**
+	 * Returns all the object entry versions where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @return the matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByObjectDefinitionId(
+		long objectDefinitionId) {
+
+		return getPersistence().findByObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
+	 * Returns a range of all the object entry versions where objectDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @return the range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByObjectDefinitionId(
+		long objectDefinitionId, int start, int end) {
+
+		return getPersistence().findByObjectDefinitionId(
+			objectDefinitionId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the object entry versions where objectDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByObjectDefinitionId(
+		long objectDefinitionId, int start, int end,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().findByObjectDefinitionId(
+			objectDefinitionId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the object entry versions where objectDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByObjectDefinitionId(
+		long objectDefinitionId, int start, int end,
+		OrderByComparator<ObjectEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByObjectDefinitionId(
+			objectDefinitionId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first object entry version in the ordered set where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object entry version
+	 * @throws NoSuchObjectEntryVersionException if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion findByObjectDefinitionId_First(
+			long objectDefinitionId,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByObjectDefinitionId_First(
+			objectDefinitionId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first object entry version in the ordered set where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByObjectDefinitionId_First(
+		long objectDefinitionId,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByObjectDefinitionId_First(
+			objectDefinitionId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object entry version in the ordered set where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object entry version
+	 * @throws NoSuchObjectEntryVersionException if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion findByObjectDefinitionId_Last(
+			long objectDefinitionId,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByObjectDefinitionId_Last(
+			objectDefinitionId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object entry version in the ordered set where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByObjectDefinitionId_Last(
+		long objectDefinitionId,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByObjectDefinitionId_Last(
+			objectDefinitionId, orderByComparator);
+	}
+
+	/**
+	 * Returns the object entry versions before and after the current object entry version in the ordered set where objectDefinitionId = &#63;.
+	 *
+	 * @param objectEntryVersionId the primary key of the current object entry version
+	 * @param objectDefinitionId the object definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object entry version
+	 * @throws NoSuchObjectEntryVersionException if a object entry version with the primary key could not be found
+	 */
+	public static ObjectEntryVersion[] findByObjectDefinitionId_PrevAndNext(
+			long objectEntryVersionId, long objectDefinitionId,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByObjectDefinitionId_PrevAndNext(
+			objectEntryVersionId, objectDefinitionId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the object entry versions where objectDefinitionId = &#63; from the database.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 */
+	public static void removeByObjectDefinitionId(long objectDefinitionId) {
+		getPersistence().removeByObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
+	 * Returns the number of object entry versions where objectDefinitionId = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @return the number of matching object entry versions
+	 */
+	public static int countByObjectDefinitionId(long objectDefinitionId) {
+		return getPersistence().countByObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
 	 * Returns all the object entry versions where objectEntryId = &#63;.
 	 *
 	 * @param objectEntryId the object entry ID
@@ -637,6 +814,261 @@ public class ObjectEntryVersionUtil {
 	 */
 	public static int countByObjectEntryId(long objectEntryId) {
 		return getPersistence().countByObjectEntryId(objectEntryId);
+	}
+
+	/**
+	 * Returns all the object entry versions where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @return the matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByC_CD(
+		long companyId, Date createDate) {
+
+		return getPersistence().findByC_CD(companyId, createDate);
+	}
+
+	/**
+	 * Returns a range of all the object entry versions where companyId = &#63; and createDate = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @return the range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByC_CD(
+		long companyId, Date createDate, int start, int end) {
+
+		return getPersistence().findByC_CD(companyId, createDate, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the object entry versions where companyId = &#63; and createDate = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByC_CD(
+		long companyId, Date createDate, int start, int end,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().findByC_CD(
+			companyId, createDate, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the object entry versions where companyId = &#63; and createDate = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param start the lower bound of the range of object entry versions
+	 * @param end the upper bound of the range of object entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object entry versions
+	 */
+	public static List<ObjectEntryVersion> findByC_CD(
+		long companyId, Date createDate, int start, int end,
+		OrderByComparator<ObjectEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByC_CD(
+			companyId, createDate, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first object entry version in the ordered set where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object entry version
+	 * @throws NoSuchObjectEntryVersionException if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion findByC_CD_First(
+			long companyId, Date createDate,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByC_CD_First(
+			companyId, createDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the first object entry version in the ordered set where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByC_CD_First(
+		long companyId, Date createDate,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByC_CD_First(
+			companyId, createDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object entry version in the ordered set where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object entry version
+	 * @throws NoSuchObjectEntryVersionException if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion findByC_CD_Last(
+			long companyId, Date createDate,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByC_CD_Last(
+			companyId, createDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object entry version in the ordered set where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByC_CD_Last(
+		long companyId, Date createDate,
+		OrderByComparator<ObjectEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByC_CD_Last(
+			companyId, createDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the object entry versions before and after the current object entry version in the ordered set where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param objectEntryVersionId the primary key of the current object entry version
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object entry version
+	 * @throws NoSuchObjectEntryVersionException if a object entry version with the primary key could not be found
+	 */
+	public static ObjectEntryVersion[] findByC_CD_PrevAndNext(
+			long objectEntryVersionId, long companyId, Date createDate,
+			OrderByComparator<ObjectEntryVersion> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByC_CD_PrevAndNext(
+			objectEntryVersionId, companyId, createDate, orderByComparator);
+	}
+
+	/**
+	 * Removes all the object entry versions where companyId = &#63; and createDate = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 */
+	public static void removeByC_CD(long companyId, Date createDate) {
+		getPersistence().removeByC_CD(companyId, createDate);
+	}
+
+	/**
+	 * Returns the number of object entry versions where companyId = &#63; and createDate = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param createDate the create date
+	 * @return the number of matching object entry versions
+	 */
+	public static int countByC_CD(long companyId, Date createDate) {
+		return getPersistence().countByC_CD(companyId, createDate);
+	}
+
+	/**
+	 * Returns the object entry version where objectEntryId = &#63; and version = &#63; or throws a <code>NoSuchObjectEntryVersionException</code> if it could not be found.
+	 *
+	 * @param objectEntryId the object entry ID
+	 * @param version the version
+	 * @return the matching object entry version
+	 * @throws NoSuchObjectEntryVersionException if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion findByOEI_V(
+			long objectEntryId, int version)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().findByOEI_V(objectEntryId, version);
+	}
+
+	/**
+	 * Returns the object entry version where objectEntryId = &#63; and version = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param objectEntryId the object entry ID
+	 * @param version the version
+	 * @return the matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByOEI_V(
+		long objectEntryId, int version) {
+
+		return getPersistence().fetchByOEI_V(objectEntryId, version);
+	}
+
+	/**
+	 * Returns the object entry version where objectEntryId = &#63; and version = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param objectEntryId the object entry ID
+	 * @param version the version
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching object entry version, or <code>null</code> if a matching object entry version could not be found
+	 */
+	public static ObjectEntryVersion fetchByOEI_V(
+		long objectEntryId, int version, boolean useFinderCache) {
+
+		return getPersistence().fetchByOEI_V(
+			objectEntryId, version, useFinderCache);
+	}
+
+	/**
+	 * Removes the object entry version where objectEntryId = &#63; and version = &#63; from the database.
+	 *
+	 * @param objectEntryId the object entry ID
+	 * @param version the version
+	 * @return the object entry version that was removed
+	 */
+	public static ObjectEntryVersion removeByOEI_V(
+			long objectEntryId, int version)
+		throws com.liferay.object.exception.NoSuchObjectEntryVersionException {
+
+		return getPersistence().removeByOEI_V(objectEntryId, version);
+	}
+
+	/**
+	 * Returns the number of object entry versions where objectEntryId = &#63; and version = &#63;.
+	 *
+	 * @param objectEntryId the object entry ID
+	 * @param version the version
+	 * @return the number of matching object entry versions
+	 */
+	public static int countByOEI_V(long objectEntryId, int version) {
+		return getPersistence().countByOEI_V(objectEntryId, version);
 	}
 
 	/**

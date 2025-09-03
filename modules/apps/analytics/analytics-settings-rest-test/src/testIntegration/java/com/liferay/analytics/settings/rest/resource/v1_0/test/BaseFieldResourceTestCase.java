@@ -44,6 +44,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -218,10 +218,10 @@ public abstract class BaseFieldResourceTestCase {
 
 	@Test
 	public void testGetFieldsAccountsPageWithPagination() throws Exception {
-		Page<Field> fieldPage = fieldResource.getFieldsAccountsPage(
+		Page<Field> fieldsPage = fieldResource.getFieldsAccountsPage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(fieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(fieldsPage.getTotalCount());
 
 		Field field1 = testGetFieldsAccountsPage_addField(randomField());
 
@@ -423,11 +423,6 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	@Test
-	public void testPatchFieldAccount() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetFieldsOrdersPage() throws Exception {
 		Page<Field> page = fieldResource.getFieldsOrdersPage(
 			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
@@ -459,10 +454,10 @@ public abstract class BaseFieldResourceTestCase {
 
 	@Test
 	public void testGetFieldsOrdersPageWithPagination() throws Exception {
-		Page<Field> fieldPage = fieldResource.getFieldsOrdersPage(
+		Page<Field> fieldsPage = fieldResource.getFieldsOrdersPage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(fieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(fieldsPage.getTotalCount());
 
 		Field field1 = testGetFieldsOrdersPage_addField(randomField());
 
@@ -663,11 +658,6 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	@Test
-	public void testPatchFieldOrder() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetFieldsPeoplePage() throws Exception {
 		Page<Field> page = fieldResource.getFieldsPeoplePage(
 			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
@@ -699,10 +689,10 @@ public abstract class BaseFieldResourceTestCase {
 
 	@Test
 	public void testGetFieldsPeoplePageWithPagination() throws Exception {
-		Page<Field> fieldPage = fieldResource.getFieldsPeoplePage(
+		Page<Field> fieldsPage = fieldResource.getFieldsPeoplePage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(fieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(fieldsPage.getTotalCount());
 
 		Field field1 = testGetFieldsPeoplePage_addField(randomField());
 
@@ -903,11 +893,6 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	@Test
-	public void testPatchFieldPeople() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetFieldsProductsPage() throws Exception {
 		Page<Field> page = fieldResource.getFieldsProductsPage(
 			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
@@ -939,10 +924,10 @@ public abstract class BaseFieldResourceTestCase {
 
 	@Test
 	public void testGetFieldsProductsPageWithPagination() throws Exception {
-		Page<Field> fieldPage = fieldResource.getFieldsProductsPage(
+		Page<Field> fieldsPage = fieldResource.getFieldsProductsPage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(fieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(fieldsPage.getTotalCount());
 
 		Field field1 = testGetFieldsProductsPage_addField(randomField());
 
@@ -1141,6 +1126,21 @@ public abstract class BaseFieldResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchFieldAccount() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchFieldOrder() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchFieldPeople() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 	@Test

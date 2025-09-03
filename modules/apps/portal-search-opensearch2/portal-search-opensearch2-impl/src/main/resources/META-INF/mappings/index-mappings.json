@@ -1344,6 +1344,9 @@
 		}
 	],
 	"properties": {
+		"accountEntryCode": {
+			"type": "keyword"
+		},
 		"ancestorOrganizationIds": {
 			"type": "keyword"
 		},
@@ -1605,6 +1608,9 @@
 			"type": "nested"
 		},
 		"nodeId": {
+			"type": "keyword"
+		},
+		"objectFolderExternalReferenceCode": {
 			"type": "keyword"
 		},
 		"organizationId": {

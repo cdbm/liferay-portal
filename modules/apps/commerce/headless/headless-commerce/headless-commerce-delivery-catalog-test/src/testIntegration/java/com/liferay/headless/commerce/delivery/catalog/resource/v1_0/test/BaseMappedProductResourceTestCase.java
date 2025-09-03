@@ -44,6 +44,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -265,12 +265,12 @@ public abstract class BaseMappedProductResourceTestCase {
 		Long channelId = testGetChannelProductMappedProductsPage_getChannelId();
 		Long productId = testGetChannelProductMappedProductsPage_getProductId();
 
-		Page<MappedProduct> mappedProductPage =
+		Page<MappedProduct> mappedProductsPage =
 			mappedProductResource.getChannelProductMappedProductsPage(
 				channelId, productId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			mappedProductPage.getTotalCount());
+			mappedProductsPage.getTotalCount());
 
 		MappedProduct mappedProduct1 =
 			testGetChannelProductMappedProductsPage_addMappedProduct(
@@ -556,11 +556,9 @@ public abstract class BaseMappedProductResourceTestCase {
 		return null;
 	}
 
-	protected MappedProduct testGraphQLMappedProduct_addMappedProduct()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

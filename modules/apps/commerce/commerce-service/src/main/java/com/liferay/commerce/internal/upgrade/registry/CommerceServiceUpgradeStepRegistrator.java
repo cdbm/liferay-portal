@@ -12,9 +12,13 @@ import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.internal.upgrade.v11_5_1.SupplierRoleUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v11_5_2.CommerceChannelRepositoryUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v13_0_3.CPConfigurationUpgradeProcess;
+import com.liferay.commerce.internal.upgrade.v13_0_5.CommerceReturnReasonConfigurationUpgradeProcess;
+import com.liferay.commerce.internal.upgrade.v13_0_6.CPDefinitionInventoryUpgradeProcess;
+import com.liferay.commerce.internal.upgrade.v14_0_0.ObjectDefinitionUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v1_2_0.CommerceSubscriptionUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v2_0_0.CommercePaymentMethodUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v2_1_0.CPDAvailabilityEstimateUpgradeProcess;
@@ -54,9 +58,11 @@ import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalS
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -87,8 +93,9 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portlet.display.template.upgrade.BaseUpgradePortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -377,8 +384,8 @@ public class CommerceServiceUpgradeStepRegistrator
 			new com.liferay.commerce.internal.upgrade.v7_0_0.
 				CommerceAddressUpgradeProcess(
 					_addressLocalService, _accountEntryLocalService,
-					_listTypeLocalService, _phoneLocalService,
-					_userLocalService));
+					_companyLocalService, _listTypeLocalService,
+					_phoneLocalService, _userLocalService));
 
 		registry.register(
 			"7.0.0", "7.1.0",
@@ -837,6 +844,20 @@ public class CommerceServiceUpgradeStepRegistrator
 
 		registry.register("13.0.3", "13.0.4", new DummyUpgradeProcess());
 
+		registry.register(
+			"13.0.4", "13.0.5",
+			new CommerceReturnReasonConfigurationUpgradeProcess(
+				_configurationAdmin));
+
+		registry.register(
+			"13.0.5", "13.0.6", new CPDefinitionInventoryUpgradeProcess());
+
+		registry.register(
+			"13.0.6", "14.0.0",
+			new ObjectDefinitionUpgradeProcess(
+				_companyLocalService, _objectDefinitionLocalService,
+				_objectFieldLocalService, _objectRelationshipLocalService));
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce upgrade step registrator finished");
 		}
@@ -890,6 +911,9 @@ public class CommerceServiceUpgradeStepRegistrator
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
+	private ConfigurationAdmin _configurationAdmin;
+
+	@Reference
 	private CountryLocalService _countryLocalService;
 
 	@Reference
@@ -921,6 +945,15 @@ public class CommerceServiceUpgradeStepRegistrator
 
 	@Reference
 	private ListTypeLocalService _listTypeLocalService;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;

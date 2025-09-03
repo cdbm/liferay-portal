@@ -10,12 +10,11 @@ import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporaryS
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -38,7 +37,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Olivér Kecskeméty
  */
-@FeatureFlags("LPS-134060")
+@FeatureFlag("LPS-134060")
 @RunWith(Arquillian.class)
 public class ContentSecurityPolicyFilterTest {
 
@@ -54,7 +53,7 @@ public class ContentSecurityPolicyFilterTest {
 					_getCompanyConfigurationTemporarySwapper(false, null, "")) {
 
 			HttpURLConnection httpURLConnection = _openHttpURLConnection(
-				"http://localhost:8080/html/" + RandomTestUtil.randomString());
+				"http://localhost:8080/html/common/null.html");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();

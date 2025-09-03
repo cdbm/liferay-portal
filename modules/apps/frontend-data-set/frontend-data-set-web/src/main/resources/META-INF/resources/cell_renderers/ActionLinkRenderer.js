@@ -11,39 +11,45 @@ import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
 
 import FrontendDataSetContext from '../FrontendDataSetContext';
+import filterItemActions from '../utils/actionItems/filterItemActions';
 import formatActionURL from '../utils/actionItems/formatActionURL';
 import {openPermissionsModal} from '../utils/modals/openPermissionsModal';
 import DefaultContent from './DefaultRenderer';
 
 function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
-	const {executeAsyncItemAction, highlightItems, openModal, openSidePanel} =
-		useContext(FrontendDataSetContext);
+	const {
+		executeAsyncItemAction,
+		highlightItems,
+		infoPanelOpen,
+		onInfoPanelToggleButtonClick,
+		openModal,
+		openSidePanel,
+		selectable,
+		selectedItemsKey,
+		selectedItemsValue,
+	} = useContext(FrontendDataSetContext);
 
 	if (!actions || !actions.length) {
 		return value ? <DefaultContent value={value} /> : null;
 	}
 
-	let currentAction = options?.actionId
-		? actions.find((action) => action.data?.id === options.actionId)
-		: actions[0];
+	const formattedActions = filterItemActions({
+		actions,
+		infoPanelOpen,
+		itemData,
+		selectable,
+		selectedItemsKey,
+		selectedItemsValue,
+	});
+
+	const currentAction = options?.actionId
+		? formattedActions.find(
+				(action) => action.data?.id === options.actionId
+			)
+		: formattedActions[0];
 
 	if (!currentAction) {
-		return null;
-	}
-
-	if (currentAction.data?.permissionKey) {
-		if (itemData.actions[currentAction.data.permissionKey]) {
-			if (currentAction.target === 'headless') {
-				currentAction = {
-					...currentAction,
-					...itemData.actions[currentAction.data.id],
-					method: currentAction.method ?? currentAction.data?.method,
-				};
-			}
-		}
-		else {
-			return value ? <DefaultContent value={value} /> : null;
-		}
+		return value ? <DefaultContent value={value} /> : null;
 	}
 
 	const formattedHref =
@@ -61,7 +67,12 @@ function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
 					url: formattedHref,
 				});
 			}
-			if (currentAction.target === 'modal-permissions') {
+			if (currentAction.target === 'infoPanel') {
+				event.preventDefault();
+
+				onInfoPanelToggleButtonClick();
+			}
+			else if (currentAction.target === 'modal-permissions') {
 				event.preventDefault();
 
 				openPermissionsModal(formattedHref);
@@ -148,6 +159,9 @@ function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
 										},
 									});
 								}
+								else {
+									event.stopPropagation();
+								}
 							}
 				}
 			>
@@ -173,6 +187,7 @@ ActionLinkRenderer.propTypes = {
 			onClick: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
 			size: PropTypes.string,
 			target: PropTypes.oneOf([
+				'infoPanel',
 				'modal',
 				'modal-permissions',
 				'sidePanel',

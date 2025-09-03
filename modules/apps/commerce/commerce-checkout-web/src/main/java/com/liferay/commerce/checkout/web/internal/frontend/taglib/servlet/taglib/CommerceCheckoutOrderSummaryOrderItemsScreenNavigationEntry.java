@@ -14,25 +14,26 @@ import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalSe
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.option.CommerceOptionValueHelper;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
 import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,7 +77,8 @@ public class CommerceCheckoutOrderSummaryOrderItemsScreenNavigationEntry
 					_commerceShippingEngineRegistry,
 					_commerceTermEntryLocalService, _cpInstanceHelper,
 					_cpInstanceUnitOfMeasureLocalService, httpServletRequest,
-					_percentageFormatter, _portal, _portletResourcePermission);
+					_jsonFactory, _percentageFormatter, _portal,
+					_portletResourcePermission);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -125,6 +127,9 @@ public class CommerceCheckoutOrderSummaryOrderItemsScreenNavigationEntry
 	@Reference
 	private CPInstanceUnitOfMeasureLocalService
 		_cpInstanceUnitOfMeasureLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private JSPRenderer _jspRenderer;

@@ -41,6 +41,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.TaskResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.TaskSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -188,6 +188,165 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProcessTask() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Task task = testDeleteProcessTask_addTask();
+
+		assertHttpResponseStatusCode(
+			204,
+			taskResource.deleteProcessTaskHttpResponse(
+				testDeleteProcessTask_getProcessId(task), task.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			taskResource.getProcessTaskHttpResponse(
+				testDeleteProcessTask_getProcessId(task), task.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			taskResource.getProcessTaskHttpResponse(
+				testDeleteProcessTask_getProcessId(task), 0L));
+	}
+
+	protected Task testDeleteProcessTask_addTask() throws Exception {
+		return testPostProcessTask_addTask(randomTask());
+	}
+
+	protected Long testDeleteProcessTask_getProcessId(Task task)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetProcessTask() throws Exception {
+		Task postTask = testGetProcessTask_addTask();
+
+		Task getTask = taskResource.getProcessTask(
+			testGetProcessTask_getProcessId(postTask), postTask.getId());
+
+		assertEquals(postTask, getTask);
+		assertValid(getTask);
+	}
+
+	protected Task testGetProcessTask_addTask() throws Exception {
+		return testPostProcessTask_addTask(randomTask());
+	}
+
+	protected Long testGetProcessTask_getProcessId(Task task) throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProcessTask() throws Exception {
+		Task task = testGraphQLGetProcessTask_addTask();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				task,
+				TaskSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"processTask",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"processId",
+											testGraphQLGetProcessTask_getProcessId(
+												task));
+										put("taskId", task.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/processTask"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				task,
+				TaskSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processTask",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessTask_getProcessId(
+													task));
+											put("taskId", task.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processTask"))));
+	}
+
+	protected Long testGraphQLGetProcessTask_getProcessId(Task task)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProcessTaskNotFound() throws Exception {
+		Long irrelevantProcessId = RandomTestUtil.randomLong();
+		Long irrelevantTaskId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"processTask",
+						new HashMap<String, Object>() {
+							{
+								put("processId", irrelevantProcessId);
+								put("taskId", irrelevantTaskId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processTask",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+									put("taskId", irrelevantTaskId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Task testGraphQLGetProcessTask_addTask() throws Exception {
+		return testGraphQLTask_addTask();
+	}
+
+	@Test
 	public void testGetProcessTasksPage() throws Exception {
 		Long processId = testGetProcessTasksPage_getProcessId();
 		Long irrelevantProcessId =
@@ -262,6 +421,61 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	@Test
+	public void testPatchProcessTask() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Task task = testPatchProcessTask_addTask();
+
+		assertHttpResponseStatusCode(
+			204,
+			taskResource.patchProcessTaskHttpResponse(
+				testPatchProcessTask_getProcessId(task), task.getId(), task));
+
+		assertHttpResponseStatusCode(
+			404,
+			taskResource.patchProcessTaskHttpResponse(
+				testPatchProcessTask_getProcessId(task), 0L, task));
+	}
+
+	protected Long testPatchProcessTask_getProcessId(Task task)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Task testPatchProcessTask_addTask() throws Exception {
+		return testPostProcessTask_addTask(randomTask());
+	}
+
+	@Test
+	public void testPatchProcessTaskComplete() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Task task = testPatchProcessTaskComplete_addTask();
+
+		assertHttpResponseStatusCode(
+			204,
+			taskResource.patchProcessTaskCompleteHttpResponse(
+				testPatchProcessTaskComplete_getProcessId(task), task.getId(),
+				task));
+
+		assertHttpResponseStatusCode(
+			404,
+			taskResource.patchProcessTaskCompleteHttpResponse(
+				testPatchProcessTaskComplete_getProcessId(task), 0L, task));
+	}
+
+	protected Long testPatchProcessTaskComplete_getProcessId(Task task)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Task testPatchProcessTaskComplete_addTask() throws Exception {
+		return testPostProcessTask_addTask(randomTask());
+	}
+
+	@Test
 	public void testPostProcessTask() throws Exception {
 		Task randomTask = randomTask();
 
@@ -277,211 +491,13 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteProcessTask() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Task task = testDeleteProcessTask_addTask();
-
-		assertHttpResponseStatusCode(
-			204,
-			taskResource.deleteProcessTaskHttpResponse(
-				testDeleteProcessTask_getProcessId(task), task.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taskResource.getProcessTaskHttpResponse(
-				testDeleteProcessTask_getProcessId(task), task.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			taskResource.getProcessTaskHttpResponse(
-				testDeleteProcessTask_getProcessId(task), 0L));
-	}
-
-	protected Long testDeleteProcessTask_getProcessId(Task task)
-		throws Exception {
-
-		return task.getProcessId();
-	}
-
-	protected Task testDeleteProcessTask_addTask() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProcessTask() throws Exception {
-		Task postTask = testGetProcessTask_addTask();
-
-		Task getTask = taskResource.getProcessTask(
-			testGetProcessTask_getProcessId(postTask), postTask.getId());
-
-		assertEquals(postTask, getTask);
-		assertValid(getTask);
-	}
-
-	protected Long testGetProcessTask_getProcessId(Task task) throws Exception {
-		return task.getProcessId();
-	}
-
-	protected Task testGetProcessTask_addTask() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetProcessTask() throws Exception {
-		Task task = testGraphQLGetProcessTask_addTask();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				task,
-				TaskSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"processTask",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"processId",
-											testGraphQLGetProcessTask_getProcessId(
-												task));
-
-										put("taskId", task.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/processTask"))));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertTrue(
-			equals(
-				task,
-				TaskSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"portalWorkflowMetrics_v1_0",
-								new GraphQLField(
-									"processTask",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"processId",
-												testGraphQLGetProcessTask_getProcessId(
-													task));
-
-											put("taskId", task.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/portalWorkflowMetrics_v1_0",
-						"Object/processTask"))));
-	}
-
-	protected Long testGraphQLGetProcessTask_getProcessId(Task task)
-		throws Exception {
-
-		return task.getProcessId();
-	}
-
-	@Test
-	public void testGraphQLGetProcessTaskNotFound() throws Exception {
-		Long irrelevantProcessId = RandomTestUtil.randomLong();
-		Long irrelevantTaskId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"processTask",
-						new HashMap<String, Object>() {
-							{
-								put("processId", irrelevantProcessId);
-								put("taskId", irrelevantTaskId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"portalWorkflowMetrics_v1_0",
-						new GraphQLField(
-							"processTask",
-							new HashMap<String, Object>() {
-								{
-									put("processId", irrelevantProcessId);
-									put("taskId", irrelevantTaskId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Task testGraphQLGetProcessTask_addTask() throws Exception {
-		return testGraphQLTask_addTask();
-	}
-
-	@Test
-	public void testPatchProcessTask() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Task task = testPatchProcessTask_addTask();
-
-		assertHttpResponseStatusCode(
-			204,
-			taskResource.patchProcessTaskHttpResponse(
-				task.getProcessId(), task.getId(), task));
-
-		assertHttpResponseStatusCode(
-			404,
-			taskResource.patchProcessTaskHttpResponse(
-				task.getProcessId(), 0L, task));
-	}
-
-	protected Task testPatchProcessTask_addTask() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPatchProcessTaskComplete() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Task task = testPatchProcessTaskComplete_addTask();
-
-		assertHttpResponseStatusCode(
-			204,
-			taskResource.patchProcessTaskCompleteHttpResponse(
-				task.getProcessId(), task.getId(), task));
-
-		assertHttpResponseStatusCode(
-			404,
-			taskResource.patchProcessTaskCompleteHttpResponse(
-				task.getProcessId(), 0L, task));
-	}
-
-	protected Task testPatchProcessTaskComplete_addTask() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testPostTasksPage() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Task testGraphQLTask_addTask() throws Exception {

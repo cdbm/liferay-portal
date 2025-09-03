@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -32,8 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * @author Brian Wing Shun Chan
@@ -456,9 +456,8 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		return false;
 	}
 
-	@Override
-	public boolean isModelCountSupported() {
-		return true;
+	public boolean isEmptyControlsAllowed() {
+		return _emptyControlsAllowed;
 	}
 
 	@Override
@@ -799,6 +798,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			deletionSystemEventStagedModelTypes;
 	}
 
+	protected void setEmptyControlsAllowed(boolean emptyControlsAllowed) {
+		_emptyControlsAllowed = emptyControlsAllowed;
+	}
+
 	protected void setExportControls(
 		PortletDataHandlerControl... exportControls) {
 
@@ -878,6 +881,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	private String[] _dataPortletPreferences = StringPool.EMPTY_ARRAY;
 	private StagedModelType[] _deletionSystemEventStagedModelTypes =
 		new StagedModelType[0];
+	private boolean _emptyControlsAllowed;
 	private PortletDataHandlerControl[] _exportControls =
 		new PortletDataHandlerControl[0];
 	private PortletDataHandlerControl[] _exportMetadataControls =

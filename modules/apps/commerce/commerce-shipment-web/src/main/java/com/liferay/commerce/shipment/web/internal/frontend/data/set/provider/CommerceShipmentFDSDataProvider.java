@@ -15,6 +15,7 @@ import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.constants.CommerceShipmentFDSNames;
 import com.liferay.commerce.frontend.model.LabelField;
 import com.liferay.commerce.frontend.model.Shipment;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceShipment;
@@ -23,7 +24,6 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceShipmentService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -44,12 +44,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

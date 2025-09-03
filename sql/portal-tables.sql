@@ -24,9 +24,11 @@ create table Address (
 	street1 VARCHAR(255) null,
 	street2 VARCHAR(255) null,
 	street3 VARCHAR(255) null,
+	subtype VARCHAR(75) null,
 	validationDate DATE null,
 	validationStatus INTEGER,
 	zip VARCHAR(75) null,
+	status INTEGER,
 	primary key (addressId, ctCollectionId)
 );
 
@@ -97,6 +99,7 @@ create table AssetCategory (
 	description TEXT null,
 	vocabularyId LONG,
 	lastPublishDate DATE null,
+	status INTEGER,
 	primary key (categoryId, ctCollectionId)
 );
 
@@ -159,6 +162,17 @@ create table AssetTag (
 	primary key (tagId, ctCollectionId)
 );
 
+create table AssetTagGroupRel (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	assetTagGroupRelId LONG not null,
+	groupId LONG,
+	companyId LONG,
+	tagId LONG,
+	primary key (assetTagGroupRelId, ctCollectionId)
+);
+
 create table AssetVocabulary (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
@@ -177,6 +191,7 @@ create table AssetVocabulary (
 	settings_ STRING null,
 	visibilityType INTEGER,
 	lastPublishDate DATE null,
+	status INTEGER,
 	primary key (vocabularyId, ctCollectionId)
 );
 
@@ -682,7 +697,7 @@ create table Layout (
 	masterLayoutPlid LONG,
 	layoutPrototypeUuid VARCHAR(75) null,
 	layoutPrototypeLinkEnabled BOOLEAN,
-	sourcePrototypeLayoutUuid VARCHAR(75) null,
+	layoutSetPrototypeLayoutERC VARCHAR(75) null,
 	publishDate DATE null,
 	lastPublishDate DATE null,
 	status INTEGER,
@@ -818,8 +833,9 @@ create table LayoutSetBranch (
 
 create table LayoutSetPrototype (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	layoutSetPrototypeId LONG not null primary key,
+	layoutSetPrototypeId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -828,7 +844,8 @@ create table LayoutSetPrototype (
 	name TEXT null,
 	description TEXT null,
 	settings_ STRING null,
-	active_ BOOLEAN
+	active_ BOOLEAN,
+	primary key (layoutSetPrototypeId, ctCollectionId)
 );
 
 create table ListType (
@@ -901,6 +918,7 @@ create table Organization_ (
 	statusListTypeId LONG,
 	comments STRING null,
 	logoId LONG,
+	status INTEGER,
 	primary key (organizationId, ctCollectionId)
 );
 
@@ -1162,6 +1180,7 @@ create table Release_ (
 	schemaVersion VARCHAR(75) null,
 	buildNumber INTEGER,
 	buildDate DATE null,
+	versionDisplayName VARCHAR(75) null,
 	verified BOOLEAN,
 	state_ INTEGER,
 	testString VARCHAR(1024) null

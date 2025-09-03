@@ -49,18 +49,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -149,7 +149,7 @@ public class InfoFieldItemSelectorViewDescriptor
 
 		PortletRequest portletRequest =
 			(PortletRequest)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		SearchContainer<InfoField<?>> searchContainer = new SearchContainer<>(
 			portletRequest, _portletURL, null, "there-are-no-info-fields");
@@ -268,7 +268,7 @@ public class InfoFieldItemSelectorViewDescriptor
 
 			String inputFieldId = GetterUtil.getString(
 				_fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					new FragmentConfigurationField(
 						"inputFieldId", "string", "", false, "text"),
 					_themeDisplay.getLocale()));

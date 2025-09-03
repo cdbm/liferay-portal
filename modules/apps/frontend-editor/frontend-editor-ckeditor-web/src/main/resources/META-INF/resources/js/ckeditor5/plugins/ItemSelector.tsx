@@ -3,61 +3,127 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ButtonView, Config, Plugin, icons} from 'ckeditor5';
+import {ButtonView, Command, Config, Plugin} from 'ckeditor5';
 import {openSelectionModal} from 'frontend-js-components-web';
 
-import {ClassicEditorConfig} from '../utils/types';
+import getIcon from '../utils/getIcon';
+import {LiferayEditorConfig} from '../utils/types';
 
 class ItemSelector extends Plugin {
 	init() {
 		const editor = this.editor;
 
-		const config: Config<ClassicEditorConfig> = editor.config;
+		const commandName = 'itemSelectorCommand';
 
-		const url = config.get('filebrowserImageBrowseUrl');
+		editor.commands.add(commandName, new Command(editor));
 
-		if (!url) {
-			return;
+		const command = editor.commands.get(commandName)!;
+
+		const config: Config<LiferayEditorConfig> = editor.config;
+
+		const filebrowserImageBrowseUrl = config.get(
+			'filebrowserImageBrowseUrl'
+		);
+
+		if (filebrowserImageBrowseUrl) {
+			editor.ui.componentFactory.add('imageSelector', () => {
+				const buttonView = new ButtonView();
+
+				buttonView.set({
+					icon: getIcon({symbol: 'picture'}),
+					label: Liferay.Language.get('image'),
+					tooltip: true,
+				});
+
+				buttonView.bind('isEnabled').to(command, 'isEnabled');
+
+				buttonView.on('execute', () => {
+					openSelectionModal({
+						onSelect: ({value}: {value: string}) => {
+							let url;
+
+							try {
+								url = JSON.parse(value).url;
+							}
+							catch (error) {
+								url = value;
+							}
+
+							if (!url) {
+								return;
+							}
+
+							const viewFragment = editor.data.processor.toView(
+								`<img src="${url}">`
+							);
+
+							const modelFragment =
+								editor.data.toModel(viewFragment);
+
+							editor.model.insertContent(modelFragment);
+						},
+						selectEventName: config.get('itemSelectorEventName'),
+						title: Liferay.Language.get('select-item'),
+						url: filebrowserImageBrowseUrl,
+						zIndex: Liferay.zIndex.WINDOW + 10,
+					});
+				});
+
+				return buttonView;
+			});
 		}
 
-		editor.ui.componentFactory.add('imageSelector', () => {
-			const buttonView = new ButtonView();
+		const filebrowserVideoBrowseUrl = config.get(
+			'filebrowserVideoBrowseUrl'
+		);
 
-			buttonView.set({
-				icon: icons.image,
-				label: Liferay.Language.get('image'),
-				tooltip: true,
-			});
+		if (filebrowserVideoBrowseUrl) {
+			editor.ui.componentFactory.add('videoSelector', () => {
+				const buttonView = new ButtonView();
 
-			buttonView.on('execute', () => {
-				openSelectionModal({
-					onSelect: ({value}: {value: string}) => {
-						let url;
-
-						try {
-							url = JSON.parse(value).url;
-						}
-						catch (error) {
-							url = value;
-						}
-
-						const viewFragment = editor.data.processor.toView(
-							`<img src="${url}">`
-						);
-
-						const modelFragment = editor.data.toModel(viewFragment);
-
-						editor.model.insertContent(modelFragment);
-					},
-					selectEventName: config.get('itemSelectorEventName'),
-					title: Liferay.Language.get('select-item'),
-					url,
-					zIndex: Liferay.zIndex.WINDOW + 10,
+				buttonView.set({
+					icon: getIcon({symbol: 'video'}),
+					label: Liferay.Language.get('video'),
+					tooltip: true,
 				});
-			});
 
-			return buttonView;
-		});
+				buttonView.bind('isEnabled').to(command, 'isEnabled');
+
+				buttonView.on('execute', () => {
+					openSelectionModal({
+						onSelect: ({value}: {value: any}) => {
+							let url: string;
+
+							try {
+								url = JSON.parse(value).url;
+							}
+							catch (error) {
+								url = value.url;
+							}
+
+							if (!url) {
+								return;
+							}
+
+							const viewFragment = editor.data.processor.toView(
+								`<oembed url="${url}"></oembed>`
+							);
+
+							const modelFragment =
+								editor.data.toModel(viewFragment);
+
+							editor.model.insertContent(modelFragment);
+						},
+						selectEventName: config.get('itemSelectorEventName'),
+						title: Liferay.Language.get('select-item'),
+						url: filebrowserVideoBrowseUrl,
+						zIndex: Liferay.zIndex.WINDOW + 10,
+					});
+				});
+
+				return buttonView;
+			});
+		}
 	}
 }
 

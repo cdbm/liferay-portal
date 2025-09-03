@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -194,6 +194,13 @@ public abstract class BaseDefaultProductDisplayPageResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteChannelIdDefaultProductDisplayPage()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testGetChannelByExternalReferenceCodeDefaultProductDisplayPage()
 		throws Exception {
 
@@ -209,6 +216,25 @@ public abstract class BaseDefaultProductDisplayPageResourceTestCase {
 
 	@Test
 	public void testGraphQLGetChannelByExternalReferenceCodeDefaultProductDisplayPageNotFound()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGetChannelIdDefaultProductDisplayPage() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetChannelIdDefaultProductDisplayPage()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetChannelIdDefaultProductDisplayPageNotFound()
 		throws Exception {
 
 		Assert.assertTrue(true);
@@ -237,32 +263,6 @@ public abstract class BaseDefaultProductDisplayPageResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteChannelIdDefaultProductDisplayPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetChannelIdDefaultProductDisplayPage() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetChannelIdDefaultProductDisplayPage()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetChannelIdDefaultProductDisplayPageNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
 	}
 
 	@Test

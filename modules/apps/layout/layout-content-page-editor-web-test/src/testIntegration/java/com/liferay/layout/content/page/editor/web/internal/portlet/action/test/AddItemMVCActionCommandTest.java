@@ -39,9 +39,9 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.List;
+import jakarta.portlet.ActionRequest;
 
-import javax.portlet.ActionRequest;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -131,8 +131,8 @@ public class AddItemMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
-				_layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(), _layoutStructure.toString());
 
 		mockLiferayPortletActionRequest.addParameter(
 			"itemType", LayoutDataItemTypeConstants.TYPE_CONTAINER);

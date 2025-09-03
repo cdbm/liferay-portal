@@ -86,8 +86,8 @@ public class PlacedOrderItemResourceTest
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null,
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
@@ -121,8 +121,8 @@ public class PlacedOrderItemResourceTest
 
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
-				RandomTestUtil.randomString(), testGroup.getGroupId(),
-				_user.getUserId(), _commerceCurrency.getCode(), true,
+				RandomTestUtil.randomString(), _user.getUserId(),
+				testGroup.getGroupId(), _commerceCurrency.getCode(), true,
 				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
 				RandomTestUtil.randomString(), RandomTestUtil.nextDouble(), 1,
 				1, 2022, 12, 0, 0, 0, 0, 0, 0, true, _serviceContext);
@@ -361,6 +361,17 @@ public class PlacedOrderItemResourceTest
 						if (commerceVirtualOrderItem == null) {
 							return null;
 						}
+
+						commerceVirtualOrderItem =
+							_commerceVirtualOrderItemLocalService.
+								updateCommerceVirtualOrderItem(
+									commerceVirtualOrderItem.
+										getCommerceVirtualOrderItemId(),
+									commerceVirtualOrderItem.
+										getActivationStatus(),
+									commerceVirtualOrderItem.getDuration(),
+									commerceVirtualOrderItem.getMaxUsages(),
+									true);
 
 						List<CommerceVirtualOrderItemFileEntry>
 							commerceVirtualOrderItemFileEntries =

@@ -16,6 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Olivér Kecskeméty
@@ -97,7 +97,7 @@ public class User implements Serializable {
 		description = "A physical mailing address for this user."
 	)
 	@Valid
-	public Object[] getAddresses() {
+	public Address[] getAddresses() {
 		if (_addressesSupplier != null) {
 			addresses = _addressesSupplier.get();
 
@@ -107,7 +107,7 @@ public class User implements Serializable {
 		return addresses;
 	}
 
-	public void setAddresses(Object[] addresses) {
+	public void setAddresses(Address[] addresses) {
 		this.addresses = addresses;
 
 		_addressesSupplier = null;
@@ -115,7 +115,7 @@ public class User implements Serializable {
 
 	@JsonIgnore
 	public void setAddresses(
-		UnsafeSupplier<Object[], Exception> addressesUnsafeSupplier) {
+		UnsafeSupplier<Address[], Exception> addressesUnsafeSupplier) {
 
 		_addressesSupplier = () -> {
 			try {
@@ -132,10 +132,10 @@ public class User implements Serializable {
 
 	@GraphQLField(description = "A physical mailing address for this user.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Object[] addresses;
+	protected Address[] addresses;
 
 	@JsonIgnore
-	private Supplier<Object[]> _addressesSupplier;
+	private Supplier<Address[]> _addressesSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The name of the user, suitable for display to end-users."
@@ -1272,7 +1272,7 @@ public class User implements Serializable {
 			sb.append(active);
 		}
 
-		Object[] addresses = getAddresses();
+		Address[] addresses = getAddresses();
 
 		if (addresses != null) {
 			if (sb.length() > 1) {
@@ -1284,11 +1284,7 @@ public class User implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < addresses.length; i++) {
-				sb.append("\"");
-
-				sb.append(_escape(addresses[i]));
-
-				sb.append("\"");
+				sb.append(String.valueOf(addresses[i]));
 
 				if ((i + 1) < addresses.length) {
 					sb.append(", ");

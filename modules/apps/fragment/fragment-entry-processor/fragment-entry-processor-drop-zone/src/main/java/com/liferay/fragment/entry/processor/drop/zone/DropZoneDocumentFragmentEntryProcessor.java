@@ -22,12 +22,12 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -53,6 +53,12 @@ public class DropZoneDocumentFragmentEntryProcessor
 		throws PortalException {
 
 		if (fragmentEntryProcessorContext.isIndexMode()) {
+			return;
+		}
+
+		String html = fragmentEntryLink.getHtml();
+
+		if (!html.contains("lfr-drop-zone")) {
 			return;
 		}
 

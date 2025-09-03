@@ -12,8 +12,8 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionCategory;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.SpecificationEntityModel;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SpecificationResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,11 +31,11 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -188,6 +188,7 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 					GetterUtil.getBoolean(specification.getFacetable()),
 					GetterUtil.getString(specification.getKey()),
 					GetterUtil.getDouble(specification.getPriority()),
+					GetterUtil.getBoolean(specification.getVisible(), true),
 					_serviceContextHelper.getServiceContext());
 
 			return _toSpecification(
@@ -206,6 +207,8 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			GetterUtil.getBoolean(specification.getFacetable()),
 			GetterUtil.getString(specification.getKey()),
 			GetterUtil.getDouble(specification.getPriority()),
+			GetterUtil.getBoolean(
+				specification.getVisible(), cpSpecificationOption.isVisible()),
 			_serviceContextHelper.getServiceContext());
 
 		return _toSpecification(
@@ -312,7 +315,7 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 				LanguageUtils.getLocalizedMap(specification.getDescription()),
 				GetterUtil.getBoolean(specification.getFacetable()),
 				specificationKey,
-				GetterUtil.getDouble(specification.getPriority()),
+				GetterUtil.getDouble(specification.getPriority()), true,
 				_serviceContextHelper.getServiceContext());
 
 		return _toSpecification(
@@ -400,6 +403,8 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			GetterUtil.getDouble(
 				specification.getPriority(),
 				cpSpecificationOption.getPriority()),
+			GetterUtil.getBoolean(
+				specification.getVisible(), cpSpecificationOption.isVisible()),
 			_serviceContextHelper.getServiceContext());
 	}
 

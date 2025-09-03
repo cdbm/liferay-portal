@@ -38,14 +38,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.engine.ConnectionInformation;
@@ -126,7 +124,6 @@ public class DDMIndexerImplTest {
 
 		_setUpJSONFactoryUtil();
 		_setUpPortalUtil();
-		_setUpPropsUtil();
 	}
 
 	@After
@@ -280,8 +277,9 @@ public class DDMIndexerImplTest {
 
 		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
 
+		ddmFormFieldOptions.addOptionLabel("apple", LocaleUtil.US, "Apple");
 		ddmFormFieldOptions.addOptionLabel(
-			"Option Value", LocaleUtil.US, "Option Label");
+			"pineapple", LocaleUtil.US, "Pineapple");
 
 		ddmFormField.setDDMFormFieldOptions(ddmFormFieldOptions);
 
@@ -296,17 +294,16 @@ public class DDMIndexerImplTest {
 				DDMFormValuesTestUtil.createDDMFormFieldValue(
 					_FIELD_NAME,
 					DDMFormValuesTestUtil.createLocalizedValue(
-						"[\"Option Value\"]", LocaleUtil.US))));
+						"[\"pineapple\"]", LocaleUtil.US))));
 
 		FieldValuesAssert.assertFieldValues(
 			HashMapBuilder.put(
-				"ddmFieldArray.ddmFieldValueKeyword_en_US", "Option Value"
+				"ddmFieldArray.ddmFieldValueKeyword_en_US", "pineapple"
 			).put(
-				"ddmFieldArray.ddmFieldValueKeyword_en_US_String",
-				"Option Label"
+				"ddmFieldArray.ddmFieldValueKeyword_en_US_String", "Pineapple"
 			).put(
 				"ddmFieldArray.ddmFieldValueKeyword_en_US_String_sortable",
-				"option label"
+				"pineapple"
 			).build(),
 			"ddmFieldArray.ddmFieldValueKeyword_en_US", document,
 			StringPool.BLANK);
@@ -519,11 +516,6 @@ public class DDMIndexerImplTest {
 		);
 
 		portalUtil.setPortal(portal);
-	}
-
-	private void _setUpPropsUtil() {
-		PropsTestUtil.setProps(
-			PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH, "255");
 	}
 
 	private void _testExtractIndexableAttributes(

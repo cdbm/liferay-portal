@@ -7,12 +7,16 @@ package com.liferay.object.web.internal.info.item.provider.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.field.InfoField;
+import com.liferay.info.field.InfoFieldSet;
+import com.liferay.info.field.InfoFieldSetEntry;
 import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
@@ -60,6 +64,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -184,7 +189,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 				TestPropsValues.getUserId(),
 				_childObjectDefinition.getObjectDefinitionId());
 
-		ObjectDefinition parentObjectDefinition = _addObjectDefinition(
+		_parentObjectDefinition = _addObjectDefinition(
 			new TextObjectFieldBuilder(
 			).labelMap(
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
@@ -192,15 +197,15 @@ public class ObjectEntryInfoItemFormProviderTest {
 				"parentTextObjectFieldName"
 			).build());
 
-		parentObjectDefinition =
+		_parentObjectDefinition =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
 				TestPropsValues.getUserId(),
-				parentObjectDefinition.getObjectDefinitionId());
+				_parentObjectDefinition.getObjectDefinitionId());
 
 		_objectRelationship =
 			_objectRelationshipLocalService.addObjectRelationship(
 				null, TestPropsValues.getUserId(),
-				parentObjectDefinition.getObjectDefinitionId(),
+				_parentObjectDefinition.getObjectDefinitionId(),
 				_childObjectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -276,10 +281,64 @@ public class ObjectEntryInfoItemFormProviderTest {
 						_childObjectDefinition.getObjectDefinitionId()),
 					0),
 				_listTypeEntry2.getKey(), _listTypeEntry3.getKey());
+
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			MockHttpServletRequest mockHttpServletRequest =
+				(MockHttpServletRequest)serviceContext.getRequest();
+
+			JournalArticle journalArticle = JournalTestUtil.addArticle(
+				TestPropsValues.getGroupId(), 0);
+
+			mockHttpServletRequest.setAttribute(
+				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
+				_journalArticleLayoutDisplayPageProvider.
+					getLayoutDisplayPageObjectProvider(
+						new InfoItemReference(
+							JournalArticle.class.getName(),
+							journalArticle.getResourcePrimKey())));
+
+			_assertOptionInfoFieldTypes(
+				infoItemFormProvider.getInfoForm(
+					String.valueOf(
+						_childObjectDefinition.getObjectDefinitionId()),
+					0),
+				_listTypeEntry1.getKey(), _listTypeEntry2.getKey());
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
 		}
+	}
+
+	@FeatureFlag("LPD-50377")
+	@Test
+	public void testParentObjectEntryInfoItemFormProvider() throws Exception {
+		InfoItemFormProvider<?> infoItemFormProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemFormProvider.class,
+				_parentObjectDefinition.getClassName());
+
+		InfoForm infoForm = infoItemFormProvider.getInfoForm(
+			String.valueOf(_parentObjectDefinition.getObjectDefinitionId()), 0);
+
+		Assert.assertNotNull(infoForm);
+		Assert.assertNotNull(
+			infoForm.getInfoField("parentTextObjectFieldName"));
+
+		InfoFieldSetEntry infoFieldSetEntry = infoForm.getInfoFieldSetEntry(
+			_objectRelationship.getName());
+
+		Assert.assertNotNull(infoFieldSetEntry);
+		Assert.assertTrue(infoFieldSetEntry instanceof InfoFieldSet);
+
+		InfoFieldSet childInfoFieldSet = (InfoFieldSet)infoFieldSetEntry;
+
+		Assert.assertNotNull(
+			childInfoFieldSet.getInfoFieldSetEntry(
+				"attachmentObjectFieldName"));
+		Assert.assertNotNull(
+			childInfoFieldSet.getInfoFieldSetEntry("picklistObjectFieldName"));
 	}
 
 	private ListTypeEntry _addListTypeEntry() throws Exception {
@@ -288,7 +347,8 @@ public class ObjectEntryInfoItemFormProviderTest {
 		return _listTypeEntryLocalService.addListTypeEntry(
 			null, TestPropsValues.getUserId(),
 			_listTypeDefinition.getListTypeDefinitionId(), listTypeEntryKey,
-			LocalizedMapUtil.getLocalizedMap(listTypeEntryKey));
+			LocalizedMapUtil.getLocalizedMap(listTypeEntryKey),
+			_listTypeDefinition.isSystem());
 	}
 
 	private ObjectDefinition _addObjectDefinition(ObjectField... objectFields)
@@ -296,7 +356,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
 			TestPropsValues.getUserId(), 0, null, false, false, true, false,
-			false,
+			false, false, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -397,6 +457,12 @@ public class ObjectEntryInfoItemFormProviderTest {
 	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
+	@Inject(
+		filter = "component.name=com.liferay.journal.web.internal.layout.display.page.JournalArticleLayoutDisplayPageProvider"
+	)
+	private LayoutDisplayPageProvider<JournalArticle>
+		_journalArticleLayoutDisplayPageProvider;
+
 	@Inject
 	private LayoutDisplayPageProviderRegistry
 		_layoutDisplayPageProviderRegistry;
@@ -446,5 +512,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 	@Inject
 	private ObjectStateTransitionLocalService
 		_objectStateTransitionLocalService;
+
+	private ObjectDefinition _parentObjectDefinition;
 
 }

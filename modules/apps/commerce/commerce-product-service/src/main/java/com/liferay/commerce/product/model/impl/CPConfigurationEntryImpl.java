@@ -33,15 +33,15 @@ public class CPConfigurationEntryImpl extends CPConfigurationEntryBaseImpl {
 		}
 
 		allowedOrderQuantitiesString = allowedOrderQuantitiesString.replaceAll(
-			" *(, *)|(\\. *)|( +)", StringPool.COMMA);
+			StringPool.COMMA, StringPool.BLANK);
 
-		int[] allowedOrderQuantities = StringUtil.split(
-			allowedOrderQuantitiesString, 0);
+		BigDecimal[] allowedOrderQuantities = TransformUtil.transform(
+			StringUtil.split(allowedOrderQuantitiesString, StringPool.SPACE),
+			BigDecimal::new, BigDecimal.class);
 
 		Arrays.sort(allowedOrderQuantities);
 
-		return TransformUtil.transform(
-			allowedOrderQuantities, BigDecimal::valueOf, BigDecimal.class);
+		return allowedOrderQuantities;
 	}
 
 	@Override
@@ -63,6 +63,15 @@ public class CPConfigurationEntryImpl extends CPConfigurationEntryBaseImpl {
 				getCPConfigurationListId());
 
 		return cpConfigurationList.getParentCPConfigurationList();
+	}
+
+	@Override
+	public boolean isMaster() throws PortalException {
+		CPConfigurationList cpConfigurationList =
+			CPConfigurationListLocalServiceUtil.getCPConfigurationList(
+				getCPConfigurationListId());
+
+		return cpConfigurationList.isMaster();
 	}
 
 }

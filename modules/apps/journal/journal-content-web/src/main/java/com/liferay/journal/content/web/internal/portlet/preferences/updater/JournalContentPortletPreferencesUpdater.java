@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,9 +76,9 @@ public class JournalContentPortletPreferencesUpdater
 
 		LayoutClassedModelUsage layoutClassedModelUsage =
 			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
-				layout.getGroupId(),
+				layout.getGroupId(), StringPool.BLANK,
 				_portal.getClassNameId(JournalArticle.class),
-				article.getResourcePrimKey(), StringPool.BLANK, portletId,
+				article.getResourcePrimKey(), portletId,
 				_portal.getClassNameId(Portlet.class), layout.getPlid());
 
 		if (layoutClassedModelUsage != null) {
@@ -86,8 +86,9 @@ public class JournalContentPortletPreferencesUpdater
 		}
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			layout.getGroupId(), _portal.getClassNameId(JournalArticle.class),
-			article.getResourcePrimKey(), StringPool.BLANK, portletId,
+			layout.getGroupId(), StringPool.BLANK,
+			_portal.getClassNameId(JournalArticle.class),
+			article.getResourcePrimKey(), portletId,
 			_portal.getClassNameId(Portlet.class), layout.getPlid(),
 			ServiceContextThreadLocal.getServiceContext());
 	}

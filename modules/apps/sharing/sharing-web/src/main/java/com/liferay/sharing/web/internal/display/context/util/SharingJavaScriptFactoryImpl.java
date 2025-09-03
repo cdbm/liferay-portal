@@ -21,12 +21,12 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.sharing.display.context.util.SharingJavaScriptFactory;
 import com.liferay.sharing.web.internal.util.SharingJavaScriptThreadLocal;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -141,10 +141,10 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 			return assetRenderer.getURLShare(
 				_portal.getLiferayPortletRequest(
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST)),
+						JavaConstants.JAKARTA_PORTLET_REQUEST)),
 				_portal.getLiferayPortletResponse(
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE)));
+						JavaConstants.JAKARTA_PORTLET_RESPONSE)));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {

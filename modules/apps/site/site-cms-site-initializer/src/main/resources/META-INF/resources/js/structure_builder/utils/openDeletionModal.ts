@@ -8,10 +8,11 @@ import {openConfirmModal} from '@liferay/layout-js-components-web';
 export default function openDeletionModal() {
 	openConfirmModal({
 		buttonLabel: Liferay.Language.get('done'),
+		center: true,
 		hideCancel: true,
 		status: 'warning',
 		text: Liferay.Language.get(
-			'structure-cannot-be-deleted-because-it-requires-at-least-one-field'
+			'fields-cannot-be-deleted-because-the-structure-requires-at-least-one-field'
 		),
 		title: Liferay.Language.get('deletion-not-allowed'),
 	});

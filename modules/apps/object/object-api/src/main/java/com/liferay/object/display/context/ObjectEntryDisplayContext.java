@@ -15,9 +15,9 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 
-import java.util.Map;
+import jakarta.servlet.jsp.PageContext;
 
-import javax.servlet.jsp.PageContext;
+import java.util.Map;
 
 /**
  * @author Gabriel Albuquerque
@@ -55,6 +55,8 @@ public interface ObjectEntryDisplayContext {
 
 	public Map<String, String> getRelationshipContextParams()
 		throws PortalException;
+
+	public Map<String, Object> getScheduleProperties() throws PortalException;
 
 	public default String getURLSeparator() {
 		return FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY;

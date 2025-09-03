@@ -22,6 +22,8 @@ if (!ddmFormAdminDisplayContext.isFormPublished()) {
 	disableCopyButton = true;
 }
 
+JSONObject formBuilderContextJSONObject = ddmFormAdminDisplayContext.getFormBuilderContextJSONObject();
+
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
@@ -45,7 +47,6 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 <div class="portlet-forms" id="<portlet:namespace />formContainer">
 	<div class="forms-navigation-bar">
 		<clay:navigation-bar
-			cssClass="lfr-forms__edit-navigation-bar"
 			id="formsNavigationBar"
 			inverted="<%= true %>"
 			navigationItems="<%= ddmFormAdminDisplayContext.getFormBuilderNavigationItems() %>"
@@ -146,6 +147,8 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 						"autosaveURL", autoSaveFormInstanceURL.toString()
 					).put(
 						"availableLanguageIds", ddmFormAdminDisplayContext.getAvailableLanguageIdsJSONArray()
+					).put(
+						"availableLocales", ddmFormAdminDisplayContext.getAvailableLocalesJSONArray()
 					).put(
 						"context", formBuilderContextJSONObject
 					).put(

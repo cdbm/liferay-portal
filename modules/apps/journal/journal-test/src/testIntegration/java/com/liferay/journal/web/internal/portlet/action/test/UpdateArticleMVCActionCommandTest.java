@@ -41,13 +41,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletException;
+
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletException;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,34 +79,36 @@ public class UpdateArticleMVCActionCommandTest {
 	}
 
 	@Test
-	public void testServeResource() throws Exception {
+	public void testProcessAction() throws Exception {
 		_processAction(_getMockLiferayPortletActionRequest());
 
-		JournalArticle journalArticle =
+		JournalArticle journalArticle1 =
 			_journalArticleLocalService.fetchArticleByUrlTitle(
 				_group.getGroupId(), "title");
 
-		Assert.assertNotNull(journalArticle);
+		Assert.assertNotNull(journalArticle1.getDisplayDate());
 		Assert.assertEquals(
-			WorkflowConstants.STATUS_APPROVED, journalArticle.getStatus());
-		Assert.assertEquals(1.0, journalArticle.getVersion(), 0.01);
+			WorkflowConstants.STATUS_APPROVED, journalArticle1.getStatus());
+		Assert.assertEquals(1.0, journalArticle1.getVersion(), 0.01);
 
 		_processAction(
 			_getMockLiferayPortletActionRequest(
-				journalArticle.getArticleId(),
-				journalArticle.getFriendlyURLMap()));
+				journalArticle1.getArticleId(),
+				journalArticle1.getFriendlyURLMap()));
 
-		journalArticle = _journalArticleLocalService.fetchArticleByUrlTitle(
-			_group.getGroupId(), "title");
+		JournalArticle journalArticle2 =
+			_journalArticleLocalService.fetchArticleByUrlTitle(
+				_group.getGroupId(), "title");
 
-		Assert.assertNotNull(journalArticle);
 		Assert.assertEquals(
-			WorkflowConstants.STATUS_APPROVED, journalArticle.getStatus());
-		Assert.assertEquals(1.1, journalArticle.getVersion(), 0.01);
+			journalArticle1.getDisplayDate(), journalArticle2.getDisplayDate());
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, journalArticle2.getStatus());
+		Assert.assertEquals(1.1, journalArticle2.getVersion(), 0.01);
 	}
 
 	@Test
-	public void testServeResourceWithErrors() throws Exception {
+	public void testProcessActionWithErrors() throws Exception {
 		_processAction(_getMockLiferayPortletActionRequest());
 
 		JournalArticle journalArticle =
@@ -155,7 +157,7 @@ public class UpdateArticleMVCActionCommandTest {
 			WebKeys.CURRENT_URL, "http://localhost:8080");
 
 		mockMultipartHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG,
+			JavaConstants.JAKARTA_PORTLET_CONFIG,
 			PortletConfigFactoryUtil.create(
 				_portletLocalService.getPortletById(JournalPortletKeys.JOURNAL),
 				null));

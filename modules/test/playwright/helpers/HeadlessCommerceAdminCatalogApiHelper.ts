@@ -23,15 +23,6 @@ type TCatalog = {
 	name?: string;
 };
 
-type TChannel = {
-	channelId: number;
-	currencyCode: string;
-	externalReferenceCode?: string;
-	id?: number;
-	name: string;
-	type: string;
-};
-
 type TCategory = {
 	checked?: boolean;
 	externalReferenceCode?: string;
@@ -40,6 +31,15 @@ type TCategory = {
 	name: string;
 	value?: string;
 	vocabulary?: string;
+};
+
+type TChannel = {
+	channelId: number;
+	currencyCode: string;
+	externalReferenceCode?: string;
+	id?: number;
+	name: string;
+	type: string;
 };
 
 type TCurrency = {
@@ -91,7 +91,7 @@ export type TProduct = {
 	productConfiguration?: TProductConfiguration;
 	productId?: number;
 	productOptions?: any[];
-	productSpecifications?: any[];
+	productSpecifications?: TProductSpecifications[];
 	productStatus?: number;
 	productType?: string;
 	productVirtualSettings?: TProductVirtualSettings;
@@ -144,6 +144,15 @@ export type TProductConfigurationList = {
 	parentProductConfigurationListId?: number;
 	priority?: number;
 	productConfigurations?: TProductConfiguration[];
+};
+
+type TProductSpecifications = {
+	id?: number;
+	key?: string;
+	label?: Record<string, string>;
+	specificationKey?: string;
+	value?: Record<string, string>;
+	visible?: boolean;
 };
 
 export type TProductTaxConfiguration = {
@@ -220,12 +229,6 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async deleteProductAccountGroup(id: number) {
-		return this.apiHelpers.delete(
-			`${this.apiHelpers.baseUrl}${this.basePath}/product-account-groups/${id}`
-		);
-	}
-
 	async deleteCatalog(catalogId: number | string) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/catalog/${catalogId}`
@@ -256,6 +259,18 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async deleteProductAccountGroup(id: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-account-groups/${id}`
+		);
+	}
+
+	async deleteProductByVersion(productId: number, version: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
 	async deleteProductConfiguration(productConfigurationId: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/product-configurations/${productConfigurationId}`
@@ -265,12 +280,6 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async deleteProductConfigurationList(productConfigurationListId: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}`
-		);
-	}
-
-	async deleteProductByVersion(productId: number, version: number) {
-		return this.apiHelpers.delete(
-			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
 		);
 	}
 
@@ -304,7 +313,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async getCurrenciesPage(search: string) {
+	async getCurrenciesPage(search = '') {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/currencies?search=${search}`
 		);
@@ -334,20 +343,6 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async getProductConfigurationListsPage(search: string = '') {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists?search=${search}`
-		);
-	}
-
-	async getProducts(searchParams = new URLSearchParams()) {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${
-				this.basePath
-			}/products?${searchParams.toString()}`
-		);
-	}
-
 	async getProductAccountGroups(productId: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/product-account-groups`
@@ -357,6 +352,24 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async getProductByVersion(productId: number, version: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
+	async getProductConfigurationListsPage(search: string = '') {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists?search=${search}`
+		);
+	}
+
+	async getProducts(searchParams = new URLSearchParams()) {
+		if (!searchParams.has('nestedFields')) {
+			searchParams.append('nestedFields', 'skus');
+		}
+
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${
+				this.basePath
+			}/products?${searchParams.toString()}`
 		);
 	}
 
@@ -413,18 +426,6 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async patchProductTaxConfiguration(
-		productId: number,
-		productTaxConfiguration: TProductTaxConfiguration
-	) {
-		return this.apiHelpers.patch(
-			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/taxConfiguration`,
-			{
-				...(productTaxConfiguration || {}),
-			}
-		);
-	}
-
 	async patchProductByErc(
 		externalReferenceCode: string,
 		product?: DataObject
@@ -436,6 +437,28 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 					en_US: `Product${getRandomInt()}`,
 				},
 				...(product || {}),
+			}
+		);
+	}
+
+	async patchProductSpecification(
+		id: number,
+		productSpecifications: TProductSpecifications
+	) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/productSpecifications/${id}`,
+			productSpecifications
+		);
+	}
+
+	async patchProductTaxConfiguration(
+		productId: number,
+		productTaxConfiguration: TProductTaxConfiguration
+	) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/taxConfiguration`,
+			{
+				...(productTaxConfiguration || {}),
 			}
 		);
 	}
@@ -630,6 +653,15 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		return product;
 	}
 
+	async postProductBatch(products: TProduct[]): Promise<TProduct[]> {
+		products = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/batch`,
+			{data: products}
+		);
+
+		return products;
+	}
+
 	async postProductConfiguration(
 		productConfigurationListId: number,
 		productConfiguration: TProductConfiguration
@@ -798,7 +830,9 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		facetable: boolean = true,
 		priority: number = 0,
 		specificationTitle: string = 'Specification' + getRandomInt(),
-		optionCategory?: DataObject
+		optionCategory?: DataObject,
+		visible?: boolean,
+		listTypeDefinitionIds?: number[]
 	) {
 		let postSpecification;
 
@@ -809,11 +843,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 					data: {
 						facetable,
 						key: specificationTitle,
+						listTypeDefinitionIds,
 						optionCategory,
 						priority,
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);
@@ -829,6 +865,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);

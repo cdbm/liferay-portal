@@ -8,13 +8,13 @@ package com.liferay.headless.admin.taxonomy.client.dto.v1_0;
 import com.liferay.headless.admin.taxonomy.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.taxonomy.client.serdes.v1_0.KeywordSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -48,6 +48,28 @@ public class Keyword implements Cloneable, Serializable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
+
+	public AssetLibrary[] getAssetLibraries() {
+		return assetLibraries;
+	}
+
+	public void setAssetLibraries(AssetLibrary[] assetLibraries) {
+		this.assetLibraries = assetLibraries;
+	}
+
+	public void setAssetLibraries(
+		UnsafeSupplier<AssetLibrary[], Exception>
+			assetLibrariesUnsafeSupplier) {
+
+		try {
+			assetLibraries = assetLibrariesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected AssetLibrary[] assetLibraries;
 
 	public String getAssetLibraryKey() {
 		return assetLibraryKey;

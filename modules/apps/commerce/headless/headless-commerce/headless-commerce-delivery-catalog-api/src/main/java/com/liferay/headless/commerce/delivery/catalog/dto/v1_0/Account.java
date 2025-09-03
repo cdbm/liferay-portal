@@ -19,6 +19,14 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -30,14 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -103,7 +103,9 @@ public class Account implements Serializable {
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -113,7 +115,9 @@ public class Account implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -121,7 +125,9 @@ public class Account implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -138,10 +144,11 @@ public class Account implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The account's creation date."
@@ -817,7 +824,8 @@ public class Account implements Serializable {
 			sb.append(_toJSON(actions));
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -829,7 +837,7 @@ public class Account implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");

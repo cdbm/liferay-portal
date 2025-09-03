@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -193,6 +193,45 @@ public abstract class BaseStructuredContentResourceTestCase {
 		Assert.assertEquals(regex, structuredContent.getKey());
 		Assert.assertEquals(regex, structuredContent.getTitle());
 		Assert.assertEquals(regex, structuredContent.getUuid());
+	}
+
+	@Test
+	public void testDeleteStructuredContentByVersion() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		StructuredContent structuredContent =
+			testDeleteStructuredContentByVersion_addStructuredContent();
+
+		assertHttpResponseStatusCode(
+			204,
+			structuredContentResource.
+				deleteStructuredContentByVersionHttpResponse(
+					structuredContent.getId(),
+					testDeleteStructuredContentByVersion_getVersion()));
+
+		assertHttpResponseStatusCode(
+			404,
+			structuredContentResource.getStructuredContentByVersionHttpResponse(
+				structuredContent.getId(),
+				testDeleteStructuredContentByVersion_getVersion()));
+		assertHttpResponseStatusCode(
+			404,
+			structuredContentResource.getStructuredContentByVersionHttpResponse(
+				0L, testDeleteStructuredContentByVersion_getVersion()));
+	}
+
+	protected StructuredContent
+			testDeleteStructuredContentByVersion_addStructuredContent()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Double testDeleteStructuredContentByVersion_getVersion()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -361,12 +400,12 @@ public abstract class BaseStructuredContentResourceTestCase {
 
 		Long siteId = testGetSiteStructuredContentsPage_getSiteId();
 
-		Page<StructuredContent> structuredContentPage =
+		Page<StructuredContent> structuredContentsPage =
 			structuredContentResource.getSiteStructuredContentsPage(
 				siteId, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			structuredContentPage.getTotalCount());
+			structuredContentsPage.getTotalCount());
 
 		StructuredContent structuredContent1 =
 			testGetSiteStructuredContentsPage_addStructuredContent(
@@ -718,67 +757,6 @@ public abstract class BaseStructuredContentResourceTestCase {
 	}
 
 	@Test
-	public void testPostSiteStructuredContentDraft() throws Exception {
-		StructuredContent randomStructuredContent = randomStructuredContent();
-
-		StructuredContent postStructuredContent =
-			testPostSiteStructuredContentDraft_addStructuredContent(
-				randomStructuredContent);
-
-		assertEquals(randomStructuredContent, postStructuredContent);
-		assertValid(postStructuredContent);
-	}
-
-	protected StructuredContent
-			testPostSiteStructuredContentDraft_addStructuredContent(
-				StructuredContent structuredContent)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteStructuredContentByVersion() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		StructuredContent structuredContent =
-			testDeleteStructuredContentByVersion_addStructuredContent();
-
-		assertHttpResponseStatusCode(
-			204,
-			structuredContentResource.
-				deleteStructuredContentByVersionHttpResponse(
-					structuredContent.getId(),
-					testDeleteStructuredContentByVersion_getVersion()));
-
-		assertHttpResponseStatusCode(
-			404,
-			structuredContentResource.getStructuredContentByVersionHttpResponse(
-				structuredContent.getId(),
-				testDeleteStructuredContentByVersion_getVersion()));
-
-		assertHttpResponseStatusCode(
-			404,
-			structuredContentResource.getStructuredContentByVersionHttpResponse(
-				0L, testDeleteStructuredContentByVersion_getVersion()));
-	}
-
-	protected Double testDeleteStructuredContentByVersion_getVersion()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected StructuredContent
-			testDeleteStructuredContentByVersion_addStructuredContent()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetStructuredContentByVersion() throws Exception {
 		StructuredContent postStructuredContent =
 			testGetStructuredContentByVersion_addStructuredContent();
@@ -792,15 +770,15 @@ public abstract class BaseStructuredContentResourceTestCase {
 		assertValid(getStructuredContent);
 	}
 
-	protected Double testGetStructuredContentByVersion_getVersion()
+	protected StructuredContent
+			testGetStructuredContentByVersion_addStructuredContent()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected StructuredContent
-			testGetStructuredContentByVersion_addStructuredContent()
+	protected Double testGetStructuredContentByVersion_getVersion()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1018,6 +996,27 @@ public abstract class BaseStructuredContentResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testPostSiteStructuredContentDraft() throws Exception {
+		StructuredContent randomStructuredContent = randomStructuredContent();
+
+		StructuredContent postStructuredContent =
+			testPostSiteStructuredContentDraft_addStructuredContent(
+				randomStructuredContent);
+
+		assertEquals(randomStructuredContent, postStructuredContent);
+		assertValid(postStructuredContent);
+	}
+
+	protected StructuredContent
+			testPostSiteStructuredContentDraft_addStructuredContent(
+				StructuredContent structuredContent)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Rule

@@ -12,7 +12,6 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -25,6 +24,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -48,14 +48,14 @@ import com.liferay.portal.search.web.search.request.SearchSettingsContributor;
 import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -81,7 +81,7 @@ public class PortletSharedSearchRequestImpl
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext, PortletSharedSearchContributor.class,
-			"javax.portlet.name");
+			"jakarta.portlet.name");
 	}
 
 	@Deactivate
@@ -275,7 +275,8 @@ public class PortletSharedSearchRequestImpl
 		ThemeDisplay themeDisplay, RenderRequest renderRequest) {
 
 		SegmentsExperienceManager segmentsExperienceManager =
-			new SegmentsExperienceManager(_segmentsExperienceLocalService);
+			new SegmentsExperienceManager(
+				_layoutPermission, _segmentsExperienceLocalService);
 
 		return TransformUtil.transform(
 			_getPortlets(
@@ -304,8 +305,7 @@ public class PortletSharedSearchRequestImpl
 
 			try {
 				JSONObject editableValuesJSONObject =
-					_jsonFactory.createJSONObject(
-						fragmentEntryLink.getEditableValues());
+					fragmentEntryLink.getEditableValuesJSONObject();
 
 				String portletId = editableValuesJSONObject.getString(
 					"portletId");
@@ -354,10 +354,10 @@ public class PortletSharedSearchRequestImpl
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Reference
-	private JSONFactory _jsonFactory;
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
+	private LayoutPermission _layoutPermission;
 
 	@Reference
 	private Portal _portal;

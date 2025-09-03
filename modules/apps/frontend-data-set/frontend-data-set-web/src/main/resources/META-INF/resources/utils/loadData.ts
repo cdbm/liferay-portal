@@ -6,7 +6,7 @@
 import {fetch} from 'frontend-js-web';
 
 import {DEFAULT_FETCH_HEADERS} from '../constants';
-import {TSort} from './../index';
+import {TSort} from './types';
 
 function createOdataFilter(filters: Array<string>): string {
 	return filters.map((filter: string) => `(${filter})`).join(' and ');
@@ -46,9 +46,9 @@ export async function loadData({
 	additionalAPIURLParameters?: string;
 	apiURL: string;
 	currentURL?: string;
-	delta: number;
+	delta?: number;
 	odataFiltersStrings?: Array<string>;
-	page: number;
+	page?: number;
 	searchParam?: string;
 	sorts?: TSort[];
 }) {
@@ -79,8 +79,13 @@ export async function loadData({
 		url.searchParams.append('doAsUserId', Liferay.ThemeDisplay.getUserId());
 	}
 
-	url.searchParams.append('page', page.toString());
-	url.searchParams.append('pageSize', delta.toString());
+	if (page) {
+		url.searchParams.append('page', page.toString());
+	}
+
+	if (delta) {
+		url.searchParams.append('pageSize', delta.toString());
+	}
 
 	if (searchParam) {
 		url.searchParams.append('search', searchParam);
@@ -88,7 +93,7 @@ export async function loadData({
 
 	if (sorts && sorts.length) {
 		const updatedSorts = sorts.map((sort: TSort) => {
-			const key = sort.key?.includes(',LANG')
+			const key = sort.key?.includes(',')
 				? sort.key.split(',')[0]
 				: sort.key;
 
@@ -115,6 +120,8 @@ export async function loadData({
 
 			const existingFilter = url.searchParams.get('filter');
 			const existingNestedFields = url.searchParams.get('nestedFields');
+			const existingNestedFieldsDepth =
+				url.searchParams.get('nestedFieldsDepth');
 			const existingSort = url.searchParams.get('sort');
 
 			if (key === 'filter' && existingFilter) {
@@ -167,7 +174,7 @@ export async function loadData({
 				additionalAPIURLParametersNestedFieldsValueArray.forEach(
 					(additionalAPIURLParametersNestedFieldsItem) => {
 						if (
-							!existingNestedFieldsArray.includes(
+							!newNestedFields.includes(
 								additionalAPIURLParametersNestedFieldsItem
 							)
 						) {
@@ -178,10 +185,38 @@ export async function loadData({
 					}
 				);
 
-				url.searchParams.set(
-					'nestedFields',
-					existingNestedFieldsArray.concat(newNestedFields).join(',')
+				url.searchParams.set('nestedFields', newNestedFields.join(','));
+			}
+			else if (
+				key === 'nestedFieldsDepth' &&
+				existingNestedFieldsDepth
+			) {
+				const existingNestedFieldsDepthValue = Number(
+					existingNestedFieldsDepth
 				);
+				const additionalAPIURLParametersNestedFieldsDepthValue =
+					Number(value);
+
+				if (
+					!isNaN(existingNestedFieldsDepthValue) &&
+					!isNaN(additionalAPIURLParametersNestedFieldsDepthValue)
+				) {
+					url.searchParams.set(
+						key,
+						existingNestedFieldsDepthValue >=
+							additionalAPIURLParametersNestedFieldsDepthValue
+							? existingNestedFieldsDepth
+							: value
+					);
+				}
+				else if (
+					!isNaN(additionalAPIURLParametersNestedFieldsDepthValue)
+				) {
+					url.searchParams.append(key, existingNestedFieldsDepth);
+				}
+				else {
+					url.searchParams.append(key, value);
+				}
 			}
 			else {
 				url.searchParams.append(key, value);

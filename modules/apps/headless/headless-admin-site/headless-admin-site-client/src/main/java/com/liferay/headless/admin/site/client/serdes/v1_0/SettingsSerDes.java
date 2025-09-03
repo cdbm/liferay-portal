@@ -9,13 +9,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ClientExtension;
 import com.liferay.headless.admin.site.client.dto.v1_0.Settings;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -80,14 +80,7 @@ public class SettingsSerDes {
 
 			sb.append("\"favIcon\": ");
 
-			if (settings.getFavIcon() instanceof String) {
-				sb.append("\"");
-				sb.append((String)settings.getFavIcon());
-				sb.append("\"");
-			}
-			else {
-				sb.append(settings.getFavIcon());
-			}
+			sb.append(String.valueOf(settings.getFavIcon()));
 		}
 
 		if (settings.getGlobalCSSClientExtensions() != null) {
@@ -422,7 +415,8 @@ public class SettingsSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "favIcon")) {
 				if (jsonParserFieldValue != null) {
-					settings.setFavIcon((Object)jsonParserFieldValue);
+					settings.setFavIcon(
+						FavIconSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(

@@ -14,11 +14,11 @@ import com.liferay.commerce.order.content.web.internal.model.OrderItem;
 import com.liferay.commerce.order.content.web.internal.util.CommerceOrderItemUtil;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CPSubscriptionInfo;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPSubscriptionType;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.service.CommerceOrderItemService;
@@ -43,11 +43,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

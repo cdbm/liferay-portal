@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -66,7 +66,7 @@ definition {
 	@priority = 5
 	test DefaultPortalLandingPageSetByProperty {
 		property custom.properties = "company.default.home.url=${line.separator}default.landing.page.path=/web/guest/landing";
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -144,7 +144,7 @@ definition {
 	@description = "This is a use case for LPS-72398. Users could login to Portal when the default language is not English."
 	@priority = 5
 	test LoginWithSpanishOnlyEnabledLocale {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -177,24 +177,6 @@ definition {
 				password = PropsUtil.get("default.admin.password"),
 				specificURL = "${portalURL}/es",
 				userEmailAddress = "test@liferay.com");
-		}
-	}
-
-	@description = "Users could login through the UI."
-	@priority = 5
-	test LoginWithUI {
-		property app.server.types = "jboss,tomcat,weblogic,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
-		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
-		property portal.acceptance = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Login and go to control panel - roles") {
-			User.firstLoginUI();
-
-			Role.openRolesAdmin();
 		}
 	}
 
@@ -254,145 +236,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LRQA-43015. Ignore test due to OpenAM 12 doesn't support Tomcat 9."
-	@ignore = "true"
-	@priority = 5
-	test OpenSSOSmoke {
-		property custom.properties = "javascript.single.page.application.enabled=false";
-		property dummy.socket.proxy.disabled = "true";
-		property openam.enabled = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Go to http://test.able.com:8080/openam and run ant command") {
-			Navigator.openSpecificURL(url = "http://test.able.com:8080/openam");
-
-			AntCommands.runCommand("build-test-openam.xml", "run-openam-tools");
-		}
-
-		task ("Wait for OpenAM setup") {
-			var pauseCount = 0;
-
-			while ((IsElementNotPresent(locator1 = "TextInput#TEXT")) && (${pauseCount} != 20)) {
-				Refresh();
-
-				// Wait for OpenAM configuration to finish. See LRQA-28959 for more details.
-
-				Pause(value1 = 30000);
-
-				var pauseCount = ${pauseCount} + 1;
-
-				echo("Pause count: ${pauseCount}");
-			}
-
-			if (${pauseCount} == 20) {
-				fail("OpenAM setup timed out after 10 minutes.");
-			}
-		}
-
-		task ("Login and configure open SSO") {
-			User.firstLoginPG();
-
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.configureOpenSSO(
-				openSsoLoginURL = "http://test.able.com:8080/openam/UI/Login?goto=http://www.able.com:8080/c/portal/login",
-				openSsoLogoutURL = "http://test.able.com:8080/openam/UI/Logout?goto=http://www.able.com:8080/web/guest/home",
-				openSsoServiceURL = "http://test.able.com:8080/openam");
-		}
-
-		task ("Test SSO connection") {
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.testOpenSSOConnection();
-		}
-
-		task ("Logout and login with open SSO") {
-			User.logoutPG();
-
-			User.loginUserWithOpenSSOEnabledPG(
-				hostsURL = "http://www.able.com:8080",
-				password = "password",
-				userScreenName = "test");
-		}
-	}
-
-	@description = "This is a use case for LRQA-48218. User should be redirected to the changed landing page upon login."
-	@priority = 5
-	test RedirectToDefaultPortalLandingPageOnLogin {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Login and configure landing page CP") {
-			User.firstLoginPG();
-
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "Instance Configuration",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.editDefaultLandingPageCP(defaultLandingPage = "/web/guest/landing");
-		}
-
-		task ("Add public page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Guest",
-				layoutName = "landing");
-		}
-
-		task ("Logout and login") {
-			User.logoutPG();
-
-			User.firstLoginUI(
-				password = PropsUtil.get("default.admin.password"),
-				userEmailAddress = "test@liferay.com");
-		}
-
-		task ("Assert url value") {
-			AssertLocation(value1 = "http://localhost:8080/web/guest/landing");
-		}
-	}
-
-	@description = "This is a use case for LPS-150388 TC-1/5: Admin password need to be set on first startup if the default admin password property is not set."
-	@priority = 5
-	test UserSetNewPasswordWithoutPasswordProperty {
-		property custom.properties = "company.security.send.password.reset.link=true${line.separator}default.admin.password=${line.separator}jsonws.web.service.paths.excludes=${line.separator}passwords.default.policy.change.required=false";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given: User opens the portal for the first time without default admin password property") {
-			Navigator.openURL();
-		}
-
-		task ("When: User accepts termss and sets the admin password") {
-			SignIn.agreeToTermsOfUse();
-
-			WaitForElementPresent(locator1 = "SignIn#SET_PASSWORD_TITLE");
-
-			User.resetPassword(newPassword = "tester");
-
-			User.answerPasswordReminder();
-		}
-
-		task ("Then: Admin password is set and user can log in with this password in the future") {
-			AssertLocation(value1 = "http://localhost:8080/web/guest/home");
-
-			User.logoutPG();
-
-			User.firstLoginUI(password = "tester");
-		}
-	}
-
-	@description = "This is a use case for LRQA-27619. Verify that LDAP and OpenSSO portlets are present at Instance Settings."
+	@description = "This is a use case for LRQA-27619. Verify that LDAP portlet is present at Instance Settings."
 	@priority = 5
 	test ViewInstanceSettingsAuthentication {
 		property osgi.app.includes = "portal-security-sso-openid";
@@ -407,79 +251,6 @@ definition {
 
 		task ("View LDAP CP authentication settings") {
 			PortalSettings.viewAuthenticationLDAPCP();
-		}
-
-		task ("View openSSO CP authentication settings") {
-			PortalSettings.viewAuthenticationOpenSSOCP();
-		}
-	}
-
-	@description = "This is a use case for LPS-150388 TC-3: If the default admin password property is not given, virtual instances need to be defined with 3 extra informations: screen name, admin email and password."
-	@priority = 5
-	test VirtualInstancesNeedExtraInformationWithoutPasswordProperty {
-		property custom.properties = "default.admin.password=";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given: User opens the portal for the first time without default admin password property") {
-			Navigator.openURL();
-
-			SignIn.agreeToTermsOfUse();
-
-			WaitForElementPresent(locator1 = "SignIn#SET_PASSWORD_TITLE");
-
-			User.resetPassword(newPassword = PropsUtil.get("default.admin.password"));
-
-			User.answerPasswordReminder();
-		}
-
-		task ("When: User adds a new virtual instance and sets the new fields with correct information") {
-			SAML.addVirtualInstances(
-				instanceAdminEmail = "test@www.able.com",
-				instanceAdminFirstName = "FirstTest",
-				instanceAdminLastName = "LastTest",
-				instancePassword = "tester",
-				instanceScreenName = "tester",
-				virtualHosts = "www.able.com");
-		}
-
-		task ("Then: The virtual instance will be created with the given information") {
-			User.firstLoginUI(
-				password = "tester",
-				specificURL = "http://www.able.com:8080",
-				userEmailAddress = "test@www.able.com");
-
-			MyAccount.openMyAccountAdmin(baseURL = "http://www.able.com:8080");
-
-			User.viewUserInformation(
-				userEmailAddress = "test@www.able.com",
-				userFirstName = "FirstTest",
-				userLastName = "LastTest",
-				userScreenName = "tester");
-		}
-	}
-
-	@description = "This is a use case for LPS-150388 TC-2: If the default admin password property is set, user doesn't need to define screen name, admin email and password upon virtual instance creation."
-	@priority = 5
-	test VirtualInstancesNeedNoExtraInformationWithPasswordProperty {
-		property custom.properties = "company.security.send.password.reset.link=true${line.separator}passwords.default.policy.change.required=false";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given: User opens the portal with a set admin password and logs in") {
-			User.firstLoginPG();
-		}
-
-		task ("When: User start to create a virtuali instance") {
-			PortalInstances.openVirtualInstancesAdmin();
-
-			LexiconEntry.gotoAdd();
-		}
-
-		task ("Then: The screen name field will not be present and can create an instance with setting basic information") {
-			AssertElementNotPresent(locator1 = "TextInput#VIRTUAL_INSTANCE_SCREEN_NAME");
-
-			SAML.addVirtualInstances(virtualHosts = "www.able.com");
 		}
 	}
 

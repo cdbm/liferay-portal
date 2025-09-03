@@ -20,8 +20,10 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
 import com.liferay.commerce.util.CommerceOrderInfoItemUtil;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.friendly.url.provider.FriendlyURLSeparatorProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
@@ -30,6 +32,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -47,11 +52,20 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -62,19 +76,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.portlet.PortletRequest;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
  * @author Gianmarco Brunialti Masera
+ * @author Michele Vigilante
  */
 @Component(service = FragmentRenderer.class)
 public class OrderActionsFragmentRenderer implements FragmentRenderer {
@@ -82,6 +90,29 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 	@Override
 	public String getCollectionKey() {
 		return "commerce-order";
+	}
+
+	@Override
+	public JSONObject getConfigurationJSONObject(
+		FragmentRendererContext fragmentRendererContext) {
+
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(
+				StringUtil.read(
+					getClass(),
+					"order_actions/dependencies/configuration.json"));
+
+			return _fragmentEntryConfigurationParser.translateConfiguration(
+				jsonObject,
+				ResourceBundleUtil.getBundle("content.Language", getClass()));
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
@@ -144,9 +175,17 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 			httpServletRequest.setAttribute(
 				"liferay-commerce:order-actions:commerceOrderId",
 				commerceOrder.getCommerceOrderId());
+
+			FragmentEntryLink fragmentEntryLink =
+				fragmentRendererContext.getFragmentEntryLink();
+
 			httpServletRequest.setAttribute(
 				"liferay-commerce:order-actions:dropdownItems",
-				_getDropdownItems(commerceOrder, httpServletRequest));
+				_getDropdownItems(
+					commerceOrder,
+					fragmentEntryLink.getEditableValuesJSONObject(),
+					fragmentRendererContext, httpServletRequest));
+
 			httpServletRequest.setAttribute(
 				"liferay-commerce:order-actions:namespace",
 				StringUtil.randomId() + StringPool.UNDERLINE);
@@ -180,7 +219,8 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 					_friendlyURLSeparatorProviderSnapshot.get(),
 					httpServletRequest));
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-10562") &&
+			if (FeatureFlagManagerUtil.isEnabled(
+					_portal.getCompanyId(httpServletRequest), "LPD-10562") &&
 				(commerceOrder.getOrderStatus() ==
 					CommerceOrderConstants.ORDER_STATUS_COMPLETED)) {
 
@@ -211,7 +251,9 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 	}
 
 	private List<DropdownItem> _getDropdownItems(
-		CommerceOrder commerceOrder, HttpServletRequest httpServletRequest) {
+		CommerceOrder commerceOrder, JSONObject editableValuesJSONObject,
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest) {
 
 		List<DropdownItem> dropdownItems = new ArrayList<>();
 
@@ -224,6 +266,20 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 			if (commerceOrder.isOpen()) {
 				for (CommerceOrderImporterType commerceOrderImporterType :
 						_getCommerceImporterTypes(commerceOrder)) {
+
+					if (!GetterUtil.getBoolean(
+							_fragmentEntryConfigurationParser.getFieldValue(
+								getConfigurationJSONObject(
+									fragmentRendererContext),
+								editableValuesJSONObject,
+								fragmentRendererContext.getLocale(),
+								StringUtil.removeSubstring(
+									commerceOrderImporterType.getKey(),
+									StringPool.DASH)),
+							true)) {
+
+						continue;
+					}
 
 					dropdownItems.add(
 						DropdownItemBuilder.setHref(
@@ -264,25 +320,33 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 			_log.error(portalException);
 		}
 
-		dropdownItems.add(
-			DropdownItemBuilder.setHref(
-				ResourceURLBuilder.createResourceURL(
-					PortletURLFactoryUtil.create(
-						httpServletRequest,
-						CommercePortletKeys.COMMERCE_ORDER_CONTENT,
-						PortletRequest.RESOURCE_PHASE)
-				).setParameter(
-					"commerceOrderId", commerceOrder.getCommerceOrderId()
-				).setParameter(
-					"orderDetailURL",
-					commerceOrderFriendlyURL +
-						commerceOrder.getCommerceOrderId()
-				).setResourceID(
-					"/commerce_order_content/export_commerce_order_report"
-				).buildString()
-			).setLabel(
-				_language.get(httpServletRequest, "print")
-			).build());
+		if (GetterUtil.getBoolean(
+				_fragmentEntryConfigurationParser.getFieldValue(
+					getConfigurationJSONObject(fragmentRendererContext),
+					editableValuesJSONObject,
+					fragmentRendererContext.getLocale(), "printOrder"),
+				true)) {
+
+			dropdownItems.add(
+				DropdownItemBuilder.setHref(
+					ResourceURLBuilder.createResourceURL(
+						PortletURLFactoryUtil.create(
+							httpServletRequest,
+							CommercePortletKeys.COMMERCE_ORDER_CONTENT,
+							PortletRequest.RESOURCE_PHASE)
+					).setParameter(
+						"commerceOrderId", commerceOrder.getCommerceOrderId()
+					).setParameter(
+						"orderDetailURL",
+						commerceOrderFriendlyURL +
+							commerceOrder.getCommerceOrderId()
+					).setResourceID(
+						"/commerce_order_content/export_commerce_order_report"
+					).buildString()
+				).setLabel(
+					_language.get(httpServletRequest, "print")
+				).build());
+		}
 
 		try {
 			if (commerceOrder.isOpen() &&
@@ -510,6 +574,12 @@ public class OrderActionsFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

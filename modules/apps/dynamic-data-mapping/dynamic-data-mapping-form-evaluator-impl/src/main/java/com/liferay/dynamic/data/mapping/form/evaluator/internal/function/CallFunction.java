@@ -172,11 +172,11 @@ public class CallFunction
 	}
 
 	protected void setDDMFormFieldOptions(
-		String field, List<KeyValuePair> options) {
+		String field, List<KeyValuePair> optionKeyValuePairs) {
 
 		UpdateFieldPropertyRequest.Builder builder =
 			UpdateFieldPropertyRequest.Builder.newBuilder(
-				field, "options", options);
+				field, "options", optionKeyValuePairs);
 
 		_ddmExpressionObserver.updateFieldProperty(builder.build());
 	}
@@ -227,6 +227,10 @@ public class CallFunction
 
 	private void _extractDDMFormFieldValue(
 		String expression, Map<String, String> parameters) {
+
+		if (Validator.isNull(expression)) {
+			return;
+		}
 
 		String[] tokens = StringUtil.split(expression, CharPool.EQUAL);
 

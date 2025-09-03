@@ -14,6 +14,7 @@ import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -31,14 +32,14 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
 import java.io.Serializable;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
+		"jakarta.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
 		"mvc.command.name=/frontend_data_set_admin/save_data_set_sort"
 	},
 	service = MVCResourceCommand.class
@@ -141,7 +142,7 @@ public class SaveDataSetSortMVCResourceCommand
 	}
 
 	private Collection<ObjectEntry> _getDataSetSortObjectEntries(
-			ObjectDefinition dataSetObjectDefinition, Long objectEntryId)
+			ObjectDefinition dataSetObjectDefinition, long objectEntryId)
 		throws Exception {
 
 		DTOConverterContext dtoConverterContext =
@@ -155,9 +156,11 @@ public class SaveDataSetSortMVCResourceCommand
 					dataSetObjectDefinition.getStorageType()));
 
 		Page<ObjectEntry> relatedObjectEntriesPage =
-			defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-				dtoConverterContext, dataSetObjectDefinition, objectEntryId,
-				"dataSetToDataSetSorts",
+			defaultObjectEntryManager.getRelatedObjectEntries(
+				dtoConverterContext, objectEntryId,
+				_objectRelationshipLocalService.getObjectRelationship(
+					dataSetObjectDefinition.getObjectDefinitionId(),
+					"dataSetToDataSetSorts"),
 				Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS));
 
 		return relatedObjectEntriesPage.getItems();
@@ -174,5 +177,8 @@ public class SaveDataSetSortMVCResourceCommand
 
 	@Reference
 	private ObjectEntryService _objectEntryService;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

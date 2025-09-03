@@ -10,6 +10,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.layout.internal.upgrade.v1_0_0.LayoutClassedModelUsageUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_0_0.LayoutUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_1_0.UpgradeCompanyId;
@@ -18,6 +19,7 @@ import com.liferay.layout.internal.upgrade.v1_2_2.LayoutSEOUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_2_3.LayoutRevisionUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_3_0.util.LayoutLocalizationTable;
 import com.liferay.layout.internal.upgrade.v1_3_1.LayoutLocalizationUpgradeProcess;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
@@ -115,6 +117,27 @@ public class LayoutServiceUpgradeStepRegistrator
 			UpgradeProcessFactory.runSQL(
 				"update Layout set type_ = 'content' where type_ = " +
 					"'collection'"));
+
+		registry.register(
+			"1.5.0", "1.5.1",
+			UpgradeProcessFactory.runSQL(
+				StringBundler.concat(
+					"delete FROM LayoutClassedModelUsage WHERE containerType ",
+					"= ",
+					_classNameLocalService.getClassNameId(
+						FragmentEntryLink.class),
+					" and not exists (select 1 from FragmentEntryLink where ",
+					"FragmentEntryLink.ctCollectionId = ",
+					"LayoutClassedModelUsage.ctCollectionId and ",
+					"FragmentEntryLink.fragmentEntryLinkId = ",
+					"CAST_LONG(LayoutClassedModelUsage.containerKey) and ",
+					"FragmentEntryLink.plid = LayoutClassedModelUsage.plid)")));
+
+		registry.register(
+			"1.5.1", "2.0.0",
+			UpgradeProcessFactory.alterColumnName(
+				"LayoutClassedModelUsage", "cmExternalReferenceCode",
+				"classExternalReferenceCode VARCHAR(75) null"));
 	}
 
 	@Reference
@@ -142,7 +165,7 @@ public class LayoutServiceUpgradeStepRegistrator
 	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.fragment.service)(&(release.schema.version>=2.5.0)))"
+		target = "(&(release.bundle.symbolic.name=com.liferay.fragment.service)(release.schema.version>=2.5.0))"
 	)
 	private Release _fragmentServiceRelease;
 
@@ -159,7 +182,7 @@ public class LayoutServiceUpgradeStepRegistrator
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.layout.page.template.service)(&(release.schema.version>=2.1.0)))"
+		target = "(&(release.bundle.symbolic.name=com.liferay.layout.page.template.service)(release.schema.version>=2.1.0))"
 	)
 	private Release _layoutPageTemplateServiceRelease;
 

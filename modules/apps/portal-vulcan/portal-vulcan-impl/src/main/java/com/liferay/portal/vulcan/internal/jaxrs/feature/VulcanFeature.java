@@ -5,8 +5,8 @@
 
 package com.liferay.portal.vulcan.internal.jaxrs.feature;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.fasterxml.jackson.jaxrs.xml.JacksonXMLProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.xml.JacksonXMLProvider;
 
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.language.Language;
@@ -50,6 +50,7 @@ import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ExceptionMapper
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.IllegalArgumentExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidFilterExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidFormatExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidTypeIdExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonMappingExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonParseExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NoSuchModelExceptionMapper;
@@ -76,9 +77,9 @@ import com.liferay.portal.vulcan.internal.param.converter.provider.DateParamConv
 import com.liferay.portal.vulcan.jaxrs.context.ContextDataInjectorBuilderFactory;
 import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
 
-import javax.ws.rs.Priorities;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.FeatureContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -127,6 +128,7 @@ public class VulcanFeature implements Feature {
 		featureContext.register(IllegalArgumentExceptionMapper.class);
 		featureContext.register(InvalidFilterExceptionMapper.class);
 		featureContext.register(InvalidFormatExceptionMapper.class);
+		featureContext.register(InvalidTypeIdExceptionMapper.class);
 		featureContext.register(JSONMessageBodyReader.class);
 		featureContext.register(JSONMessageBodyWriter.class);
 		featureContext.register(JacksonJsonProvider.class);

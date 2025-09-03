@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.url.builder.ActionURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -42,18 +43,18 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo
@@ -139,6 +140,17 @@ public class ViewObjectEntriesDisplayContext {
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "view"),
 				"get", null, null),
 			new FDSActionDropdownItem(
+				ActionURLBuilder.createActionURL(
+					_objectRequestHelper.getLiferayPortletResponse()
+				).setActionName(
+					"/object_entries/expire_object_entry"
+				).setParameter(
+					"objectEntryId", "{id}"
+				).buildString(),
+				"time", "expire",
+				LanguageUtil.get(_objectRequestHelper.getRequest(), "expire"),
+				"get", "expire", null),
+			new FDSActionDropdownItem(
 				null, "trash", "deleteObjectEntry",
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "delete"),
 				"delete", "delete", null),
@@ -146,7 +158,21 @@ public class ViewObjectEntriesDisplayContext {
 				_getPermissionsURL(), "password-policies", "permissions",
 				LanguageUtil.get(
 					_objectRequestHelper.getRequest(), "permissions"),
-				"get", "permissions", "modal-permissions"));
+				"get", "permissions", "modal-permissions"),
+			new FDSActionDropdownItem(
+				getByExternalReferenceCodePath() +
+					"/{externalReferenceCode}/subscribe",
+				"bell-on", "subscribe",
+				LanguageUtil.get(
+					_objectRequestHelper.getRequest(), "subscribe"),
+				"post", "subscribe", "async"),
+			new FDSActionDropdownItem(
+				getByExternalReferenceCodePath() +
+					"/{externalReferenceCode}/unsubscribe",
+				"bell-off", "unsubscribe",
+				LanguageUtil.get(
+					_objectRequestHelper.getRequest(), "unsubscribe"),
+				"post", "unsubscribe", "async"));
 
 		ObjectDefinition objectDefinition = getObjectDefinition();
 

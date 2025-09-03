@@ -6,6 +6,7 @@
 package com.liferay.object.web.internal.object.entries.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.display.context.ObjectEntryDisplayContext;
 import com.liferay.object.display.context.ObjectEntryDisplayContextFactory;
@@ -30,12 +31,12 @@ import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -48,7 +49,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /**
  * @author Pedro Leite
  */
-@FeatureFlags("LPD-34594")
+@FeatureFlag("LPD-34594")
 @RunWith(Arquillian.class)
 public class ObjectEntryDisplayContextTest {
 
@@ -88,14 +89,16 @@ public class ObjectEntryDisplayContextTest {
 				TestPropsValues.getCompanyId(), "C_AA");
 
 		ObjectEntry objectEntryAA1 = _objectEntryLocalService.getObjectEntry(
-			"AA1", objectDefinitionAA.getObjectDefinitionId());
+			"AA1", ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+			objectDefinitionAA.getObjectDefinitionId());
 
 		MockHttpServletRequest mockHttpServletRequest =
 			_getMockHttpServletRequest(
 				objectEntryAA1.getExternalReferenceCode(), objectDefinitionAA);
 
 		ObjectEntry objectEntryA1 = _objectEntryLocalService.getObjectEntry(
-			"A1", nodeA.getPrimaryKey());
+			"A1", ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+			nodeA.getPrimaryKey());
 
 		ObjectDefinition objectDefinitionA =
 			_objectDefinitionLocalService.getObjectDefinition(
@@ -129,7 +132,8 @@ public class ObjectEntryDisplayContextTest {
 				TestPropsValues.getCompanyId(), "C_AAA");
 
 		ObjectEntry objectEntryAAA1 = _objectEntryLocalService.getObjectEntry(
-			"AAA1", objectDefinitionAAA.getObjectDefinitionId());
+			"AAA1", ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+			objectDefinitionAAA.getObjectDefinitionId());
 
 		mockHttpServletRequest = _getMockHttpServletRequest(
 			objectEntryAAA1.getExternalReferenceCode(), objectDefinitionAAA);
@@ -180,12 +184,14 @@ public class ObjectEntryDisplayContextTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(
 			ObjectWebKeys.OBJECT_DEFINITION, objectDefinition);
 		mockHttpServletRequest.setAttribute(
 			ObjectWebKeys.OBJECT_ENTRY_READ_ONLY, Boolean.FALSE);
+		mockHttpServletRequest.setAttribute(
+			WebKeys.PORTLET_ID, objectDefinition.getPortletId());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 

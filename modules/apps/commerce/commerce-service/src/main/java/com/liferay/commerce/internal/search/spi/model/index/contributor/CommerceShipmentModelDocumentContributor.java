@@ -46,10 +46,13 @@ public class CommerceShipmentModelDocumentContributor
 			document.addNumberSortable(
 				Field.ENTRY_CLASS_PK, commerceShipment.getCommerceShipmentId());
 			document.addKeyword(Field.STATUS, commerceShipment.getStatus());
+			document.addKeyword("carrier", commerceShipment.getCarrier());
+			document.addTextSortable("carrier", commerceShipment.getCarrier());
 			document.addKeyword(
 				"commerceAccountId", commerceShipment.getCommerceAccountId());
 			document.addKeyword(
-				"commerceAccountName", commerceShipment.getAccountEntryName());
+				"commerceAccountName", commerceShipment.getAccountEntryName(),
+				true);
 
 			CommerceChannel commerceChannel =
 				_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
@@ -58,11 +61,13 @@ public class CommerceShipmentModelDocumentContributor
 			document.addKeyword(
 				"commerceChannelId", commerceChannel.getCommerceChannelId());
 			document.addKeyword(
-				"commerceChannelName", commerceChannel.getName());
+				"commerceChannelName", commerceChannel.getName(), true);
 
 			document.addKeyword(
 				"commerceOrderIds",
 				_getCommerceOrderIds(commerceShipment.getCommerceShipmentId()));
+			document.addDateSortable(
+				"expectedDate", commerceShipment.getExpectedDate());
 			document.addNumber(
 				"itemsCount",
 				_commerceShipmentItemLocalService.getCommerceShipmentItemsCount(

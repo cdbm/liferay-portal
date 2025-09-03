@@ -26,7 +26,6 @@ import com.liferay.headless.delivery.dto.v1_0.SitePage;
 import com.liferay.headless.delivery.dto.v1_0.SitePageNavigationMenuSettings;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryReference;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.SitePageEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
@@ -36,6 +35,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.seo.model.LayoutSEOEntryCustomMetaTagProperty;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
+import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -86,6 +86,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -103,16 +105,16 @@ import com.liferay.segments.processor.SegmentsExperienceRequestProcessorRegistry
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -127,13 +129,26 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/site-page.properties",
+	property = {
+		"crud.entity.class.name=com.liferay.headless.delivery.dto.v1_0.SitePage",
+		"crud.item.delegate=true"
+	},
 	scope = ServiceScope.PROTOTYPE, service = SitePageResource.class
 )
-public class SitePageResourceImpl extends BaseSitePageResourceImpl {
+public class SitePageResourceImpl
+	extends BaseSitePageResourceImpl
+	implements VulcanCRUDItemDelegate<SitePage> {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
 		return _entityModel;
+	}
+
+	@Override
+	public SitePage getItem(Long id) throws Exception {
+		Layout layout = _layoutLocalService.getLayout(id);
+
+		return getSiteSitePage(layout.getGroupId(), layout.getFriendlyURL());
 	}
 
 	@Override
@@ -780,29 +795,31 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				new long[] {segmentsExperience.getSegmentsExperienceId()});
 		}
 
-		contextHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay(layout));
+		try (AutoCloseable autoCloseable =
+				_layoutServiceContextHelper.getServiceContextAutoCloseable(
+					layout, contextUser)) {
 
-		layout.includeLayoutContent(
-			contextHttpServletRequest, contextHttpServletResponse);
+			layout.includeLayoutContent(
+				contextHttpServletRequest, contextHttpServletResponse);
 
-		StringBundler sb =
-			(StringBundler)contextHttpServletRequest.getAttribute(
-				WebKeys.LAYOUT_CONTENT);
+			StringBundler sb =
+				(StringBundler)contextHttpServletRequest.getAttribute(
+					WebKeys.LAYOUT_CONTENT);
 
-		LayoutSet layoutSet = layout.getLayoutSet();
+			LayoutSet layoutSet = layout.getLayoutSet();
 
-		Document document = Jsoup.parse(
-			ThemeUtil.include(
-				ServletContextPool.get(StringPool.BLANK),
-				contextHttpServletRequest, contextHttpServletResponse,
-				"portal_normal.ftl", layoutSet.getTheme(), false));
+			Document document = Jsoup.parse(
+				ThemeUtil.include(
+					ServletContextPool.get(StringPool.BLANK),
+					contextHttpServletRequest, contextHttpServletResponse,
+					"portal_normal.ftl", layoutSet.getTheme(), false));
 
-		Element bodyElement = document.body();
+			Element bodyElement = document.body();
 
-		bodyElement.html(sb.toString());
+			bodyElement.html(sb.toString());
 
-		return document.html();
+			return document.html();
+		}
 	}
 
 	private SitePage _toSitePage(
@@ -1029,6 +1046,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutServiceContextHelper _layoutServiceContextHelper;
 
 	@Reference
 	private LayoutsImporter _layoutsImporter;

@@ -4,22 +4,24 @@
  */
 
 import {
-	ObjectActionApi,
-	ObjectDefinitionApi,
-	ObjectFolderApi,
-	ObjectRelationshipApi,
+	ObjectActionAPI,
+	ObjectDefinitionAPI,
+	ObjectFolderAPI,
+	ObjectRelationshipAPI,
 } from '@liferay/object-admin-rest-client-js';
 import {Page} from '@playwright/test';
 
 import {liferayConfig} from '../liferay.config';
 import {ApiBuilderHelper} from './ApiBuilderHelper';
 import {DataEngineApiHelper} from './DataEngineApiHelper';
+import {DynamicDataMappingApiHelper} from './DynamicDataMappingApiHelper';
 import {FeatureFlagApiHelper} from './FeatureFlagApiHelper';
 import {HeadlessAdminAddressApiHelper} from './HeadlessAdminAddressApiHelper';
 import {HeadlessAdminContentApiHelper} from './HeadlessAdminContentApiHelper';
 import {HeadlessAdminTaxonomyApiHelper} from './HeadlessAdminTaxonomyApiHelper';
 import {HeadlessAdminUserApiHelper} from './HeadlessAdminUserApiHelper';
 import {HeadlessAdminWorkflowApiHelper} from './HeadlessAdminWorkflowApiHelper';
+import {HeadlessAssetLibraryApiHelper} from './HeadlessAssetLibraryApiHelper';
 import {HeadlessBatchEngineApiHelper} from './HeadlessBatchEngineApiHelper';
 import {HeadlessChangeTrackingApiHelper} from './HeadlessChangeTrackingApiHelper';
 import {HeadlessCommerceAdminAccountApiHelper} from './HeadlessCommerceAdminAccountApiHelper';
@@ -34,16 +36,20 @@ import {HeadlessCommerceDeliveryCartApiHelper} from './HeadlessCommerceDeliveryC
 import {HeadlessCommerceDeliveryCatalogApiHelper} from './HeadlessCommerceDeliveryCatalogApiHelper';
 import {HeadlessCommerceReturnApiHelper} from './HeadlessCommerceReturnApiHelper';
 import {HeadlessDeliveryApiHelper} from './HeadlessDeliveryApiHelper';
+import {HeadlessPortalInstanceApiHelper} from './HeadlessPortalInstanceApiHelper';
 import {HeadlessSiteApiHelper} from './HeadlessSiteApiHelper';
 import {ListTypeAdminApiHelper} from './ListTypeAdminApiHelper';
 import {NotificationApiHelper} from './NotificationApiHelper';
 import {ObjectAdminApiHelper} from './ObjectAdminApiHelper';
 import {ObjectEntryApiHelper} from './ObjectEntryApiHelper';
+import {ObjectEntryFolderApiHelper} from './ObjectEntryFolderApiHelper';
 import {SCIMApiHelper} from './SCIMApiHelper';
 import {SearchExperiencesApiHelper} from './SearchExperiencesApiHelper';
 import {JSONWebServicesAnnouncementsEntryApiHelper} from './json-web-services/JSONWebServicesAnnouncementsEntryApiHelper';
 import {JSONWebServicesAssetDisplayPageEntryApiHelper} from './json-web-services/JSONWebServicesAssetDisplayPageEntryApiHelper';
 import {JSONWebServicesAssetListEntryApiHelper} from './json-web-services/JSONWebServicesAssetListEntryApiHelper';
+import {JSONWebServicesCalendarApiHelper} from './json-web-services/JSONWebServicesCalendarApiHelper';
+import {JSONWebServicesCalendarResourceApiHelper} from './json-web-services/JSONWebServicesCalendarResourceApiHelper';
 import {JSONWebServicesClassNameApiHelper} from './json-web-services/JSONWebServicesClassNameApiHelper';
 import {JSONWebServicesClientExtensionApiHelper} from './json-web-services/JSONWebServicesClientExtensionApiHelper';
 import {JSONWebServicesCompanyApiHelper} from './json-web-services/JSONWebServicesCompanyApiHelper';
@@ -110,11 +116,13 @@ export class ApiHelpers {
 	readonly baseUrl: string;
 	readonly featureFlag: FeatureFlagApiHelper;
 	readonly dataEngine: DataEngineApiHelper;
+	readonly dynamicDataMapping: DynamicDataMappingApiHelper;
 	readonly headlessAdminAddress: HeadlessAdminAddressApiHelper;
 	readonly headlessAdminContent: HeadlessAdminContentApiHelper;
 	readonly headlessAdminTaxonomy: HeadlessAdminTaxonomyApiHelper;
 	readonly headlessAdminUser: HeadlessAdminUserApiHelper;
 	readonly headlessAdminWorkflow: HeadlessAdminWorkflowApiHelper;
+	readonly headlessAssetLibrary: HeadlessAssetLibraryApiHelper;
 	readonly headlessBatchEngine: HeadlessBatchEngineApiHelper;
 	readonly headlessChangeTracking: HeadlessChangeTrackingApiHelper;
 	readonly headlessCommerceAdminAccount: HeadlessCommerceAdminAccountApiHelper;
@@ -130,9 +138,12 @@ export class ApiHelpers {
 	readonly headlessCommerceReturn: HeadlessCommerceReturnApiHelper;
 	readonly headlessDelivery: HeadlessDeliveryApiHelper;
 	readonly headlessSite: HeadlessSiteApiHelper;
+	readonly headlessPortalInstance: HeadlessPortalInstanceApiHelper;
 	readonly jsonWebServicesAnnouncementsEntryApiHelper: JSONWebServicesAnnouncementsEntryApiHelper;
 	readonly jsonWebServicesAssetDisplayPageEntry: JSONWebServicesAssetDisplayPageEntryApiHelper;
 	readonly jsonWebServicesAssetListEntry: JSONWebServicesAssetListEntryApiHelper;
+	readonly jsonWebServicesCalendar: JSONWebServicesCalendarApiHelper;
+	readonly jsonWebServicesCalendarResource: JSONWebServicesCalendarResourceApiHelper;
 	readonly jsonWebServicesClassName: JSONWebServicesClassNameApiHelper;
 	readonly jsonWebServicesClientExtension: JSONWebServicesClientExtensionApiHelper;
 	readonly jsonWebServicesCompany: JSONWebServicesCompanyApiHelper;
@@ -161,6 +172,7 @@ export class ApiHelpers {
 	readonly notification: NotificationApiHelper;
 	readonly objectAdmin: ObjectAdminApiHelper;
 	readonly objectEntry: ObjectEntryApiHelper;
+	readonly objectFolder: ObjectEntryFolderApiHelper;
 	readonly page: Page;
 	readonly scim: SCIMApiHelper;
 	readonly searchExperiences: SearchExperiencesApiHelper;
@@ -169,16 +181,20 @@ export class ApiHelpers {
 		`test@liferay.com:test`
 	)}`;
 
-	constructor(page: Page) {
+	constructor(page: Page, baseUrl?: string) {
 		this.apiBuilder = new ApiBuilderHelper(this);
-		this.baseUrl = liferayConfig.environment.baseUrl + '/o/';
+		this.baseUrl = baseUrl
+			? baseUrl + '/o/'
+			: liferayConfig.environment.baseUrl + '/o/';
 		this.featureFlag = new FeatureFlagApiHelper(page);
 		this.dataEngine = new DataEngineApiHelper(this);
+		this.dynamicDataMapping = new DynamicDataMappingApiHelper(this);
 		this.headlessAdminAddress = new HeadlessAdminAddressApiHelper(this);
 		this.headlessAdminContent = new HeadlessAdminContentApiHelper(this);
 		this.headlessAdminTaxonomy = new HeadlessAdminTaxonomyApiHelper(this);
 		this.headlessAdminUser = new HeadlessAdminUserApiHelper(this);
 		this.headlessAdminWorkflow = new HeadlessAdminWorkflowApiHelper(this);
+		this.headlessAssetLibrary = new HeadlessAssetLibraryApiHelper(this);
 		this.headlessBatchEngine = new HeadlessBatchEngineApiHelper(this);
 		this.headlessChangeTracking = new HeadlessChangeTrackingApiHelper(this);
 		this.headlessCommerceAdminAccount =
@@ -204,12 +220,18 @@ export class ApiHelpers {
 		this.headlessCommerceReturn = new HeadlessCommerceReturnApiHelper(this);
 		this.headlessDelivery = new HeadlessDeliveryApiHelper(this);
 		this.headlessSite = new HeadlessSiteApiHelper(this);
+		this.headlessPortalInstance = new HeadlessPortalInstanceApiHelper(this);
 		this.jsonWebServicesAnnouncementsEntryApiHelper =
 			new JSONWebServicesAnnouncementsEntryApiHelper(this);
 		this.jsonWebServicesAssetDisplayPageEntry =
 			new JSONWebServicesAssetDisplayPageEntryApiHelper(this);
 		this.jsonWebServicesAssetListEntry =
 			new JSONWebServicesAssetListEntryApiHelper(this);
+		this.jsonWebServicesCalendar = new JSONWebServicesCalendarApiHelper(
+			this
+		);
+		this.jsonWebServicesCalendarResource =
+			new JSONWebServicesCalendarResourceApiHelper(this);
 		this.jsonWebServicesClassName = new JSONWebServicesClassNameApiHelper(
 			this
 		);
@@ -251,6 +273,7 @@ export class ApiHelpers {
 		this.notification = new NotificationApiHelper(this);
 		this.objectAdmin = new ObjectAdminApiHelper(this);
 		this.objectEntry = new ObjectEntryApiHelper(this);
+		this.objectFolder = new ObjectEntryFolderApiHelper(this);
 		this.page = page;
 		this.scim = new SCIMApiHelper(this);
 		this.searchExperiences = new SearchExperiencesApiHelper(this);
@@ -287,8 +310,17 @@ export class ApiHelpers {
 
 	async post<T>(url: string, options: RequestOptions<T> = {}) {
 		const response = await this.postResponse(url, options);
+		const status = response.status();
 
-		if (response.status() === 204) {
+		if (!response.ok()) {
+			const error = await response.text();
+
+			throw new Error(
+				`POST request to ${url} failed with code ${status}:\n\n${error}`
+			);
+		}
+
+		if (status === 204) {
 			return;
 		}
 
@@ -410,8 +442,8 @@ export class ApiHelpers {
 export class DataApiHelpers extends ApiHelpers {
 	readonly data: TDataApiHelpersData[];
 
-	constructor(page: Page) {
-		super(page);
+	constructor(page: Page, baseUrl?: string) {
+		super(page, baseUrl);
 
 		this.data = [];
 	}
@@ -424,6 +456,9 @@ export class DataApiHelpers extends ApiHelpers {
 			else if (item.type === 'accountGroup') {
 				await this.headlessAdminUser.deleteAccountGroup(item.id);
 			}
+			else if (item.type === 'address') {
+				await this.headlessAdminUser.deletePostalAddress(item.id);
+			}
 			else if (item.type === 'announcement') {
 				await this.jsonWebServicesAnnouncementsEntryApiHelper.deleteEntry(
 					item.id
@@ -431,6 +466,11 @@ export class DataApiHelpers extends ApiHelpers {
 			}
 			else if (item.type === 'apiApplication') {
 				await this.apiBuilder.deleteApiApplication(item.id);
+			}
+			else if (item.type === 'assetLibrary') {
+				await this.headlessAssetLibrary.deleteAssetLibrariesPage(
+					item.id
+				);
 			}
 			else if (item.type === 'catalog') {
 				await this.headlessCommerceAdminCatalog.deleteCatalog(item.id);
@@ -465,23 +505,23 @@ export class DataApiHelpers extends ApiHelpers {
 				await this.notification.deleteNotificationTemplate(item.id);
 			}
 			else if (item.type === 'objectAction') {
-				const objectActionApiClient =
-					await this.buildRestClient(ObjectActionApi);
-				await objectActionApiClient.deleteObjectAction(item.id);
+				const objectActionAPIClient =
+					await this.buildRestClient(ObjectActionAPI);
+				await objectActionAPIClient.deleteObjectAction(item.id);
 			}
 			else if (item.type === 'objectDefinition') {
-				const objectDefinitionApiClient =
-					await this.buildRestClient(ObjectDefinitionApi);
-				await objectDefinitionApiClient.deleteObjectDefinition(item.id);
+				const objectDefinitionAPIClient =
+					await this.buildRestClient(ObjectDefinitionAPI);
+				await objectDefinitionAPIClient.deleteObjectDefinition(item.id);
 			}
 			else if (item.type === 'objectFolder') {
 				const objectFolderRESTClient =
-					await this.buildRestClient(ObjectFolderApi);
+					await this.buildRestClient(ObjectFolderAPI);
 				await objectFolderRESTClient.deleteObjectFolder(item.id);
 			}
 			else if (item.type === 'objectRelationship') {
 				const objectRelationshipRESTClient = await this.buildRestClient(
-					ObjectRelationshipApi
+					ObjectRelationshipAPI
 				);
 				await objectRelationshipRESTClient.deleteObjectRelationship(
 					item.id
@@ -497,6 +537,9 @@ export class DataApiHelpers extends ApiHelpers {
 			}
 			else if (item.type === 'order') {
 				await this.headlessCommerceAdminOrder.deleteOrder(item.id);
+			}
+			else if (item.type === 'orderRule') {
+				await this.headlessCommerceAdminOrder.deleteOrderRules(item.id);
 			}
 			else if (item.type === 'orderType') {
 				await this.headlessCommerceAdminOrder.deleteOrderTypes(item.id);
@@ -521,6 +564,11 @@ export class DataApiHelpers extends ApiHelpers {
 			}
 			else if (item.type === 'price-entry') {
 				await this.headlessCommerceAdminPricing.deletePriceEntry(
+					item.id
+				);
+			}
+			else if (item.type === 'price-list') {
+				await this.headlessCommerceAdminPricing.deletePriceList(
 					item.id
 				);
 			}
@@ -550,6 +598,11 @@ export class DataApiHelpers extends ApiHelpers {
 				await this.headlessAdminUser.deleteRoleUserAccountAssociation(
 					roleId,
 					userId
+				);
+			}
+			else if (item.type === 'shipment') {
+				await this.headlessCommerceAdminShipment.deleteShipment(
+					item.id
 				);
 			}
 			else if (item.type === 'site') {
@@ -592,8 +645,18 @@ export class DataApiHelpers extends ApiHelpers {
 					userIds
 				);
 			}
+			else if (item.type === 'virtual-instance') {
+				await this.headlessPortalInstance.deleteVirtualInstance(
+					item.id
+				);
+			}
 			else if (item.type === 'warehouse') {
 				await this.headlessCommerceAdminInventoryApiHelper.deleteWarehouse(
+					item.id
+				);
+			}
+			else if (item.type === 'warehouse-item') {
+				await this.headlessCommerceAdminInventoryApiHelper.deleteWarehouseItem(
 					item.id
 				);
 			}

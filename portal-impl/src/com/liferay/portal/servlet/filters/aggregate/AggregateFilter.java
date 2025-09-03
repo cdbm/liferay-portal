@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -42,8 +43,13 @@ import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.servlet.filters.util.CacheFileNameGenerator;
 import com.liferay.portal.util.AggregateUtil;
 import com.liferay.portal.util.JavaScriptBundleUtil;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.Closeable;
 import java.io.File;
@@ -58,12 +64,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Brian Wing Shun Chan
@@ -260,7 +260,7 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 		_servletContext = filterConfig.getServletContext();
 
 		File tempDir = (File)_servletContext.getAttribute(
-			JavaConstants.JAVAX_SERVLET_CONTEXT_TEMPDIR);
+			JavaConstants.JAKARTA_SERVLET_CONTEXT_TEMPDIR);
 
 		_tempDir = new File(tempDir, _TEMP_DIR);
 
@@ -451,6 +451,10 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 
 				content = getCssContent(
 					httpServletRequest, httpServletResponse, resourcePath);
+
+				if (content.startsWith(_BOM_CHAR)) {
+					content = content.substring(1);
+				}
 
 				httpServletResponse.setContentType(ContentTypes.TEXT_CSS_UTF8);
 
@@ -723,6 +727,8 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 	}
 
 	private static final String _BASE_URL = "@base_url@";
+
+	private static final String _BOM_CHAR = "\uFEFF";
 
 	private static final String _CSS_COMMENT_BEGIN = "/*";
 

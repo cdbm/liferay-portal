@@ -37,10 +37,10 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(
-	property = "javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
+	property = "jakarta.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 	service = PortletLayoutListener.class
 )
 public class JournalContentPortletLayoutListener
@@ -165,9 +165,9 @@ public class JournalContentPortletLayoutListener
 
 		LayoutClassedModelUsage layoutClassedModelUsage =
 			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
-				layout.getGroupId(),
+				layout.getGroupId(), StringPool.BLANK,
 				_portal.getClassNameId(JournalArticle.class),
-				article.getResourcePrimKey(), StringPool.BLANK, portletId,
+				article.getResourcePrimKey(), portletId,
 				_portal.getClassNameId(Portlet.class), layout.getPlid());
 
 		if (layoutClassedModelUsage != null) {
@@ -175,8 +175,9 @@ public class JournalContentPortletLayoutListener
 		}
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			layout.getGroupId(), _portal.getClassNameId(JournalArticle.class),
-			article.getResourcePrimKey(), StringPool.BLANK, portletId,
+			layout.getGroupId(), StringPool.BLANK,
+			_portal.getClassNameId(JournalArticle.class),
+			article.getResourcePrimKey(), portletId,
 			_portal.getClassNameId(Portlet.class), layout.getPlid(),
 			ServiceContextThreadLocal.getServiceContext());
 	}

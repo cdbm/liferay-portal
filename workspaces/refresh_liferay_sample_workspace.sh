@@ -65,7 +65,7 @@ function refresh_liferay_sample_workspace {
 	mv gradle.properties.tmp gradle.properties
 
 	sed -i 's/name: "biz.aQute.bnd", version: ".*"/name: "biz.aQute.bnd.gradle", version: "5.2.0"/' settings.gradle
-	sed -i 's/name: "com.liferay.gradle.plugins.workspace", version: ".*"/name: "com.liferay.gradle.plugins.workspace", version: "12.1.11"/' settings.gradle
+	sed -i 's/name: "com.liferay.gradle.plugins.workspace", version: ".*"/name: "com.liferay.gradle.plugins.workspace", version: "14.0.0"/' settings.gradle
 
 	echo -en "\ninclude \"poshi\"" >> settings.gradle
 
@@ -99,12 +99,12 @@ EOF
 
 	mkdir -p liferay-sample-workspace/modules
 
-	echo "Client extensions are the recommended way of customizing Liferay. Modules and" > liferay-sample-workspace/modules/README.markdown
-	echo -n "themes are supported for backwards compatibility." >> liferay-sample-workspace/modules/README.markdown
+	echo "Client extensions are the recommended way of customizing Liferay. Modules and" > liferay-sample-workspace/modules/README.md
+	echo -n "themes are supported for backwards compatibility." >> liferay-sample-workspace/modules/README.md
 
 	mkdir -p liferay-sample-workspace/themes
 
-	cp liferay-sample-workspace/modules/README.markdown liferay-sample-workspace/themes
+	cp liferay-sample-workspace/modules/README.md liferay-sample-workspace/themes
 
 	#
 	# Client Extension: Sample Custom Element 3

@@ -115,8 +115,8 @@ public class ObjectFieldUtil {
 
 				listTypeEntryLocalService.addListTypeEntry(
 					null, userId, listTypeDefinition.getListTypeDefinitionId(),
-					key,
-					Collections.singletonMap(LocaleUtil.getDefault(), key));
+					key, Collections.singletonMap(LocaleUtil.getDefault(), key),
+					listTypeDefinition.isSystem());
 			}
 		}
 
@@ -145,7 +145,8 @@ public class ObjectFieldUtil {
 			null, userId, listTypeDefinition.getListTypeDefinitionId(),
 			defaultObjectFieldSettingValue,
 			Collections.singletonMap(
-				LocaleUtil.getDefault(), defaultObjectFieldSettingValue));
+				LocaleUtil.getDefault(), defaultObjectFieldSettingValue),
+			listTypeDefinition.isSystem());
 
 		for (ListTypeEntry listTypeEntry : listTypeEntries.values()) {
 			listTypeEntryLocalService.deleteListTypeEntry(listTypeEntry);
@@ -207,7 +208,7 @@ public class ObjectFieldUtil {
 	}
 
 	public static com.liferay.object.model.ObjectField toObjectField(
-		String defaultLanguageId, boolean enableLocalization,
+		String defaultLanguageId,
 		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ObjectField objectField,
 		ObjectFieldLocalService objectFieldLocalService,
@@ -262,8 +263,7 @@ public class ObjectFieldUtil {
 		serviceBuilderObjectField.setLabelMap(localizedLabelMap);
 
 		serviceBuilderObjectField.setLocalized(
-			GetterUtil.getBoolean(
-				objectField.getLocalized(), enableLocalization));
+			GetterUtil.getBoolean(objectField.getLocalized()));
 		serviceBuilderObjectField.setName(objectField.getName());
 		serviceBuilderObjectField.setObjectFieldSettings(
 			ObjectFieldSettingUtil.toObjectFieldSettings(
@@ -295,11 +295,17 @@ public class ObjectFieldUtil {
 		).put(
 			"creator", "author"
 		).put(
+			"displayDate", "display-date"
+		).put(
+			"expirationDate", "expiration-date"
+		).put(
 			"externalReferenceCode", "external-reference-code"
 		).put(
 			"id", "id"
 		).put(
 			"modifiedDate", "modified-date"
+		).put(
+			"reviewDate", "review-date"
 		).put(
 			"status", "status"
 		).build();

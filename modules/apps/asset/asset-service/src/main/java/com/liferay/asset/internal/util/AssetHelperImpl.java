@@ -71,6 +71,11 @@ import com.liferay.portal.search.sort.FieldSort;
 import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -84,11 +89,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TimeZone;
 
-import javax.portlet.PortletMode;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -100,7 +100,7 @@ public class AssetHelperImpl implements AssetHelper {
 
 	@Override
 	public Set<String> addLayoutTags(
-		HttpServletRequest httpServletRequest, List<AssetTag> tags) {
+		HttpServletRequest httpServletRequest, List<AssetTag> assetTags) {
 
 		Set<String> tagNames = (Set<String>)httpServletRequest.getAttribute(
 			WebKeys.ASSET_LAYOUT_TAG_NAMES);
@@ -112,8 +112,8 @@ public class AssetHelperImpl implements AssetHelper {
 				WebKeys.ASSET_LAYOUT_TAG_NAMES, tagNames);
 		}
 
-		for (AssetTag tag : tags) {
-			tagNames.add(tag.getName());
+		for (AssetTag assetTag : assetTags) {
+			tagNames.add(assetTag.getName());
 		}
 
 		return tagNames;

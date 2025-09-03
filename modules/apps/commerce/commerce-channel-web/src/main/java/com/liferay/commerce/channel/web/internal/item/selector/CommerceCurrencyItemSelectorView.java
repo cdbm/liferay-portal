@@ -26,21 +26,21 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -192,9 +192,9 @@ public class CommerceCurrencyItemSelectorView
 			_portletURL = portletURL;
 
 			_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 			_renderResponse = (RenderResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 		}
 
 		@Override
@@ -222,7 +222,7 @@ public class CommerceCurrencyItemSelectorView
 			SearchContainer<CommerceCurrency> entriesSearchContainer =
 				new SearchContainer<>(
 					(PortletRequest)_httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST),
+						JavaConstants.JAKARTA_PORTLET_REQUEST),
 					_portletURL, null, "no-entries-were-found");
 
 			ThemeDisplay themeDisplay =

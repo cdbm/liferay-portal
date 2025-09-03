@@ -43,6 +43,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -187,6 +187,256 @@ public abstract class BaseAccountMemberResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountMember accountMember =
+			testDeleteAccountByExternalReferenceCodeAccountMember_addAccountMember();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountMemberResource.
+				deleteAccountByExternalReferenceCodeAccountMemberHttpResponse(
+					testDeleteAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+						accountMember),
+					accountMember.getUserId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountMemberResource.
+				getAccountByExternalReferenceCodeAccountMemberHttpResponse(
+					testDeleteAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+						accountMember),
+					accountMember.getUserId()));
+		assertHttpResponseStatusCode(
+			404,
+			accountMemberResource.
+				getAccountByExternalReferenceCodeAccountMemberHttpResponse(
+					testDeleteAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+						accountMember),
+					accountMember.getUserId()));
+	}
+
+	protected AccountMember
+			testDeleteAccountByExternalReferenceCodeAccountMember_addAccountMember()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+				AccountMember accountMember)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAccountIdAccountMember() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountMember accountMember =
+			testDeleteAccountIdAccountMember_addAccountMember();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountMemberResource.deleteAccountIdAccountMemberHttpResponse(
+				testDeleteAccountIdAccountMember_getId(),
+				accountMember.getUserId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountMemberResource.getAccountIdAccountMemberHttpResponse(
+				testDeleteAccountIdAccountMember_getId(),
+				accountMember.getUserId()));
+		assertHttpResponseStatusCode(
+			404,
+			accountMemberResource.getAccountIdAccountMemberHttpResponse(
+				testDeleteAccountIdAccountMember_getId(),
+				accountMember.getUserId()));
+	}
+
+	protected AccountMember testDeleteAccountIdAccountMember_addAccountMember()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testDeleteAccountIdAccountMember_getId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		AccountMember postAccountMember =
+			testGetAccountByExternalReferenceCodeAccountMember_addAccountMember();
+
+		AccountMember getAccountMember =
+			accountMemberResource.
+				getAccountByExternalReferenceCodeAccountMember(
+					testGetAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+						postAccountMember),
+					postAccountMember.getUserId());
+
+		assertEquals(postAccountMember, getAccountMember);
+		assertValid(getAccountMember);
+	}
+
+	protected AccountMember
+			testGetAccountByExternalReferenceCodeAccountMember_addAccountMember()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+				AccountMember accountMember)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		AccountMember accountMember =
+			testGraphQLGetAccountByExternalReferenceCodeAccountMember_addAccountMember();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountMember,
+				AccountMemberSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountByExternalReferenceCodeAccountMember",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												testGraphQLGetAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+													accountMember) + "\"");
+										put(
+											"userId",
+											accountMember.getUserId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountByExternalReferenceCodeAccountMember"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountMember,
+				AccountMemberSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountByExternalReferenceCodeAccountMember",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													testGraphQLGetAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+														accountMember) + "\"");
+											put(
+												"userId",
+												accountMember.getUserId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountByExternalReferenceCodeAccountMember"))));
+	}
+
+	protected String
+			testGraphQLGetAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+				AccountMember accountMember)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountMemberNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		Long irrelevantUserId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountByExternalReferenceCodeAccountMember",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+								put("userId", irrelevantUserId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountByExternalReferenceCodeAccountMember",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+									put("userId", irrelevantUserId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountMember
+			testGraphQLGetAccountByExternalReferenceCodeAccountMember_addAccountMember()
+		throws Exception {
+
+		return testGraphQLAccountMember_addAccountMember();
+	}
+
+	@Test
 	public void testGetAccountByExternalReferenceCodeAccountMembersPage()
 		throws Exception {
 
@@ -264,13 +514,13 @@ public abstract class BaseAccountMemberResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountMembersPage_getExternalReferenceCode();
 
-		Page<AccountMember> accountMemberPage =
+		Page<AccountMember> accountMembersPage =
 			accountMemberResource.
 				getAccountByExternalReferenceCodeAccountMembersPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountMemberPage.getTotalCount());
+			accountMembersPage.getTotalCount());
 
 		AccountMember accountMember1 =
 			testGetAccountByExternalReferenceCodeAccountMembersPage_addAccountMember(
@@ -392,22 +642,88 @@ public abstract class BaseAccountMemberResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountMember()
-		throws Exception {
-
-		AccountMember randomAccountMember = randomAccountMember();
-
+	public void testGetAccountIdAccountMember() throws Exception {
 		AccountMember postAccountMember =
-			testPostAccountByExternalReferenceCodeAccountMember_addAccountMember(
-				randomAccountMember);
+			testGetAccountIdAccountMember_addAccountMember();
 
-		assertEquals(randomAccountMember, postAccountMember);
-		assertValid(postAccountMember);
+		AccountMember getAccountMember =
+			accountMemberResource.getAccountIdAccountMember(
+				testGetAccountIdAccountMember_getId(),
+				postAccountMember.getUserId());
+
+		assertEquals(postAccountMember, getAccountMember);
+		assertValid(getAccountMember);
 	}
 
-	protected AccountMember
-			testPostAccountByExternalReferenceCodeAccountMember_addAccountMember(
-				AccountMember accountMember)
+	protected AccountMember testGetAccountIdAccountMember_addAccountMember()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountIdAccountMember_getId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountIdAccountMember() throws Exception {
+		AccountMember accountMember =
+			testGraphQLGetAccountIdAccountMember_addAccountMember();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				accountMember,
+				AccountMemberSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountIdAccountMember",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"id",
+											testGraphQLGetAccountIdAccountMember_getId());
+										put(
+											"userId",
+											accountMember.getUserId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/accountIdAccountMember"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountMember,
+				AccountMemberSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountIdAccountMember",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												testGraphQLGetAccountIdAccountMember_getId());
+											put(
+												"userId",
+												accountMember.getUserId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountIdAccountMember"))));
+	}
+
+	protected Long testGraphQLGetAccountIdAccountMember_getId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -415,38 +731,56 @@ public abstract class BaseAccountMemberResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAccountByExternalReferenceCodeAccountMember()
+	public void testGraphQLGetAccountIdAccountMemberNotFound()
 		throws Exception {
 
-		Assert.assertTrue(false);
+		Long irrelevantId = RandomTestUtil.randomLong();
+		Long irrelevantUserId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountIdAccountMember",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+								put("userId", irrelevantUserId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountIdAccountMember",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+									put("userId", irrelevantUserId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
-	@Test
-	public void testGetAccountByExternalReferenceCodeAccountMember()
+	protected AccountMember
+			testGraphQLGetAccountIdAccountMember_addAccountMember()
 		throws Exception {
 
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountMember()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountMemberNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchAccountByExternalReferenceCodeAccountMember()
-		throws Exception {
-
-		Assert.assertTrue(false);
+		return testGraphQLAccountMember_addAccountMember();
 	}
 
 	@Test
@@ -513,11 +847,11 @@ public abstract class BaseAccountMemberResourceTestCase {
 
 		Long id = testGetAccountIdAccountMembersPage_getId();
 
-		Page<AccountMember> accountMemberPage =
+		Page<AccountMember> accountMembersPage =
 			accountMemberResource.getAccountIdAccountMembersPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountMemberPage.getTotalCount());
+			accountMembersPage.getTotalCount());
 
 		AccountMember accountMember1 =
 			testGetAccountIdAccountMembersPage_addAccountMember(
@@ -625,6 +959,41 @@ public abstract class BaseAccountMemberResourceTestCase {
 	}
 
 	@Test
+	public void testPatchAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchAccountIdAccountMember() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		AccountMember randomAccountMember = randomAccountMember();
+
+		AccountMember postAccountMember =
+			testPostAccountByExternalReferenceCodeAccountMember_addAccountMember(
+				randomAccountMember);
+
+		assertEquals(randomAccountMember, postAccountMember);
+		assertValid(postAccountMember);
+	}
+
+	protected AccountMember
+			testPostAccountByExternalReferenceCodeAccountMember_addAccountMember(
+				AccountMember accountMember)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountIdAccountMember() throws Exception {
 		AccountMember randomAccountMember = randomAccountMember();
 
@@ -645,30 +1014,15 @@ public abstract class BaseAccountMemberResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAccountIdAccountMember() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetAccountIdAccountMember() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountIdAccountMember() throws Exception {
+	public void testBatchEngineDeleteImportTask() throws Exception {
 		Assert.assertTrue(true);
 	}
 
-	@Test
-	public void testGraphQLGetAccountIdAccountMemberNotFound()
+	protected AccountMember testGraphQLAccountMember_addAccountMember()
 		throws Exception {
 
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchAccountIdAccountMember() throws Exception {
-		Assert.assertTrue(false);
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertContains(

@@ -8,6 +8,8 @@ package com.liferay.headless.admin.site.client.serdes.v1_0;
 import com.liferay.headless.admin.site.client.dto.v1_0.DisplayPageTemplateFolder;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -16,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -174,6 +174,21 @@ public class DisplayPageTemplateFolderSerDes {
 			sb.append("\"");
 		}
 
+		if (displayPageTemplateFolder.getParentDisplayPageTemplateFolder() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentDisplayPageTemplateFolder\": ");
+
+			sb.append(
+				String.valueOf(
+					displayPageTemplateFolder.
+						getParentDisplayPageTemplateFolder()));
+		}
+
 		if (displayPageTemplateFolder.
 				getParentDisplayPageTemplateFolderExternalReferenceCode() !=
 					null) {
@@ -310,6 +325,19 @@ public class DisplayPageTemplateFolderSerDes {
 				"name", String.valueOf(displayPageTemplateFolder.getName()));
 		}
 
+		if (displayPageTemplateFolder.getParentDisplayPageTemplateFolder() ==
+				null) {
+
+			map.put("parentDisplayPageTemplateFolder", null);
+		}
+		else {
+			map.put(
+				"parentDisplayPageTemplateFolder",
+				String.valueOf(
+					displayPageTemplateFolder.
+						getParentDisplayPageTemplateFolder()));
+		}
+
 		if (displayPageTemplateFolder.
 				getParentDisplayPageTemplateFolderExternalReferenceCode() ==
 					null) {
@@ -381,6 +409,12 @@ public class DisplayPageTemplateFolderSerDes {
 			}
 			else if (Objects.equals(
 						jsonParserFieldName,
+						"parentDisplayPageTemplateFolder")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
 						"parentDisplayPageTemplateFolderExternalReferenceCode")) {
 
 				return false;
@@ -447,6 +481,17 @@ public class DisplayPageTemplateFolderSerDes {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplateFolder.setName(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"parentDisplayPageTemplateFolder")) {
+
+				if (jsonParserFieldValue != null) {
+					displayPageTemplateFolder.
+						setParentDisplayPageTemplateFolder(
+							DisplayPageTemplateFolderSerDes.toDTO(
+								(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(

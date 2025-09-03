@@ -6,14 +6,17 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Alejandro Tardín
@@ -23,7 +26,7 @@ public class ObjectDefinitionUtil {
 	public static String getModifiableSystemObjectDefinitionRESTContextPath(
 		String name) {
 
-		if (PortalRunMode.isTestMode() && Objects.equals(name, "Test")) {
+		if (PortalRunMode.isTestMode() && StringUtil.startsWith(name, "Test")) {
 			return "/test";
 		}
 
@@ -38,6 +41,26 @@ public class ObjectDefinitionUtil {
 		}
 
 		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
+	}
+
+	public static boolean isDefaultFriendlyURLSeparator(
+		String friendlyURLSeparator) {
+
+		FriendlyURLResolver friendlyURLResolver =
+			FriendlyURLResolverRegistryUtil.
+				getFriendlyURLResolverByDefaultURLSeparator(
+					FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY);
+
+		if ((friendlyURLResolver != null) &&
+			StringUtil.equals(
+				StringUtil.removeSubstring(
+					friendlyURLResolver.getURLSeparator(), StringPool.SLASH),
+				friendlyURLSeparator)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isInvokerBundleAllowed() {
@@ -102,6 +125,12 @@ public class ObjectDefinitionUtil {
 			"Blog", "/cms/blogs"
 		).put(
 			"Bookmark", "/bookmarks"
+		).put(
+			"BulkActionTask", "/cms/bulk-action-tasks"
+		).put(
+			"BulkActionTaskItem", "/cms/bulk-action-task-items"
+		).put(
+			"CMSDefaultPermission", "/cms/default-permissions"
 		).put(
 			"CommerceReturn", "/commerce/returns"
 		).put(

@@ -5,11 +5,13 @@
 
 package com.liferay.portal.test.rule;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PortalInstances;
 
 import org.junit.rules.TestRule;
@@ -34,14 +36,45 @@ public class DBPartitionTestRule implements TestRule {
 			Company company = CompanyLocalServiceUtil.fetchCompanyByVirtualHost(
 				TestPropsValues.COMPANY_WEB_ID);
 
-			if (company == null) {
-				PortalInstances.addCompany(
-					"",
-					() -> CompanyLocalServiceUtil.addCompany(
-						null, TestPropsValues.COMPANY_WEB_ID,
-						TestPropsValues.COMPANY_WEB_ID,
-						TestPropsValues.COMPANY_WEB_ID, 0, true, true, null,
-						null, null, null, null, null));
+			if (company != null) {
+				return statement;
+			}
+
+			String companyWebId;
+
+			if (TestPropsValues.DATABASE_PARTITION_COPY) {
+				companyWebId = StringUtil.replaceLast(
+					TestPropsValues.COMPANY_WEB_ID, CharPool.PERIOD, "-copy.");
+			}
+			else {
+				companyWebId = TestPropsValues.COMPANY_WEB_ID;
+			}
+
+			PortalInstances.addCompany(
+				"",
+				() -> CompanyLocalServiceUtil.addCompany(
+					null, companyWebId, companyWebId, companyWebId, 0, true,
+					true, null, null, null, null, null, null));
+
+			company = CompanyLocalServiceUtil.fetchCompanyByVirtualHost(
+				companyWebId);
+
+			if (TestPropsValues.DATABASE_PARTITION_COPY) {
+				CompanyLocalServiceUtil.copyDBPartitionCompany(
+					company.getCompanyId(), null,
+					TestPropsValues.COMPANY_WEB_ID,
+					TestPropsValues.COMPANY_WEB_ID,
+					TestPropsValues.COMPANY_WEB_ID);
+			}
+			else if (TestPropsValues.DATABASE_PARTITION_EXPORT_AND_IMPORT) {
+				CompanyLocalServiceUtil.exportCompany(company.getCompanyId());
+
+				CompanyLocalServiceUtil.deleteCompany(company.getCompanyId());
+
+				CompanyLocalServiceUtil.addDBPartitionCompany(
+					company.getCompanyId(), TestPropsValues.COMPANY_WEB_ID,
+					TestPropsValues.COMPANY_WEB_ID,
+					TestPropsValues.COMPANY_WEB_ID);
 			}
 		}
 		catch (PortalException portalException) {

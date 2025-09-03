@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Catalog;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseCatalogResourceTestCase {
 			testCompany.getCompanyId());
 
 		catalogResource = CatalogResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -216,222 +229,6 @@ public abstract class BaseCatalogResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteCatalogByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Catalog catalog = testDeleteCatalogByExternalReferenceCode_addCatalog();
-
-		assertHttpResponseStatusCode(
-			204,
-			catalogResource.deleteCatalogByExternalReferenceCodeHttpResponse(
-				catalog.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			catalogResource.getCatalogByExternalReferenceCodeHttpResponse(
-				catalog.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			catalogResource.getCatalogByExternalReferenceCodeHttpResponse(
-				catalog.getExternalReferenceCode()));
-	}
-
-	protected Catalog testDeleteCatalogByExternalReferenceCode_addCatalog()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetCatalogByExternalReferenceCode() throws Exception {
-		Catalog postCatalog =
-			testGetCatalogByExternalReferenceCode_addCatalog();
-
-		Catalog getCatalog = catalogResource.getCatalogByExternalReferenceCode(
-			postCatalog.getExternalReferenceCode());
-
-		assertEquals(postCatalog, getCatalog);
-		assertValid(getCatalog);
-	}
-
-	protected Catalog testGetCatalogByExternalReferenceCode_addCatalog()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetCatalogByExternalReferenceCode()
-		throws Exception {
-
-		Catalog catalog =
-			testGraphQLGetCatalogByExternalReferenceCode_addCatalog();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				catalog,
-				CatalogSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"catalogByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												catalog.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/catalogByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				catalog,
-				CatalogSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"catalogByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													catalog.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/catalogByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetCatalogByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"catalogByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"catalogByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Catalog testGraphQLGetCatalogByExternalReferenceCode_addCatalog()
-		throws Exception {
-
-		return testGraphQLCatalog_addCatalog();
-	}
-
-	@Test
-	public void testPatchCatalogByExternalReferenceCode() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPutCatalogByExternalReferenceCode() throws Exception {
-		Catalog postCatalog =
-			testPutCatalogByExternalReferenceCode_addCatalog();
-
-		Catalog randomCatalog = randomCatalog();
-
-		Catalog putCatalog = catalogResource.putCatalogByExternalReferenceCode(
-			postCatalog.getExternalReferenceCode(), randomCatalog);
-
-		assertEquals(randomCatalog, putCatalog);
-		assertValid(putCatalog);
-
-		Catalog getCatalog = catalogResource.getCatalogByExternalReferenceCode(
-			putCatalog.getExternalReferenceCode());
-
-		assertEquals(randomCatalog, getCatalog);
-		assertValid(getCatalog);
-
-		Catalog newCatalog =
-			testPutCatalogByExternalReferenceCode_createCatalog();
-
-		putCatalog = catalogResource.putCatalogByExternalReferenceCode(
-			newCatalog.getExternalReferenceCode(), newCatalog);
-
-		assertEquals(newCatalog, putCatalog);
-		assertValid(putCatalog);
-
-		getCatalog = catalogResource.getCatalogByExternalReferenceCode(
-			putCatalog.getExternalReferenceCode());
-
-		assertEquals(newCatalog, getCatalog);
-
-		Assert.assertEquals(
-			newCatalog.getExternalReferenceCode(),
-			putCatalog.getExternalReferenceCode());
-	}
-
-	protected Catalog testPutCatalogByExternalReferenceCode_createCatalog()
-		throws Exception {
-
-		return randomCatalog();
-	}
-
-	protected Catalog testPutCatalogByExternalReferenceCode_addCatalog()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteCatalog() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Catalog catalog = testDeleteCatalog_addCatalog();
@@ -441,9 +238,8 @@ public abstract class BaseCatalogResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, catalogResource.getCatalogHttpResponse(catalog.getId()));
-
 		assertHttpResponseStatusCode(
-			404, catalogResource.getCatalogHttpResponse(catalog.getId()));
+			404, catalogResource.getCatalogHttpResponse(0L));
 	}
 
 	protected Catalog testDeleteCatalog_addCatalog() throws Exception {
@@ -523,6 +319,92 @@ public abstract class BaseCatalogResourceTestCase {
 
 	protected Catalog testGraphQLDeleteCatalog_addCatalog() throws Exception {
 		return testGraphQLCatalog_addCatalog();
+	}
+
+	@Test
+	public void testDeleteCatalogBatch() throws Exception {
+		Catalog catalog1 = testDeleteCatalogBatch_addCatalog();
+
+		testDeleteCatalogBatch_deleteCatalog(
+			202, catalog1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+
+		catalog1 = testDeleteCatalogBatch_addCatalog();
+
+		testDeleteCatalogBatch_deleteCatalog(202, null, catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+
+		catalog1 = testDeleteCatalogBatch_addCatalog();
+		Catalog catalog2 = testDeleteCatalogBatch_addCatalog();
+
+		testDeleteCatalogBatch_deleteCatalog(
+			202, catalog2.getExternalReferenceCode(), catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+		assertHttpResponseStatusCode(
+			200, catalogResource.getCatalogHttpResponse(catalog2.getId()));
+
+		testDeleteCatalogBatch_deleteCatalog(
+			202, catalog2.getExternalReferenceCode(), catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog2.getId()));
+	}
+
+	protected Catalog testDeleteCatalogBatch_addCatalog() throws Exception {
+		return testDeleteCatalog_addCatalog();
+	}
+
+	protected void testDeleteCatalogBatch_deleteCatalog(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			catalogResource.deleteCatalogBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteCatalogByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Catalog catalog = testDeleteCatalogByExternalReferenceCode_addCatalog();
+
+		assertHttpResponseStatusCode(
+			204,
+			catalogResource.deleteCatalogByExternalReferenceCodeHttpResponse(
+				catalog.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			catalogResource.getCatalogByExternalReferenceCodeHttpResponse(
+				catalog.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			catalogResource.getCatalogByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected Catalog testDeleteCatalogByExternalReferenceCode_addCatalog()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -818,8 +700,135 @@ public abstract class BaseCatalogResourceTestCase {
 	}
 
 	@Test
-	public void testPatchCatalog() throws Exception {
-		Assert.assertTrue(false);
+	public void testGetCatalogByExternalReferenceCode() throws Exception {
+		Catalog postCatalog =
+			testGetCatalogByExternalReferenceCode_addCatalog();
+
+		Catalog getCatalog = catalogResource.getCatalogByExternalReferenceCode(
+			postCatalog.getExternalReferenceCode());
+
+		assertEquals(postCatalog, getCatalog);
+		assertValid(getCatalog);
+	}
+
+	protected Catalog testGetCatalogByExternalReferenceCode_addCatalog()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetCatalogByExternalReferenceCode()
+		throws Exception {
+
+		Catalog catalog =
+			testGraphQLGetCatalogByExternalReferenceCode_addCatalog();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				catalog,
+				CatalogSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"catalogByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												catalog.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/catalogByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				catalog,
+				CatalogSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"catalogByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													catalog.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/catalogByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetCatalogByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"catalogByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"catalogByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Catalog testGraphQLGetCatalogByExternalReferenceCode_addCatalog()
+		throws Exception {
+
+		return testGraphQLCatalog_addCatalog();
 	}
 
 	@Test
@@ -930,10 +939,10 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGetCatalogsPageWithPagination() throws Exception {
-		Page<Catalog> catalogPage = catalogResource.getCatalogsPage(
+		Page<Catalog> catalogsPage = catalogResource.getCatalogsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(catalogPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(catalogsPage.getTotalCount());
 
 		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
 
@@ -1201,23 +1210,6 @@ public abstract class BaseCatalogResourceTestCase {
 	}
 
 	@Test
-	public void testPostCatalog() throws Exception {
-		Catalog randomCatalog = randomCatalog();
-
-		Catalog postCatalog = testPostCatalog_addCatalog(randomCatalog);
-
-		assertEquals(randomCatalog, postCatalog);
-		assertValid(postCatalog);
-	}
-
-	protected Catalog testPostCatalog_addCatalog(Catalog catalog)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductByExternalReferenceCodeCatalog()
 		throws Exception {
 
@@ -1234,15 +1226,16 @@ public abstract class BaseCatalogResourceTestCase {
 		assertValid(getCatalog);
 	}
 
+	protected Catalog testGetProductByExternalReferenceCodeCatalog_addCatalog()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected String
 			testGetProductByExternalReferenceCodeCatalog_getExternalReferenceCode(
 				Catalog catalog)
-		throws Exception {
-
-		return catalog.getExternalReferenceCode();
-	}
-
-	protected Catalog testGetProductByExternalReferenceCodeCatalog_addCatalog()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1311,7 +1304,8 @@ public abstract class BaseCatalogResourceTestCase {
 				Catalog catalog)
 		throws Exception {
 
-		return catalog.getExternalReferenceCode();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1380,13 +1374,14 @@ public abstract class BaseCatalogResourceTestCase {
 		assertValid(getCatalog);
 	}
 
+	protected Catalog testGetProductIdCatalog_addCatalog() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long testGetProductIdCatalog_getId(Catalog catalog)
 		throws Exception {
 
-		return catalog.getId();
-	}
-
-	protected Catalog testGetProductIdCatalog_addCatalog() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -1445,7 +1440,8 @@ public abstract class BaseCatalogResourceTestCase {
 	protected Long testGraphQLGetProductIdCatalog_getId(Catalog catalog)
 		throws Exception {
 
-		return catalog.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1493,6 +1489,161 @@ public abstract class BaseCatalogResourceTestCase {
 		throws Exception {
 
 		return testGraphQLCatalog_addCatalog();
+	}
+
+	@Test
+	public void testPatchCatalog() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchCatalogByExternalReferenceCode() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostCatalog() throws Exception {
+		Catalog randomCatalog = randomCatalog();
+
+		Catalog postCatalog = testPostCatalog_addCatalog(randomCatalog);
+
+		assertEquals(randomCatalog, postCatalog);
+		assertValid(postCatalog);
+	}
+
+	protected Catalog testPostCatalog_addCatalog(Catalog catalog)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutCatalogByExternalReferenceCode() throws Exception {
+		Catalog postCatalog =
+			testPutCatalogByExternalReferenceCode_addCatalog();
+
+		Catalog randomCatalog = randomCatalog();
+
+		Catalog putCatalog = catalogResource.putCatalogByExternalReferenceCode(
+			postCatalog.getExternalReferenceCode(), randomCatalog);
+
+		assertEquals(randomCatalog, putCatalog);
+		assertValid(putCatalog);
+
+		Catalog getCatalog = catalogResource.getCatalogByExternalReferenceCode(
+			putCatalog.getExternalReferenceCode());
+
+		assertEquals(randomCatalog, getCatalog);
+		assertValid(getCatalog);
+
+		Catalog newCatalog =
+			testPutCatalogByExternalReferenceCode_createCatalog();
+
+		putCatalog = catalogResource.putCatalogByExternalReferenceCode(
+			newCatalog.getExternalReferenceCode(), newCatalog);
+
+		assertEquals(newCatalog, putCatalog);
+		assertValid(putCatalog);
+
+		getCatalog = catalogResource.getCatalogByExternalReferenceCode(
+			putCatalog.getExternalReferenceCode());
+
+		assertEquals(newCatalog, getCatalog);
+
+		Assert.assertEquals(
+			newCatalog.getExternalReferenceCode(),
+			putCatalog.getExternalReferenceCode());
+	}
+
+	protected Catalog testPutCatalogByExternalReferenceCode_addCatalog()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Catalog testPutCatalogByExternalReferenceCode_createCatalog()
+		throws Exception {
+
+		return randomCatalog();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Catalog catalog1 = testBatchEngineDeleteImportTask_addCatalog();
+
+		testBatchEngineDeleteImportTask_deleteCatalog(
+			200, catalog1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+
+		catalog1 = testBatchEngineDeleteImportTask_addCatalog();
+
+		testBatchEngineDeleteImportTask_deleteCatalog(
+			200, null, catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+
+		catalog1 = testBatchEngineDeleteImportTask_addCatalog();
+		Catalog catalog2 = testBatchEngineDeleteImportTask_addCatalog();
+
+		testBatchEngineDeleteImportTask_deleteCatalog(
+			200, catalog2.getExternalReferenceCode(), catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog1.getId()));
+		assertHttpResponseStatusCode(
+			200, catalogResource.getCatalogHttpResponse(catalog2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteCatalog(
+			200, catalog2.getExternalReferenceCode(), catalog1.getId());
+
+		assertHttpResponseStatusCode(
+			404, catalogResource.getCatalogHttpResponse(catalog2.getId()));
+	}
+
+	protected Catalog testBatchEngineDeleteImportTask_addCatalog()
+		throws Exception {
+
+		return testDeleteCatalog_addCatalog();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteCatalog(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Catalog",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -2314,7 +2465,30 @@ public abstract class BaseCatalogResourceTestCase {
 		return randomCatalog();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CatalogResource catalogResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

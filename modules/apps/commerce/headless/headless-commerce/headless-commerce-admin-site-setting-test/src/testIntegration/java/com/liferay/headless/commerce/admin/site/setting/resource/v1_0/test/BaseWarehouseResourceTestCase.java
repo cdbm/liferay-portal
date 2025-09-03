@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.site.setting.client.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.site.setting.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.site.setting.client.pagination.Page;
@@ -54,6 +57,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -71,16 +84,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -127,6 +130,16 @@ public abstract class BaseWarehouseResourceTestCase {
 			testCompany.getCompanyId());
 
 		warehouseResource = WarehouseResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -213,6 +226,140 @@ public abstract class BaseWarehouseResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteWarehouse() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Warehouse warehouse = testDeleteWarehouse_addWarehouse();
+
+		assertHttpResponseStatusCode(
+			204,
+			warehouseResource.deleteWarehouseHttpResponse(warehouse.getId()));
+
+		assertHttpResponseStatusCode(
+			404, warehouseResource.getWarehouseHttpResponse(warehouse.getId()));
+		assertHttpResponseStatusCode(
+			404, warehouseResource.getWarehouseHttpResponse(0L));
+	}
+
+	protected Warehouse testDeleteWarehouse_addWarehouse() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteWarehouse() throws Exception {
+
+		// No namespace
+
+		Warehouse warehouse1 = testGraphQLDeleteWarehouse_addWarehouse();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteWarehouse",
+						new HashMap<String, Object>() {
+							{
+								put("id", warehouse1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteWarehouse"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"warehouse",
+					new HashMap<String, Object>() {
+						{
+							put("id", warehouse1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
+
+		Warehouse warehouse2 = testGraphQLDeleteWarehouse_addWarehouse();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminSiteSetting_v1_0",
+						new GraphQLField(
+							"deleteWarehouse",
+							new HashMap<String, Object>() {
+								{
+									put("id", warehouse2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
+				"Object/deleteWarehouse"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminSiteSetting_v1_0",
+					new GraphQLField(
+						"warehouse",
+						new HashMap<String, Object>() {
+							{
+								put("id", warehouse2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Warehouse testGraphQLDeleteWarehouse_addWarehouse()
+		throws Exception {
+
+		return testGraphQLWarehouse_addWarehouse();
+	}
+
+	@Test
+	public void testDeleteWarehouseBatch() throws Exception {
+		Warehouse warehouse1 = testDeleteWarehouseBatch_addWarehouse();
+
+		testDeleteWarehouseBatch_deleteWarehouse(202, null, warehouse1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			warehouseResource.getWarehouseHttpResponse(warehouse1.getId()));
+	}
+
+	protected Warehouse testDeleteWarehouseBatch_addWarehouse()
+		throws Exception {
+
+		return testDeleteWarehouse_addWarehouse();
+	}
+
+	protected void testDeleteWarehouseBatch_deleteWarehouse(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			warehouseResource.deleteWarehouseBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetCommerceAdminSiteSettingGroupWarehousePage()
 		throws Exception {
 
@@ -289,11 +436,11 @@ public abstract class BaseWarehouseResourceTestCase {
 		Long groupId =
 			testGetCommerceAdminSiteSettingGroupWarehousePage_getGroupId();
 
-		Page<Warehouse> warehousePage =
+		Page<Warehouse> warehousesPage =
 			warehouseResource.getCommerceAdminSiteSettingGroupWarehousePage(
 				groupId, null, null);
 
-		int totalCount = GetterUtil.getInteger(warehousePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(warehousesPage.getTotalCount());
 
 		Warehouse warehouse1 =
 			testGetCommerceAdminSiteSettingGroupWarehousePage_addWarehouse(
@@ -393,126 +540,6 @@ public abstract class BaseWarehouseResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostCommerceAdminSiteSettingGroupWarehouse()
-		throws Exception {
-
-		Warehouse randomWarehouse = randomWarehouse();
-
-		Warehouse postWarehouse =
-			testPostCommerceAdminSiteSettingGroupWarehouse_addWarehouse(
-				randomWarehouse);
-
-		assertEquals(randomWarehouse, postWarehouse);
-		assertValid(postWarehouse);
-	}
-
-	protected Warehouse
-			testPostCommerceAdminSiteSettingGroupWarehouse_addWarehouse(
-				Warehouse warehouse)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteWarehouse() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Warehouse warehouse = testDeleteWarehouse_addWarehouse();
-
-		assertHttpResponseStatusCode(
-			204,
-			warehouseResource.deleteWarehouseHttpResponse(warehouse.getId()));
-
-		assertHttpResponseStatusCode(
-			404, warehouseResource.getWarehouseHttpResponse(warehouse.getId()));
-
-		assertHttpResponseStatusCode(
-			404, warehouseResource.getWarehouseHttpResponse(warehouse.getId()));
-	}
-
-	protected Warehouse testDeleteWarehouse_addWarehouse() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteWarehouse() throws Exception {
-
-		// No namespace
-
-		Warehouse warehouse1 = testGraphQLDeleteWarehouse_addWarehouse();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteWarehouse",
-						new HashMap<String, Object>() {
-							{
-								put("id", warehouse1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteWarehouse"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"warehouse",
-					new HashMap<String, Object>() {
-						{
-							put("id", warehouse1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
-
-		Warehouse warehouse2 = testGraphQLDeleteWarehouse_addWarehouse();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminSiteSetting_v1_0",
-						new GraphQLField(
-							"deleteWarehouse",
-							new HashMap<String, Object>() {
-								{
-									put("id", warehouse2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
-				"Object/deleteWarehouse"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminSiteSetting_v1_0",
-					new GraphQLField(
-						"warehouse",
-						new HashMap<String, Object>() {
-							{
-								put("id", warehouse2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Warehouse testGraphQLDeleteWarehouse_addWarehouse()
-		throws Exception {
-
-		return testGraphQLWarehouse_addWarehouse();
 	}
 
 	@Test
@@ -812,8 +839,84 @@ public abstract class BaseWarehouseResourceTestCase {
 	}
 
 	@Test
+	public void testPostCommerceAdminSiteSettingGroupWarehouse()
+		throws Exception {
+
+		Warehouse randomWarehouse = randomWarehouse();
+
+		Warehouse postWarehouse =
+			testPostCommerceAdminSiteSettingGroupWarehouse_addWarehouse(
+				randomWarehouse);
+
+		assertEquals(randomWarehouse, postWarehouse);
+		assertValid(postWarehouse);
+	}
+
+	protected Warehouse
+			testPostCommerceAdminSiteSettingGroupWarehouse_addWarehouse(
+				Warehouse warehouse)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutWarehouse() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Warehouse warehouse1 = testBatchEngineDeleteImportTask_addWarehouse();
+
+		testBatchEngineDeleteImportTask_deleteWarehouse(
+			200, null, warehouse1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			warehouseResource.getWarehouseHttpResponse(warehouse1.getId()));
+	}
+
+	protected Warehouse testBatchEngineDeleteImportTask_addWarehouse()
+		throws Exception {
+
+		return testDeleteWarehouse_addWarehouse();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteWarehouse(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.site.setting.dto.v1_0.Warehouse",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected Warehouse testGraphQLWarehouse_addWarehouse() throws Exception {
@@ -1767,7 +1870,30 @@ public abstract class BaseWarehouseResourceTestCase {
 		return randomWarehouse();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected WarehouseResource warehouseResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

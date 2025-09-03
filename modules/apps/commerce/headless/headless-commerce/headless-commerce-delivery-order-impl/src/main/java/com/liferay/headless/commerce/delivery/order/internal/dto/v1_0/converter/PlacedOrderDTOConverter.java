@@ -90,6 +90,7 @@ public class PlacedOrderDTOConverter
 				setAccountId(commerceOrder::getCommerceAccountId);
 				setAttachments(() -> _getAttachments(commerceOrder));
 				setAuthor(commerceOrder::getUserName);
+				setAuthorId(commerceOrder::getUserId);
 				setChannelId(
 					() -> {
 						CommerceChannel commerceChannel =
@@ -216,6 +217,8 @@ public class PlacedOrderDTOConverter
 					commerceOrder::getShippingAddressId);
 				setPrintedNote(commerceOrder::getPrintedNote);
 				setPurchaseOrderNumber(commerceOrder::getPurchaseOrderNumber);
+				setRequestedDeliveryDate(
+					commerceOrder::getRequestedDeliveryDate);
 				setShippingMethod(
 					() -> {
 						CommerceShippingMethod commerceShippingMethod =
@@ -393,6 +396,11 @@ public class PlacedOrderDTOConverter
 		Summary summary = new Summary() {
 			{
 				setCurrency(() -> commerceCurrency.getName(locale));
+				setItemsCount(
+					() ->
+						_commerceOrderItemService.
+							getParentCommerceOrderItemsCount(
+								commerceOrder.getCommerceOrderId(), 0));
 				setItemsQuantity(
 					() -> BigDecimalUtil.stripTrailingZeros(
 						_commerceOrderItemService.getCommerceOrderItemsQuantity(

@@ -21,7 +21,7 @@ public class AdvancedSystemFDSEntry implements SystemFDSEntry {
 
 	@Override
 	public String getAdditionalAPIURLParameters() {
-		return "";
+		return "sort=title:asc";
 	}
 
 	@Override

@@ -12,9 +12,9 @@ import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -27,11 +27,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo

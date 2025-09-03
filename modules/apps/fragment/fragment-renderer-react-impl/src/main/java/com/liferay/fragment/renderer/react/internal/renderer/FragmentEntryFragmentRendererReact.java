@@ -31,6 +31,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,9 +43,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -61,13 +61,13 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		FragmentEntryLink fragmentEntryLink =
 			fragmentRendererContext.getFragmentEntryLink();
 
-		return fragmentEntryLink.getConfiguration();
+		return fragmentEntryLink.getConfigurationJSONObject(true);
 	}
 
 	@Override
@@ -103,8 +103,8 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 				configurationJSONObject =
 					_fragmentEntryConfigurationParser.
 						getConfigurationJSONObject(
-							fragmentEntryLink.getConfiguration(),
-							fragmentEntryLink.getEditableValues(),
+							fragmentEntryLink.getConfigurationJSONObject(),
+							fragmentEntryLink.getEditableValuesJSONObject(),
 							LocaleUtil.getMostRelevantLocale());
 			}
 

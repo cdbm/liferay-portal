@@ -15,7 +15,7 @@ import com.liferay.dynamic.data.mapping.taglib.servlet.taglib.base.BaseHTMLTag;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,10 +27,10 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * @author Bruno Basto

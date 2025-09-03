@@ -8,16 +8,16 @@ package com.liferay.commerce.product.content.web.internal.fragment.renderer;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.content.constants.CPContentWebKeys;
 import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.info.item.renderer.CPContentInfoItemRendererRegistry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
@@ -27,7 +27,6 @@ import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -44,16 +43,16 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,7 +69,7 @@ public class ProductCardFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
@@ -92,7 +91,7 @@ public class ProductCardFragmentRenderer implements FragmentRenderer {
 				_log.debug(jsonException);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -182,7 +181,7 @@ public class ProductCardFragmentRenderer implements FragmentRenderer {
 				_cpDefinitionHelper.getCPCatalogEntry(
 					_getAccountEntryId(groupId, httpServletRequest), groupId,
 					cpDefinition.getCPDefinitionId(),
-					_portal.getLocale(httpServletRequest)));
+					_portal.getLocale(httpServletRequest), false));
 
 			httpServletRequest.setAttribute(
 				CPContentWebKeys.CP_CONTENT_HELPER, _cpContentHelper);
@@ -194,8 +193,10 @@ public class ProductCardFragmentRenderer implements FragmentRenderer {
 			FragmentEntryLink fragmentEntryLink =
 				fragmentRendererContext.getFragmentEntryLink();
 
-			String configuration = fragmentEntryLink.getConfiguration();
-			String editableValues = fragmentEntryLink.getEditableValues();
+			JSONObject configurationJSONObject =
+				fragmentEntryLink.getConfigurationJSONObject();
+			JSONObject editableValuesJSONObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			Locale locale = fragmentRendererContext.getLocale();
 
@@ -203,52 +204,56 @@ public class ProductCardFragmentRenderer implements FragmentRenderer {
 				"liferay-commerce:product-card:showAddToCartButton",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale,
-						"showAddToCartButton")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showAddToCartButton")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showAddToWishListButton",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale,
-						"showAddToWishListButton")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showAddToWishListButton")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showAvailabilityLabel",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale,
-						"showAvailabilityLabel")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showAvailabilityLabel")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showCompareCheckbox",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale,
-						"showCompareCheckbox")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showCompareCheckbox")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showDiscontinuedLabel",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale,
-						"showDiscontinuedLabel")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showDiscontinuedLabel")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showImage",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale, "showImage")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showImage")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showName",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale, "showName")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showName")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showPrice",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale, "showPrice")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showPrice")));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:product-card:showSku",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						configuration, editableValues, locale, "showSku")));
+						configurationJSONObject, editableValuesJSONObject,
+						locale, "showSku")));
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}

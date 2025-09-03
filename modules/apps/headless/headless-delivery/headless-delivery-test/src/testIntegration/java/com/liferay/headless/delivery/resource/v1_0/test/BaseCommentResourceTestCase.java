@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.Comment;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
@@ -58,6 +61,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -75,16 +88,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -131,6 +134,16 @@ public abstract class BaseCommentResourceTestCase {
 			testCompany.getCompanyId());
 
 		commentResource = CommentResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -208,6 +221,356 @@ public abstract class BaseCommentResourceTestCase {
 
 		Assert.assertEquals(regex, comment.getExternalReferenceCode());
 		Assert.assertEquals(regex, comment.getText());
+	}
+
+	@Test
+	public void testDeleteComment() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Comment comment = testDeleteComment_addComment();
+
+		assertHttpResponseStatusCode(
+			204, commentResource.deleteCommentHttpResponse(comment.getId()));
+
+		assertHttpResponseStatusCode(
+			404, commentResource.getCommentHttpResponse(comment.getId()));
+		assertHttpResponseStatusCode(
+			404, commentResource.getCommentHttpResponse(0L));
+	}
+
+	protected Comment testDeleteComment_addComment() throws Exception {
+		return testPostCommentComment_addComment(randomComment());
+	}
+
+	@Test
+	public void testGraphQLDeleteComment() throws Exception {
+
+		// No namespace
+
+		Comment comment1 = testGraphQLDeleteComment_addComment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteComment",
+						new HashMap<String, Object>() {
+							{
+								put("commentId", comment1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteComment"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"comment",
+					new HashMap<String, Object>() {
+						{
+							put("commentId", comment1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Comment comment2 = testGraphQLDeleteComment_addComment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteComment",
+							new HashMap<String, Object>() {
+								{
+									put("commentId", comment2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteComment"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"comment",
+						new HashMap<String, Object>() {
+							{
+								put("commentId", comment2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Comment testGraphQLDeleteComment_addComment() throws Exception {
+		return testGraphQLComment_addComment();
+	}
+
+	@Test
+	public void testDeleteCommentBatch() throws Exception {
+		Comment comment1 = testDeleteCommentBatch_addComment();
+
+		testDeleteCommentBatch_deleteComment(202, null, comment1.getId());
+
+		assertHttpResponseStatusCode(
+			404, commentResource.getCommentHttpResponse(comment1.getId()));
+	}
+
+	protected Comment testDeleteCommentBatch_addComment() throws Exception {
+		return testDeleteComment_addComment();
+	}
+
+	protected void testDeleteCommentBatch_deleteComment(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			commentResource.deleteCommentBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Comment comment =
+			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		assertHttpResponseStatusCode(
+			204,
+			commentResource.
+				deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					"-"));
+	}
+
+	protected Comment
+			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Comment comment =
+			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		assertHttpResponseStatusCode(
+			204,
+			commentResource.
+				deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					"-"));
+	}
+
+	protected Comment
+			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Comment comment =
+			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		assertHttpResponseStatusCode(
+			204,
+			commentResource.
+				deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					"-"));
+	}
+
+	protected Comment
+			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Comment comment =
+			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		assertHttpResponseStatusCode(
+			204,
+			commentResource.
+				deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					comment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			commentResource.
+				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					"-"));
+	}
+
+	protected Comment
+			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -377,10 +740,10 @@ public abstract class BaseCommentResourceTestCase {
 
 		Long blogPostingId = testGetBlogPostingCommentsPage_getBlogPostingId();
 
-		Page<Comment> commentPage = commentResource.getBlogPostingCommentsPage(
+		Page<Comment> commentsPage = commentResource.getBlogPostingCommentsPage(
 			blogPostingId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(commentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(commentsPage.getTotalCount());
 
 		Comment comment1 = testGetBlogPostingCommentsPage_addComment(
 			blogPostingId, randomComment());
@@ -615,117 +978,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPostBlogPostingComment() throws Exception {
-		Comment randomComment = randomComment();
-
-		Comment postComment = testPostBlogPostingComment_addComment(
-			randomComment);
-
-		assertEquals(randomComment, postComment);
-		assertValid(postComment);
-	}
-
-	protected Comment testPostBlogPostingComment_addComment(Comment comment)
-		throws Exception {
-
-		return commentResource.postBlogPostingComment(
-			testGetBlogPostingCommentsPage_getBlogPostingId(), comment);
-	}
-
-	@Test
-	public void testDeleteComment() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Comment comment = testDeleteComment_addComment();
-
-		assertHttpResponseStatusCode(
-			204, commentResource.deleteCommentHttpResponse(comment.getId()));
-
-		assertHttpResponseStatusCode(
-			404, commentResource.getCommentHttpResponse(comment.getId()));
-
-		assertHttpResponseStatusCode(
-			404, commentResource.getCommentHttpResponse(0L));
-	}
-
-	protected Comment testDeleteComment_addComment() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteComment() throws Exception {
-
-		// No namespace
-
-		Comment comment1 = testGraphQLDeleteComment_addComment();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteComment",
-						new HashMap<String, Object>() {
-							{
-								put("commentId", comment1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteComment"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"comment",
-					new HashMap<String, Object>() {
-						{
-							put("commentId", comment1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessDelivery_v1_0
-
-		Comment comment2 = testGraphQLDeleteComment_addComment();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessDelivery_v1_0",
-						new GraphQLField(
-							"deleteComment",
-							new HashMap<String, Object>() {
-								{
-									put("commentId", comment2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
-				"Object/deleteComment"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessDelivery_v1_0",
-					new GraphQLField(
-						"comment",
-						new HashMap<String, Object>() {
-							{
-								put("commentId", comment2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Comment testGraphQLDeleteComment_addComment() throws Exception {
-		return testGraphQLComment_addComment();
-	}
-
-	@Test
 	public void testGetComment() throws Exception {
 		Comment postComment = testGetComment_addComment();
 
@@ -922,8 +1174,7 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	protected Comment testGetComment_addComment() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testPostCommentComment_addComment(randomComment());
 	}
 
 	@Test
@@ -1013,29 +1264,6 @@ public abstract class BaseCommentResourceTestCase {
 
 	protected Comment testGraphQLGetComment_addComment() throws Exception {
 		return testGraphQLComment_addComment();
-	}
-
-	@Test
-	public void testPutComment() throws Exception {
-		Comment postComment = testPutComment_addComment();
-
-		Comment randomComment = randomComment();
-
-		Comment putComment = commentResource.putComment(
-			postComment.getId(), randomComment);
-
-		assertEquals(randomComment, putComment);
-		assertValid(putComment);
-
-		Comment getComment = commentResource.getComment(putComment.getId());
-
-		assertEquals(randomComment, getComment);
-		assertValid(getComment);
-	}
-
-	protected Comment testPutComment_addComment() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1192,10 +1420,10 @@ public abstract class BaseCommentResourceTestCase {
 	public void testGetCommentCommentsPageWithPagination() throws Exception {
 		Long parentCommentId = testGetCommentCommentsPage_getParentCommentId();
 
-		Page<Comment> commentPage = commentResource.getCommentCommentsPage(
+		Page<Comment> commentsPage = commentResource.getCommentCommentsPage(
 			parentCommentId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(commentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(commentsPage.getTotalCount());
 
 		Comment comment1 = testGetCommentCommentsPage_addComment(
 			parentCommentId, randomComment());
@@ -1422,23 +1650,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPostCommentComment() throws Exception {
-		Comment randomComment = randomComment();
-
-		Comment postComment = testPostCommentComment_addComment(randomComment);
-
-		assertEquals(randomComment, postComment);
-		assertValid(postComment);
-	}
-
-	protected Comment testPostCommentComment_addComment(Comment comment)
-		throws Exception {
-
-		return commentResource.postCommentComment(
-			testGetCommentCommentsPage_getParentCommentId(), comment);
-	}
-
-	@Test
 	public void testGetDocumentCommentsPage() throws Exception {
 		Long documentId = testGetDocumentCommentsPage_getDocumentId();
 		Long irrelevantDocumentId =
@@ -1599,10 +1810,10 @@ public abstract class BaseCommentResourceTestCase {
 	public void testGetDocumentCommentsPageWithPagination() throws Exception {
 		Long documentId = testGetDocumentCommentsPage_getDocumentId();
 
-		Page<Comment> commentPage = commentResource.getDocumentCommentsPage(
+		Page<Comment> commentsPage = commentResource.getDocumentCommentsPage(
 			documentId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(commentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(commentsPage.getTotalCount());
 
 		Comment comment1 = testGetDocumentCommentsPage_addComment(
 			documentId, randomComment());
@@ -1827,80 +2038,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPostDocumentComment() throws Exception {
-		Comment randomComment = randomComment();
-
-		Comment postComment = testPostDocumentComment_addComment(randomComment);
-
-		assertEquals(randomComment, postComment);
-		assertValid(postComment);
-	}
-
-	protected Comment testPostDocumentComment_addComment(Comment comment)
-		throws Exception {
-
-		return commentResource.postDocumentComment(
-			testGetDocumentCommentsPage_getDocumentId(), comment);
-	}
-
-	@Test
-	public void testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Comment comment =
-			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		assertHttpResponseStatusCode(
-			204,
-			commentResource.
-				deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testDeleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode()
 		throws Exception {
 
@@ -1918,6 +2055,14 @@ public abstract class BaseCommentResourceTestCase {
 		assertValid(getComment);
 	}
 
+	protected Comment
+			testGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long
 			testGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
 		throws Exception {
@@ -1928,14 +2073,6 @@ public abstract class BaseCommentResourceTestCase {
 
 	protected String
 			testGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1972,7 +2109,6 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2010,7 +2146,6 @@ public abstract class BaseCommentResourceTestCase {
 												"\"" +
 													testGraphQLGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -2111,150 +2246,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		Comment postComment =
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		Comment randomComment = randomComment();
-
-		Comment putComment =
-			commentResource.
-				putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					postComment.getExternalReferenceCode(), randomComment);
-
-		assertEquals(randomComment, putComment);
-		assertValid(putComment);
-
-		Comment getComment =
-			commentResource.
-				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(randomComment, getComment);
-		assertValid(getComment);
-
-		Comment newComment =
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_createComment();
-
-		putComment =
-			commentResource.
-				putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					newComment.getExternalReferenceCode(), newComment);
-
-		assertEquals(newComment, putComment);
-		assertValid(putComment);
-
-		getComment =
-			commentResource.
-				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(newComment, getComment);
-
-		Assert.assertEquals(
-			newComment.getExternalReferenceCode(),
-			putComment.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_createComment()
-		throws Exception {
-
-		return randomComment();
-	}
-
-	protected Comment
-			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Comment comment =
-			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		assertHttpResponseStatusCode(
-			204,
-			commentResource.
-				deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testDeleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode()
 		throws Exception {
 
@@ -2272,6 +2263,14 @@ public abstract class BaseCommentResourceTestCase {
 		assertValid(getComment);
 	}
 
+	protected Comment
+			testGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long
 			testGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
 		throws Exception {
@@ -2282,14 +2281,6 @@ public abstract class BaseCommentResourceTestCase {
 
 	protected String
 			testGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -2326,7 +2317,6 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2364,7 +2354,6 @@ public abstract class BaseCommentResourceTestCase {
 												"\"" +
 													testGraphQLGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -2465,150 +2454,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		Comment postComment =
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		Comment randomComment = randomComment();
-
-		Comment putComment =
-			commentResource.
-				putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					postComment.getExternalReferenceCode(), randomComment);
-
-		assertEquals(randomComment, putComment);
-		assertValid(putComment);
-
-		Comment getComment =
-			commentResource.
-				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(randomComment, getComment);
-		assertValid(getComment);
-
-		Comment newComment =
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
-
-		putComment =
-			commentResource.
-				putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					newComment.getExternalReferenceCode(), newComment);
-
-		assertEquals(newComment, putComment);
-		assertValid(putComment);
-
-		getComment =
-			commentResource.
-				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(newComment, getComment);
-
-		Assert.assertEquals(
-			newComment.getExternalReferenceCode(),
-			putComment.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
-		throws Exception {
-
-		return randomComment();
-	}
-
-	protected Comment
-			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Comment comment =
-			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		assertHttpResponseStatusCode(
-			204,
-			commentResource.
-				deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testDeleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode()
 		throws Exception {
 
@@ -2626,6 +2471,14 @@ public abstract class BaseCommentResourceTestCase {
 		assertValid(getComment);
 	}
 
+	protected Comment
+			testGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long
 			testGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
 		throws Exception {
@@ -2636,14 +2489,6 @@ public abstract class BaseCommentResourceTestCase {
 
 	protected String
 			testGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -2680,7 +2525,6 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2718,7 +2562,6 @@ public abstract class BaseCommentResourceTestCase {
 												"\"" +
 													testGraphQLGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -2819,150 +2662,6 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
-	public void testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		Comment postComment =
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		Comment randomComment = randomComment();
-
-		Comment putComment =
-			commentResource.
-				putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					postComment.getExternalReferenceCode(), randomComment);
-
-		assertEquals(randomComment, putComment);
-		assertValid(putComment);
-
-		Comment getComment =
-			commentResource.
-				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(randomComment, getComment);
-		assertValid(getComment);
-
-		Comment newComment =
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
-
-		putComment =
-			commentResource.
-				putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					newComment.getExternalReferenceCode(), newComment);
-
-		assertEquals(newComment, putComment);
-		assertValid(putComment);
-
-		getComment =
-			commentResource.
-				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(newComment, getComment);
-
-		Assert.assertEquals(
-			newComment.getExternalReferenceCode(),
-			putComment.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
-		throws Exception {
-
-		return randomComment();
-	}
-
-	protected Comment
-			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Comment comment =
-			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		assertHttpResponseStatusCode(
-			204,
-			commentResource.
-				deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			commentResource.
-				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCodeHttpResponse(
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					comment.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testDeleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode()
 		throws Exception {
 
@@ -2980,6 +2679,14 @@ public abstract class BaseCommentResourceTestCase {
 		assertValid(getComment);
 	}
 
+	protected Comment
+			testGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long
 			testGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
 		throws Exception {
@@ -2990,14 +2697,6 @@ public abstract class BaseCommentResourceTestCase {
 
 	protected String
 			testGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -3034,7 +2733,6 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode() +
 													"\"");
-
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -3072,7 +2770,6 @@ public abstract class BaseCommentResourceTestCase {
 												"\"" +
 													testGraphQLGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode() +
 														"\"");
-
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -3170,93 +2867,6 @@ public abstract class BaseCommentResourceTestCase {
 		throws Exception {
 
 		return testGraphQLComment_addComment();
-	}
-
-	@Test
-	public void testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode()
-		throws Exception {
-
-		Comment postComment =
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
-
-		Comment randomComment = randomComment();
-
-		Comment putComment =
-			commentResource.
-				putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					postComment.getExternalReferenceCode(), randomComment);
-
-		assertEquals(randomComment, putComment);
-		assertValid(putComment);
-
-		Comment getComment =
-			commentResource.
-				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(randomComment, getComment);
-		assertValid(getComment);
-
-		Comment newComment =
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
-
-		putComment =
-			commentResource.
-				putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					newComment.getExternalReferenceCode(), newComment);
-
-		assertEquals(newComment, putComment);
-		assertValid(putComment);
-
-		getComment =
-			commentResource.
-				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
-					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
-					putComment.getExternalReferenceCode());
-
-		assertEquals(newComment, getComment);
-
-		Assert.assertEquals(
-			newComment.getExternalReferenceCode(),
-			putComment.getExternalReferenceCode());
-	}
-
-	protected Long
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Comment
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
-		throws Exception {
-
-		return randomComment();
-	}
-
-	protected Comment
-			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -3437,11 +3047,11 @@ public abstract class BaseCommentResourceTestCase {
 		Long structuredContentId =
 			testGetStructuredContentCommentsPage_getStructuredContentId();
 
-		Page<Comment> commentPage =
+		Page<Comment> commentsPage =
 			commentResource.getStructuredContentCommentsPage(
 				structuredContentId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(commentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(commentsPage.getTotalCount());
 
 		Comment comment1 = testGetStructuredContentCommentsPage_addComment(
 			structuredContentId, randomComment());
@@ -3687,6 +3297,58 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	@Test
+	public void testPostBlogPostingComment() throws Exception {
+		Comment randomComment = randomComment();
+
+		Comment postComment = testPostBlogPostingComment_addComment(
+			randomComment);
+
+		assertEquals(randomComment, postComment);
+		assertValid(postComment);
+	}
+
+	protected Comment testPostBlogPostingComment_addComment(Comment comment)
+		throws Exception {
+
+		return commentResource.postBlogPostingComment(
+			testGetBlogPostingCommentsPage_getBlogPostingId(), comment);
+	}
+
+	@Test
+	public void testPostCommentComment() throws Exception {
+		Comment randomComment = randomComment();
+
+		Comment postComment = testPostCommentComment_addComment(randomComment);
+
+		assertEquals(randomComment, postComment);
+		assertValid(postComment);
+	}
+
+	protected Comment testPostCommentComment_addComment(Comment comment)
+		throws Exception {
+
+		return commentResource.postCommentComment(
+			testGetCommentCommentsPage_getParentCommentId(), comment);
+	}
+
+	@Test
+	public void testPostDocumentComment() throws Exception {
+		Comment randomComment = randomComment();
+
+		Comment postComment = testPostDocumentComment_addComment(randomComment);
+
+		assertEquals(randomComment, postComment);
+		assertValid(postComment);
+	}
+
+	protected Comment testPostDocumentComment_addComment(Comment comment)
+		throws Exception {
+
+		return commentResource.postDocumentComment(
+			testGetDocumentCommentsPage_getDocumentId(), comment);
+	}
+
+	@Test
 	public void testPostStructuredContentComment() throws Exception {
 		Comment randomComment = randomComment();
 
@@ -3704,6 +3366,428 @@ public abstract class BaseCommentResourceTestCase {
 		return commentResource.postStructuredContentComment(
 			testGetStructuredContentCommentsPage_getStructuredContentId(),
 			comment);
+	}
+
+	@Test
+	public void testPutComment() throws Exception {
+		Comment postComment = testPutComment_addComment();
+
+		Comment randomComment = randomComment();
+
+		Comment putComment = commentResource.putComment(
+			postComment.getId(), randomComment);
+
+		assertEquals(randomComment, putComment);
+		assertValid(putComment);
+
+		Comment getComment = commentResource.getComment(putComment.getId());
+
+		assertEquals(randomComment, getComment);
+		assertValid(getComment);
+	}
+
+	protected Comment testPutComment_addComment() throws Exception {
+		return testPostCommentComment_addComment(randomComment());
+	}
+
+	@Test
+	public void testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		Comment postComment =
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		Comment randomComment = randomComment();
+
+		Comment putComment =
+			commentResource.
+				putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					postComment.getExternalReferenceCode(), randomComment);
+
+		assertEquals(randomComment, putComment);
+		assertValid(putComment);
+
+		Comment getComment =
+			commentResource.
+				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(randomComment, getComment);
+		assertValid(getComment);
+
+		Comment newComment =
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_createComment();
+
+		putComment =
+			commentResource.
+				putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					newComment.getExternalReferenceCode(), newComment);
+
+		assertEquals(newComment, putComment);
+		assertValid(putComment);
+
+		getComment =
+			commentResource.
+				getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(newComment, getComment);
+
+		Assert.assertEquals(
+			newComment.getExternalReferenceCode(),
+			putComment.getExternalReferenceCode());
+	}
+
+	protected Comment
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Comment
+			testPutSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_createComment()
+		throws Exception {
+
+		return randomComment();
+	}
+
+	@Test
+	public void testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		Comment postComment =
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		Comment randomComment = randomComment();
+
+		Comment putComment =
+			commentResource.
+				putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					postComment.getExternalReferenceCode(), randomComment);
+
+		assertEquals(randomComment, putComment);
+		assertValid(putComment);
+
+		Comment getComment =
+			commentResource.
+				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(randomComment, getComment);
+		assertValid(getComment);
+
+		Comment newComment =
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
+
+		putComment =
+			commentResource.
+				putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					newComment.getExternalReferenceCode(), newComment);
+
+		assertEquals(newComment, putComment);
+		assertValid(putComment);
+
+		getComment =
+			commentResource.
+				getSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(newComment, getComment);
+
+		Assert.assertEquals(
+			newComment.getExternalReferenceCode(),
+			putComment.getExternalReferenceCode());
+	}
+
+	protected Comment
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Comment
+			testPutSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
+		throws Exception {
+
+		return randomComment();
+	}
+
+	@Test
+	public void testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		Comment postComment =
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		Comment randomComment = randomComment();
+
+		Comment putComment =
+			commentResource.
+				putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					postComment.getExternalReferenceCode(), randomComment);
+
+		assertEquals(randomComment, putComment);
+		assertValid(putComment);
+
+		Comment getComment =
+			commentResource.
+				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(randomComment, getComment);
+		assertValid(getComment);
+
+		Comment newComment =
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
+
+		putComment =
+			commentResource.
+				putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					newComment.getExternalReferenceCode(), newComment);
+
+		assertEquals(newComment, putComment);
+		assertValid(putComment);
+
+		getComment =
+			commentResource.
+				getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(newComment, getComment);
+
+		Assert.assertEquals(
+			newComment.getExternalReferenceCode(),
+			putComment.getExternalReferenceCode());
+	}
+
+	protected Comment
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Comment
+			testPutSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
+		throws Exception {
+
+		return randomComment();
+	}
+
+	@Test
+	public void testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode()
+		throws Exception {
+
+		Comment postComment =
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment();
+
+		Comment randomComment = randomComment();
+
+		Comment putComment =
+			commentResource.
+				putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					postComment.getExternalReferenceCode(), randomComment);
+
+		assertEquals(randomComment, putComment);
+		assertValid(putComment);
+
+		Comment getComment =
+			commentResource.
+				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(randomComment, getComment);
+		assertValid(getComment);
+
+		Comment newComment =
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_createComment();
+
+		putComment =
+			commentResource.
+				putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					newComment.getExternalReferenceCode(), newComment);
+
+		assertEquals(newComment, putComment);
+		assertValid(putComment);
+
+		getComment =
+			commentResource.
+				getSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId(),
+					testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode(),
+					putComment.getExternalReferenceCode());
+
+		assertEquals(newComment, getComment);
+
+		Assert.assertEquals(
+			newComment.getExternalReferenceCode(),
+			putComment.getExternalReferenceCode());
+	}
+
+	protected Comment
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_addComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Comment
+			testPutSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_createComment()
+		throws Exception {
+
+		return randomComment();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Comment comment1 = testBatchEngineDeleteImportTask_addComment();
+
+		testBatchEngineDeleteImportTask_deleteComment(
+			200, null, comment1.getId());
+
+		assertHttpResponseStatusCode(
+			404, commentResource.getCommentHttpResponse(comment1.getId()));
+	}
+
+	protected Comment testBatchEngineDeleteImportTask_addComment()
+		throws Exception {
+
+		return testDeleteComment_addComment();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteComment(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.delivery.dto.v1_0.Comment", null, null,
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -4404,7 +4488,30 @@ public abstract class BaseCommentResourceTestCase {
 		return randomComment();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CommentResource commentResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

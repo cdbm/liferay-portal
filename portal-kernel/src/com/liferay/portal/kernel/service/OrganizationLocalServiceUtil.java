@@ -549,6 +549,15 @@ public class OrganizationLocalServiceUtil {
 		return getService().getNoAssetOrganizations();
 	}
 
+	public static Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, long companyId, long userId,
+			String name)
+		throws Exception {
+
+		return getService().getOrAddEmptyOrganization(
+			externalReferenceCode, companyId, userId, name);
+	}
+
 	/**
 	 * Returns the organization with the primary key.
 	 *

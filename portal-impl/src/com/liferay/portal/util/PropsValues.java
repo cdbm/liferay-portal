@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
@@ -699,12 +700,6 @@ public class PropsValues {
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH));
 
-	public static final String[]
-		DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES =
-			PropsUtil.getArray(
-				PropsKeys.
-					DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES);
-
 	public static final int DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT =
 		GetterUtil.getInteger(
 			PropsUtil.get(
@@ -1012,6 +1007,10 @@ public class PropsValues {
 
 	public static final String JDBC_DEFAULT_USERNAME = PropsUtil.get(
 		PropsKeys.JDBC_DEFAULT_USERNAME);
+
+	public static long JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT));
 
 	public static final boolean JSON_SERVICE_AUTH_TOKEN_ENABLED =
 		GetterUtil.getBoolean(
@@ -2096,7 +2095,7 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.SESSION_ENABLE_URL_WITH_SESSION_ID));
 
-	public static final int SESSION_MAX_ALLOWED = GetterUtil.getInteger(
+	public static int SESSION_MAX_ALLOWED = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.SESSION_MAX_ALLOWED));
 
 	public static String[] SESSION_PHISHING_PROTECTED_ATTRIBUTES =
@@ -2390,6 +2389,27 @@ public class PropsValues {
 
 	public static final String UNICODE_TEXT_NORMALIZER_FORM = PropsUtil.get(
 		PropsKeys.UNICODE_TEXT_NORMALIZER_FORM);
+
+	public static final boolean UPGRADE_DATABASE_DL_STORAGE_CHECK_DISABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.UPGRADE_DATABASE_DL_STORAGE_CHECK_DISABLED));
+
+	public static final String[]
+		UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_BLACKLIST = PropsUtil.getArray(
+			PropsKeys.UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_BLACKLIST);
+
+	public static final boolean
+		UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_ENABLED =
+			GetterUtil.getBoolean(
+				PropsUtil.get(
+					PropsKeys.
+						UPGRADE_DATABASE_PREUPGRADE_DATA_CLEANUP_ENABLED));
+
+	public static final boolean UPGRADE_DATABASE_PREUPGRADE_VERIFY_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.UPGRADE_DATABASE_PREUPGRADE_VERIFY_ENABLED));
 
 	public static final boolean UPGRADE_DATABASE_TRANSACTIONS_DISABLED =
 		GetterUtil.getBoolean(

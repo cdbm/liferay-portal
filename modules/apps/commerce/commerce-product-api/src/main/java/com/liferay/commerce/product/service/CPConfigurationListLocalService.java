@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -80,25 +81,26 @@ public interface CPConfigurationListLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPConfigurationList addCPConfigurationList(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			long parentCPConfigurationListId, boolean master, String name,
 			double priority, int displayDateMonth, int displayDateDay,
 			int displayDateYear, int displayDateHour, int displayDateMinute,
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire)
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPConfigurationList addOrUpdateCPConfigurationList(
-			String externalReferenceCode, long companyId, long groupId,
-			long userId, long parentCPConfigurationListId, boolean master,
+			String externalReferenceCode, long companyId, long userId,
+			long groupId, long parentCPConfigurationListId, boolean master,
 			String name, double priority, int displayDateMonth,
 			int displayDateDay, int displayDateYear, int displayDateHour,
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire)
+			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -129,9 +131,13 @@ public interface CPConfigurationListLocalService
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CPConfigurationList deleteCPConfigurationList(
 			CPConfigurationList cpConfigurationList)
+		throws PortalException;
+
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
+	public CPConfigurationList deleteCPConfigurationList(
+			CPConfigurationList cpConfigurationList, boolean force)
 		throws PortalException;
 
 	/**
@@ -148,6 +154,10 @@ public interface CPConfigurationListLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public CPConfigurationList deleteCPConfigurationList(
 			long CPConfigurationListId)
+		throws PortalException;
+
+	public CPConfigurationList deleteCPConfigurationList(
+			long cpConfigurationListId, boolean force)
 		throws PortalException;
 
 	public void deleteCPConfigurationLists(long companyId)
@@ -250,11 +260,6 @@ public interface CPConfigurationListLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPConfigurationList fetchCPConfigurationListByUuidAndGroupId(
 		String uuid, long groupId);
-
-	@Indexable(type = IndexableType.DELETE)
-	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
-	public CPConfigurationList forceDeleteCPConfigurationList(
-		CPConfigurationList cpConfigurationList);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -391,13 +396,13 @@ public interface CPConfigurationListLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CPConfigurationList updateCPConfigurationList(
 			String externalReferenceCode, long cpConfigurationListId,
-			long groupId, long userId, long parentCPConfigurationListId,
+			long userId, long groupId, long parentCPConfigurationListId,
 			boolean master, String name, double priority, int displayDateMonth,
 			int displayDateDay, int displayDateYear, int displayDateHour,
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire)
+			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
 	@Override

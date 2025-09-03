@@ -20,14 +20,13 @@ export default function _JournalPortlet({
 	classNameId,
 	contentTitle,
 	defaultLanguageId: initialDefaultLanguageId,
-	displayDate,
 	hasSavePermission,
 	namespace,
 }) {
 	const formId = `${namespace}fm1`;
 
 	const actionInput = document.getElementById(
-		`${namespace}javax-portlet-action`
+		`${namespace}jakarta-portlet-action`
 	);
 	const availableLocalesInput = document.getElementById(
 		`${namespace}availableLocales`
@@ -56,6 +55,7 @@ export default function _JournalPortlet({
 	let articleId = initialArticleId;
 	let defaultLanguageId = initialDefaultLanguageId;
 	let selectedLanguageId = initialDefaultLanguageId;
+	let formSubmitted = false;
 
 	const lockHolder = {};
 
@@ -66,41 +66,9 @@ export default function _JournalPortlet({
 	const editingDefaultValues = classNameId && classNameId !== '0';
 
 	if (editingDefaultValues) {
-		const getInput = (inputName) =>
-			document.getElementById(`${namespace}${inputName}`);
-
-		const resetInput = (inputName) => {
-			const input = getInput(inputName);
-
-			if (input && !displayDate) {
-				input.value = '';
-			}
-		};
-
 		actionInput.value = articleId
 			? '/journal/update_data_engine_default_values'
 			: '/journal/add_data_engine_default_values';
-
-		resetInput('displayDate');
-		resetInput('displayDateAmPm');
-		resetInput('displayDateDay');
-		resetInput('displayDateHour');
-		resetInput('displayDateMinute');
-		resetInput('displayDateMonth');
-		resetInput('displayDateTime');
-		resetInput('displayDateYear');
-
-		const displayDateInput = getInput('displayDate');
-
-		if (displayDateInput) {
-			displayDateInput.addEventListener('change', (event) => {
-				if (!event.target.value) {
-					getInput('displayDateDay').value = '';
-					getInput('displayDateMonth').value = '';
-					getInput('displayDateYear').value = '';
-				}
-			});
-		}
 	}
 
 	const handleContextualSidebarButton = () => {
@@ -217,7 +185,9 @@ export default function _JournalPortlet({
 					submitAsyncForm(form, {redirectOnSave});
 				}
 			}
-			else {
+			else if (!formSubmitted) {
+				formSubmitted = true;
+
 				form.submit();
 			}
 		}

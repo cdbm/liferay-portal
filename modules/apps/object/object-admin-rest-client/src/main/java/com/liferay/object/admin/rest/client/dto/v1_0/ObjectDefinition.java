@@ -8,13 +8,13 @@ package com.liferay.object.admin.rest.client.dto.v1_0;
 import com.liferay.object.admin.rest.client.function.UnsafeSupplier;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -377,6 +377,81 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableObjectEntryHistory;
 
+	public Boolean getEnableObjectEntrySchedule() {
+		return enableObjectEntrySchedule;
+	}
+
+	public void setEnableObjectEntrySchedule(
+		Boolean enableObjectEntrySchedule) {
+
+		this.enableObjectEntrySchedule = enableObjectEntrySchedule;
+	}
+
+	public void setEnableObjectEntrySchedule(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryScheduleUnsafeSupplier) {
+
+		try {
+			enableObjectEntrySchedule =
+				enableObjectEntryScheduleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntrySchedule;
+
+	public Boolean getEnableObjectEntrySubscription() {
+		return enableObjectEntrySubscription;
+	}
+
+	public void setEnableObjectEntrySubscription(
+		Boolean enableObjectEntrySubscription) {
+
+		this.enableObjectEntrySubscription = enableObjectEntrySubscription;
+	}
+
+	public void setEnableObjectEntrySubscription(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntrySubscriptionUnsafeSupplier) {
+
+		try {
+			enableObjectEntrySubscription =
+				enableObjectEntrySubscriptionUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntrySubscription;
+
+	public Boolean getEnableObjectEntryVersioning() {
+		return enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		Boolean enableObjectEntryVersioning) {
+
+		this.enableObjectEntryVersioning = enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryVersioningUnsafeSupplier) {
+
+		try {
+			enableObjectEntryVersioning =
+				enableObjectEntryVersioningUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntryVersioning;
+
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -397,6 +472,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected String externalReferenceCode;
+
+	public String getFriendlyURLSeparator() {
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		try {
+			friendlyURLSeparator = friendlyURLSeparatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String friendlyURLSeparator;
 
 	public Long getId() {
 		return id;
@@ -918,6 +1014,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected String titleObjectFieldName;
+
+	public WorkflowDefinitionLink[] getWorkflowDefinitionLinks() {
+		return workflowDefinitionLinks;
+	}
+
+	public void setWorkflowDefinitionLinks(
+		WorkflowDefinitionLink[] workflowDefinitionLinks) {
+
+		this.workflowDefinitionLinks = workflowDefinitionLinks;
+	}
+
+	public void setWorkflowDefinitionLinks(
+		UnsafeSupplier<WorkflowDefinitionLink[], Exception>
+			workflowDefinitionLinksUnsafeSupplier) {
+
+		try {
+			workflowDefinitionLinks =
+				workflowDefinitionLinksUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected WorkflowDefinitionLink[] workflowDefinitionLinks;
 
 	@Override
 	public ObjectDefinition clone() throws CloneNotSupportedException {

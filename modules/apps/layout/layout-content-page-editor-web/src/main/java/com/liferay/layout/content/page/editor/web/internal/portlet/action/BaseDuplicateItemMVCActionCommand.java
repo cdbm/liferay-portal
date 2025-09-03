@@ -47,15 +47,15 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletPreferences;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -73,12 +73,15 @@ public abstract class BaseDuplicateItemMVCActionCommand
 				CheckNoninstanceablePortletThreadLocal.
 					setCheckNoninstanceablePortletWithSafeCloseable(true)) {
 
+			JSONObject duplicatedEditableValuesJSONObject =
+				jsonFactory.createJSONObject();
+
 			FragmentEntryLink fragmentEntryLink =
 				fragmentEntryLinkLocalService.getFragmentEntryLink(
 					fragmentEntryLinkId);
 
-			JSONObject editableValuesJSONObject = jsonFactory.createJSONObject(
-				fragmentEntryLink.getEditableValues());
+			JSONObject editableValuesJSONObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			String portletId = editableValuesJSONObject.getString("portletId");
 
@@ -108,6 +111,20 @@ public abstract class BaseDuplicateItemMVCActionCommand
 						serviceContext.getRequest(), portletId, oldInstanceId,
 						namespace);
 				}
+
+				FragmentEntryLink duplicatedFragmentEntryLink =
+					fragmentEntryLinkService.addFragmentEntryLink(
+						null, fragmentEntryLink.getGroupId(), 0,
+						fragmentEntryLink.getFragmentEntryId(),
+						fragmentEntryLink.getSegmentsExperienceId(),
+						fragmentEntryLink.getPlid(), fragmentEntryLink.getCss(),
+						fragmentEntryLink.getHtml(), fragmentEntryLink.getJs(),
+						fragmentEntryLink.getConfiguration(),
+						editableValuesJSONObject.toString(), namespace, 0,
+						fragmentEntryLink.getRendererKey(),
+						fragmentEntryLink.getType(), serviceContext);
+
+				return duplicatedFragmentEntryLink.getFragmentEntryLinkId();
 			}
 
 			if (fragmentEntryLink.isTypeInput()) {
@@ -122,6 +139,31 @@ public abstract class BaseDuplicateItemMVCActionCommand
 				}
 			}
 
+			for (String key : editableValuesJSONObject.keySet()) {
+				Object value = editableValuesJSONObject.get(key);
+
+				if (!(value instanceof JSONObject)) {
+					duplicatedEditableValuesJSONObject.put(key, value);
+
+					continue;
+				}
+
+				JSONObject jsonObject = (JSONObject)value;
+				JSONObject duplicatedJSONObject =
+					jsonFactory.createJSONObject();
+
+				for (String curKey : jsonObject.keySet()) {
+					duplicatedJSONObject.put(
+						StringUtil.replace(
+							curKey, fragmentEntryLink.getNamespace(),
+							namespace),
+						jsonObject.get(curKey));
+				}
+
+				duplicatedEditableValuesJSONObject.put(
+					key, duplicatedJSONObject);
+			}
+
 			FragmentEntryLink duplicatedFragmentEntryLink =
 				fragmentEntryLinkService.addFragmentEntryLink(
 					null, fragmentEntryLink.getGroupId(), 0,
@@ -130,7 +172,7 @@ public abstract class BaseDuplicateItemMVCActionCommand
 					fragmentEntryLink.getPlid(), fragmentEntryLink.getCss(),
 					fragmentEntryLink.getHtml(), fragmentEntryLink.getJs(),
 					fragmentEntryLink.getConfiguration(),
-					editableValuesJSONObject.toString(), namespace, 0,
+					duplicatedEditableValuesJSONObject.toString(), namespace, 0,
 					fragmentEntryLink.getRendererKey(),
 					fragmentEntryLink.getType(), serviceContext);
 

@@ -58,11 +58,7 @@ public class PullRequest {
 	public static boolean isValidGitHubPullRequestURL(String gitHubURL) {
 		Matcher matcher = _gitHubPullRequestURLPattern.matcher(gitHubURL);
 
-		if (matcher.find()) {
-			return true;
-		}
-
-		return false;
+		return matcher.find();
 	}
 
 	public Comment addComment(String body) {
@@ -997,8 +993,11 @@ public class PullRequest {
 
 		sb.append("\"");
 
-		if ((testSuiteStatus == TestSuiteStatus.ERROR) ||
-			(testSuiteStatus == TestSuiteStatus.FAILURE)) {
+		if (testSuiteStatus == TestSuiteStatus.BYPASSED) {
+			sb.append(" was BYPASSED.");
+		}
+		else if ((testSuiteStatus == TestSuiteStatus.ERROR) ||
+				 (testSuiteStatus == TestSuiteStatus.FAILURE)) {
 
 			sb.append(" has FAILED.");
 		}
@@ -1128,8 +1127,8 @@ public class PullRequest {
 
 	public static enum TestSuiteStatus {
 
-		ERROR("fccdcc"), FAILURE("fccdcc"), MISSING("eeeeee"),
-		PENDING("fff4c9"), SUCCESS("c7e8cb");
+		BYPASSED("bcf5db"), ERROR("fccdcc"), FAILURE("fccdcc"),
+		MISSING("eeeeee"), PENDING("fff4c9"), SUCCESS("c7e8cb");
 
 		public String getColor() {
 			return _color;

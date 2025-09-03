@@ -10,12 +10,11 @@ import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.OptionEntityModel;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -34,13 +34,14 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.io.Serializable;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -240,10 +241,17 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 	private Map<String, Serializable> _getExpandoBridgeAttributes(
 		Option option) {
 
-		return CustomFieldsUtil.toMap(
-			CPOption.class.getName(), contextCompany.getCompanyId(),
-			option.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
+		Map<String, Serializable> expandoBridgeAttributes =
+			CustomFieldsUtil.toMap(
+				CPOption.class.getName(), contextCompany.getCompanyId(),
+				option.getCustomFields(),
+				contextAcceptLanguage.getPreferredLocale());
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		return expandoBridgeAttributes;
 	}
 
 	private Option _toOption(Long cpOptionId) throws Exception {

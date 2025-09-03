@@ -13,8 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.DocumentFolder;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.Rating;
@@ -67,6 +71,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -84,16 +98,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -134,16 +138,28 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_documentFolderResource.setContextCompany(testCompany);
 
@@ -151,6 +167,16 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			testCompany.getCompanyId());
 
 		documentFolderResource = DocumentFolderResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -232,6 +258,243 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		Assert.assertEquals(regex, documentFolder.getDescription());
 		Assert.assertEquals(regex, documentFolder.getExternalReferenceCode());
 		Assert.assertEquals(regex, documentFolder.getName());
+	}
+
+	@Test
+	public void testDeleteDocumentFolder() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testDeleteDocumentFolder_addDocumentFolder();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentFolderResource.deleteDocumentFolderHttpResponse(
+				documentFolder.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.getDocumentFolderHttpResponse(
+				documentFolder.getId()));
+		assertHttpResponseStatusCode(
+			404, documentFolderResource.getDocumentFolderHttpResponse(0L));
+	}
+
+	protected DocumentFolder testDeleteDocumentFolder_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testGraphQLDeleteDocumentFolder() throws Exception {
+
+		// No namespace
+
+		DocumentFolder documentFolder1 =
+			testGraphQLDeleteDocumentFolder_addDocumentFolder();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDocumentFolder",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"documentFolderId",
+									documentFolder1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDocumentFolder"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"documentFolder",
+					new HashMap<String, Object>() {
+						{
+							put("documentFolderId", documentFolder1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		DocumentFolder documentFolder2 =
+			testGraphQLDeleteDocumentFolder_addDocumentFolder();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteDocumentFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"documentFolderId",
+										documentFolder2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteDocumentFolder"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"documentFolder",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"documentFolderId",
+									documentFolder2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected DocumentFolder testGraphQLDeleteDocumentFolder_addDocumentFolder()
+		throws Exception {
+
+		return testGraphQLDocumentFolder_addDocumentFolder();
+	}
+
+	@Test
+	public void testDeleteDocumentFolderBatch() throws Exception {
+		DocumentFolder documentFolder1 =
+			testDeleteDocumentFolderBatch_addDocumentFolder();
+
+		testDeleteDocumentFolderBatch_deleteDocumentFolder(
+			202, null, documentFolder1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.getDocumentFolderHttpResponse(
+				documentFolder1.getId()));
+	}
+
+	protected DocumentFolder testDeleteDocumentFolderBatch_addDocumentFolder()
+		throws Exception {
+
+		return testDeleteDocumentFolder_addDocumentFolder();
+	}
+
+	protected void testDeleteDocumentFolderBatch_deleteDocumentFolder(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			documentFolderResource.deleteDocumentFolderBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteDocumentFolderMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testDeleteDocumentFolderMyRating_addDocumentFolder();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentFolderResource.deleteDocumentFolderMyRatingHttpResponse(
+				documentFolder.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.getDocumentFolderMyRatingHttpResponse(
+				documentFolder.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.getDocumentFolderMyRatingHttpResponse(0L));
+	}
+
+	protected DocumentFolder
+			testDeleteDocumentFolderMyRating_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testDeleteSiteDocumentsFolderByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testDeleteSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentFolderResource.
+				deleteSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
+					documentFolder.getSiteId(),
+					documentFolder.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.
+				getSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
+					documentFolder.getSiteId(),
+					documentFolder.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.
+				getSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
+					documentFolder.getSiteId(), "-"));
+	}
+
+	protected DocumentFolder
+			testDeleteSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testGetAssetLibraryDocumentFolderPermissionsPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder postDocumentFolder =
+			testGetAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder();
+
+		Page<Permission> page =
+			documentFolderResource.getAssetLibraryDocumentFolderPermissionsPage(
+				testDepotEntry.getDepotEntryId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected DocumentFolder
+			testGetAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postAssetLibraryDocumentFolder(
+			testDepotEntry.getDepotEntryId(), randomDocumentFolder());
 	}
 
 	@Test
@@ -419,12 +682,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryDocumentFoldersPage_getAssetLibraryId();
 
-		Page<DocumentFolder> documentFolderPage =
+		Page<DocumentFolder> documentFoldersPage =
 			documentFolderResource.getAssetLibraryDocumentFoldersPage(
 				assetLibraryId, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			documentFolderPage.getTotalCount());
+			documentFoldersPage.getTotalCount());
 
 		DocumentFolder documentFolder1 =
 			testGetAssetLibraryDocumentFoldersPage_addDocumentFolder(
@@ -692,97 +955,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			testGetAssetLibraryDocumentFoldersPage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
-	}
-
-	@Test
-	public void testPostAssetLibraryDocumentFolder() throws Exception {
-		DocumentFolder randomDocumentFolder = randomDocumentFolder();
-
-		DocumentFolder postDocumentFolder =
-			testPostAssetLibraryDocumentFolder_addDocumentFolder(
-				randomDocumentFolder);
-
-		assertEquals(randomDocumentFolder, postDocumentFolder);
-		assertValid(postDocumentFolder);
-	}
-
-	protected DocumentFolder
-			testPostAssetLibraryDocumentFolder_addDocumentFolder(
-				DocumentFolder documentFolder)
-		throws Exception {
-
-		return documentFolderResource.postAssetLibraryDocumentFolder(
-			testGetAssetLibraryDocumentFoldersPage_getAssetLibraryId(),
-			documentFolder);
-	}
-
-	@Test
-	public void testGetAssetLibraryDocumentFolderPermissionsPage()
-		throws Exception {
-
-		Page<Permission> page =
-			documentFolderResource.getAssetLibraryDocumentFolderPermissionsPage(
-				testDepotEntry.getDepotEntryId(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected DocumentFolder
-			testGetAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return testPostAssetLibraryDocumentFolder_addDocumentFolder(
-			randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutAssetLibraryDocumentFolderPermissionsPage()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testPutAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			documentFolderResource.
-				putAssetLibraryDocumentFolderPermissionsPageHttpResponse(
-					testDepotEntry.getDepotEntryId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.
-				putAssetLibraryDocumentFolderPermissionsPageHttpResponse(
-					testDepotEntry.getDepotEntryId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected DocumentFolder
-			testPutAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postAssetLibraryDocumentFolder(
-			testDepotEntry.getDepotEntryId(), randomDocumentFolder());
+		return irrelevantDepotEntry.getDepotEntryId();
 	}
 
 	@Test
@@ -865,12 +1038,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryDocumentFoldersRatedByMePage_getAssetLibraryId();
 
-		Page<DocumentFolder> documentFolderPage =
+		Page<DocumentFolder> documentFoldersPage =
 			documentFolderResource.getAssetLibraryDocumentFoldersRatedByMePage(
 				assetLibraryId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			documentFolderPage.getTotalCount());
+			documentFoldersPage.getTotalCount());
 
 		DocumentFolder documentFolder1 =
 			testGetAssetLibraryDocumentFoldersRatedByMePage_addDocumentFolder(
@@ -984,117 +1157,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			testGetAssetLibraryDocumentFoldersRatedByMePage_getIrrelevantAssetLibraryId()
 		throws Exception {
 
-		return null;
-	}
-
-	@Test
-	public void testDeleteDocumentFolder() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testDeleteDocumentFolder_addDocumentFolder();
-
-		assertHttpResponseStatusCode(
-			204,
-			documentFolderResource.deleteDocumentFolderHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.getDocumentFolderHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404, documentFolderResource.getDocumentFolderHttpResponse(0L));
-	}
-
-	protected DocumentFolder testDeleteDocumentFolder_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testGraphQLDeleteDocumentFolder() throws Exception {
-
-		// No namespace
-
-		DocumentFolder documentFolder1 =
-			testGraphQLDeleteDocumentFolder_addDocumentFolder();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDocumentFolder",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"documentFolderId",
-									documentFolder1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDocumentFolder"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"documentFolder",
-					new HashMap<String, Object>() {
-						{
-							put("documentFolderId", documentFolder1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessDelivery_v1_0
-
-		DocumentFolder documentFolder2 =
-			testGraphQLDeleteDocumentFolder_addDocumentFolder();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessDelivery_v1_0",
-						new GraphQLField(
-							"deleteDocumentFolder",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"documentFolderId",
-										documentFolder2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
-				"Object/deleteDocumentFolder"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessDelivery_v1_0",
-					new GraphQLField(
-						"documentFolder",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"documentFolderId",
-									documentFolder2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected DocumentFolder testGraphQLDeleteDocumentFolder_addDocumentFolder()
-		throws Exception {
-
-		return testGraphQLDocumentFolder_addDocumentFolder();
+		return irrelevantDepotEntry.getDepotEntryId();
 	}
 
 	@Test
@@ -1410,208 +1473,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	}
 
 	@Test
-	public void testPatchDocumentFolder() throws Exception {
-		DocumentFolder postDocumentFolder =
-			testPatchDocumentFolder_addDocumentFolder();
-
-		DocumentFolder randomPatchDocumentFolder = randomPatchDocumentFolder();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder patchDocumentFolder =
-			documentFolderResource.patchDocumentFolder(
-				postDocumentFolder.getId(), randomPatchDocumentFolder);
-
-		DocumentFolder expectedPatchDocumentFolder = postDocumentFolder.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchDocumentFolder, expectedPatchDocumentFolder);
-
-		DocumentFolder getDocumentFolder =
-			documentFolderResource.getDocumentFolder(
-				patchDocumentFolder.getId());
-
-		assertEquals(expectedPatchDocumentFolder, getDocumentFolder);
-		assertValid(getDocumentFolder);
-	}
-
-	protected DocumentFolder testPatchDocumentFolder_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutDocumentFolder() throws Exception {
-		DocumentFolder postDocumentFolder =
-			testPutDocumentFolder_addDocumentFolder();
-
-		DocumentFolder randomDocumentFolder = randomDocumentFolder();
-
-		DocumentFolder putDocumentFolder =
-			documentFolderResource.putDocumentFolder(
-				postDocumentFolder.getId(), randomDocumentFolder);
-
-		assertEquals(randomDocumentFolder, putDocumentFolder);
-		assertValid(putDocumentFolder);
-
-		DocumentFolder getDocumentFolder =
-			documentFolderResource.getDocumentFolder(putDocumentFolder.getId());
-
-		assertEquals(randomDocumentFolder, getDocumentFolder);
-		assertValid(getDocumentFolder);
-	}
-
-	protected DocumentFolder testPutDocumentFolder_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testDeleteDocumentFolderMyRating() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testDeleteDocumentFolderMyRating_addDocumentFolder();
-
-		assertHttpResponseStatusCode(
-			204,
-			documentFolderResource.deleteDocumentFolderMyRatingHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.getDocumentFolderMyRatingHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.getDocumentFolderMyRatingHttpResponse(0L));
-	}
-
-	protected DocumentFolder
-			testDeleteDocumentFolderMyRating_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testGetDocumentFolderPermissionsPage() throws Exception {
-		DocumentFolder postDocumentFolder =
-			testGetDocumentFolderPermissionsPage_addDocumentFolder();
-
-		Page<Permission> page =
-			documentFolderResource.getDocumentFolderPermissionsPage(
-				postDocumentFolder.getId(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected DocumentFolder
-			testGetDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return testPostDocumentFolderDocumentFolder_addDocumentFolder(
-			randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutDocumentFolderPermissionsPage() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testPutDocumentFolderPermissionsPage_addDocumentFolder();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			documentFolderResource.putDocumentFolderPermissionsPageHttpResponse(
-				documentFolder.getId(),
-				new Permission[] {
-					new Permission() {
-						{
-							setActionIds(new String[] {"VIEW"});
-							setRoleName(role.getName());
-						}
-					}
-				}));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.putDocumentFolderPermissionsPageHttpResponse(
-				0L,
-				new Permission[] {
-					new Permission() {
-						{
-							setActionIds(new String[] {"-"});
-							setRoleName("-");
-						}
-					}
-				}));
-	}
-
-	protected DocumentFolder
-			testPutDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutDocumentFolderSubscribe() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testPutDocumentFolderSubscribe_addDocumentFolder();
-
-		assertHttpResponseStatusCode(
-			204,
-			documentFolderResource.putDocumentFolderSubscribeHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.putDocumentFolderSubscribeHttpResponse(0L));
-	}
-
-	protected DocumentFolder testPutDocumentFolderSubscribe_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutDocumentFolderUnsubscribe() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testPutDocumentFolderUnsubscribe_addDocumentFolder();
-
-		assertHttpResponseStatusCode(
-			204,
-			documentFolderResource.putDocumentFolderUnsubscribeHttpResponse(
-				documentFolder.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.putDocumentFolderUnsubscribeHttpResponse(
-				0L));
-	}
-
-	protected DocumentFolder
-			testPutDocumentFolderUnsubscribe_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
 	public void testGetDocumentFolderDocumentFoldersPage() throws Exception {
 		Long parentDocumentFolderId =
 			testGetDocumentFolderDocumentFoldersPage_getParentDocumentFolderId();
@@ -1789,12 +1650,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		Long parentDocumentFolderId =
 			testGetDocumentFolderDocumentFoldersPage_getParentDocumentFolderId();
 
-		Page<DocumentFolder> documentFolderPage =
+		Page<DocumentFolder> documentFoldersPage =
 			documentFolderResource.getDocumentFolderDocumentFoldersPage(
 				parentDocumentFolderId, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			documentFolderPage.getTotalCount());
+			documentFoldersPage.getTotalCount());
 
 		DocumentFolder documentFolder1 =
 			testGetDocumentFolderDocumentFoldersPage_addDocumentFolder(
@@ -2068,25 +1929,45 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	}
 
 	@Test
-	public void testPostDocumentFolderDocumentFolder() throws Exception {
-		DocumentFolder randomDocumentFolder = randomDocumentFolder();
-
+	public void testGetDocumentFolderPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DocumentFolder postDocumentFolder =
-			testPostDocumentFolderDocumentFolder_addDocumentFolder(
-				randomDocumentFolder);
+			testGetDocumentFolderPermissionsPage_addDocumentFolder();
 
-		assertEquals(randomDocumentFolder, postDocumentFolder);
-		assertValid(postDocumentFolder);
+		Page<Permission> page =
+			documentFolderResource.getDocumentFolderPermissionsPage(
+				postDocumentFolder.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
 	}
 
 	protected DocumentFolder
-			testPostDocumentFolderDocumentFolder_addDocumentFolder(
-				DocumentFolder documentFolder)
+			testGetDocumentFolderPermissionsPage_addDocumentFolder()
 		throws Exception {
 
-		return documentFolderResource.postDocumentFolderDocumentFolder(
-			testGetDocumentFolderDocumentFoldersPage_getParentDocumentFolderId(),
-			documentFolder);
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testGetSiteDocumentFolderPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder postDocumentFolder =
+			testGetSiteDocumentFolderPermissionsPage_addDocumentFolder();
+
+		Page<Permission> page =
+			documentFolderResource.getSiteDocumentFolderPermissionsPage(
+				testGroup.getGroupId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected DocumentFolder
+			testGetSiteDocumentFolderPermissionsPage_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
 	}
 
 	@Test
@@ -2263,12 +2144,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		Long siteId = testGetSiteDocumentFoldersPage_getSiteId();
 
-		Page<DocumentFolder> documentFolderPage =
+		Page<DocumentFolder> documentFoldersPage =
 			documentFolderResource.getSiteDocumentFoldersPage(
 				siteId, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			documentFolderPage.getTotalCount());
+			documentFoldersPage.getTotalCount());
 
 		DocumentFolder documentFolder1 =
 			testGetSiteDocumentFoldersPage_addDocumentFolder(
@@ -2611,99 +2492,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	}
 
 	@Test
-	public void testPostSiteDocumentFolder() throws Exception {
-		DocumentFolder randomDocumentFolder = randomDocumentFolder();
-
-		DocumentFolder postDocumentFolder =
-			testPostSiteDocumentFolder_addDocumentFolder(randomDocumentFolder);
-
-		assertEquals(randomDocumentFolder, postDocumentFolder);
-		assertValid(postDocumentFolder);
-	}
-
-	protected DocumentFolder testPostSiteDocumentFolder_addDocumentFolder(
-			DocumentFolder documentFolder)
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGetSiteDocumentFoldersPage_getSiteId(), documentFolder);
-	}
-
-	@Test
-	public void testGraphQLPostSiteDocumentFolder() throws Exception {
-		DocumentFolder randomDocumentFolder = randomDocumentFolder();
-
-		DocumentFolder documentFolder =
-			testGraphQLDocumentFolder_addDocumentFolder(randomDocumentFolder);
-
-		Assert.assertTrue(equals(randomDocumentFolder, documentFolder));
-	}
-
-	@Test
-	public void testGetSiteDocumentFolderPermissionsPage() throws Exception {
-		Page<Permission> page =
-			documentFolderResource.getSiteDocumentFolderPermissionsPage(
-				testGroup.getGroupId(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected DocumentFolder
-			testGetSiteDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return testPostSiteDocumentFolder_addDocumentFolder(
-			randomDocumentFolder());
-	}
-
-	@Test
-	public void testPutSiteDocumentFolderPermissionsPage() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testPutSiteDocumentFolderPermissionsPage_addDocumentFolder();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			documentFolderResource.
-				putSiteDocumentFolderPermissionsPageHttpResponse(
-					documentFolder.getSiteId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.
-				putSiteDocumentFolderPermissionsPageHttpResponse(
-					documentFolder.getSiteId(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected DocumentFolder
-			testPutSiteDocumentFolderPermissionsPage_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
 	public void testGetSiteDocumentFoldersRatedByMePage() throws Exception {
 		Long siteId = testGetSiteDocumentFoldersRatedByMePage_getSiteId();
 		Long irrelevantSiteId =
@@ -2774,12 +2562,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		Long siteId = testGetSiteDocumentFoldersRatedByMePage_getSiteId();
 
-		Page<DocumentFolder> documentFolderPage =
+		Page<DocumentFolder> documentFoldersPage =
 			documentFolderResource.getSiteDocumentFoldersRatedByMePage(
 				siteId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			documentFolderPage.getTotalCount());
+			documentFoldersPage.getTotalCount());
 
 		DocumentFolder documentFolder1 =
 			testGetSiteDocumentFoldersRatedByMePage_addDocumentFolder(
@@ -2889,55 +2677,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteSiteDocumentsFolderByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DocumentFolder documentFolder =
-			testDeleteSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder();
-
-		assertHttpResponseStatusCode(
-			204,
-			documentFolderResource.
-				deleteSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						documentFolder),
-					documentFolder.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.
-				getSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						documentFolder),
-					documentFolder.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			documentFolderResource.
-				getSiteDocumentsFolderByExternalReferenceCodeHttpResponse(
-					testDeleteSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						documentFolder),
-					documentFolder.getExternalReferenceCode()));
-	}
-
-	protected Long
-			testDeleteSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-				DocumentFolder documentFolder)
-		throws Exception {
-
-		return documentFolder.getSiteId();
-	}
-
-	protected DocumentFolder
-			testDeleteSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder()
-		throws Exception {
-
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
-	}
-
-	@Test
 	public void testGetSiteDocumentsFolderByExternalReferenceCode()
 		throws Exception {
 
@@ -2947,19 +2686,11 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		DocumentFolder getDocumentFolder =
 			documentFolderResource.
 				getSiteDocumentsFolderByExternalReferenceCode(
-					testGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						postDocumentFolder),
+					postDocumentFolder.getSiteId(),
 					postDocumentFolder.getExternalReferenceCode());
 
 		assertEquals(postDocumentFolder, getDocumentFolder);
 		assertValid(getDocumentFolder);
-	}
-
-	protected Long testGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-			DocumentFolder documentFolder)
-		throws Exception {
-
-		return documentFolder.getSiteId();
 	}
 
 	protected DocumentFolder
@@ -2991,10 +2722,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" +
-												testGraphQLGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-													documentFolder) + "\"");
-
+											"\"" + documentFolder.getSiteId() +
+												"\"");
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -3024,9 +2753,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 											put(
 												"siteKey",
 												"\"" +
-													testGraphQLGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-														documentFolder) + "\"");
-
+													documentFolder.getSiteId() +
+														"\"");
 											put(
 												"externalReferenceCode",
 												"\"" +
@@ -3038,14 +2766,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 									getGraphQLFields()))),
 						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 						"Object/documentsFolderByExternalReferenceCode"))));
-	}
-
-	protected Long
-			testGraphQLGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-				DocumentFolder documentFolder)
-		throws Exception {
-
-		return documentFolder.getSiteId();
 	}
 
 	@Test
@@ -3111,6 +2831,328 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	}
 
 	@Test
+	public void testPatchDocumentFolder() throws Exception {
+		DocumentFolder postDocumentFolder =
+			testPatchDocumentFolder_addDocumentFolder();
+
+		DocumentFolder randomPatchDocumentFolder = randomPatchDocumentFolder();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder patchDocumentFolder =
+			documentFolderResource.patchDocumentFolder(
+				postDocumentFolder.getId(), randomPatchDocumentFolder);
+
+		DocumentFolder expectedPatchDocumentFolder = postDocumentFolder.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchDocumentFolder, expectedPatchDocumentFolder);
+
+		DocumentFolder getDocumentFolder =
+			documentFolderResource.getDocumentFolder(
+				patchDocumentFolder.getId());
+
+		assertEquals(expectedPatchDocumentFolder, getDocumentFolder);
+		assertValid(getDocumentFolder);
+	}
+
+	protected DocumentFolder testPatchDocumentFolder_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPostAssetLibraryDocumentFolder() throws Exception {
+		DocumentFolder randomDocumentFolder = randomDocumentFolder();
+
+		DocumentFolder postDocumentFolder =
+			testPostAssetLibraryDocumentFolder_addDocumentFolder(
+				randomDocumentFolder);
+
+		assertEquals(randomDocumentFolder, postDocumentFolder);
+		assertValid(postDocumentFolder);
+	}
+
+	protected DocumentFolder
+			testPostAssetLibraryDocumentFolder_addDocumentFolder(
+				DocumentFolder documentFolder)
+		throws Exception {
+
+		return documentFolderResource.postAssetLibraryDocumentFolder(
+			testGetAssetLibraryDocumentFoldersPage_getAssetLibraryId(),
+			documentFolder);
+	}
+
+	@Test
+	public void testPostDocumentFolderDocumentFolder() throws Exception {
+		DocumentFolder randomDocumentFolder = randomDocumentFolder();
+
+		DocumentFolder postDocumentFolder =
+			testPostDocumentFolderDocumentFolder_addDocumentFolder(
+				randomDocumentFolder);
+
+		assertEquals(randomDocumentFolder, postDocumentFolder);
+		assertValid(postDocumentFolder);
+	}
+
+	protected DocumentFolder
+			testPostDocumentFolderDocumentFolder_addDocumentFolder(
+				DocumentFolder documentFolder)
+		throws Exception {
+
+		return documentFolderResource.postDocumentFolderDocumentFolder(
+			testGetDocumentFolderDocumentFoldersPage_getParentDocumentFolderId(),
+			documentFolder);
+	}
+
+	@Test
+	public void testPostSiteDocumentFolder() throws Exception {
+		DocumentFolder randomDocumentFolder = randomDocumentFolder();
+
+		DocumentFolder postDocumentFolder =
+			testPostSiteDocumentFolder_addDocumentFolder(randomDocumentFolder);
+
+		assertEquals(randomDocumentFolder, postDocumentFolder);
+		assertValid(postDocumentFolder);
+	}
+
+	protected DocumentFolder testPostSiteDocumentFolder_addDocumentFolder(
+			DocumentFolder documentFolder)
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGetSiteDocumentFoldersPage_getSiteId(), documentFolder);
+	}
+
+	@Test
+	public void testGraphQLPostSiteDocumentFolder() throws Exception {
+		DocumentFolder randomDocumentFolder = randomDocumentFolder();
+
+		DocumentFolder documentFolder =
+			testGraphQLDocumentFolder_addDocumentFolder(randomDocumentFolder);
+
+		Assert.assertTrue(equals(randomDocumentFolder, documentFolder));
+	}
+
+	@Test
+	public void testPutAssetLibraryDocumentFolderPermissionsPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testPutAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			documentFolderResource.
+				putAssetLibraryDocumentFolderPermissionsPageHttpResponse(
+					testDepotEntry.getDepotEntryId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"PERMISSIONS"});
+								setRoleName(role.getName());
+							}
+						}
+					}));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.
+				putAssetLibraryDocumentFolderPermissionsPageHttpResponse(
+					testDepotEntry.getDepotEntryId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"-"});
+								setRoleName("-");
+							}
+						}
+					}));
+	}
+
+	protected DocumentFolder
+			testPutAssetLibraryDocumentFolderPermissionsPage_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postAssetLibraryDocumentFolder(
+			testDepotEntry.getDepotEntryId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPutDocumentFolder() throws Exception {
+		DocumentFolder postDocumentFolder =
+			testPutDocumentFolder_addDocumentFolder();
+
+		DocumentFolder randomDocumentFolder = randomDocumentFolder();
+
+		DocumentFolder putDocumentFolder =
+			documentFolderResource.putDocumentFolder(
+				postDocumentFolder.getId(), randomDocumentFolder);
+
+		assertEquals(randomDocumentFolder, putDocumentFolder);
+		assertValid(putDocumentFolder);
+
+		DocumentFolder getDocumentFolder =
+			documentFolderResource.getDocumentFolder(putDocumentFolder.getId());
+
+		assertEquals(randomDocumentFolder, getDocumentFolder);
+		assertValid(getDocumentFolder);
+	}
+
+	protected DocumentFolder testPutDocumentFolder_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPutDocumentFolderPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testPutDocumentFolderPermissionsPage_addDocumentFolder();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			documentFolderResource.putDocumentFolderPermissionsPageHttpResponse(
+				documentFolder.getId(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"VIEW"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.putDocumentFolderPermissionsPageHttpResponse(
+				0L,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
+	}
+
+	protected DocumentFolder
+			testPutDocumentFolderPermissionsPage_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPutDocumentFolderSubscribe() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testPutDocumentFolderSubscribe_addDocumentFolder();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentFolderResource.putDocumentFolderSubscribeHttpResponse(
+				documentFolder.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.putDocumentFolderSubscribeHttpResponse(0L));
+	}
+
+	protected DocumentFolder testPutDocumentFolderSubscribe_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPutDocumentFolderUnsubscribe() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testPutDocumentFolderUnsubscribe_addDocumentFolder();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentFolderResource.putDocumentFolderUnsubscribeHttpResponse(
+				documentFolder.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.putDocumentFolderUnsubscribeHttpResponse(
+				0L));
+	}
+
+	protected DocumentFolder
+			testPutDocumentFolderUnsubscribe_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
+	public void testPutSiteDocumentFolderPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentFolder documentFolder =
+			testPutSiteDocumentFolderPermissionsPage_addDocumentFolder();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			documentFolderResource.
+				putSiteDocumentFolderPermissionsPageHttpResponse(
+					documentFolder.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"PERMISSIONS"});
+								setRoleName(role.getName());
+							}
+						}
+					}));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.
+				putSiteDocumentFolderPermissionsPageHttpResponse(
+					documentFolder.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"-"});
+								setRoleName("-");
+							}
+						}
+					}));
+	}
+
+	protected DocumentFolder
+			testPutSiteDocumentFolderPermissionsPage_addDocumentFolder()
+		throws Exception {
+
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
+	}
+
+	@Test
 	public void testPutSiteDocumentsFolderByExternalReferenceCode()
 		throws Exception {
 
@@ -3122,8 +3164,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		DocumentFolder putDocumentFolder =
 			documentFolderResource.
 				putSiteDocumentsFolderByExternalReferenceCode(
-					testPutSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						postDocumentFolder),
+					postDocumentFolder.getSiteId(),
 					postDocumentFolder.getExternalReferenceCode(),
 					randomDocumentFolder);
 
@@ -3133,8 +3174,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		DocumentFolder getDocumentFolder =
 			documentFolderResource.
 				getSiteDocumentsFolderByExternalReferenceCode(
-					testPutSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						putDocumentFolder),
+					putDocumentFolder.getSiteId(),
 					putDocumentFolder.getExternalReferenceCode());
 
 		assertEquals(randomDocumentFolder, getDocumentFolder);
@@ -3146,8 +3186,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		putDocumentFolder =
 			documentFolderResource.
 				putSiteDocumentsFolderByExternalReferenceCode(
-					testPutSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						newDocumentFolder),
+					newDocumentFolder.getSiteId(),
 					newDocumentFolder.getExternalReferenceCode(),
 					newDocumentFolder);
 
@@ -3157,8 +3196,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		getDocumentFolder =
 			documentFolderResource.
 				getSiteDocumentsFolderByExternalReferenceCode(
-					testPutSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-						putDocumentFolder),
+					putDocumentFolder.getSiteId(),
 					putDocumentFolder.getExternalReferenceCode());
 
 		assertEquals(newDocumentFolder, getDocumentFolder);
@@ -3168,11 +3206,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			putDocumentFolder.getExternalReferenceCode());
 	}
 
-	protected Long testPutSiteDocumentsFolderByExternalReferenceCode_getSiteId(
-			DocumentFolder documentFolder)
+	protected DocumentFolder
+			testPutSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder()
 		throws Exception {
 
-		return documentFolder.getSiteId();
+		return documentFolderResource.postSiteDocumentFolder(
+			testGroup.getGroupId(), randomDocumentFolder());
 	}
 
 	protected DocumentFolder
@@ -3182,12 +3221,59 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		return randomDocumentFolder();
 	}
 
-	protected DocumentFolder
-			testPutSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder()
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		DocumentFolder documentFolder1 =
+			testBatchEngineDeleteImportTask_addDocumentFolder();
+
+		testBatchEngineDeleteImportTask_deleteDocumentFolder(
+			200, null, documentFolder1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			documentFolderResource.getDocumentFolderHttpResponse(
+				documentFolder1.getId()));
+	}
+
+	protected DocumentFolder testBatchEngineDeleteImportTask_addDocumentFolder()
 		throws Exception {
 
-		return documentFolderResource.postSiteDocumentFolder(
-			testGroup.getGroupId(), randomDocumentFolder());
+		return testDeleteDocumentFolder_addDocumentFolder();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDocumentFolder(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.delivery.dto.v1_0.DocumentFolder", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -3442,10 +3528,9 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			valid = false;
 		}
 
-		com.liferay.portal.kernel.model.Group group = testDepotEntry.getGroup();
-
 		if (!Objects.equals(
-				documentFolder.getAssetLibraryKey(), group.getGroupKey()) &&
+				documentFolder.getAssetLibraryKey(),
+				testDepotEntryGroup.getGroupKey()) &&
 			!Objects.equals(
 				documentFolder.getSiteId(), testGroup.getGroupId())) {
 
@@ -4452,8 +4537,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	protected DocumentFolder randomDocumentFolder() throws Exception {
 		return new DocumentFolder() {
 			{
-				assetLibraryKey = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				assetLibraryKey = String.valueOf(
+					testDepotEntry.getDepotEntryId());
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
@@ -4473,6 +4558,9 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 	protected DocumentFolder randomIrrelevantDocumentFolder() throws Exception {
 		DocumentFolder randomIrrelevantDocumentFolder = randomDocumentFolder();
+
+		randomIrrelevantDocumentFolder.setAssetLibraryKey(
+			String.valueOf(irrelevantDepotEntry.getDepotEntryId()));
 
 		randomIrrelevantDocumentFolder.setSiteId(irrelevantGroup.getGroupId());
 
@@ -4496,10 +4584,36 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		};
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DocumentFolderResource documentFolderResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {

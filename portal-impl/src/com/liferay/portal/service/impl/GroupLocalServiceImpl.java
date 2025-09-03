@@ -27,6 +27,7 @@ import com.liferay.exportimport.kernel.staging.StagingURLHelperUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.CharPool;
@@ -90,6 +91,8 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.reindexer.ReindexerBridge;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -154,6 +157,7 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -170,7 +174,6 @@ import com.liferay.portal.service.http.GroupServiceHttp;
 import com.liferay.portal.theme.ThemeLoader;
 import com.liferay.portal.theme.ThemeLoaderFactory;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.site.initializer.kernel.util.SiteInitializerThreadLocal;
 import com.liferay.social.kernel.service.SocialActivityLocalService;
@@ -449,6 +452,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		if (className.equals(Group.class.getName())) {
 			if (!site && (liveGroupId == 0) &&
 				!(StringUtil.startsWith(groupKey, GroupConstants.APP) ||
+				  groupKey.equals(GroupConstants.CALENDAR) ||
 				  groupKey.equals(GroupConstants.CMS) ||
 				  groupKey.equals(GroupConstants.CONTROL_PANEL) ||
 				  groupKey.equals(GroupConstants.FORMS))) {
@@ -779,31 +783,6 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				"persistence.test.rule.aware", Boolean.TRUE));
 	}
 
-	/**
-	 * Adds a company group if it does not exist. This method is typically used
-	 * when a virtual host is added.
-	 *
-	 * @param  companyId the primary key of the company
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public void checkCompanyGroup(long companyId) throws PortalException {
-		int count = groupPersistence.countByC_C_C(
-			companyId, _classNameLocalService.getClassNameId(Company.class),
-			companyId);
-
-		if (count == 0) {
-			groupLocalService.addGroup(
-				_userLocalService.getGuestUserId(companyId),
-				GroupConstants.DEFAULT_PARENT_GROUP_ID, Company.class.getName(),
-				companyId, GroupConstants.DEFAULT_LIVE_GROUP_ID,
-				getLocalizationMap(GroupConstants.GLOBAL), null, 0, true,
-				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
-				GroupConstants.GLOBAL_FRIENDLY_URL, true, true, null);
-		}
-	}
-
 	@Override
 	public Group checkScopeGroup(Layout layout, long userId)
 		throws PortalException {
@@ -836,7 +815,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	public void checkSystemGroups(long companyId) throws PortalException {
 		String companyIdHexString = StringUtil.toHexString(companyId);
 
-		String[] systemGroups = PortalUtil.getSystemGroups();
+		String companyIdString = String.valueOf(companyId);
+
+		String[] systemGroups = ArrayUtil.append(
+			PortalUtil.getSystemGroups(), companyIdString);
 
 		for (Group group :
 				groupPersistence.findByC_GK(companyId, systemGroups)) {
@@ -866,7 +848,12 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				boolean site = true;
 				UnicodeProperties typeSettingsUnicodeProperties = null;
 
-				if (groupKey.equals(GroupConstants.CMS)) {
+				if (groupKey.equals(GroupConstants.CALENDAR)) {
+					type = GroupConstants.TYPE_SITE_PRIVATE;
+					friendlyURL = GroupConstants.CALENDAR_FRIENDLY_URL;
+					site = false;
+				}
+				else if (groupKey.equals(GroupConstants.CMS)) {
 					type = GroupConstants.TYPE_SITE_PRIVATE;
 					friendlyURL = GroupConstants.CMS_FRIENDLY_URL;
 					site = false;
@@ -899,6 +886,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 						GroupConstants.USER_PERSONAL_SITE_FRIENDLY_URL;
 					site = false;
 				}
+				else if (groupKey.equals(companyIdString)) {
+					className = Company.class.getName();
+					classPK = companyId;
+					groupKey = GroupConstants.GLOBAL;
+					type = 0;
+					friendlyURL = GroupConstants.GLOBAL_FRIENDLY_URL;
+				}
 
 				group = groupLocalService.addGroup(
 					guestUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
@@ -913,7 +907,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 
 				group.setExternalReferenceCode(
-					"L_" + TextFormatter.format(groupKey, TextFormatter.A));
+					_toExternalReferenceCode(groupKey));
 
 				group = groupPersistence.update(group);
 
@@ -1217,6 +1211,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 						resourcePermission);
 				}
 
+				// Indexer
+
 				long companyId = group.getCompanyId();
 				long[] userIds = getUserPrimaryKeys(group.getGroupId());
 
@@ -1227,6 +1223,14 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 							return null;
 						});
+				}
+
+				List<UserGroup> groupUserGroups =
+					_userGroupLocalService.getGroupUserGroups(
+						group.getGroupId());
+
+				for (UserGroup groupUserGroup : groupUserGroups) {
+					reindexUserGroup(groupUserGroup.getUserGroupId());
 				}
 
 				groupPersistence.remove(group);
@@ -1549,10 +1553,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				return null;
 			}
 
-			if (groups.size() > 1) {
-				_log.error(
-					"Live group " + liveGroupId +
-						" has more than one staging group");
+			if ((groups.size() > 1) && _log.isWarnEnabled()) {
+				_log.warn(
+					"More than one staging group uses live group ID " +
+						liveGroupId);
 			}
 
 			return groups.get(groups.size() - 1);
@@ -2204,13 +2208,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	public List<Group> getOrganizationsGroups(
 		List<Organization> organizations) {
 
-		List<Group> organizationGroups = new ArrayList<>();
-
-		for (Organization organization : organizations) {
-			organizationGroups.add(organization.getGroup());
-		}
-
-		return organizationGroups;
+		return TransformUtil.transform(
+			organizations, organization -> organization.getGroup());
 	}
 
 	/**
@@ -2368,13 +2367,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	public List<Group> getUserGroupsGroups(List<UserGroup> userGroups)
 		throws PortalException {
 
-		List<Group> userGroupGroups = new ArrayList<>();
-
-		for (UserGroup userGroup : userGroups) {
-			userGroupGroups.add(userGroup.getGroup());
-		}
-
-		return userGroupGroups;
+		return TransformUtil.transform(
+			userGroups, userGroup -> userGroup.getGroup());
 	}
 
 	/**
@@ -4736,11 +4730,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		ClassName className = ClassNameServiceHttp.fetchByClassNameId(
 			httpPrincipal, group.getClassNameId());
 
-		if (Objects.equals(className.getValue(), Company.class.getName())) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(className.getValue(), Company.class.getName());
 	}
 
 	protected boolean isParentGroup(long parentGroupId, long groupId)
@@ -4756,13 +4746,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		String treePath = group.getTreePath();
 
-		if (treePath.contains(
-				StringPool.SLASH + parentGroupId + StringPool.SLASH)) {
-
-			return true;
-		}
-
-		return false;
+		return treePath.contains(
+			StringPool.SLASH + parentGroupId + StringPool.SLASH);
 	}
 
 	protected boolean isStaging(ServiceContext serviceContext) {
@@ -4822,6 +4807,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		reindexerBridge.reindex(companyId, User.class.getName(), userIds);
 	}
 
+	protected void reindexUserGroup(long userGroupId) throws PortalException {
+		Indexer<UserGroup> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			UserGroup.class);
+
+		indexer.reindex(_userGroupLocalService.getUserGroup(userGroupId));
+	}
+
 	protected void reindexUsersInOrganization(long organizationId)
 		throws PortalException {
 
@@ -4857,6 +4849,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			TransactionCommitCallbackUtil.registerCallback(
 				() -> {
 					reindex(companyId, userIds);
+					reindexUserGroup(userGroupId);
 
 					return null;
 				});
@@ -5375,7 +5368,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	protected File publicLARFile;
 
 	private static void _clearStagingGroupIds() {
-		_stagingGroupIdsDCLSingleton.destroy(null);
+		_doClearStagingGroupIds();
 
 		if (!ClusterExecutorUtil.isEnabled()) {
 			return;
@@ -5385,7 +5378,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			() -> {
 				ClusterRequest clusterRequest =
 					ClusterRequest.createMulticastRequest(
-						_clearStagingGroupIdsMethodHandler, true);
+						_doClearStagingGroupIdsMethodHandler, true);
 
 				clusterRequest.setFireAndForget(true);
 
@@ -5393,6 +5386,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 				return null;
 			});
+	}
+
+	private static void _doClearStagingGroupIds() {
+		_stagingGroupIdsDCLSingleton.destroy(null);
 	}
 
 	private Collection<Group> _filterGroups(
@@ -5466,7 +5463,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 				if ((originalValue != null) && _log.isWarnEnabled()) {
 					_log.warn(
-						"Duplicated staging group for group with id " +
+						"More than one staging group uses live group ID " +
 							result[0]);
 				}
 			}
@@ -5493,6 +5490,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		}
 
 		return normalizedNameMap;
+	}
+
+	private String _toExternalReferenceCode(String groupKey) {
+		return "L_" + TextFormatter.format(groupKey, TextFormatter.A);
 	}
 
 	private void _validateGroupKeyChange(long groupId, String typeSettings)
@@ -5539,10 +5540,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		new MethodKey(
 			GroupServiceUtil.class, "checkRemoteStagingGroup",
 			new Class<?>[] {long.class});
-	private static final MethodHandler _clearStagingGroupIdsMethodHandler =
+	private static final MethodHandler _doClearStagingGroupIdsMethodHandler =
 		new MethodHandler(
 			new MethodKey(
-				GroupLocalServiceImpl.class, "_clearStagingGroupIds"));
+				GroupLocalServiceImpl.class, "_doClearStagingGroupIds"));
 	private static final Snapshot<ReindexerBridge> _reindexerBridgeSnapshot =
 		new Snapshot<>(GroupLocalServiceImpl.class, ReindexerBridge.class);
 	private static final DCLSingleton<Map<Long, Long>>

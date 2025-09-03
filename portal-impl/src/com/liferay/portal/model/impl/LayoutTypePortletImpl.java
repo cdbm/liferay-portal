@@ -6,6 +6,7 @@
 package com.liferay.portal.model.impl;
 
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
@@ -51,12 +52,14 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.util.JS;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.text.DateFormat;
 import java.text.Format;
@@ -70,8 +73,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * @author Brian Wing Shun Chan
@@ -307,17 +308,15 @@ public class LayoutTypePortletImpl
 			return portlets;
 		}
 
-		List<Portlet> filteredPortlets = new ArrayList<>();
+		return TransformUtil.transform(
+			portlets,
+			portlet -> {
+				if (portlet.isSystem() && !includeSystem) {
+					return null;
+				}
 
-		for (Portlet portlet : portlets) {
-			if (portlet.isSystem() && !includeSystem) {
-				continue;
-			}
-
-			filteredPortlets.add(portlet);
-		}
-
-		return filteredPortlets;
+				return portlet;
+			});
 	}
 
 	@Override
@@ -840,11 +839,7 @@ public class LayoutTypePortletImpl
 
 	@Override
 	public boolean hasStateMaxPortletId(String portletId) {
-		if (StringUtil.contains(getStateMax(), portletId)) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.contains(getStateMax(), portletId);
 	}
 
 	@Override
@@ -860,11 +855,7 @@ public class LayoutTypePortletImpl
 
 	@Override
 	public boolean hasStateMinPortletId(String portletId) {
-		if (StringUtil.contains(getStateMin(), portletId)) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.contains(getStateMin(), portletId);
 	}
 
 	@Override
@@ -933,11 +924,7 @@ public class LayoutTypePortletImpl
 		boolean customizable = GetterUtil.getBoolean(customizableString);
 
 		if (customizable) {
-			if (isLayoutSetPrototype()) {
-				return false;
-			}
-
-			return true;
+			return !isLayoutSetPrototype();
 		}
 
 		if (hasUserPreferences()) {
@@ -2163,9 +2150,10 @@ public class LayoutTypePortletImpl
 
 		String instanceId = PortletIdCodec.decodeInstanceId(columnId);
 
-		if (instanceId.indexOf(StringPool.UNDERLINE) != -1) {
-			instanceId = instanceId.substring(
-				0, instanceId.indexOf(StringPool.UNDERLINE));
+		int index = instanceId.indexOf(StringPool.UNDERLINE);
+
+		if (index != -1) {
+			instanceId = instanceId.substring(0, index);
 		}
 
 		long userId = PortletIdCodec.decodeUserId(columnId);

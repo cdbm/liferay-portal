@@ -37,16 +37,16 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.IncludeTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Juan Fernández
@@ -183,14 +183,14 @@ public class AssetLinksTag extends IncludeTag {
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		LiferayPortletRequest liferayPortletRequest =
 			PortalUtil.getLiferayPortletRequest(portletRequest);
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		LiferayPortletResponse liferayPortletResponse =
 			PortalUtil.getLiferayPortletResponse(portletResponse);

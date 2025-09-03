@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -53,6 +56,16 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.ProcessResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.ProcessSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -70,16 +83,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -126,6 +129,16 @@ public abstract class BaseProcessResourceTestCase {
 			testCompany.getCompanyId());
 
 		processResource = ProcessResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -210,23 +223,6 @@ public abstract class BaseProcessResourceTestCase {
 	}
 
 	@Test
-	public void testPostProcess() throws Exception {
-		Process randomProcess = randomProcess();
-
-		Process postProcess = testPostProcess_addProcess(randomProcess);
-
-		assertEquals(randomProcess, postProcess);
-		assertValid(postProcess);
-	}
-
-	protected Process testPostProcess_addProcess(Process process)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteProcess() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Process process = testDeleteProcess_addProcess();
@@ -236,7 +232,6 @@ public abstract class BaseProcessResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, processResource.getProcessHttpResponse(process.getId()));
-
 		assertHttpResponseStatusCode(
 			404, processResource.getProcessHttpResponse(0L));
 	}
@@ -317,6 +312,41 @@ public abstract class BaseProcessResourceTestCase {
 
 	protected Process testGraphQLDeleteProcess_addProcess() throws Exception {
 		return testGraphQLProcess_addProcess();
+	}
+
+	@Test
+	public void testDeleteProcessBatch() throws Exception {
+		Process process1 = testDeleteProcessBatch_addProcess();
+
+		testDeleteProcessBatch_deleteProcess(202, null, process1.getId());
+
+		assertHttpResponseStatusCode(
+			404, processResource.getProcessHttpResponse(process1.getId()));
+	}
+
+	protected Process testDeleteProcessBatch_addProcess() throws Exception {
+		return testDeleteProcess_addProcess();
+	}
+
+	protected void testDeleteProcessBatch_deleteProcess(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			processResource.deleteProcessBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -612,6 +642,28 @@ public abstract class BaseProcessResourceTestCase {
 	}
 
 	@Test
+	public void testGetProcessTitle() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostProcess() throws Exception {
+		Process randomProcess = randomProcess();
+
+		Process postProcess = testPostProcess_addProcess(randomProcess);
+
+		assertEquals(randomProcess, postProcess);
+		assertValid(postProcess);
+	}
+
+	protected Process testPostProcess_addProcess(Process process)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutProcess() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Process process = testPutProcess_addProcess();
@@ -630,8 +682,55 @@ public abstract class BaseProcessResourceTestCase {
 	}
 
 	@Test
-	public void testGetProcessTitle() throws Exception {
-		Assert.assertTrue(false);
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Process process1 = testBatchEngineDeleteImportTask_addProcess();
+
+		testBatchEngineDeleteImportTask_deleteProcess(
+			200, null, process1.getId());
+
+		assertHttpResponseStatusCode(
+			404, processResource.getProcessHttpResponse(process1.getId()));
+	}
+
+	protected Process testBatchEngineDeleteImportTask_addProcess()
+		throws Exception {
+
+		return testDeleteProcess_addProcess();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteProcess(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.portal.workflow.metrics.rest.dto.v1_0.Process",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected Process testGraphQLProcess_addProcess() throws Exception {
@@ -1405,7 +1504,30 @@ public abstract class BaseProcessResourceTestCase {
 		return randomProcess();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProcessResource processResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

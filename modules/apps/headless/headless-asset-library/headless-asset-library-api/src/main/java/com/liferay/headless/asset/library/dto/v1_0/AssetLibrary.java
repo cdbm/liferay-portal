@@ -5,9 +5,12 @@
 
 package com.liferay.headless.asset.library.dto.v1_0;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -15,6 +18,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -27,12 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Roberto Díaz
@@ -53,6 +56,139 @@ public class AssetLibrary implements Serializable {
 	public static AssetLibrary unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(AssetLibrary.class, json);
 	}
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "Block of actions allowed by the user making the request."
+	)
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		if (_actionsSupplier != null) {
+			actions = _actionsSupplier.get();
+
+			_actionsSupplier = null;
+		}
+
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+
+		_actionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		_actionsSupplier = () -> {
+			try {
+				return actionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "Block of actions allowed by the user making the request."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
+	@JsonIgnore
+	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's key."
+	)
+	public String getAssetLibraryKey() {
+		if (_assetLibraryKeySupplier != null) {
+			assetLibraryKey = _assetLibraryKeySupplier.get();
+
+			_assetLibraryKeySupplier = null;
+		}
+
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+
+		_assetLibraryKeySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		_assetLibraryKeySupplier = () -> {
+			try {
+				return assetLibraryKeyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's key.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String assetLibraryKey;
+
+	@JsonIgnore
+	private Supplier<String> _assetLibraryKeySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's creator user ID."
+	)
+	public Long getCreatorUserId() {
+		if (_creatorUserIdSupplier != null) {
+			creatorUserId = _creatorUserIdSupplier.get();
+
+			_creatorUserIdSupplier = null;
+		}
+
+		return creatorUserId;
+	}
+
+	public void setCreatorUserId(Long creatorUserId) {
+		this.creatorUserId = creatorUserId;
+
+		_creatorUserIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCreatorUserId(
+		UnsafeSupplier<Long, Exception> creatorUserIdUnsafeSupplier) {
+
+		_creatorUserIdSupplier = () -> {
+			try {
+				return creatorUserIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's creator user ID.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long creatorUserId;
+
+	@JsonIgnore
+	private Supplier<Long> _creatorUserIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset library's creation date."
@@ -274,7 +410,7 @@ public class AssetLibrary implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The asset library's site ID."
+		description = "The asset library's ID."
 	)
 	public Long getId() {
 		if (_idSupplier != null) {
@@ -307,7 +443,7 @@ public class AssetLibrary implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The asset library's site ID.")
+	@GraphQLField(description = "The asset library's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
@@ -399,6 +535,49 @@ public class AssetLibrary implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Map<String, String>> _name_i18nSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of this asset library's sites."
+	)
+	public Integer getNumberOfSites() {
+		if (_numberOfSitesSupplier != null) {
+			numberOfSites = _numberOfSitesSupplier.get();
+
+			_numberOfSitesSupplier = null;
+		}
+
+		return numberOfSites;
+	}
+
+	public void setNumberOfSites(Integer numberOfSites) {
+		this.numberOfSites = numberOfSites;
+
+		_numberOfSitesSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setNumberOfSites(
+		UnsafeSupplier<Integer, Exception> numberOfSitesUnsafeSupplier) {
+
+		_numberOfSitesSupplier = () -> {
+			try {
+				return numberOfSitesUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The number of this asset library's sites.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Integer numberOfSites;
+
+	@JsonIgnore
+	private Supplier<Integer> _numberOfSitesSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of this asset library's associated users."
@@ -535,6 +714,49 @@ public class AssetLibrary implements Serializable {
 	private Supplier<Settings> _settingsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's site ID."
+	)
+	public Long getSiteId() {
+		if (_siteIdSupplier != null) {
+			siteId = _siteIdSupplier.get();
+
+			_siteIdSupplier = null;
+		}
+
+		return siteId;
+	}
+
+	public void setSiteId(Long siteId) {
+		this.siteId = siteId;
+
+		_siteIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSiteId(
+		UnsafeSupplier<Long, Exception> siteIdUnsafeSupplier) {
+
+		_siteIdSupplier = () -> {
+			try {
+				return siteIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's site ID.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long siteId;
+
+	@JsonIgnore
+	private Supplier<Long> _siteIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset library's connected sites."
 	)
 	@Valid
@@ -577,6 +799,58 @@ public class AssetLibrary implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Site[]> _sitesSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	@JsonGetter("type")
+	@Valid
+	public Type getType() {
+		if (_typeSupplier != null) {
+			type = _typeSupplier.get();
+
+			_typeSupplier = null;
+		}
+
+		return type;
+	}
+
+	@JsonIgnore
+	public String getTypeAsString() {
+		Type type = getType();
+
+		if (type == null) {
+			return null;
+		}
+
+		return type.toString();
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+
+		_typeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setType(UnsafeSupplier<Type, Exception> typeUnsafeSupplier) {
+		_typeSupplier = () -> {
+			try {
+				return typeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Type type;
+
+	@JsonIgnore
+	private Supplier<Type> _typeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset library's associated users."
@@ -696,6 +970,46 @@ public class AssetLibrary implements Serializable {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		Map<String, Map<String, String>> actions = getActions();
+
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
+		String assetLibraryKey = getAssetLibraryKey();
+
+		if (assetLibraryKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetLibraryKey));
+
+			sb.append("\"");
+		}
+
+		Long creatorUserId = getCreatorUserId();
+
+		if (creatorUserId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creatorUserId\": ");
+
+			sb.append(creatorUserId);
+		}
+
 		Date dateCreated = getDateCreated();
 
 		if (dateCreated != null) {
@@ -812,6 +1126,18 @@ public class AssetLibrary implements Serializable {
 			sb.append(_toJSON(name_i18n));
 		}
 
+		Integer numberOfSites = getNumberOfSites();
+
+		if (numberOfSites != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfSites\": ");
+
+			sb.append(numberOfSites);
+		}
+
 		Integer numberOfUserAccounts = getNumberOfUserAccounts();
 
 		if (numberOfUserAccounts != null) {
@@ -848,6 +1174,18 @@ public class AssetLibrary implements Serializable {
 			sb.append(String.valueOf(settings));
 		}
 
+		Long siteId = getSiteId();
+
+		if (siteId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteId\": ");
+
+			sb.append(siteId);
+		}
+
 		Site[] sites = getSites();
 
 		if (sites != null) {
@@ -868,6 +1206,22 @@ public class AssetLibrary implements Serializable {
 			}
 
 			sb.append("]");
+		}
+
+		Type type = getType();
+
+		if (type != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"type\": ");
+
+			sb.append("\"");
+
+			sb.append(type);
+
+			sb.append("\"");
 		}
 
 		UserAccount[] userAccounts = getUserAccounts();
@@ -925,6 +1279,44 @@ public class AssetLibrary implements Serializable {
 		name = "x-class-name"
 	)
 	public String xClassName;
+
+	@GraphQLName("Type")
+	public static enum Type {
+
+		ASSET_LIBRARY("AssetLibrary"), SPACE("Space");
+
+		@JsonCreator
+		public static Type create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (Type type : values()) {
+				if (Objects.equals(type.getValue(), value)) {
+					return type;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Type(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(

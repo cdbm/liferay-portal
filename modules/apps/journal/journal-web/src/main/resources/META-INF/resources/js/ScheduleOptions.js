@@ -29,16 +29,6 @@ export default function ScheduleOptions({
 
 				return;
 			}
-
-			const date = new Date(displayDate);
-
-			if (
-				date <= new Date(new Date().toLocaleString('en-US', {timeZone}))
-			) {
-				setError(
-					Liferay.Language.get('the-date-entered-is-in-the-past')
-				);
-			}
 			else {
 				setError('');
 			}
@@ -62,13 +52,46 @@ export default function ScheduleOptions({
 				</label>
 
 				<ClayDatePicker
+					ariaLabels={{
+						buttonChooseDate: `${Liferay.Language.get(
+							'select-date'
+						)}`,
+						buttonDot: `${Liferay.Language.get(
+							'select-current-date'
+						)}`,
+						buttonNextMonth: `${Liferay.Language.get(
+							'select-next-month'
+						)}`,
+						buttonPreviousMonth: `${Liferay.Language.get(
+							'select-previous-month'
+						)}`,
+						dialog: `${Liferay.Language.get('select-date')}`,
+						selectMonth: `${Liferay.Language.get('select-a-month')}`,
+						selectYear: `${Liferay.Language.get('select-a-year')}`,
+					}}
+					firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 					id={`${portletNamespace}displayDatePicker`}
+					months={[
+						`${Liferay.Language.get('january')}`,
+						`${Liferay.Language.get('february')}`,
+						`${Liferay.Language.get('march')}`,
+						`${Liferay.Language.get('april')}`,
+						`${Liferay.Language.get('may')}`,
+						`${Liferay.Language.get('june')}`,
+						`${Liferay.Language.get('july')}`,
+						`${Liferay.Language.get('august')}`,
+						`${Liferay.Language.get('september')}`,
+						`${Liferay.Language.get('october')}`,
+						`${Liferay.Language.get('november')}`,
+						`${Liferay.Language.get('december')}`,
+					]}
 					onChange={setDisplayDate}
 					placeholder="YYYY-MM-DD HH:mm"
 					required
 					time
-					timezone={timeZone}
+					timezone={timeZone.name}
 					value={displayDate || ''}
+					weekdaysShort={dateUtils.getWeekdaysShort()}
 					years={{
 						end: 9999,
 						start: new Date().getFullYear(),
@@ -90,7 +113,7 @@ export default function ScheduleOptions({
 			</ClayForm.Group>
 
 			<p className="mt-1 text-3 text-secondary">
-				{sub(Liferay.Language.get('time-zone-x'), timeZone)}
+				{sub(Liferay.Language.get('time-zone-x'), timeZone.name)}
 			</p>
 
 			<ClayInput

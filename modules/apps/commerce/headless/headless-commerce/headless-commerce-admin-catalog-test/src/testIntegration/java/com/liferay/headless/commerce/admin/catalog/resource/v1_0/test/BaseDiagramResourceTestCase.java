@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -183,11 +183,6 @@ public abstract class BaseDiagramResourceTestCase {
 	}
 
 	@Test
-	public void testPatchDiagram() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetProductByExternalReferenceCodeDiagram()
 		throws Exception {
 
@@ -202,15 +197,15 @@ public abstract class BaseDiagramResourceTestCase {
 		assertValid(getDiagram);
 	}
 
-	protected String
-			testGetProductByExternalReferenceCodeDiagram_getExternalReferenceCode()
+	protected Diagram testGetProductByExternalReferenceCodeDiagram_addDiagram()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Diagram testGetProductByExternalReferenceCodeDiagram_addDiagram()
+	protected String
+			testGetProductByExternalReferenceCodeDiagram_getExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -338,28 +333,6 @@ public abstract class BaseDiagramResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeDiagram()
-		throws Exception {
-
-		Diagram randomDiagram = randomDiagram();
-
-		Diagram postDiagram =
-			testPostProductByExternalReferenceCodeDiagram_addDiagram(
-				randomDiagram);
-
-		assertEquals(randomDiagram, postDiagram);
-		assertValid(postDiagram);
-	}
-
-	protected Diagram testPostProductByExternalReferenceCodeDiagram_addDiagram(
-			Diagram diagram)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdDiagram() throws Exception {
 		Diagram postDiagram = testGetProductIdDiagram_addDiagram();
 
@@ -370,13 +343,14 @@ public abstract class BaseDiagramResourceTestCase {
 		assertValid(getDiagram);
 	}
 
+	protected Diagram testGetProductIdDiagram_addDiagram() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Long testGetProductIdDiagram_getId(Diagram diagram)
 		throws Exception {
 
-		return diagram.getId();
-	}
-
-	protected Diagram testGetProductIdDiagram_addDiagram() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -435,7 +409,8 @@ public abstract class BaseDiagramResourceTestCase {
 	protected Long testGraphQLGetProductIdDiagram_getId(Diagram diagram)
 		throws Exception {
 
-		return diagram.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -486,6 +461,33 @@ public abstract class BaseDiagramResourceTestCase {
 	}
 
 	@Test
+	public void testPatchDiagram() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeDiagram()
+		throws Exception {
+
+		Diagram randomDiagram = randomDiagram();
+
+		Diagram postDiagram =
+			testPostProductByExternalReferenceCodeDiagram_addDiagram(
+				randomDiagram);
+
+		assertEquals(randomDiagram, postDiagram);
+		assertValid(postDiagram);
+	}
+
+	protected Diagram testPostProductByExternalReferenceCodeDiagram_addDiagram(
+			Diagram diagram)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostProductIdDiagram() throws Exception {
 		Diagram randomDiagram = randomDiagram();
 
@@ -501,6 +503,11 @@ public abstract class BaseDiagramResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected Diagram testGraphQLDiagram_addDiagram() throws Exception {

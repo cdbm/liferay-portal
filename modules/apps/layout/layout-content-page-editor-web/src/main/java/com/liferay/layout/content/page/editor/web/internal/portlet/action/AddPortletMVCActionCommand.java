@@ -47,12 +47,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.RenderRequestFactory;
 import com.liferay.portlet.RenderResponseFactory;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletPreferences;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -62,7 +62,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+		"jakarta.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 		"mvc.command.name=/layout_content_page_editor/add_portlet"
 	},
 	service = MVCActionCommand.class
@@ -164,8 +164,7 @@ public class AddPortletMVCActionCommand
 
 			JSONObject editableValueJSONObject =
 				_fragmentEntryProcessorRegistry.
-					getDefaultEditableValuesJSONObject(
-						StringPool.BLANK, StringPool.BLANK);
+					getDefaultEditableValuesJSONObject(StringPool.BLANK, null);
 
 			editableValueJSONObject.put(
 				"instanceId", instanceId
@@ -230,7 +229,7 @@ public class AddPortletMVCActionCommand
 					actionRequest.getPreferences(), themeDisplay.getPlid());
 
 			httpServletRequest.setAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST, liferayRenderRequest);
+				JavaConstants.JAKARTA_PORTLET_REQUEST, liferayRenderRequest);
 
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
@@ -240,7 +239,7 @@ public class AddPortletMVCActionCommand
 					httpServletResponse, liferayRenderRequest);
 
 			httpServletRequest.setAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE, liferayRenderResponse);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE, liferayRenderResponse);
 
 			LayoutStructure layoutStructure =
 				LayoutStructureUtil.getLayoutStructure(

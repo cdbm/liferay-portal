@@ -42,12 +42,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * @author Stefano Motta
@@ -63,12 +63,13 @@ public class RequestQuoteTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
+			if ((commerceContext == null) ||
+				(commerceContext.getCommerceChannelId() == 0)) {
 
-			if (_commerceChannelId == 0) {
 				return SKIP_BODY;
 			}
 
+			_commerceChannelId = commerceContext.getCommerceChannelId();
 			_commerceAccountId = CommerceUtil.getCommerceAccountId(
 				commerceContext);
 

@@ -3,198 +3,113 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {PRODUCT_PRICE_MODEL, PRODUCT_SPECIFICATION_KEY} from '../enums/Product';
-import {ProductVocabulary} from '../enums/ProductVocabulary';
-import i18n from '../i18n';
-import {ConsoleUserProject} from '../services/oauth/types';
+import SearchBuilder from '../core/SearchBuilder';
+import {SkuOptions} from '../enums/Product';
+import HeadlessCommerceAdminPricing from '../services/rest/HeadlessCommerceAdminPricing';
+import {MarketplaceDeliveryProduct} from './MarketplaceDeliveryProduct';
 
-const productTypeIcons = {
-	cloud: 'cloud',
-	dxp: 'site-template',
-};
-
-export class MarketplaceProduct {
-	constructor(private product: DeliveryProduct) {}
-
-	get createDate() {
-		return this.product.createDate;
-	}
-
-	get catalogName() {
-		return this.product.catalogName;
-	}
-
-	get friendlyURL() {
-		return this.product.urls.en_US;
-	}
-
-	getPurchasableSKUs() {
-		return this.product.skus.filter(({purchasable}) => purchasable);
+export class MarketplaceProduct extends MarketplaceDeliveryProduct {
+	constructor(product: Product) {
+		super(product as unknown as DeliveryProduct);
 	}
 
 	get specificationValues() {
-		const _specifications = {} as typeof PRODUCT_SPECIFICATION_KEY;
+		const specificationValues = super.specificationValues;
 
-		for (const specificationKey in PRODUCT_SPECIFICATION_KEY) {
-			const _key =
-				specificationKey as keyof typeof PRODUCT_SPECIFICATION_KEY;
+		for (const key in specificationValues) {
+			(specificationValues as any)[key] = (specificationValues as any)[
+				key
+			].en_US;
+		}
 
-			(_specifications as any)[_key] = this.getSpecificationValue(
-				PRODUCT_SPECIFICATION_KEY[_key]
+		return specificationValues;
+	}
+
+	async getProductPrices() {
+		const product = this.product as unknown as Product;
+
+		const {items: priceLists} =
+			await HeadlessCommerceAdminPricing.getPriceLists(
+				new URLSearchParams({
+					filter: SearchBuilder.eq('type', 'price-list'),
+					nestedFields: 'priceEntries',
+					search: SearchBuilder.eq(
+						'catalogName',
+						product.catalog.name
+					),
+				})
 			);
-		}
 
-		return _specifications;
-	}
+		const prices = {} as {
+			[currency: string]: {
+				[sku: string]: {
+					[quantity: number]: number;
+				};
+			};
+		};
 
-	private getCategories(vocabulary: string) {
-		return this.product.categories.filter(
-			(category) => category.vocabulary === vocabulary
-		);
-	}
+		const marketplaceProduct = new MarketplaceProduct(product);
 
-	public getProductImages() {
-		return this.product.images
-			.filter((image) => image.priority !== 0)
-			.map((image) => image.src);
-	}
+		const productSkus = product!.skus
+			.filter((sku) =>
+				sku.skuOptions.some(
+					(skuOption) =>
+						skuOption.key ===
+							marketplaceProduct.getProductOptionKey() &&
+						skuOption.value !== SkuOptions.TRIAL
+				)
+			)
+			.map((sku) => sku.id);
 
-	public getPrice() {
-		const priceModel = this.getPriceModel();
+		for (const priceList of priceLists) {
+			const {items: priceEntries} =
+				await HeadlessCommerceAdminPricing.getPriceListEntries(
+					priceList.id,
+					new URLSearchParams({
+						filter: SearchBuilder.in('skuId', productSkus),
+						nestedFields: 'priceEntry',
+					})
+				);
 
-		if (
-			priceModel.toLowerCase() === PRODUCT_PRICE_MODEL.FREE.toLowerCase()
-		) {
-			return PRODUCT_PRICE_MODEL.FREE;
-		}
+			const tierPricesItems = await Promise.all(
+				priceEntries.map((priceEntry) =>
+					HeadlessCommerceAdminPricing.getTierPricesByPriceEntryId(
+						priceEntry.priceEntryId
+					).then(({items}) => items)
+				)
+			);
 
-		const [purchasableSKU] = this.getPurchasableSKUs();
+			for (const [index, priceEntry] of priceEntries.entries()) {
+				const tierPrices = tierPricesItems[index];
 
-		return purchasableSKU?.price?.priceFormatted;
-	}
+				const sku = product!.skus.find(
+					(sku) => sku.id === priceEntry.skuId
+				) as SKU;
 
-	public getAppCategories() {
-		return this.getCategories(ProductVocabulary.APP_CATEGORY);
-	}
+				const skuName = sku.sku.toLowerCase();
 
-	public getCloudResourceLabel(consoleUserProject: ConsoleUserProject) {
-		let output = '';
+				if (!prices[priceList.currencyCode]) {
+					prices[priceList.currencyCode] = {};
+				}
 
-		if (!consoleUserProject) {
-			return output;
-		}
+				if (!prices[priceList.currencyCode][skuName]) {
+					prices[priceList.currencyCode][skuName] = {};
+				}
 
-		const round = (value: number) => {
-			if (!value) {
-				return 0;
+				for (const tierPrice of tierPrices) {
+					if (
+						!prices[priceList.currencyCode][skuName][
+							tierPrice.minimumQuantity
+						]
+					) {
+						prices[priceList.currencyCode][skuName][
+							tierPrice.minimumQuantity
+						] = tierPrice.price;
+					}
+				}
 			}
-
-			return Math.floor(value);
-		};
-
-		output += `${consoleUserProject.environments.length} ${i18n.translate('environment')}, `;
-		output += `${round(consoleUserProject.rootProjectPlanUsage.cpu.free)} CPUs, `;
-		output += `${round(consoleUserProject.rootProjectPlanUsage.memory.free / 1000)} GB RAM`;
-
-		return output;
-	}
-
-	public getEditions() {
-		return this.getCategories(ProductVocabulary.EDITION);
-	}
-
-	public hasEnoughResources(cloudUserProject: ConsoleUserProject) {
-		if (!cloudUserProject) {
-			return false;
 		}
 
-		if (!cloudUserProject.rootProjectPlanUsage.instance.free) {
-			return false;
-		}
-
-		const cpuSpecification = Number(
-			this.getSpecificationValue(
-				PRODUCT_SPECIFICATION_KEY.APP_BUILD_NUMBER_OF_CPUS,
-				'0'
-			)
-		);
-
-		const ramSpecification = Number(
-			this.getSpecificationValue(
-				PRODUCT_SPECIFICATION_KEY.APP_BUILD_RAM_IN_GBS,
-				'0'
-			)
-		);
-
-		if (
-			cloudUserProject.rootProjectPlanUsage.cpu.free < cpuSpecification ||
-			Math.floor(
-				cloudUserProject.rootProjectPlanUsage.memory.free / 1000
-			) < ramSpecification
-		) {
-			return false;
-		}
-
-		return true;
-	}
-
-	public getPlatformOfferings() {
-		return this.getCategories(ProductVocabulary.LIFERAY_PLATFORM_OFFERING);
-	}
-
-	public getProductType() {
-		const type = this.getSpecificationValue(
-			PRODUCT_SPECIFICATION_KEY.APP_TYPE
-		);
-
-		return {
-			icon:
-				(productTypeIcons as any)[
-					type as keyof typeof productTypeIcons
-				] || 'cog',
-			label: `${type} App`,
-			type,
-		};
-	}
-
-	public getPriceModel() {
-		return this.getSpecificationValue(
-			PRODUCT_SPECIFICATION_KEY.APP_PRICING_MODEL,
-			'Free'
-		);
-	}
-
-	public getSpecification(
-		specificationKey: string | typeof PRODUCT_SPECIFICATION_KEY
-	) {
-		return this.product.productSpecifications.find(
-			(specification) =>
-				specification.specificationKey === specificationKey
-		);
-	}
-
-	private getSpecificationValue(
-		specificationKey: string | typeof PRODUCT_SPECIFICATION_KEY,
-		value = ''
-	) {
-		return this.getSpecification(specificationKey)?.value || value;
-	}
-
-	public get productImage() {
-		return this.product.urlImage;
-	}
-
-	public getProductResourceLabel() {
-		const cpuSpecification = this.getSpecificationValue(
-			PRODUCT_SPECIFICATION_KEY.APP_BUILD_NUMBER_OF_CPUS,
-			'0'
-		);
-
-		const ramSpecification = this.getSpecificationValue(
-			PRODUCT_SPECIFICATION_KEY.APP_BUILD_RAM_IN_GBS,
-			'0'
-		);
-
-		return `${cpuSpecification}CPUs, ${ramSpecification}GB RAM`;
+		return prices;
 	}
 }

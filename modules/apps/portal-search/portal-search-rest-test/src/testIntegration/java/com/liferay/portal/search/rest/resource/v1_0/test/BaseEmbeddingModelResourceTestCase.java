@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -218,12 +218,12 @@ public abstract class BaseEmbeddingModelResourceTestCase {
 	public void testGetEmbeddingEmbeddingModelsPageWithPagination()
 		throws Exception {
 
-		Page<EmbeddingModel> embeddingModelPage =
+		Page<EmbeddingModel> embeddingModelsPage =
 			embeddingModelResource.getEmbeddingEmbeddingModelsPage(
 				null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			embeddingModelPage.getTotalCount());
+			embeddingModelsPage.getTotalCount());
 
 		EmbeddingModel embeddingModel1 =
 			testGetEmbeddingEmbeddingModelsPage_addEmbeddingModel(
@@ -318,6 +318,11 @@ public abstract class BaseEmbeddingModelResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

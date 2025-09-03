@@ -18,6 +18,9 @@ import com.liferay.headless.admin.user.client.http.HttpInvoker;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.resource.v1_0.EmailAddressResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.EmailAddressSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -52,6 +55,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -69,16 +82,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -125,6 +128,16 @@ public abstract class BaseEmailAddressResourceTestCase {
 			testCompany.getCompanyId());
 
 		emailAddressResource = EmailAddressResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -204,6 +217,220 @@ public abstract class BaseEmailAddressResourceTestCase {
 		Assert.assertEquals(regex, emailAddress.getEmailAddress());
 		Assert.assertEquals(regex, emailAddress.getExternalReferenceCode());
 		Assert.assertEquals(regex, emailAddress.getType());
+	}
+
+	@Test
+	public void testDeleteEmailAddress() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		EmailAddress emailAddress = testDeleteEmailAddress_addEmailAddress();
+
+		assertHttpResponseStatusCode(
+			204,
+			emailAddressResource.deleteEmailAddressHttpResponse(
+				emailAddress.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress.getId()));
+		assertHttpResponseStatusCode(
+			404, emailAddressResource.getEmailAddressHttpResponse(0L));
+	}
+
+	protected EmailAddress testDeleteEmailAddress_addEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteEmailAddress() throws Exception {
+
+		// No namespace
+
+		EmailAddress emailAddress1 =
+			testGraphQLDeleteEmailAddress_addEmailAddress();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteEmailAddress",
+						new HashMap<String, Object>() {
+							{
+								put("emailAddressId", emailAddress1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteEmailAddress"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"emailAddress",
+					new HashMap<String, Object>() {
+						{
+							put("emailAddressId", emailAddress1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		EmailAddress emailAddress2 =
+			testGraphQLDeleteEmailAddress_addEmailAddress();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteEmailAddress",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"emailAddressId",
+										emailAddress2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteEmailAddress"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"emailAddress",
+						new HashMap<String, Object>() {
+							{
+								put("emailAddressId", emailAddress2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected EmailAddress testGraphQLDeleteEmailAddress_addEmailAddress()
+		throws Exception {
+
+		return testGraphQLEmailAddress_addEmailAddress();
+	}
+
+	@Test
+	public void testDeleteEmailAddressBatch() throws Exception {
+		EmailAddress emailAddress1 =
+			testDeleteEmailAddressBatch_addEmailAddress();
+
+		testDeleteEmailAddressBatch_deleteEmailAddress(
+			202, emailAddress1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+
+		emailAddress1 = testDeleteEmailAddressBatch_addEmailAddress();
+
+		testDeleteEmailAddressBatch_deleteEmailAddress(
+			202, null, emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+
+		emailAddress1 = testDeleteEmailAddressBatch_addEmailAddress();
+		EmailAddress emailAddress2 =
+			testDeleteEmailAddressBatch_addEmailAddress();
+
+		testDeleteEmailAddressBatch_deleteEmailAddress(
+			202, emailAddress2.getExternalReferenceCode(),
+			emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress2.getId()));
+
+		testDeleteEmailAddressBatch_deleteEmailAddress(
+			202, emailAddress2.getExternalReferenceCode(),
+			emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress2.getId()));
+	}
+
+	protected EmailAddress testDeleteEmailAddressBatch_addEmailAddress()
+		throws Exception {
+
+		return testDeleteEmailAddress_addEmailAddress();
+	}
+
+	protected void testDeleteEmailAddressBatch_deleteEmailAddress(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			emailAddressResource.deleteEmailAddressBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteEmailAddressByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		EmailAddress emailAddress =
+			testDeleteEmailAddressByExternalReferenceCode_addEmailAddress();
+
+		assertHttpResponseStatusCode(
+			204,
+			emailAddressResource.
+				deleteEmailAddressByExternalReferenceCodeHttpResponse(
+					emailAddress.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.
+				getEmailAddressByExternalReferenceCodeHttpResponse(
+					emailAddress.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.
+				getEmailAddressByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected EmailAddress
+			testDeleteEmailAddressByExternalReferenceCode_addEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -384,316 +611,6 @@ public abstract class BaseEmailAddressResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testDeleteEmailAddressByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		EmailAddress emailAddress =
-			testDeleteEmailAddressByExternalReferenceCode_addEmailAddress();
-
-		assertHttpResponseStatusCode(
-			204,
-			emailAddressResource.
-				deleteEmailAddressByExternalReferenceCodeHttpResponse(
-					emailAddress.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			emailAddressResource.
-				getEmailAddressByExternalReferenceCodeHttpResponse(
-					emailAddress.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			emailAddressResource.
-				getEmailAddressByExternalReferenceCodeHttpResponse(
-					emailAddress.getExternalReferenceCode()));
-	}
-
-	protected EmailAddress
-			testDeleteEmailAddressByExternalReferenceCode_addEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetEmailAddressByExternalReferenceCode() throws Exception {
-		EmailAddress postEmailAddress =
-			testGetEmailAddressByExternalReferenceCode_addEmailAddress();
-
-		EmailAddress getEmailAddress =
-			emailAddressResource.getEmailAddressByExternalReferenceCode(
-				postEmailAddress.getExternalReferenceCode());
-
-		assertEquals(postEmailAddress, getEmailAddress);
-		assertValid(getEmailAddress);
-	}
-
-	protected EmailAddress
-			testGetEmailAddressByExternalReferenceCode_addEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetEmailAddressByExternalReferenceCode()
-		throws Exception {
-
-		EmailAddress emailAddress =
-			testGraphQLGetEmailAddressByExternalReferenceCode_addEmailAddress();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				emailAddress,
-				EmailAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"emailAddressByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												emailAddress.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/emailAddressByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				emailAddress,
-				EmailAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"emailAddressByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													emailAddress.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/emailAddressByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetEmailAddressByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"emailAddressByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"emailAddressByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected EmailAddress
-			testGraphQLGetEmailAddressByExternalReferenceCode_addEmailAddress()
-		throws Exception {
-
-		return testGraphQLEmailAddress_addEmailAddress();
-	}
-
-	@Test
-	public void testPatchEmailAddressByExternalReferenceCode()
-		throws Exception {
-
-		EmailAddress postEmailAddress =
-			testPatchEmailAddressByExternalReferenceCode_addEmailAddress();
-
-		EmailAddress randomPatchEmailAddress = randomPatchEmailAddress();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		EmailAddress patchEmailAddress =
-			emailAddressResource.patchEmailAddressByExternalReferenceCode(
-				postEmailAddress.getExternalReferenceCode(),
-				randomPatchEmailAddress);
-
-		EmailAddress expectedPatchEmailAddress = postEmailAddress.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchEmailAddress, expectedPatchEmailAddress);
-
-		EmailAddress getEmailAddress =
-			emailAddressResource.getEmailAddressByExternalReferenceCode(
-				patchEmailAddress.getExternalReferenceCode());
-
-		assertEquals(expectedPatchEmailAddress, getEmailAddress);
-		assertValid(getEmailAddress);
-	}
-
-	protected EmailAddress
-			testPatchEmailAddressByExternalReferenceCode_addEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteEmailAddress() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		EmailAddress emailAddress = testDeleteEmailAddress_addEmailAddress();
-
-		assertHttpResponseStatusCode(
-			204,
-			emailAddressResource.deleteEmailAddressHttpResponse(
-				emailAddress.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			emailAddressResource.getEmailAddressHttpResponse(
-				emailAddress.getId()));
-
-		assertHttpResponseStatusCode(
-			404, emailAddressResource.getEmailAddressHttpResponse(0L));
-	}
-
-	protected EmailAddress testDeleteEmailAddress_addEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteEmailAddress() throws Exception {
-
-		// No namespace
-
-		EmailAddress emailAddress1 =
-			testGraphQLDeleteEmailAddress_addEmailAddress();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteEmailAddress",
-						new HashMap<String, Object>() {
-							{
-								put("emailAddressId", emailAddress1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteEmailAddress"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"emailAddress",
-					new HashMap<String, Object>() {
-						{
-							put("emailAddressId", emailAddress1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		EmailAddress emailAddress2 =
-			testGraphQLDeleteEmailAddress_addEmailAddress();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"deleteEmailAddress",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"emailAddressId",
-										emailAddress2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-				"Object/deleteEmailAddress"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminUser_v1_0",
-					new GraphQLField(
-						"emailAddress",
-						new HashMap<String, Object>() {
-							{
-								put("emailAddressId", emailAddress2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected EmailAddress testGraphQLDeleteEmailAddress_addEmailAddress()
-		throws Exception {
-
-		return testGraphQLEmailAddress_addEmailAddress();
 	}
 
 	@Test
@@ -1002,32 +919,137 @@ public abstract class BaseEmailAddressResourceTestCase {
 	}
 
 	@Test
-	public void testPatchEmailAddress() throws Exception {
-		EmailAddress postEmailAddress = testPatchEmailAddress_addEmailAddress();
+	public void testGetEmailAddressByExternalReferenceCode() throws Exception {
+		EmailAddress postEmailAddress =
+			testGetEmailAddressByExternalReferenceCode_addEmailAddress();
 
-		EmailAddress randomPatchEmailAddress = randomPatchEmailAddress();
+		EmailAddress getEmailAddress =
+			emailAddressResource.getEmailAddressByExternalReferenceCode(
+				postEmailAddress.getExternalReferenceCode());
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		EmailAddress patchEmailAddress = emailAddressResource.patchEmailAddress(
-			postEmailAddress.getId(), randomPatchEmailAddress);
-
-		EmailAddress expectedPatchEmailAddress = postEmailAddress.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchEmailAddress, expectedPatchEmailAddress);
-
-		EmailAddress getEmailAddress = emailAddressResource.getEmailAddress(
-			patchEmailAddress.getId());
-
-		assertEquals(expectedPatchEmailAddress, getEmailAddress);
+		assertEquals(postEmailAddress, getEmailAddress);
 		assertValid(getEmailAddress);
 	}
 
-	protected EmailAddress testPatchEmailAddress_addEmailAddress()
+	protected EmailAddress
+			testGetEmailAddressByExternalReferenceCode_addEmailAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetEmailAddressByExternalReferenceCode()
+		throws Exception {
+
+		EmailAddress emailAddress =
+			testGraphQLGetEmailAddressByExternalReferenceCode_addEmailAddress();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				emailAddress,
+				EmailAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"emailAddressByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												emailAddress.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/emailAddressByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				emailAddress,
+				EmailAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"emailAddressByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													emailAddress.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/emailAddressByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetEmailAddressByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"emailAddressByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"emailAddressByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected EmailAddress
+			testGraphQLGetEmailAddressByExternalReferenceCode_addEmailAddress()
+		throws Exception {
+
+		return testGraphQLEmailAddress_addEmailAddress();
 	}
 
 	@Test
@@ -1401,6 +1423,162 @@ public abstract class BaseEmailAddressResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testPatchEmailAddress() throws Exception {
+		EmailAddress postEmailAddress = testPatchEmailAddress_addEmailAddress();
+
+		EmailAddress randomPatchEmailAddress = randomPatchEmailAddress();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		EmailAddress patchEmailAddress = emailAddressResource.patchEmailAddress(
+			postEmailAddress.getId(), randomPatchEmailAddress);
+
+		EmailAddress expectedPatchEmailAddress = postEmailAddress.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchEmailAddress, expectedPatchEmailAddress);
+
+		EmailAddress getEmailAddress = emailAddressResource.getEmailAddress(
+			patchEmailAddress.getId());
+
+		assertEquals(expectedPatchEmailAddress, getEmailAddress);
+		assertValid(getEmailAddress);
+	}
+
+	protected EmailAddress testPatchEmailAddress_addEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchEmailAddressByExternalReferenceCode()
+		throws Exception {
+
+		EmailAddress postEmailAddress =
+			testPatchEmailAddressByExternalReferenceCode_addEmailAddress();
+
+		EmailAddress randomPatchEmailAddress = randomPatchEmailAddress();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		EmailAddress patchEmailAddress =
+			emailAddressResource.patchEmailAddressByExternalReferenceCode(
+				postEmailAddress.getExternalReferenceCode(),
+				randomPatchEmailAddress);
+
+		EmailAddress expectedPatchEmailAddress = postEmailAddress.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchEmailAddress, expectedPatchEmailAddress);
+
+		EmailAddress getEmailAddress =
+			emailAddressResource.getEmailAddressByExternalReferenceCode(
+				patchEmailAddress.getExternalReferenceCode());
+
+		assertEquals(expectedPatchEmailAddress, getEmailAddress);
+		assertValid(getEmailAddress);
+	}
+
+	protected EmailAddress
+			testPatchEmailAddressByExternalReferenceCode_addEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		EmailAddress emailAddress1 =
+			testBatchEngineDeleteImportTask_addEmailAddress();
+
+		testBatchEngineDeleteImportTask_deleteEmailAddress(
+			200, emailAddress1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+
+		emailAddress1 = testBatchEngineDeleteImportTask_addEmailAddress();
+
+		testBatchEngineDeleteImportTask_deleteEmailAddress(
+			200, null, emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+
+		emailAddress1 = testBatchEngineDeleteImportTask_addEmailAddress();
+		EmailAddress emailAddress2 =
+			testBatchEngineDeleteImportTask_addEmailAddress();
+
+		testBatchEngineDeleteImportTask_deleteEmailAddress(
+			200, emailAddress2.getExternalReferenceCode(),
+			emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteEmailAddress(
+			200, emailAddress2.getExternalReferenceCode(),
+			emailAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			emailAddressResource.getEmailAddressHttpResponse(
+				emailAddress2.getId()));
+	}
+
+	protected EmailAddress testBatchEngineDeleteImportTask_addEmailAddress()
+		throws Exception {
+
+		return testDeleteEmailAddress_addEmailAddress();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteEmailAddress(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.user.dto.v1_0.EmailAddress", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected EmailAddress testGraphQLEmailAddress_addEmailAddress()
@@ -2020,7 +2198,30 @@ public abstract class BaseEmailAddressResourceTestCase {
 		return randomEmailAddress();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected EmailAddressResource emailAddressResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

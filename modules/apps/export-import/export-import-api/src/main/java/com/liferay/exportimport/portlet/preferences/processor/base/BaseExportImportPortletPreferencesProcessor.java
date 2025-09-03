@@ -28,10 +28,10 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.http.GroupServiceHttp;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -53,6 +53,51 @@ public abstract class BaseExportImportPortletPreferencesProcessor
 			PortletDataContext portletDataContext, Portlet portlet,
 			String className, long primaryKeyLong)
 		throws Exception;
+
+	protected String getGroupExportPortletPreferencesExternalReferenceCode(
+		PortletDataContext portletDataContext, String externalReferenceCode) {
+
+		Group group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+			externalReferenceCode, portletDataContext.getCompanyId());
+
+		if (group == null) {
+			return externalReferenceCode;
+		}
+
+		if (ExportImportThreadLocal.isStagingInProcess() &&
+			group.isStagedRemotely()) {
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				group.getTypeSettingsProperties();
+
+			String remoteGroupExternalReferenceCode =
+				typeSettingsUnicodeProperties.get(
+					"remoteGroupExternalReferenceCode");
+
+			if (Validator.isNull(remoteGroupExternalReferenceCode)) {
+				remoteGroupExternalReferenceCode =
+					_getRemoteGroupExternalReferenceCode(
+						typeSettingsUnicodeProperties);
+			}
+
+			if (Validator.isNotNull(remoteGroupExternalReferenceCode)) {
+				externalReferenceCode = remoteGroupExternalReferenceCode;
+			}
+		}
+
+		if (!group.isStagingGroup()) {
+			return externalReferenceCode;
+		}
+
+		Group liveGroup = GroupLocalServiceUtil.fetchGroup(
+			group.getLiveGroupId());
+
+		if (liveGroup == null) {
+			return externalReferenceCode;
+		}
+
+		return liveGroup.getExternalReferenceCode();
+	}
 
 	protected String getImportPortletPreferencesNewExternalReferenceCode(
 			PortletDataContext portletDataContext, Class<?> clazz,
@@ -146,7 +191,7 @@ public abstract class BaseExportImportPortletPreferencesProcessor
 
 				if (Objects.equals(className, Group.class.getName())) {
 					newPreferencesValue =
-						_getGroupExportPortletPreferencesExternalReferenceCode(
+						getGroupExportPortletPreferencesExternalReferenceCode(
 							portletDataContext, externalReferenceCode);
 				}
 				else {
@@ -279,51 +324,6 @@ public abstract class BaseExportImportPortletPreferencesProcessor
 		}
 
 		portletPreferences.setValues(key, newValues);
-	}
-
-	private String _getGroupExportPortletPreferencesExternalReferenceCode(
-		PortletDataContext portletDataContext, String externalReferenceCode) {
-
-		Group group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
-			externalReferenceCode, portletDataContext.getCompanyId());
-
-		if (group == null) {
-			return externalReferenceCode;
-		}
-
-		if (ExportImportThreadLocal.isStagingInProcess() &&
-			group.isStagedRemotely()) {
-
-			UnicodeProperties typeSettingsUnicodeProperties =
-				group.getTypeSettingsProperties();
-
-			String remoteGroupExternalReferenceCode =
-				typeSettingsUnicodeProperties.get(
-					"remoteGroupExternalReferenceCode");
-
-			if (Validator.isNull(remoteGroupExternalReferenceCode)) {
-				remoteGroupExternalReferenceCode =
-					_getRemoteGroupExternalReferenceCode(
-						typeSettingsUnicodeProperties);
-			}
-
-			if (Validator.isNotNull(remoteGroupExternalReferenceCode)) {
-				externalReferenceCode = remoteGroupExternalReferenceCode;
-			}
-		}
-
-		if (!group.isStagingGroup()) {
-			return externalReferenceCode;
-		}
-
-		Group liveGroup = GroupLocalServiceUtil.fetchGroup(
-			group.getLiveGroupId());
-
-		if (liveGroup == null) {
-			return externalReferenceCode;
-		}
-
-		return liveGroup.getExternalReferenceCode();
 	}
 
 	private String _getRemoteGroupExternalReferenceCode(

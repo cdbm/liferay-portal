@@ -40,6 +40,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -54,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -185,14 +185,14 @@ public abstract class BaseOrderTypeResourceTestCase {
 		assertValid(getOrderType);
 	}
 
-	protected Long testGetDiscountOrderTypeOrderType_getDiscountOrderTypeId()
+	protected OrderType testGetDiscountOrderTypeOrderType_addOrderType()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected OrderType testGetDiscountOrderTypeOrderType_addOrderType()
+	protected Long testGetDiscountOrderTypeOrderType_getDiscountOrderTypeId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -324,14 +324,14 @@ public abstract class BaseOrderTypeResourceTestCase {
 		assertValid(getOrderType);
 	}
 
-	protected Long testGetPriceListOrderTypeOrderType_getPriceListOrderTypeId()
+	protected OrderType testGetPriceListOrderTypeOrderType_addOrderType()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected OrderType testGetPriceListOrderTypeOrderType_addOrderType()
+	protected Long testGetPriceListOrderTypeOrderType_getPriceListOrderTypeId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(

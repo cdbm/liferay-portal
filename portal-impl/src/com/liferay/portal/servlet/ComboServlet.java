@@ -42,6 +42,13 @@ import com.liferay.portal.util.AggregateUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.constants.DLFriendlyURLConstants;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -56,13 +63,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Eduardo Lundgren
@@ -468,13 +468,8 @@ public class ComboServlet extends HttpServlet {
 
 					baseURL = PortalUtil.getPathProxy() + baseURL;
 
-					if (StringUtil.contains(
-							stringFileContent, _CSS_CHARSET_UTF_8,
-							StringPool.BLANK)) {
-
-						stringFileContent = StringUtil.removeSubstring(
-							stringFileContent, _CSS_CHARSET_UTF_8);
-					}
+					stringFileContent = StringUtil.removeSubstring(
+						stringFileContent, _CSS_CHARSET_UTF_8);
 
 					stringFileContent = AggregateUtil.updateRelativeURLs(
 						stringFileContent, baseURL);

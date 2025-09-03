@@ -27,9 +27,13 @@ import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.test.util.ExpandoTestUtil;
+import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
+import com.liferay.object.constants.ObjectActionExecutorConstants;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
 import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.validation.rule.ObjectValidationRuleResult;
@@ -39,6 +43,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.BaseModelListener;
@@ -68,6 +75,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -79,12 +87,15 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
@@ -101,7 +112,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -204,6 +217,7 @@ public class AccountEntryLocalServiceTest {
 
 		try {
 			_accountEntryLocalService.updateAccountEntry(
+				accountEntry.getExternalReferenceCode(),
 				accountEntry.getAccountEntryId(),
 				accountEntry.getParentAccountEntryId(), "", null, false, null,
 				null, null, null, accountEntry.getStatus(),
@@ -215,6 +229,143 @@ public class AccountEntryLocalServiceTest {
 			String message = accountEntryNameException.getMessage();
 
 			Assert.assertTrue(message.contains("Name is null"));
+		}
+	}
+
+	@Test
+	public void testAccountEntryObjectActions() throws Exception {
+		Queue<Object[]> argumentsList = new LinkedList<>();
+
+		Http originalHttp = (Http)ReflectionTestUtil.getAndSetFieldValue(
+			_objectActionExecutorRegistry.getObjectActionExecutor(
+				0, ObjectActionExecutorConstants.KEY_WEBHOOK),
+			"_http",
+			ProxyUtil.newProxyInstance(
+				Http.class.getClassLoader(), new Class<?>[] {Http.class},
+				(proxy, method, arguments) -> {
+					argumentsList.add(arguments);
+
+					return null;
+				}));
+
+		try {
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					TestPropsValues.getCompanyId(),
+					AccountEntry.class.getName());
+
+			_objectActionLocalService.addObjectAction(
+				StringPool.BLANK, TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId(), true,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				RandomTestUtil.randomString(),
+				ObjectActionExecutorConstants.KEY_WEBHOOK,
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ADD,
+				UnicodePropertiesBuilder.put(
+					"url", RandomTestUtil.randomString()
+				).build(),
+				false);
+
+			String customFieldName = "A" + RandomTestUtil.randomString();
+			String customFieldValue = RandomTestUtil.randomString();
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext();
+
+			serviceContext.setExpandoBridgeAttributes(
+				HashMapBuilder.<String, Serializable>put(
+					() -> {
+						ExpandoColumn expandoColumn = ExpandoTestUtil.addColumn(
+							ExpandoTestUtil.addTable(
+								PortalUtil.getClassNameId(AccountEntry.class),
+								ExpandoTableConstants.DEFAULT_TABLE_NAME),
+							customFieldName, ExpandoColumnConstants.STRING);
+
+						return expandoColumn.getName();
+					},
+					customFieldValue
+				).build());
+
+			AccountEntry accountEntry =
+				_accountEntryLocalService.addAccountEntry(
+					StringPool.BLANK, TestPropsValues.getUserId(), 0,
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(), null,
+					RandomTestUtil.randomString() + "@liferay.com", null,
+					StringPool.BLANK,
+					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
+					WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+			Object[] arguments = argumentsList.poll();
+
+			Http.Options options = (Http.Options)arguments[0];
+
+			Http.Body body = options.getBody();
+
+			JSONObject payloadJSONObject = _jsonFactory.createJSONObject(
+				body.getContent());
+
+			Assert.assertEquals(
+				customFieldValue,
+				JSONUtil.getValue(
+					payloadJSONObject, "JSONObject/modelDTOAccount",
+					"Object/customFields/" + customFieldName, "Object/0",
+					"Object/customValue", "Object/data"));
+
+			argumentsList.clear();
+
+			_objectActionLocalService.addObjectAction(
+				StringPool.BLANK, TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId(), true,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				RandomTestUtil.randomString(),
+				ObjectActionExecutorConstants.KEY_WEBHOOK,
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
+				UnicodePropertiesBuilder.put(
+					"url", RandomTestUtil.randomString()
+				).build(),
+				false);
+
+			customFieldValue = RandomTestUtil.randomString();
+			serviceContext = ServiceContextTestUtil.getServiceContext();
+
+			serviceContext.setExpandoBridgeAttributes(
+				HashMapBuilder.<String, Serializable>put(
+					customFieldName, customFieldValue
+				).build());
+
+			_accountEntryLocalService.updateAccountEntry(
+				accountEntry.getExternalReferenceCode(),
+				accountEntry.getAccountEntryId(), 0, accountEntry.getName(),
+				accountEntry.getDescription(), false, null,
+				accountEntry.getEmailAddress(), null,
+				accountEntry.getTaxIdNumber(),
+				WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+			arguments = argumentsList.poll();
+
+			options = (Http.Options)arguments[0];
+
+			body = options.getBody();
+
+			payloadJSONObject = _jsonFactory.createJSONObject(
+				body.getContent());
+
+			Assert.assertEquals(
+				customFieldValue,
+				JSONUtil.getValue(
+					payloadJSONObject, "JSONObject/modelDTOAccount",
+					"Object/customFields/" + customFieldName, "Object/0",
+					"Object/customValue", "Object/data"));
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				_objectActionExecutorRegistry.getObjectActionExecutor(
+					0, ObjectActionExecutorConstants.KEY_WEBHOOK),
+				"_http", originalHttp);
 		}
 	}
 
@@ -546,13 +697,13 @@ public class AccountEntryLocalServiceTest {
 
 		Address address = _addressLocalService.addAddress(
 			null, accountEntry.getUserId(), AccountEntry.class.getName(),
-			accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, RandomTestUtil.randomString(), null, 0, 0,
+			accountEntry.getAccountEntryId(), 0,
 			_listTypeLocalService.getListTypeId(
 				accountEntry.getCompanyId(), "personal",
 				ListTypeConstants.CONTACT_ADDRESS),
-			false, false, "1234567890",
+			0, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			false, RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), null, null, null, null, "1234567890",
 			ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertNotNull(address);
@@ -584,12 +735,12 @@ public class AccountEntryLocalServiceTest {
 	}
 
 	@Test
-	public void testGetOrAddIncompleteAccountEntry() throws Exception {
+	public void testGetOrAddEmptyAccountEntry() throws Exception {
 
 		// Lazy referencing disabled
 
 		try {
-			_accountEntryLocalService.getOrAddIncompleteAccountEntry(
+			_accountEntryLocalService.getOrAddEmptyAccountEntry(
 				RandomTestUtil.randomString(), TestPropsValues.getCompanyId(),
 				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 				AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
@@ -606,14 +757,14 @@ public class AccountEntryLocalServiceTest {
 				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
 			AccountEntry accountEntry =
-				_accountEntryLocalService.getOrAddIncompleteAccountEntry(
+				_accountEntryLocalService.getOrAddEmptyAccountEntry(
 					RandomTestUtil.randomString(),
 					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 					RandomTestUtil.randomString(),
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
 
 			_assertStatus(
-				accountEntry, WorkflowConstants.STATUS_INCOMPLETE,
+				accountEntry, WorkflowConstants.STATUS_EMPTY,
 				TestPropsValues.getUser());
 			Assert.assertFalse(_hasWorkflowInstance(accountEntry));
 		}
@@ -626,14 +777,14 @@ public class AccountEntryLocalServiceTest {
 			_enableWorkflow();
 
 			AccountEntry accountEntry =
-				_accountEntryLocalService.getOrAddIncompleteAccountEntry(
+				_accountEntryLocalService.getOrAddEmptyAccountEntry(
 					RandomTestUtil.randomString(),
 					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 					RandomTestUtil.randomString(),
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
 
 			_assertStatus(
-				accountEntry, WorkflowConstants.STATUS_INCOMPLETE,
+				accountEntry, WorkflowConstants.STATUS_EMPTY,
 				TestPropsValues.getUser());
 			Assert.assertFalse(_hasWorkflowInstance(accountEntry));
 		}
@@ -1170,6 +1321,7 @@ public class AccountEntryLocalServiceTest {
 			).build());
 
 		accountEntry = _accountEntryLocalService.updateAccountEntry(
+			accountEntry.getExternalReferenceCode(),
 			accountEntry.getAccountEntryId(),
 			accountEntry.getParentAccountEntryId(), accountEntry.getName(),
 			accountEntry.getDescription(), false, expectedDomains,
@@ -1180,6 +1332,7 @@ public class AccountEntryLocalServiceTest {
 			expectedDomains, accountEntry.getDomainsArray());
 
 		accountEntry = _accountEntryLocalService.updateAccountEntry(
+			accountEntry.getExternalReferenceCode(),
 			accountEntry.getAccountEntryId(),
 			accountEntry.getParentAccountEntryId(), accountEntry.getName(),
 			accountEntry.getDescription(), false, null,
@@ -1213,18 +1366,19 @@ public class AccountEntryLocalServiceTest {
 				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
 			AccountEntry accountEntry =
-				_accountEntryLocalService.getOrAddIncompleteAccountEntry(
+				_accountEntryLocalService.getOrAddEmptyAccountEntry(
 					RandomTestUtil.randomString(),
 					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 					RandomTestUtil.randomString(),
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
 
 			_assertStatus(
-				accountEntry, WorkflowConstants.STATUS_INCOMPLETE,
+				accountEntry, WorkflowConstants.STATUS_EMPTY,
 				TestPropsValues.getUser());
 			Assert.assertFalse(_hasWorkflowInstance(accountEntry));
 
 			accountEntry = _accountEntryLocalService.updateAccountEntry(
+				accountEntry.getExternalReferenceCode(),
 				accountEntry.getAccountEntryId(),
 				accountEntry.getParentAccountEntryId(), accountEntry.getName(),
 				accountEntry.getDescription(), false, null,
@@ -1245,18 +1399,19 @@ public class AccountEntryLocalServiceTest {
 			_enableWorkflow();
 
 			AccountEntry accountEntry =
-				_accountEntryLocalService.getOrAddIncompleteAccountEntry(
+				_accountEntryLocalService.getOrAddEmptyAccountEntry(
 					RandomTestUtil.randomString(),
 					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 					RandomTestUtil.randomString(),
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
 
 			_assertStatus(
-				accountEntry, WorkflowConstants.STATUS_INCOMPLETE,
+				accountEntry, WorkflowConstants.STATUS_EMPTY,
 				TestPropsValues.getUser());
 			Assert.assertFalse(_hasWorkflowInstance(accountEntry));
 
 			accountEntry = _accountEntryLocalService.updateAccountEntry(
+				accountEntry.getExternalReferenceCode(),
 				accountEntry.getAccountEntryId(),
 				accountEntry.getParentAccountEntryId(), accountEntry.getName(),
 				accountEntry.getDescription(), false, null,
@@ -1479,12 +1634,12 @@ public class AccountEntryLocalServiceTest {
 		Assert.assertEquals(
 			expectedAccountEntries.length, baseModelSearchResult.getLength());
 
-		List<AccountEntry> expectedAccountEntriesList = Arrays.asList(
-			expectedAccountEntries);
-
 		Assert.assertTrue(
-			expectedAccountEntriesList.containsAll(
-				baseModelSearchResult.getBaseModels()));
+			Arrays.asList(
+				expectedAccountEntries
+			).containsAll(
+				baseModelSearchResult.getBaseModels()
+			));
 	}
 
 	private void _assertStatus(
@@ -1506,7 +1661,7 @@ public class AccountEntryLocalServiceTest {
 
 	private void _enableWorkflow() throws Exception {
 		_workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, AccountEntry.class.getName(),
 			0, 0, "Single Approver", 1);
 	}
@@ -1640,6 +1795,15 @@ public class AccountEntryLocalServiceTest {
 
 	@Inject
 	private ClassNameLocalService _classNameLocalService;
+
+	@Inject
+	private JSONFactory _jsonFactory;
+
+	@Inject
+	private ObjectActionExecutorRegistry _objectActionExecutorRegistry;
+
+	@Inject
+	private ObjectActionLocalService _objectActionLocalService;
 
 	@Inject
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

@@ -7,8 +7,8 @@ package com.liferay.jenkins.results.parser;
 
 import com.liferay.jenkins.results.parser.metrics.BuildHistoryProcessor;
 import com.liferay.jenkins.results.parser.metrics.BuildHistoryReport;
-import com.liferay.jenkins.results.parser.testray.TestrayS3Bucket;
-import com.liferay.jenkins.results.parser.testray.TestrayS3Object;
+import com.liferay.jenkins.results.parser.testray.TestrayCloudBucket;
+import com.liferay.jenkins.results.parser.testray.TestrayCloudObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -35,6 +36,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * @author Kenji Heigel
@@ -283,7 +287,8 @@ public class GenerateReportsBuildRunner extends BaseBuildRunner<BuildData> {
 				DateTimeFormatter.ofPattern("yyyy-MM"));
 		}
 
-		TestrayS3Bucket testrayS3Bucket = TestrayS3Bucket.getInstance();
+		TestrayCloudBucket testrayCloudBucket =
+			TestrayCloudBucket.getInstance();
 
 		List<String> keys = new ArrayList<>();
 
@@ -307,7 +312,7 @@ public class GenerateReportsBuildRunner extends BaseBuildRunner<BuildData> {
 			File testrayResultsBucketLocalDir = new File(
 				_getBuildProperty("google.cloud.bucket.local.dir[testray]"));
 
-			testrayS3Bucket.downloadTestrayS3Objects(
+			testrayCloudBucket.downloadTestrayCloudObjects(
 				testrayResultsBucketLocalDir, keys);
 		}
 		catch (TimeoutException timeoutException) {
@@ -368,26 +373,11 @@ public class GenerateReportsBuildRunner extends BaseBuildRunner<BuildData> {
 		CISystemStatusReportUtil.writeJenkinsDataJavaScriptFile(
 			filePath + "/js/jenkins-data.js");
 
-		String testrayDataFilepath = null;
+		String testrayDataJSGCPFilePath = JenkinsResultsParserUtil.combine(
+			_getGCPBucketBasePath(), "/data/", _getReportDirName(reportName),
+			"/testray-data.js");
 
-		try {
-			Process process = JenkinsResultsParserUtil.executeBashCommands(
-				1000 * 30,
-				JenkinsResultsParserUtil.combine(
-					"ssh test-1-0 'find ", _REPORT_RSYNC_DESTINATION_DIR_PATH,
-					_getReportDirName(Report.CI_SYSTEM_STATUS.toString()),
-					"/js -name testray-data.js -mmin +60'"));
-
-			testrayDataFilepath = JenkinsResultsParserUtil.readInputStream(
-				process.getInputStream());
-		}
-		catch (IOException | TimeoutException exception) {
-			System.out.println("Unable to get age of testray-data.js");
-		}
-
-		if ((testrayDataFilepath != null) &&
-			testrayDataFilepath.contains("testray-data.js")) {
-
+		if (_isGCPReportFileStale(testrayDataJSGCPFilePath, 60)) {
 			_downloadTestrayBuildReportJSONFiles();
 
 			CISystemStatusReportUtil.writeTestrayDataJavaScriptFile(
@@ -408,13 +398,8 @@ public class GenerateReportsBuildRunner extends BaseBuildRunner<BuildData> {
 
 		if (!testrayDataJSFile.exists()) {
 			CloudBucketUtil.copyGCPFile(
-				filePath + "/js/testray-data.js",
-				JenkinsResultsParserUtil.combine(
-					_getGCPBucketBasePath(), "/data/",
-					_getReportDirName(reportName), "/testray-data.js"));
+				filePath + "/js/testray-data.js", testrayDataJSGCPFilePath);
 		}
-
-		_mergeHTMLFiles(filePath);
 
 		_updateReport(filePath);
 
@@ -664,17 +649,53 @@ public class GenerateReportsBuildRunner extends BaseBuildRunner<BuildData> {
 		sb.append(jobName);
 		sb.append("/");
 
-		TestrayS3Bucket testrayS3Bucket = TestrayS3Bucket.getInstance();
+		TestrayCloudBucket testrayCloudBucket =
+			TestrayCloudBucket.getInstance();
 
-		for (TestrayS3Object testrayS3Object :
-				testrayS3Bucket.getTestrayS3Objects(sb.toString())) {
+		for (TestrayCloudObject testrayCloudObject :
+				testrayCloudBucket.getTestrayCloudObjects(sb.toString())) {
 
-			String filePath = testrayS3Object.getKey() + "build-report.json.gz";
+			String filePath =
+				testrayCloudObject.getKey() + "build-report.json.gz";
 
 			filePaths.add(filePath);
 		}
 
 		return filePaths;
+	}
+
+	private boolean _isGCPReportFileStale(String path, long ageMinutes) {
+		JSONArray jsonArray = null;
+
+		try {
+			jsonArray = new JSONArray(CloudBucketUtil.listGCPFiles(path, "-j"));
+		}
+		catch (IOException | TimeoutException exception) {
+			System.out.println("Unable to get age of " + path);
+
+			return false;
+		}
+
+		JSONObject jsonObject = jsonArray.getJSONObject(0);
+
+		JSONObject metadataJSONObject = jsonObject.getJSONObject("metadata");
+
+		String timeCreatedString = metadataJSONObject.getString("timeCreated");
+
+		Duration duration = Duration.between(
+			Instant.from(
+				DateTimeFormatter.ISO_INSTANT.parse(timeCreatedString)),
+			Instant.now());
+
+		System.out.println(
+			path + " was last updated " + duration.toMinutes() +
+				" minutes ago");
+
+		if (duration.toMinutes() >= ageMinutes) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private void _mergeHTMLFiles(String reportDirPath) {

@@ -8,6 +8,8 @@ package com.liferay.headless.commerce.admin.order.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.order.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -15,8 +17,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Alessio Antonio Rendina
@@ -405,16 +405,16 @@ public class Order implements Cloneable, Serializable {
 
 	protected Long currencyId;
 
-	public CustomField[] getCustomFields() {
+	public Map<String, ?> getCustomFields() {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(Map<String, ?> customFields) {
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier<Map<String, ?>, Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -424,7 +424,7 @@ public class Order implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected Map<String, ?> customFields;
 
 	public String getDeliveryTermDescription() {
 		return deliveryTermDescription;

@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -41,6 +39,17 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.NotSupportedException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -50,27 +59,124 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Javier Gamarra
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseEmailAddressResourceImpl
 	implements EmailAddressResource, EntityModelResource,
 			   VulcanBatchEngineTaskItemDelegate<EmailAddress>,
 			   VulcanCRUDItemDelegate<EmailAddress> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes an email address."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "emailAddressId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/email-addresses/{emailAddressId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteEmailAddress(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("emailAddressId")
+			Long emailAddressId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/email-addresses/batch")
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteEmailAddressBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				EmailAddress.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes an email address."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path(
+		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteEmailAddressByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -91,17 +197,17 @@ public abstract class BaseEmailAddressResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
 		"/accounts/by-external-reference-code/{externalReferenceCode}/email-addresses"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Page<EmailAddress>
 			getAccountByExternalReferenceCodeEmailAddressesPage(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("externalReferenceCode")
 				String externalReferenceCode)
 		throws Exception {
 
@@ -127,18 +233,296 @@ public abstract class BaseEmailAddressResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/accounts/{accountId}/email-addresses")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/accounts/{accountId}/email-addresses")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Page<EmailAddress> getAccountEmailAddressesPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("accountId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("accountId")
 			Long accountId)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the email address."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "emailAddressId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/email-addresses/{emailAddressId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public EmailAddress getEmailAddress(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("emailAddressId")
+			Long emailAddressId)
+		throws Exception {
+
+		return new EmailAddress();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the email address."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public EmailAddress getEmailAddressByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new EmailAddress();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}/email-addresses'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the organization's email addresses."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/organizations/by-external-reference-code/{externalReferenceCode}/email-addresses"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<EmailAddress>
+			getOrganizationByExternalReferenceCodeEmailAddressesPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}/email-addresses'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the organization's email addresses."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "organizationId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/organizations/{organizationId}/email-addresses")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<EmailAddress> getOrganizationEmailAddressesPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("organizationId")
+			String organizationId)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/user-accounts/by-external-reference-code/{externalReferenceCode}/email-addresses'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the user's email addresses."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/user-accounts/by-external-reference-code/{externalReferenceCode}/email-addresses"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<EmailAddress>
+			getUserAccountByExternalReferenceCodeEmailAddressesPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/user-accounts/{userAccountId}/email-addresses'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the user's email addresses."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "userAccountId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/user-accounts/{userAccountId}/email-addresses")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<EmailAddress> getUserAccountEmailAddressesPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("userAccountId")
+			Long userAccountId)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}' -d $'{"emailAddress": ___, "externalReferenceCode": ___, "id": ___, "primary": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the email address with the information sent in the request body. Fields not present in the request body are left unchanged."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "emailAddressId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/email-addresses/{emailAddressId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public EmailAddress patchEmailAddress(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("emailAddressId")
+			Long emailAddressId,
+			EmailAddress emailAddress)
+		throws Exception {
+
+		return new EmailAddress();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"emailAddress": ___, "externalReferenceCode": ___, "id": ___, "primary": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the email address with the information sent in the request body. Fields not present in the request body are left unchanged."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path(
+		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public EmailAddress patchEmailAddressByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			EmailAddress emailAddress)
+		throws Exception {
+
+		return new EmailAddress();
 	}
 
 	/**
@@ -169,25 +553,25 @@ public abstract class BaseEmailAddressResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/accounts/{accountId}/email-addresses/export-batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/accounts/{accountId}/email-addresses/export-batch")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
 	@Override
 	public Response postAccountEmailAddressesPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("accountId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("accountId")
 			Long accountId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
+			@jakarta.ws.rs.DefaultValue("JSON")
+			@jakarta.ws.rs.QueryParam("contentType")
 			String contentType,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
+			@jakarta.ws.rs.QueryParam("fieldNames")
 			String fieldNames)
 		throws Exception {
 
@@ -208,323 +592,6 @@ public abstract class BaseEmailAddressResourceImpl
 				EmailAddress.class.getName(), callbackURL, contentType,
 				fieldNames)
 		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes an email address."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteEmailAddressByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the email address."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public EmailAddress getEmailAddressByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new EmailAddress();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"emailAddress": ___, "externalReferenceCode": ___, "primary": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates the email address with the information sent in the request body. Fields not present in the request body are left unchanged."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path(
-		"/email-addresses/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public EmailAddress patchEmailAddressByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			EmailAddress emailAddress)
-		throws Exception {
-
-		return new EmailAddress();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes an email address."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "emailAddressId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/email-addresses/{emailAddressId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteEmailAddress(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("emailAddressId")
-			Long emailAddressId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/email-addresses/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteEmailAddressBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				EmailAddress.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the email address."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "emailAddressId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/email-addresses/{emailAddressId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public EmailAddress getEmailAddress(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("emailAddressId")
-			Long emailAddressId)
-		throws Exception {
-
-		return new EmailAddress();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/email-addresses/{emailAddressId}' -d $'{"emailAddress": ___, "externalReferenceCode": ___, "primary": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates the email address with the information sent in the request body. Fields not present in the request body are left unchanged."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "emailAddressId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/email-addresses/{emailAddressId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public EmailAddress patchEmailAddress(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("emailAddressId")
-			Long emailAddressId,
-			EmailAddress emailAddress)
-		throws Exception {
-
-		return new EmailAddress();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/by-external-reference-code/{externalReferenceCode}/email-addresses'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the organization's email addresses."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/organizations/by-external-reference-code/{externalReferenceCode}/email-addresses"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<EmailAddress>
-			getOrganizationByExternalReferenceCodeEmailAddressesPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}/email-addresses'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the organization's email addresses."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "organizationId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/organizations/{organizationId}/email-addresses")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<EmailAddress> getOrganizationEmailAddressesPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("organizationId")
-			String organizationId)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
 	}
 
 	/**
@@ -555,27 +622,27 @@ public abstract class BaseEmailAddressResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path(
 		"/organizations/{organizationId}/email-addresses/export-batch"
 	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
 	@Override
 	public Response postOrganizationEmailAddressesPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("organizationId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("organizationId")
 			String organizationId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
+			@jakarta.ws.rs.DefaultValue("JSON")
+			@jakarta.ws.rs.QueryParam("contentType")
 			String contentType,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
+			@jakarta.ws.rs.QueryParam("fieldNames")
 			String fieldNames)
 		throws Exception {
 
@@ -596,75 +663,6 @@ public abstract class BaseEmailAddressResourceImpl
 				EmailAddress.class.getName(), callbackURL, contentType,
 				fieldNames)
 		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/user-accounts/by-external-reference-code/{externalReferenceCode}/email-addresses'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the user's email addresses."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/user-accounts/by-external-reference-code/{externalReferenceCode}/email-addresses"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<EmailAddress>
-			getUserAccountByExternalReferenceCodeEmailAddressesPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/user-accounts/{userAccountId}/email-addresses'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the user's email addresses."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "userAccountId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/user-accounts/{userAccountId}/email-addresses")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<EmailAddress> getUserAccountEmailAddressesPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("userAccountId")
-			Long userAccountId)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
 	}
 
 	/**
@@ -695,27 +693,27 @@ public abstract class BaseEmailAddressResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "EmailAddress")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path(
 		"/user-accounts/{userAccountId}/email-addresses/export-batch"
 	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
 	@Override
 	public Response postUserAccountEmailAddressesPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("userAccountId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("userAccountId")
 			Long userAccountId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
+			@jakarta.ws.rs.DefaultValue("JSON")
+			@jakarta.ws.rs.QueryParam("contentType")
 			String contentType,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
+			@jakarta.ws.rs.QueryParam("fieldNames")
 			String fieldNames)
 		throws Exception {
 
@@ -757,9 +755,30 @@ public abstract class BaseEmailAddressResourceImpl
 
 		UnsafeFunction<EmailAddress, EmailAddress, Exception>
 			emailAddressUnsafeFunction = emailAddress -> {
-				deleteEmailAddress(emailAddress.getId());
+				if (emailAddress.getId() != null) {
+					try {
+						deleteEmailAddress(emailAddress.getId());
 
-				return emailAddress;
+						return emailAddress;
+					}
+					catch (Exception exception) {
+						if (emailAddress.getExternalReferenceCode() != null) {
+							deleteEmailAddressByExternalReferenceCode(
+								emailAddress.getExternalReferenceCode());
+
+							return emailAddress;
+						}
+					}
+				}
+				else if (emailAddress.getExternalReferenceCode() != null) {
+					deleteEmailAddressByExternalReferenceCode(
+						emailAddress.getExternalReferenceCode());
+
+					return emailAddress;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
 			};
 
 		if (contextBatchUnsafeBiConsumer != null) {
@@ -793,13 +812,6 @@ public abstract class BaseEmailAddressResourceImpl
 			new MultivaluedHashMap<String, Object>(multivaluedMap));
 	}
 
-	@Override
-	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
-		throws Exception {
-
-		return null;
-	}
-
 	public String getResourceName() {
 		return "EmailAddress";
 	}
@@ -810,7 +822,9 @@ public abstract class BaseEmailAddressResourceImpl
 
 	@Override
 	public Page<EmailAddress> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -868,9 +882,7 @@ public abstract class BaseEmailAddressResourceImpl
 
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 			emailAddressUnsafeFunction = emailAddress -> patchEmailAddress(
-				emailAddress.getId() != null ? emailAddress.getId() :
-					_parseLong((String)parameters.get("emailAddressId")),
-				emailAddress);
+				emailAddress.getId(), emailAddress);
 		}
 
 		if (emailAddressUnsafeFunction == null) {
@@ -898,6 +910,13 @@ public abstract class BaseEmailAddressResourceImpl
 		if (value != null) {
 			return Long.parseLong(value);
 		}
+
+		return null;
+	}
+
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
 
 		return null;
 	}
@@ -958,7 +977,8 @@ public abstract class BaseEmailAddressResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1014,7 +1034,7 @@ public abstract class BaseEmailAddressResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1039,7 +1059,7 @@ public abstract class BaseEmailAddressResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1057,13 +1077,13 @@ public abstract class BaseEmailAddressResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1074,7 +1094,7 @@ public abstract class BaseEmailAddressResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1120,6 +1140,20 @@ public abstract class BaseEmailAddressResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -1135,6 +1169,80 @@ public abstract class BaseEmailAddressResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -1147,11 +1255,45 @@ public abstract class BaseEmailAddressResourceImpl
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -1171,6 +1313,104 @@ public abstract class BaseEmailAddressResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1184,6 +1424,29 @@ public abstract class BaseEmailAddressResourceImpl
 
 		return TransformUtil.unsafeTransformToLongArray(
 			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
@@ -1200,7 +1463,8 @@ public abstract class BaseEmailAddressResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

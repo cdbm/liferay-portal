@@ -11,12 +11,12 @@ import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNo
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.aui.base.BaseStyleTag;
 
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+
 import java.io.IOException;
 
 import java.util.Objects;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Iván Zaera Avellón
@@ -36,7 +36,7 @@ public class StyleTag extends BaseStyleTag {
 				_write(jspWriter, "data-senna-off", "true");
 			}
 			else if (Validator.isNotNull(senna)) {
-				_write(jspWriter, "data-senna-track", "senna");
+				_write(jspWriter, "data-senna-track", senna);
 			}
 
 			jspWriter.write(

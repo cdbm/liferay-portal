@@ -50,6 +50,14 @@ import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -58,14 +66,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -94,19 +94,20 @@ public class AssetVocabularySiteNavigationMenuItemType
 				siteNavigationMenuItem.getTypeSettings()
 			).build();
 
-		long assetVocabularyId = GetterUtil.getLong(
-			typeSettingsUnicodeProperties.get("classPK"));
+		String externalReferenceCode = GetterUtil.getString(
+			typeSettingsUnicodeProperties.get("externalReferenceCode"));
 
 		AssetVocabulary assetVocabulary =
-			_assetVocabularyLocalService.fetchAssetVocabulary(
-				assetVocabularyId);
+			_assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, siteNavigationMenuItem.getGroupId());
 
 		if (assetVocabulary == null) {
 			return false;
 		}
 
 		siteNavigationMenuItemElement.addAttribute(
-			"asset-vocabulary-id", String.valueOf(assetVocabularyId));
+			"asset-vocabulary-external-reference-code", externalReferenceCode);
 
 		portletDataContext.addReferenceElement(
 			siteNavigationMenuItem, siteNavigationMenuItemElement,
@@ -176,7 +177,7 @@ public class AssetVocabularySiteNavigationMenuItemType
 	public String getItemSelectorURL(HttpServletRequest httpServletRequest) {
 		RenderResponse renderResponse =
 			(RenderResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		AssetVocabularyItemSelectorCriterion
 			assetVocabularyItemSelectorCriterion =
@@ -375,20 +376,17 @@ public class AssetVocabularySiteNavigationMenuItemType
 		Element element = portletDataContext.getImportDataElement(
 			siteNavigationMenuItem);
 
-		long classPK = GetterUtil.getLong(
-			element.attributeValue("asset-vocabulary-id"));
+		String externalReferenceCode = GetterUtil.getString(
+			element.attributeValue("asset-vocabulary-external-reference-code"));
 
-		if (classPK <= 0) {
+		if (externalReferenceCode == null) {
 			return false;
 		}
 
-		long newClassPK = MapUtil.getLong(
-			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-				AssetVocabulary.class.getName()),
-			classPK, classPK);
-
 		AssetVocabulary assetVocabulary =
-			_assetVocabularyLocalService.fetchAssetVocabulary(newClassPK);
+			_assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, siteNavigationMenuItem.getGroupId());
 
 		if (assetVocabulary == null) {
 			return false;
@@ -398,7 +396,16 @@ public class AssetVocabularySiteNavigationMenuItemType
 			UnicodePropertiesBuilder.fastLoad(
 				siteNavigationMenuItem.getTypeSettings()
 			).put(
-				"classPK", String.valueOf(newClassPK)
+				"classPK",
+				String.valueOf(
+					MapUtil.getLong(
+						(Map<Long, Long>)
+							portletDataContext.getNewPrimaryKeysMap(
+								AssetVocabulary.class.getName()),
+						assetVocabulary.getVocabularyId(),
+						assetVocabulary.getVocabularyId()))
+			).put(
+				"externalReferenceCode", externalReferenceCode
 			).put(
 				"groupId", String.valueOf(assetVocabulary.getGroupId())
 			).put(

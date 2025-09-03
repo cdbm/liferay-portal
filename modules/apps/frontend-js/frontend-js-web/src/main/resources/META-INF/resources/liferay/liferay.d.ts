@@ -16,6 +16,16 @@ declare module Liferay {
 		): Promise<any>;
 	}
 
+	namespace Browser {
+		export function isChrome(): boolean;
+
+		export function isFirefox(): boolean;
+
+		export function isMobile(): boolean;
+
+		export function isMac(): boolean;
+	}
+
 	namespace CustomDialogs {
 		export const enabled: boolean;
 	}
@@ -248,12 +258,15 @@ declare module Liferay {
 		export function getCompanyId(): string;
 		export function getDefaultLanguageId(): Language.Locale;
 		export function getLanguageId(): Language.Locale;
+		export function getLayoutRelativeControlPanelURL(): string;
 		export function getPathContext(): string;
+		export function getPathMain(): string;
 		export function getPathThemeImages(): string;
 		export function getPathThemeSpritemap(): string;
 		export function getPortalURL(): string;
-		export function getTimeZone(): string;
+		export function getRealUserId(): string;
 		export function getSiteGroupId(): number;
+		export function getTimeZone(): string;
 		export function getUserId(): string;
 		export function isControlPanel(): boolean;
 		export function isImpersonated(): boolean;
@@ -459,6 +472,8 @@ declare module Liferay {
 			except: string,
 			name?: string
 		): Array<number> | '';
+
+		export function getDOM(arg: any): HTMLElement | null;
 
 		export function getUncheckedCheckboxes(
 			form: HTMLFormElement,

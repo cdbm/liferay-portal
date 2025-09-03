@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -83,8 +85,8 @@ public class FragmentEntryLocalServiceImpl
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Fragment entry
@@ -110,9 +112,14 @@ public class FragmentEntryLocalServiceImpl
 		_validateFragmentEntryKey(groupId, fragmentEntryKey);
 
 		if (WorkflowConstants.STATUS_APPROVED == status) {
-			_fragmentEntryValidator.validateConfiguration(configuration);
+			JSONObject configurationJSONObject =
+				_jsonFactory.safeCreateJSONObject(configuration, true);
+
+			_fragmentEntryValidator.validateConfiguration(
+				configurationJSONObject);
+
 			_fragmentEntryValidator.validateTypeOptions(type, typeOptions);
-			_validateContent(html, configuration);
+			_validateContent(html, configurationJSONObject);
 		}
 
 		FragmentEntry draftFragmentEntry = create();
@@ -137,6 +144,7 @@ public class FragmentEntryLocalServiceImpl
 		draftFragmentEntry.setConfiguration(configuration);
 		draftFragmentEntry.setIcon(icon);
 		draftFragmentEntry.setPreviewFileEntryId(previewFileEntryId);
+		draftFragmentEntry.setMarketplace(marketplace);
 		draftFragmentEntry.setReadOnly(readOnly);
 		draftFragmentEntry.setType(type);
 		draftFragmentEntry.setTypeOptions(typeOptions);
@@ -199,7 +207,7 @@ public class FragmentEntryLocalServiceImpl
 				publishedFragmentEntry.getJs(),
 				publishedFragmentEntry.isCacheable(),
 				publishedFragmentEntry.getConfiguration(),
-				publishedFragmentEntry.getIcon(), 0,
+				publishedFragmentEntry.getIcon(), 0, false,
 				publishedFragmentEntry.isReadOnly(),
 				publishedFragmentEntry.getType(),
 				publishedFragmentEntry.getTypeOptions(),
@@ -224,7 +232,7 @@ public class FragmentEntryLocalServiceImpl
 				draftFragmentEntry.getCss(), draftFragmentEntry.getHtml(),
 				draftFragmentEntry.getJs(), draftFragmentEntry.isCacheable(),
 				draftFragmentEntry.getConfiguration(),
-				draftFragmentEntry.getIcon(), 0,
+				draftFragmentEntry.getIcon(), 0, false,
 				draftFragmentEntry.isReadOnly(), draftFragmentEntry.getType(),
 				draftFragmentEntry.getTypeOptions(),
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -670,11 +678,16 @@ public class FragmentEntryLocalServiceImpl
 		_validate(name);
 
 		if (WorkflowConstants.STATUS_APPROVED == status) {
-			_fragmentEntryValidator.validateConfiguration(configuration);
+			JSONObject configurationJSONObject =
+				_jsonFactory.safeCreateJSONObject(configuration, true);
+
+			_fragmentEntryValidator.validateConfiguration(
+				configurationJSONObject);
+
 			_fragmentEntryValidator.validateTypeOptions(
 				fragmentEntry.getType(), typeOptions);
 
-			_validateContent(html, configuration);
+			_validateContent(html, configurationJSONObject);
 		}
 
 		User user = _userLocalService.getUser(userId);
@@ -991,13 +1004,14 @@ public class FragmentEntryLocalServiceImpl
 			_validate(draftFragmentEntry.getName());
 		}
 
-		_fragmentEntryValidator.validateConfiguration(
-			draftFragmentEntry.getConfiguration());
+		JSONObject configurationJSONObject = _jsonFactory.safeCreateJSONObject(
+			draftFragmentEntry.getConfiguration(), true);
+
+		_fragmentEntryValidator.validateConfiguration(configurationJSONObject);
+
 		_fragmentEntryValidator.validateTypeOptions(
 			draftFragmentEntry.getType(), draftFragmentEntry.getTypeOptions());
-		_validateContent(
-			draftFragmentEntry.getHtml(),
-			draftFragmentEntry.getConfiguration());
+		_validateContent(draftFragmentEntry.getHtml(), configurationJSONObject);
 
 		draftFragmentEntry.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -1041,11 +1055,12 @@ public class FragmentEntryLocalServiceImpl
 		}
 	}
 
-	private void _validateContent(String html, String configuration)
+	private void _validateContent(
+			String html, JSONObject configurationJSONObject)
 		throws PortalException {
 
 		_fragmentEntryProcessorRegistry.validateFragmentEntryHTML(
-			html, configuration);
+			html, configurationJSONObject);
 	}
 
 	private void _validateFragmentEntryKey(
@@ -1091,6 +1106,9 @@ public class FragmentEntryLocalServiceImpl
 
 	@Reference
 	private FragmentEntryValidator _fragmentEntryValidator;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

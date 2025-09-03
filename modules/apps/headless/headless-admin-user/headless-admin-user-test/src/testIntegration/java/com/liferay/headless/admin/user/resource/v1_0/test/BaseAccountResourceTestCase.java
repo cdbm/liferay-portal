@@ -19,6 +19,9 @@ import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.resource.v1_0.AccountResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.AccountSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseAccountResourceTestCase {
 			testCompany.getCompanyId());
 
 		accountResource = AccountResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -200,6 +213,7 @@ public abstract class BaseAccountResourceTestCase {
 		account.setDefaultShippingAddressExternalReferenceCode(regex);
 		account.setDescription(regex);
 		account.setExternalReferenceCode(regex);
+		account.setLogoBase64(regex);
 		account.setLogoExternalReferenceCode(regex);
 		account.setLogoURL(regex);
 		account.setName(regex);
@@ -218,1500 +232,13 @@ public abstract class BaseAccountResourceTestCase {
 			regex, account.getDefaultShippingAddressExternalReferenceCode());
 		Assert.assertEquals(regex, account.getDescription());
 		Assert.assertEquals(regex, account.getExternalReferenceCode());
+		Assert.assertEquals(regex, account.getLogoBase64());
 		Assert.assertEquals(regex, account.getLogoExternalReferenceCode());
 		Assert.assertEquals(regex, account.getLogoURL());
 		Assert.assertEquals(regex, account.getName());
 		Assert.assertEquals(
 			regex, account.getParentAccountExternalReferenceCode());
 		Assert.assertEquals(regex, account.getTaxId());
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPage()
-		throws Exception {
-
-		String accountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
-		String irrelevantAccountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getIrrelevantAccountGroupExternalReferenceCode();
-
-		Page<Account> page =
-			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
-				accountGroupExternalReferenceCode, null, null,
-				Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantAccountGroupExternalReferenceCode != null) {
-			Account irrelevantAccount =
-				testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-					irrelevantAccountGroupExternalReferenceCode,
-					randomIrrelevantAccount());
-
-			page =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						irrelevantAccountGroupExternalReferenceCode, null, null,
-						Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(irrelevantAccount, (List<Account>)page.getItems());
-			assertValid(
-				page,
-				testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
-					irrelevantAccountGroupExternalReferenceCode));
-		}
-
-		Account account1 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		Account account2 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		page =
-			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
-				accountGroupExternalReferenceCode, null, null,
-				Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(account1, (List<Account>)page.getItems());
-		assertContains(account2, (List<Account>)page.getItems());
-		assertValid(
-			page,
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
-				accountGroupExternalReferenceCode));
-
-		accountResource.deleteAccount(account1.getId());
-
-		accountResource.deleteAccount(account2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
-				String accountGroupExternalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String accountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
-
-		Account account1 = randomAccount();
-
-		account1 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, account1);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null,
-						getFilterString(entityField, "between", account1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
-			"eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
-			"contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
-			"eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
-			"startswith", EntityField.Type.STRING);
-	}
-
-	protected void
-			testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
-				String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String accountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
-
-		Account account1 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account2 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null,
-						getFilterString(entityField, operator, account1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithPagination()
-		throws Exception {
-
-		String accountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
-
-		Page<Account> accountPage =
-			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
-				accountGroupExternalReferenceCode, null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
-
-		Account account1 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		Account account2 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		Account account3 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, randomAccount());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Account> page1 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(account1, (List<Account>)page1.getItems());
-
-			Page<Account> page2 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(account2, (List<Account>)page2.getItems());
-
-			Page<Account> page3 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(
-							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit),
-						null);
-
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-		else {
-			Page<Account> page1 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(1, totalCount + 2), null);
-
-			List<Account> accounts1 = (List<Account>)page1.getItems();
-
-			Assert.assertEquals(
-				accounts1.toString(), totalCount + 2, accounts1.size());
-
-			Page<Account> page2 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<Account> accounts2 = (List<Account>)page2.getItems();
-
-			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
-
-			Page<Account> page3 =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(account1, (List<Account>)page3.getItems());
-			assertContains(account2, (List<Account>)page3.getItems());
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortDateTime()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(
-					account1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortDouble()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortInteger()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortString()
-		throws Exception {
-
-		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, account1, account2) -> {
-				Class<?> clazz = account1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void
-			testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
-				EntityField.Type type,
-				UnsafeTriConsumer<EntityField, Account, Account, Exception>
-					unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String accountGroupExternalReferenceCode =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
-
-		Account account1 = randomAccount();
-		Account account2 = randomAccount();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, account1, account2);
-		}
-
-		account1 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, account1);
-
-		account2 =
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				accountGroupExternalReferenceCode, account2);
-
-		Page<Account> page =
-			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
-				accountGroupExternalReferenceCode, null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> ascPage =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":asc");
-
-			assertContains(account1, (List<Account>)ascPage.getItems());
-			assertContains(account2, (List<Account>)ascPage.getItems());
-
-			Page<Account> descPage =
-				accountResource.
-					getAccountGroupByExternalReferenceCodeAccountsPage(
-						accountGroupExternalReferenceCode, null, null,
-						Pagination.of(1, (int)page.getTotalCount() + 1),
-						entityField.getName() + ":desc");
-
-			assertContains(account2, (List<Account>)descPage.getItems());
-			assertContains(account1, (List<Account>)descPage.getItems());
-		}
-	}
-
-	protected Account
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
-				String accountGroupExternalReferenceCode, Account account)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountGroupByExternalReferenceCodeAccountsPage_getIrrelevantAccountGroupExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPage() throws Exception {
-		Long accountGroupId =
-			testGetAccountGroupAccountsPage_getAccountGroupId();
-		Long irrelevantAccountGroupId =
-			testGetAccountGroupAccountsPage_getIrrelevantAccountGroupId();
-
-		Page<Account> page = accountResource.getAccountGroupAccountsPage(
-			accountGroupId, null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantAccountGroupId != null) {
-			Account irrelevantAccount =
-				testGetAccountGroupAccountsPage_addAccount(
-					irrelevantAccountGroupId, randomIrrelevantAccount());
-
-			page = accountResource.getAccountGroupAccountsPage(
-				irrelevantAccountGroupId, null, null,
-				Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(irrelevantAccount, (List<Account>)page.getItems());
-			assertValid(
-				page,
-				testGetAccountGroupAccountsPage_getExpectedActions(
-					irrelevantAccountGroupId));
-		}
-
-		Account account1 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		Account account2 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		page = accountResource.getAccountGroupAccountsPage(
-			accountGroupId, null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(account1, (List<Account>)page.getItems());
-		assertContains(account2, (List<Account>)page.getItems());
-		assertValid(
-			page,
-			testGetAccountGroupAccountsPage_getExpectedActions(accountGroupId));
-
-		accountResource.deleteAccount(account1.getId());
-
-		accountResource.deleteAccount(account2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetAccountGroupAccountsPage_getExpectedActions(
-				Long accountGroupId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long accountGroupId =
-			testGetAccountGroupAccountsPage_getAccountGroupId();
-
-		Account account1 = randomAccount();
-
-		account1 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, account1);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null,
-				getFilterString(entityField, "between", account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithFilter(
-			"eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithFilter(
-			"contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithFilter(
-			"eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithFilter(
-			"startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetAccountGroupAccountsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long accountGroupId =
-			testGetAccountGroupAccountsPage_getAccountGroupId();
-
-		Account account1 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account2 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null,
-				getFilterString(entityField, operator, account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithPagination()
-		throws Exception {
-
-		Long accountGroupId =
-			testGetAccountGroupAccountsPage_getAccountGroupId();
-
-		Page<Account> accountPage = accountResource.getAccountGroupAccountsPage(
-			accountGroupId, null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
-
-		Account account1 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		Account account2 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		Account account3 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, randomAccount());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Account> page1 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(account1, (List<Account>)page1.getItems());
-
-			Page<Account> page2 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account2, (List<Account>)page2.getItems());
-
-			Page<Account> page3 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-		else {
-			Page<Account> page1 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null, Pagination.of(1, totalCount + 2),
-				null);
-
-			List<Account> accounts1 = (List<Account>)page1.getItems();
-
-			Assert.assertEquals(
-				accounts1.toString(), totalCount + 2, accounts1.size());
-
-			Page<Account> page2 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null, Pagination.of(2, totalCount + 2),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<Account> accounts2 = (List<Account>)page2.getItems();
-
-			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
-
-			Page<Account> page3 = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(account1, (List<Account>)page3.getItems());
-			assertContains(account2, (List<Account>)page3.getItems());
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithSortDateTime()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(
-					account1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithSortDouble()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithSortInteger()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetAccountGroupAccountsPageWithSortString()
-		throws Exception {
-
-		testGetAccountGroupAccountsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, account1, account2) -> {
-				Class<?> clazz = account1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetAccountGroupAccountsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, Account, Account, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Long accountGroupId =
-			testGetAccountGroupAccountsPage_getAccountGroupId();
-
-		Account account1 = randomAccount();
-		Account account2 = randomAccount();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, account1, account2);
-		}
-
-		account1 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, account1);
-
-		account2 = testGetAccountGroupAccountsPage_addAccount(
-			accountGroupId, account2);
-
-		Page<Account> page = accountResource.getAccountGroupAccountsPage(
-			accountGroupId, null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> ascPage = accountResource.getAccountGroupAccountsPage(
-				accountGroupId, null, null,
-				Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(account1, (List<Account>)ascPage.getItems());
-			assertContains(account2, (List<Account>)ascPage.getItems());
-
-			Page<Account> descPage =
-				accountResource.getAccountGroupAccountsPage(
-					accountGroupId, null, null,
-					Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":desc");
-
-			assertContains(account2, (List<Account>)descPage.getItems());
-			assertContains(account1, (List<Account>)descPage.getItems());
-		}
-	}
-
-	protected Account testGetAccountGroupAccountsPage_addAccount(
-			Long accountGroupId, Account account)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetAccountGroupAccountsPage_getAccountGroupId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetAccountGroupAccountsPage_getIrrelevantAccountGroupId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testGetAccountsPage() throws Exception {
-		Page<Account> page = accountResource.getAccountsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		Account account1 = testGetAccountsPage_addAccount(randomAccount());
-
-		Account account2 = testGetAccountsPage_addAccount(randomAccount());
-
-		page = accountResource.getAccountsPage(
-			null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(account1, (List<Account>)page.getItems());
-		assertContains(account2, (List<Account>)page.getItems());
-		assertValid(page, testGetAccountsPage_getExpectedActions());
-
-		accountResource.deleteAccount(account1.getId());
-
-		accountResource.deleteAccount(account2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetAccountsPage_getExpectedActions()
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetAccountsPageWithFilterDateTimeEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Account account1 = randomAccount();
-
-		account1 = testGetAccountsPage_addAccount(account1);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getAccountsPage(
-				null, getFilterString(entityField, "between", account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountsPageWithFilterDoubleEquals() throws Exception {
-		testGetAccountsPageWithFilter("eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetAccountsPageWithFilterStringContains() throws Exception {
-		testGetAccountsPageWithFilter("contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountsPageWithFilterStringEquals() throws Exception {
-		testGetAccountsPageWithFilter("eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetAccountsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetAccountsPageWithFilter("startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetAccountsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Account account1 = testGetAccountsPage_addAccount(randomAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account2 = testGetAccountsPage_addAccount(randomAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getAccountsPage(
-				null, getFilterString(entityField, operator, account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountsPageWithPagination() throws Exception {
-		Page<Account> accountPage = accountResource.getAccountsPage(
-			null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
-
-		Account account1 = testGetAccountsPage_addAccount(randomAccount());
-
-		Account account2 = testGetAccountsPage_addAccount(randomAccount());
-
-		Account account3 = testGetAccountsPage_addAccount(randomAccount());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Account> page1 = accountResource.getAccountsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(account1, (List<Account>)page1.getItems());
-
-			Page<Account> page2 = accountResource.getAccountsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account2, (List<Account>)page2.getItems());
-
-			Page<Account> page3 = accountResource.getAccountsPage(
-				null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-		else {
-			Page<Account> page1 = accountResource.getAccountsPage(
-				null, null, Pagination.of(1, totalCount + 2), null);
-
-			List<Account> accounts1 = (List<Account>)page1.getItems();
-
-			Assert.assertEquals(
-				accounts1.toString(), totalCount + 2, accounts1.size());
-
-			Page<Account> page2 = accountResource.getAccountsPage(
-				null, null, Pagination.of(2, totalCount + 2), null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<Account> accounts2 = (List<Account>)page2.getItems();
-
-			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
-
-			Page<Account> page3 = accountResource.getAccountsPage(
-				null, null, Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(account1, (List<Account>)page3.getItems());
-			assertContains(account2, (List<Account>)page3.getItems());
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetAccountsPageWithSortDateTime() throws Exception {
-		testGetAccountsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(
-					account1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetAccountsPageWithSortDouble() throws Exception {
-		testGetAccountsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetAccountsPageWithSortInteger() throws Exception {
-		testGetAccountsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetAccountsPageWithSortString() throws Exception {
-		testGetAccountsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, account1, account2) -> {
-				Class<?> clazz = account1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetAccountsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, Account, Account, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Account account1 = randomAccount();
-		Account account2 = randomAccount();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, account1, account2);
-		}
-
-		account1 = testGetAccountsPage_addAccount(account1);
-
-		account2 = testGetAccountsPage_addAccount(account2);
-
-		Page<Account> page = accountResource.getAccountsPage(
-			null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> ascPage = accountResource.getAccountsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(account1, (List<Account>)ascPage.getItems());
-			assertContains(account2, (List<Account>)ascPage.getItems());
-
-			Page<Account> descPage = accountResource.getAccountsPage(
-				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":desc");
-
-			assertContains(account2, (List<Account>)descPage.getItems());
-			assertContains(account1, (List<Account>)descPage.getItems());
-		}
-	}
-
-	protected Account testGetAccountsPage_addAccount(Account account)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountsPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"accounts",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject accountsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/accounts");
-
-		long totalCount = accountsJSONObject.getLong("totalCount");
-
-		Account account1 = testGraphQLGetAccountsPage_addAccount();
-		Account account2 = testGraphQLGetAccountsPage_addAccount();
-
-		accountsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/accounts");
-
-		Assert.assertEquals(
-			totalCount + 2, accountsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			account1,
-			Arrays.asList(
-				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
-		assertContains(
-			account2,
-			Arrays.asList(
-				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		accountsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-			"JSONObject/accounts");
-
-		Assert.assertEquals(
-			totalCount + 2, accountsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			account1,
-			Arrays.asList(
-				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
-		assertContains(
-			account2,
-			Arrays.asList(
-				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
-	}
-
-	protected Account testGraphQLGetAccountsPage_addAccount() throws Exception {
-		return testGraphQLAccount_addAccount();
-	}
-
-	@Test
-	public void testPostAccount() throws Exception {
-		Account randomAccount = randomAccount();
-
-		Account postAccount = testPostAccount_addAccount(randomAccount);
-
-		assertEquals(randomAccount, postAccount);
-		assertValid(postAccount);
-	}
-
-	protected Account testPostAccount_addAccount(Account account)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account = testDeleteAccountByExternalReferenceCode_addAccount();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.deleteAccountByExternalReferenceCodeHttpResponse(
-				account.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountResource.getAccountByExternalReferenceCodeHttpResponse(
-				account.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountResource.getAccountByExternalReferenceCodeHttpResponse(
-				account.getExternalReferenceCode()));
-	}
-
-	protected Account testDeleteAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountByExternalReferenceCode() throws Exception {
-		Account postAccount =
-			testGetAccountByExternalReferenceCode_addAccount();
-
-		Account getAccount = accountResource.getAccountByExternalReferenceCode(
-			postAccount.getExternalReferenceCode());
-
-		assertEquals(postAccount, getAccount);
-		assertValid(getAccount);
-	}
-
-	protected Account testGetAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCode()
-		throws Exception {
-
-		Account account =
-			testGraphQLGetAccountByExternalReferenceCode_addAccount();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				account,
-				AccountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"accountByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												account.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/accountByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				account,
-				AccountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"accountByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													account.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/accountByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"accountByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"accountByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Account testGraphQLGetAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		return testGraphQLAccount_addAccount();
-	}
-
-	@Test
-	public void testPatchAccountByExternalReferenceCode() throws Exception {
-		Account postAccount =
-			testPatchAccountByExternalReferenceCode_addAccount();
-
-		Account randomPatchAccount = randomPatchAccount();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account patchAccount =
-			accountResource.patchAccountByExternalReferenceCode(
-				postAccount.getExternalReferenceCode(), randomPatchAccount);
-
-		Account expectedPatchAccount = postAccount.clone();
-
-		BeanTestUtil.copyProperties(randomPatchAccount, expectedPatchAccount);
-
-		Account getAccount = accountResource.getAccountByExternalReferenceCode(
-			patchAccount.getExternalReferenceCode());
-
-		assertEquals(expectedPatchAccount, getAccount);
-		assertValid(getAccount);
-	}
-
-	protected Account testPatchAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutAccountByExternalReferenceCode() throws Exception {
-		Account postAccount =
-			testPutAccountByExternalReferenceCode_addAccount();
-
-		Account randomAccount = randomAccount();
-
-		Account putAccount = accountResource.putAccountByExternalReferenceCode(
-			postAccount.getExternalReferenceCode(), randomAccount);
-
-		assertEquals(randomAccount, putAccount);
-		assertValid(putAccount);
-
-		Account getAccount = accountResource.getAccountByExternalReferenceCode(
-			putAccount.getExternalReferenceCode());
-
-		assertEquals(randomAccount, getAccount);
-		assertValid(getAccount);
-
-		Account newAccount =
-			testPutAccountByExternalReferenceCode_createAccount();
-
-		putAccount = accountResource.putAccountByExternalReferenceCode(
-			newAccount.getExternalReferenceCode(), newAccount);
-
-		assertEquals(newAccount, putAccount);
-		assertValid(putAccount);
-
-		getAccount = accountResource.getAccountByExternalReferenceCode(
-			putAccount.getExternalReferenceCode());
-
-		assertEquals(newAccount, getAccount);
-
-		Assert.assertEquals(
-			newAccount.getExternalReferenceCode(),
-			putAccount.getExternalReferenceCode());
-	}
-
-	protected Account testPutAccountByExternalReferenceCode_createAccount()
-		throws Exception {
-
-		return randomAccount();
-	}
-
-	protected Account testPutAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1724,7 +251,6 @@ public abstract class BaseAccountResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, accountResource.getAccountHttpResponse(account.getId()));
-
 		assertHttpResponseStatusCode(
 			404, accountResource.getAccountHttpResponse(0L));
 	}
@@ -1805,6 +331,215 @@ public abstract class BaseAccountResourceTestCase {
 
 	protected Account testGraphQLDeleteAccount_addAccount() throws Exception {
 		return testGraphQLAccount_addAccount();
+	}
+
+	@Test
+	public void testDeleteAccountBatch() throws Exception {
+		Account account1 = testDeleteAccountBatch_addAccount();
+
+		testDeleteAccountBatch_deleteAccount(
+			202, account1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+
+		account1 = testDeleteAccountBatch_addAccount();
+
+		testDeleteAccountBatch_deleteAccount(202, null, account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+
+		account1 = testDeleteAccountBatch_addAccount();
+		Account account2 = testDeleteAccountBatch_addAccount();
+
+		testDeleteAccountBatch_deleteAccount(
+			202, account2.getExternalReferenceCode(), account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+		assertHttpResponseStatusCode(
+			200, accountResource.getAccountHttpResponse(account2.getId()));
+
+		testDeleteAccountBatch_deleteAccount(
+			202, account2.getExternalReferenceCode(), account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account2.getId()));
+	}
+
+	protected Account testDeleteAccountBatch_addAccount() throws Exception {
+		return testDeleteAccount_addAccount();
+	}
+
+	protected void testDeleteAccountBatch_deleteAccount(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			accountResource.deleteAccountBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteAccountByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account = testDeleteAccountByExternalReferenceCode_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.deleteAccountByExternalReferenceCodeHttpResponse(
+				account.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountResource.getAccountByExternalReferenceCodeHttpResponse(
+				account.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			accountResource.getAccountByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected Account testDeleteAccountByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteOrganizationAccounts() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account = testDeleteOrganizationAccounts_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.deleteOrganizationAccountsHttpResponse(
+				testDeleteOrganizationAccounts_getOrganizationId(), null));
+	}
+
+	protected Account testDeleteOrganizationAccounts_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testDeleteOrganizationAccounts_getOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteOrganizationAccountsByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account =
+			testDeleteOrganizationAccountsByExternalReferenceCode_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.
+				deleteOrganizationAccountsByExternalReferenceCodeHttpResponse(
+					testDeleteOrganizationAccountsByExternalReferenceCode_getOrganizationId(),
+					null));
+	}
+
+	protected Account
+			testDeleteOrganizationAccountsByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteOrganizationAccountsByExternalReferenceCode_getOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteOrganizationByExternalReferenceCodeAccounts()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account =
+			testDeleteOrganizationByExternalReferenceCodeAccounts_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.
+				deleteOrganizationByExternalReferenceCodeAccountsHttpResponse(
+					testDeleteOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
+						account),
+					null));
+	}
+
+	protected Account
+			testDeleteOrganizationByExternalReferenceCodeAccounts_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
+				Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account =
+			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.
+				deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
+					testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode(),
+					null));
+	}
+
+	protected Account
+			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -2098,84 +833,1772 @@ public abstract class BaseAccountResourceTestCase {
 	}
 
 	@Test
-	public void testPatchAccount() throws Exception {
-		Account postAccount = testPatchAccount_addAccount();
+	public void testGetAccountByExternalReferenceCode() throws Exception {
+		Account postAccount =
+			testGetAccountByExternalReferenceCode_addAccount();
 
-		Account randomPatchAccount = randomPatchAccount();
+		Account getAccount = accountResource.getAccountByExternalReferenceCode(
+			postAccount.getExternalReferenceCode());
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account patchAccount = accountResource.patchAccount(
-			postAccount.getId(), randomPatchAccount);
-
-		Account expectedPatchAccount = postAccount.clone();
-
-		BeanTestUtil.copyProperties(randomPatchAccount, expectedPatchAccount);
-
-		Account getAccount = accountResource.getAccount(patchAccount.getId());
-
-		assertEquals(expectedPatchAccount, getAccount);
+		assertEquals(postAccount, getAccount);
 		assertValid(getAccount);
 	}
 
-	protected Account testPatchAccount_addAccount() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutAccount() throws Exception {
-		Account postAccount = testPutAccount_addAccount();
-
-		Account randomAccount = randomAccount();
-
-		Account putAccount = accountResource.putAccount(
-			postAccount.getId(), randomAccount);
-
-		assertEquals(randomAccount, putAccount);
-		assertValid(putAccount);
-
-		Account getAccount = accountResource.getAccount(putAccount.getId());
-
-		assertEquals(randomAccount, getAccount);
-		assertValid(getAccount);
-	}
-
-	protected Account testPutAccount_addAccount() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteOrganizationByExternalReferenceCodeAccounts()
+	protected Account testGetAccountByExternalReferenceCode_addAccount()
 		throws Exception {
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCode()
+		throws Exception {
+
 		Account account =
-			testDeleteOrganizationByExternalReferenceCodeAccounts_addAccount();
+			testGraphQLGetAccountByExternalReferenceCode_addAccount();
 
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.
-				deleteOrganizationByExternalReferenceCodeAccountsHttpResponse(
-					testDeleteOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
-						account),
-					null));
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				account,
+				AccountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												account.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				account,
+				AccountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"accountByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													account.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/accountByExternalReferenceCode"))));
 	}
 
-	protected String
-			testDeleteOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
-				Account account)
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeNotFound()
 		throws Exception {
 
-		return account.getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"accountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Account testGraphQLGetAccountByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		return testGraphQLAccount_addAccount();
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPage() throws Exception {
+		Long accountGroupId =
+			testGetAccountGroupAccountsPage_getAccountGroupId();
+		Long irrelevantAccountGroupId =
+			testGetAccountGroupAccountsPage_getIrrelevantAccountGroupId();
+
+		Page<Account> page = accountResource.getAccountGroupAccountsPage(
+			accountGroupId, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantAccountGroupId != null) {
+			Account irrelevantAccount =
+				testGetAccountGroupAccountsPage_addAccount(
+					irrelevantAccountGroupId, randomIrrelevantAccount());
+
+			page = accountResource.getAccountGroupAccountsPage(
+				irrelevantAccountGroupId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantAccount, (List<Account>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountGroupAccountsPage_getExpectedActions(
+					irrelevantAccountGroupId));
+		}
+
+		Account account1 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		Account account2 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		page = accountResource.getAccountGroupAccountsPage(
+			accountGroupId, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(account1, (List<Account>)page.getItems());
+		assertContains(account2, (List<Account>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountGroupAccountsPage_getExpectedActions(accountGroupId));
+
+		accountResource.deleteAccount(account1.getId());
+
+		accountResource.deleteAccount(account2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountGroupAccountsPage_getExpectedActions(
+				Long accountGroupId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountGroupId =
+			testGetAccountGroupAccountsPage_getAccountGroupId();
+
+		Account account1 = randomAccount();
+
+		account1 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, account1);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null,
+				getFilterString(entityField, "between", account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAccountGroupAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountGroupId =
+			testGetAccountGroupAccountsPage_getAccountGroupId();
+
+		Account account1 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account2 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null,
+				getFilterString(entityField, operator, account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithPagination()
+		throws Exception {
+
+		Long accountGroupId =
+			testGetAccountGroupAccountsPage_getAccountGroupId();
+
+		Page<Account> accountsPage =
+			accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
+
+		Account account1 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		Account account2 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		Account account3 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, randomAccount());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Account> page1 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(account1, (List<Account>)page1.getItems());
+
+			Page<Account> page2 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account2, (List<Account>)page2.getItems());
+
+			Page<Account> page3 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+		else {
+			Page<Account> page1 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null, Pagination.of(1, totalCount + 2),
+				null);
+
+			List<Account> accounts1 = (List<Account>)page1.getItems();
+
+			Assert.assertEquals(
+				accounts1.toString(), totalCount + 2, accounts1.size());
+
+			Page<Account> page2 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null, Pagination.of(2, totalCount + 2),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Account> accounts2 = (List<Account>)page2.getItems();
+
+			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
+
+			Page<Account> page3 = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null,
+				Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(account1, (List<Account>)page3.getItems());
+			assertContains(account2, (List<Account>)page3.getItems());
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithSortDateTime()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(
+					account1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithSortDouble()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithSortInteger()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupAccountsPageWithSortString()
+		throws Exception {
+
+		testGetAccountGroupAccountsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, account1, account2) -> {
+				Class<?> clazz = account1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetAccountGroupAccountsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, Account, Account, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountGroupId =
+			testGetAccountGroupAccountsPage_getAccountGroupId();
+
+		Account account1 = randomAccount();
+		Account account2 = randomAccount();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, account1, account2);
+		}
+
+		account1 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, account1);
+
+		account2 = testGetAccountGroupAccountsPage_addAccount(
+			accountGroupId, account2);
+
+		Page<Account> page = accountResource.getAccountGroupAccountsPage(
+			accountGroupId, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> ascPage = accountResource.getAccountGroupAccountsPage(
+				accountGroupId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(account1, (List<Account>)ascPage.getItems());
+			assertContains(account2, (List<Account>)ascPage.getItems());
+
+			Page<Account> descPage =
+				accountResource.getAccountGroupAccountsPage(
+					accountGroupId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(account2, (List<Account>)descPage.getItems());
+			assertContains(account1, (List<Account>)descPage.getItems());
+		}
+	}
+
+	protected Account testGetAccountGroupAccountsPage_addAccount(
+			Long accountGroupId, Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountGroupAccountsPage_getAccountGroupId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountGroupAccountsPage_getIrrelevantAccountGroupId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPage()
+		throws Exception {
+
+		String accountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
+		String irrelevantAccountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getIrrelevantAccountGroupExternalReferenceCode();
+
+		Page<Account> page =
+			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
+				accountGroupExternalReferenceCode, null, null,
+				Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantAccountGroupExternalReferenceCode != null) {
+			Account irrelevantAccount =
+				testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+					irrelevantAccountGroupExternalReferenceCode,
+					randomIrrelevantAccount());
+
+			page =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						irrelevantAccountGroupExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantAccount, (List<Account>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
+					irrelevantAccountGroupExternalReferenceCode));
+		}
+
+		Account account1 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		Account account2 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		page =
+			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
+				accountGroupExternalReferenceCode, null, null,
+				Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(account1, (List<Account>)page.getItems());
+		assertContains(account2, (List<Account>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
+				accountGroupExternalReferenceCode));
+
+		accountResource.deleteAccount(account1.getId());
+
+		accountResource.deleteAccount(account2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getExpectedActions(
+				String accountGroupExternalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
+
+		Account account1 = randomAccount();
+
+		account1 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, account1);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null,
+						getFilterString(entityField, "between", account1),
+						Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetAccountGroupByExternalReferenceCodeAccountsPageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
+
+		Account account1 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account2 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null,
+						getFilterString(entityField, operator, account1),
+						Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithPagination()
+		throws Exception {
+
+		String accountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
+
+		Page<Account> accountsPage =
+			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
+				accountGroupExternalReferenceCode, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
+
+		Account account1 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		Account account2 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		Account account3 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, randomAccount());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Account> page1 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(account1, (List<Account>)page1.getItems());
+
+			Page<Account> page2 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(account2, (List<Account>)page2.getItems());
+
+			Page<Account> page3 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+		else {
+			Page<Account> page1 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<Account> accounts1 = (List<Account>)page1.getItems();
+
+			Assert.assertEquals(
+				accounts1.toString(), totalCount + 2, accounts1.size());
+
+			Page<Account> page2 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Account> accounts2 = (List<Account>)page2.getItems();
+
+			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
+
+			Page<Account> page3 =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(account1, (List<Account>)page3.getItems());
+			assertContains(account2, (List<Account>)page3.getItems());
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortDateTime()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(
+					account1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortDouble()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortInteger()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetAccountGroupByExternalReferenceCodeAccountsPageWithSortString()
+		throws Exception {
+
+		testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, account1, account2) -> {
+				Class<?> clazz = account1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void
+			testGetAccountGroupByExternalReferenceCodeAccountsPageWithSort(
+				EntityField.Type type,
+				UnsafeTriConsumer<EntityField, Account, Account, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountGroupExternalReferenceCode =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode();
+
+		Account account1 = randomAccount();
+		Account account2 = randomAccount();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, account1, account2);
+		}
+
+		account1 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, account1);
+
+		account2 =
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				accountGroupExternalReferenceCode, account2);
+
+		Page<Account> page =
+			accountResource.getAccountGroupByExternalReferenceCodeAccountsPage(
+				accountGroupExternalReferenceCode, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> ascPage =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
+
+			assertContains(account1, (List<Account>)ascPage.getItems());
+			assertContains(account2, (List<Account>)ascPage.getItems());
+
+			Page<Account> descPage =
+				accountResource.
+					getAccountGroupByExternalReferenceCodeAccountsPage(
+						accountGroupExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
+
+			assertContains(account2, (List<Account>)descPage.getItems());
+			assertContains(account1, (List<Account>)descPage.getItems());
+		}
 	}
 
 	protected Account
-			testDeleteOrganizationByExternalReferenceCodeAccounts_addAccount()
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_addAccount(
+				String accountGroupExternalReferenceCode, Account account)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getAccountGroupExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountGroupByExternalReferenceCodeAccountsPage_getIrrelevantAccountGroupExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountsPage() throws Exception {
+		Page<Account> page = accountResource.getAccountsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		Account account1 = testGetAccountsPage_addAccount(randomAccount());
+
+		Account account2 = testGetAccountsPage_addAccount(randomAccount());
+
+		page = accountResource.getAccountsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(account1, (List<Account>)page.getItems());
+		assertContains(account2, (List<Account>)page.getItems());
+		assertValid(page, testGetAccountsPage_getExpectedActions());
+
+		accountResource.deleteAccount(account1.getId());
+
+		accountResource.deleteAccount(account2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountsPageWithFilterDateTimeEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Account account1 = randomAccount();
+
+		account1 = testGetAccountsPage_addAccount(account1);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getAccountsPage(
+				null, getFilterString(entityField, "between", account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountsPageWithFilterDoubleEquals() throws Exception {
+		testGetAccountsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetAccountsPageWithFilterStringContains() throws Exception {
+		testGetAccountsPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountsPageWithFilterStringEquals() throws Exception {
+		testGetAccountsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Account account1 = testGetAccountsPage_addAccount(randomAccount());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account2 = testGetAccountsPage_addAccount(randomAccount());
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getAccountsPage(
+				null, getFilterString(entityField, operator, account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountsPageWithPagination() throws Exception {
+		Page<Account> accountsPage = accountResource.getAccountsPage(
+			null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
+
+		Account account1 = testGetAccountsPage_addAccount(randomAccount());
+
+		Account account2 = testGetAccountsPage_addAccount(randomAccount());
+
+		Account account3 = testGetAccountsPage_addAccount(randomAccount());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Account> page1 = accountResource.getAccountsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(account1, (List<Account>)page1.getItems());
+
+			Page<Account> page2 = accountResource.getAccountsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account2, (List<Account>)page2.getItems());
+
+			Page<Account> page3 = accountResource.getAccountsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+		else {
+			Page<Account> page1 = accountResource.getAccountsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Account> accounts1 = (List<Account>)page1.getItems();
+
+			Assert.assertEquals(
+				accounts1.toString(), totalCount + 2, accounts1.size());
+
+			Page<Account> page2 = accountResource.getAccountsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Account> accounts2 = (List<Account>)page2.getItems();
+
+			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
+
+			Page<Account> page3 = accountResource.getAccountsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(account1, (List<Account>)page3.getItems());
+			assertContains(account2, (List<Account>)page3.getItems());
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAccountsPageWithSortDateTime() throws Exception {
+		testGetAccountsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(
+					account1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetAccountsPageWithSortDouble() throws Exception {
+		testGetAccountsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetAccountsPageWithSortInteger() throws Exception {
+		testGetAccountsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetAccountsPageWithSortString() throws Exception {
+		testGetAccountsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, account1, account2) -> {
+				Class<?> clazz = account1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetAccountsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, Account, Account, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Account account1 = randomAccount();
+		Account account2 = randomAccount();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, account1, account2);
+		}
+
+		account1 = testGetAccountsPage_addAccount(account1);
+
+		account2 = testGetAccountsPage_addAccount(account2);
+
+		Page<Account> page = accountResource.getAccountsPage(
+			null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> ascPage = accountResource.getAccountsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(account1, (List<Account>)ascPage.getItems());
+			assertContains(account2, (List<Account>)ascPage.getItems());
+
+			Page<Account> descPage = accountResource.getAccountsPage(
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(account2, (List<Account>)descPage.getItems());
+			assertContains(account1, (List<Account>)descPage.getItems());
+		}
+	}
+
+	protected Account testGetAccountsPage_addAccount(Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountsPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"accounts",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject accountsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/accounts");
+
+		long totalCount = accountsJSONObject.getLong("totalCount");
+
+		Account account1 = testGraphQLGetAccountsPage_addAccount();
+		Account account2 = testGraphQLGetAccountsPage_addAccount();
+
+		accountsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/accounts");
+
+		Assert.assertEquals(
+			totalCount + 2, accountsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			account1,
+			Arrays.asList(
+				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
+		assertContains(
+			account2,
+			Arrays.asList(
+				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		accountsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+			"JSONObject/accounts");
+
+		Assert.assertEquals(
+			totalCount + 2, accountsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			account1,
+			Arrays.asList(
+				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
+		assertContains(
+			account2,
+			Arrays.asList(
+				AccountSerDes.toDTOs(accountsJSONObject.getString("items"))));
+	}
+
+	protected Account testGraphQLGetAccountsPage_addAccount() throws Exception {
+		return testGraphQLAccount_addAccount();
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPage() throws Exception {
+		String organizationId =
+			testGetOrganizationAccountsPage_getOrganizationId();
+		String irrelevantOrganizationId =
+			testGetOrganizationAccountsPage_getIrrelevantOrganizationId();
+
+		Page<Account> page = accountResource.getOrganizationAccountsPage(
+			organizationId, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantOrganizationId != null) {
+			Account irrelevantAccount =
+				testGetOrganizationAccountsPage_addAccount(
+					irrelevantOrganizationId, randomIrrelevantAccount());
+
+			page = accountResource.getOrganizationAccountsPage(
+				irrelevantOrganizationId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantAccount, (List<Account>)page.getItems());
+			assertValid(
+				page,
+				testGetOrganizationAccountsPage_getExpectedActions(
+					irrelevantOrganizationId));
+		}
+
+		Account account1 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		Account account2 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		page = accountResource.getOrganizationAccountsPage(
+			organizationId, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(account1, (List<Account>)page.getItems());
+		assertContains(account2, (List<Account>)page.getItems());
+		assertValid(
+			page,
+			testGetOrganizationAccountsPage_getExpectedActions(organizationId));
+
+		accountResource.deleteAccount(account1.getId());
+
+		accountResource.deleteAccount(account2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrganizationAccountsPage_getExpectedActions(
+				String organizationId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String organizationId =
+			testGetOrganizationAccountsPage_getOrganizationId();
+
+		Account account1 = randomAccount();
+
+		account1 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, account1);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getOrganizationAccountsPage(
+				organizationId, null,
+				getFilterString(entityField, "between", account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetOrganizationAccountsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String organizationId =
+			testGetOrganizationAccountsPage_getOrganizationId();
+
+		Account account1 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account2 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> page = accountResource.getOrganizationAccountsPage(
+				organizationId, null,
+				getFilterString(entityField, operator, account1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(account1),
+				(List<Account>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithPagination()
+		throws Exception {
+
+		String organizationId =
+			testGetOrganizationAccountsPage_getOrganizationId();
+
+		Page<Account> accountsPage =
+			accountResource.getOrganizationAccountsPage(
+				organizationId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
+
+		Account account1 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		Account account2 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		Account account3 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, randomAccount());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Account> page1 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(account1, (List<Account>)page1.getItems());
+
+			Page<Account> page2 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account2, (List<Account>)page2.getItems());
+
+			Page<Account> page3 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+		else {
+			Page<Account> page1 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null, Pagination.of(1, totalCount + 2),
+				null);
+
+			List<Account> accounts1 = (List<Account>)page1.getItems();
+
+			Assert.assertEquals(
+				accounts1.toString(), totalCount + 2, accounts1.size());
+
+			Page<Account> page2 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null, Pagination.of(2, totalCount + 2),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Account> accounts2 = (List<Account>)page2.getItems();
+
+			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
+
+			Page<Account> page3 = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null,
+				Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(account1, (List<Account>)page3.getItems());
+			assertContains(account2, (List<Account>)page3.getItems());
+			assertContains(account3, (List<Account>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithSortDateTime()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(
+					account1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithSortDouble()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithSortInteger()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, account1, account2) -> {
+				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetOrganizationAccountsPageWithSortString()
+		throws Exception {
+
+		testGetOrganizationAccountsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, account1, account2) -> {
+				Class<?> clazz = account1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						account1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						account2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetOrganizationAccountsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, Account, Account, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String organizationId =
+			testGetOrganizationAccountsPage_getOrganizationId();
+
+		Account account1 = randomAccount();
+		Account account2 = randomAccount();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, account1, account2);
+		}
+
+		account1 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, account1);
+
+		account2 = testGetOrganizationAccountsPage_addAccount(
+			organizationId, account2);
+
+		Page<Account> page = accountResource.getOrganizationAccountsPage(
+			organizationId, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Account> ascPage = accountResource.getOrganizationAccountsPage(
+				organizationId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(account1, (List<Account>)ascPage.getItems());
+			assertContains(account2, (List<Account>)ascPage.getItems());
+
+			Page<Account> descPage =
+				accountResource.getOrganizationAccountsPage(
+					organizationId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(account2, (List<Account>)descPage.getItems());
+			assertContains(account1, (List<Account>)descPage.getItems());
+		}
+	}
+
+	protected Account testGetOrganizationAccountsPage_addAccount(
+			String organizationId, Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String testGetOrganizationAccountsPage_getOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationAccountsPage_getIrrelevantOrganizationId()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -2359,11 +2782,11 @@ public abstract class BaseAccountResourceTestCase {
 		String externalReferenceCode =
 			testGetOrganizationByExternalReferenceCodeAccountsPage_getExternalReferenceCode();
 
-		Page<Account> accountPage =
+		Page<Account> accountsPage =
 			accountResource.getOrganizationByExternalReferenceCodeAccountsPage(
 				externalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
 
 		Account account1 =
 			testGetOrganizationByExternalReferenceCodeAccountsPage_addAccount(
@@ -2626,67 +3049,6 @@ public abstract class BaseAccountResourceTestCase {
 	}
 
 	@Test
-	public void testPostOrganizationByExternalReferenceCodeAccounts()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account =
-			testPostOrganizationByExternalReferenceCodeAccounts_addAccount();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.
-				postOrganizationByExternalReferenceCodeAccountsHttpResponse(
-					account.getExternalReferenceCode(), null));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountResource.
-				postOrganizationByExternalReferenceCodeAccountsHttpResponse(
-					account.getExternalReferenceCode(), null));
-	}
-
-	protected Account
-			testPostOrganizationByExternalReferenceCodeAccounts_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account =
-			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.
-				deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
-					testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode(),
-					null));
-	}
-
-	protected String
-			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Account
-			testDeleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage()
 		throws Exception {
 
@@ -2872,12 +3234,12 @@ public abstract class BaseAccountResourceTestCase {
 		String organizationExternalReferenceCode =
 			testGetOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage_getOrganizationExternalReferenceCode();
 
-		Page<Account> accountPage =
+		Page<Account> accountsPage =
 			accountResource.
 				getOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage(
 					organizationExternalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(accountsPage.getTotalCount());
 
 		Account account1 =
 			testGetOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage_addAccount(
@@ -3141,28 +3503,54 @@ public abstract class BaseAccountResourceTestCase {
 	}
 
 	@Test
-	public void testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode()
-		throws Exception {
+	public void testPatchAccount() throws Exception {
+		Account postAccount = testPatchAccount_addAccount();
+
+		Account randomPatchAccount = randomPatchAccount();
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account =
-			testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount();
+		Account patchAccount = accountResource.patchAccount(
+			postAccount.getId(), randomPatchAccount);
 
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.
-				postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
-					null, null));
+		Account expectedPatchAccount = postAccount.clone();
 
-		assertHttpResponseStatusCode(
-			404,
-			accountResource.
-				postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
-					null, null));
+		BeanTestUtil.copyProperties(randomPatchAccount, expectedPatchAccount);
+
+		Account getAccount = accountResource.getAccount(patchAccount.getId());
+
+		assertEquals(expectedPatchAccount, getAccount);
+		assertValid(getAccount);
 	}
 
-	protected Account
-			testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount()
+	protected Account testPatchAccount_addAccount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchAccountByExternalReferenceCode() throws Exception {
+		Account postAccount =
+			testPatchAccountByExternalReferenceCode_addAccount();
+
+		Account randomPatchAccount = randomPatchAccount();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account patchAccount =
+			accountResource.patchAccountByExternalReferenceCode(
+				postAccount.getExternalReferenceCode(), randomPatchAccount);
+
+		Account expectedPatchAccount = postAccount.clone();
+
+		BeanTestUtil.copyProperties(randomPatchAccount, expectedPatchAccount);
+
+		Account getAccount = accountResource.getAccountByExternalReferenceCode(
+			patchAccount.getExternalReferenceCode());
+
+		assertEquals(expectedPatchAccount, getAccount);
+		assertValid(getAccount);
+	}
+
+	protected Account testPatchAccountByExternalReferenceCode_addAccount()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -3177,12 +3565,30 @@ public abstract class BaseAccountResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			accountResource.patchOrganizationMoveAccountsHttpResponse(
-				null, null, null));
+				testPatchOrganizationMoveAccounts_getSourceOrganizationId(),
+				testPatchOrganizationMoveAccounts_getTargetOrganizationId(),
+				null));
 
 		assertHttpResponseStatusCode(
 			404,
 			accountResource.patchOrganizationMoveAccountsHttpResponse(
-				null, null, null));
+				testPatchOrganizationMoveAccounts_getSourceOrganizationId(),
+				testPatchOrganizationMoveAccounts_getTargetOrganizationId(),
+				null));
+	}
+
+	protected Long testPatchOrganizationMoveAccounts_getSourceOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testPatchOrganizationMoveAccounts_getTargetOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected Account testPatchOrganizationMoveAccounts_addAccount()
@@ -3204,13 +3610,33 @@ public abstract class BaseAccountResourceTestCase {
 			204,
 			accountResource.
 				patchOrganizationMoveAccountsByExternalReferenceCodeHttpResponse(
-					null, null, null));
+					testPatchOrganizationMoveAccountsByExternalReferenceCode_getSourceOrganizationId(),
+					testPatchOrganizationMoveAccountsByExternalReferenceCode_getTargetOrganizationId(),
+					null));
 
 		assertHttpResponseStatusCode(
 			404,
 			accountResource.
 				patchOrganizationMoveAccountsByExternalReferenceCodeHttpResponse(
-					null, null, null));
+					testPatchOrganizationMoveAccountsByExternalReferenceCode_getSourceOrganizationId(),
+					testPatchOrganizationMoveAccountsByExternalReferenceCode_getTargetOrganizationId(),
+					null));
+	}
+
+	protected Long
+			testPatchOrganizationMoveAccountsByExternalReferenceCode_getSourceOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPatchOrganizationMoveAccountsByExternalReferenceCode_getTargetOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected Account
@@ -3222,433 +3648,20 @@ public abstract class BaseAccountResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteOrganizationAccounts() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account = testDeleteOrganizationAccounts_addAccount();
+	public void testPostAccount() throws Exception {
+		Account randomAccount = randomAccount();
 
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.deleteOrganizationAccountsHttpResponse(
-				testDeleteOrganizationAccounts_getOrganizationId(), null));
+		Account postAccount = testPostAccount_addAccount(randomAccount);
+
+		assertEquals(randomAccount, postAccount);
+		assertValid(postAccount);
 	}
 
-	protected Long testDeleteOrganizationAccounts_getOrganizationId()
+	protected Account testPostAccount_addAccount(Account account)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	protected Account testDeleteOrganizationAccounts_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPage() throws Exception {
-		String organizationId =
-			testGetOrganizationAccountsPage_getOrganizationId();
-		String irrelevantOrganizationId =
-			testGetOrganizationAccountsPage_getIrrelevantOrganizationId();
-
-		Page<Account> page = accountResource.getOrganizationAccountsPage(
-			organizationId, null, null, Pagination.of(1, 10), null);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantOrganizationId != null) {
-			Account irrelevantAccount =
-				testGetOrganizationAccountsPage_addAccount(
-					irrelevantOrganizationId, randomIrrelevantAccount());
-
-			page = accountResource.getOrganizationAccountsPage(
-				irrelevantOrganizationId, null, null,
-				Pagination.of(1, (int)totalCount + 1), null);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(irrelevantAccount, (List<Account>)page.getItems());
-			assertValid(
-				page,
-				testGetOrganizationAccountsPage_getExpectedActions(
-					irrelevantOrganizationId));
-		}
-
-		Account account1 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		Account account2 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		page = accountResource.getOrganizationAccountsPage(
-			organizationId, null, null, Pagination.of(1, 10), null);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(account1, (List<Account>)page.getItems());
-		assertContains(account2, (List<Account>)page.getItems());
-		assertValid(
-			page,
-			testGetOrganizationAccountsPage_getExpectedActions(organizationId));
-
-		accountResource.deleteAccount(account1.getId());
-
-		accountResource.deleteAccount(account2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetOrganizationAccountsPage_getExpectedActions(
-				String organizationId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithFilterDateTimeEquals()
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DATE_TIME);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String organizationId =
-			testGetOrganizationAccountsPage_getOrganizationId();
-
-		Account account1 = randomAccount();
-
-		account1 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, account1);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getOrganizationAccountsPage(
-				organizationId, null,
-				getFilterString(entityField, "between", account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithFilterDoubleEquals()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithFilter(
-			"eq", EntityField.Type.DOUBLE);
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithFilterStringContains()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithFilter(
-			"contains", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithFilterStringEquals()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithFilter(
-			"eq", EntityField.Type.STRING);
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithFilterStringStartsWith()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithFilter(
-			"startswith", EntityField.Type.STRING);
-	}
-
-	protected void testGetOrganizationAccountsPageWithFilter(
-			String operator, EntityField.Type type)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String organizationId =
-			testGetOrganizationAccountsPage_getOrganizationId();
-
-		Account account1 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account2 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> page = accountResource.getOrganizationAccountsPage(
-				organizationId, null,
-				getFilterString(entityField, operator, account1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(account1),
-				(List<Account>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithPagination()
-		throws Exception {
-
-		String organizationId =
-			testGetOrganizationAccountsPage_getOrganizationId();
-
-		Page<Account> accountPage = accountResource.getOrganizationAccountsPage(
-			organizationId, null, null, null, null);
-
-		int totalCount = GetterUtil.getInteger(accountPage.getTotalCount());
-
-		Account account1 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		Account account2 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		Account account3 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, randomAccount());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Account> page1 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(account1, (List<Account>)page1.getItems());
-
-			Page<Account> page2 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account2, (List<Account>)page2.getItems());
-
-			Page<Account> page3 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null,
-				Pagination.of(
-					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-					pageSizeLimit),
-				null);
-
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-		else {
-			Page<Account> page1 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null, Pagination.of(1, totalCount + 2),
-				null);
-
-			List<Account> accounts1 = (List<Account>)page1.getItems();
-
-			Assert.assertEquals(
-				accounts1.toString(), totalCount + 2, accounts1.size());
-
-			Page<Account> page2 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null, Pagination.of(2, totalCount + 2),
-				null);
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<Account> accounts2 = (List<Account>)page2.getItems();
-
-			Assert.assertEquals(accounts2.toString(), 1, accounts2.size());
-
-			Page<Account> page3 = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
-
-			assertContains(account1, (List<Account>)page3.getItems());
-			assertContains(account2, (List<Account>)page3.getItems());
-			assertContains(account3, (List<Account>)page3.getItems());
-		}
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithSortDateTime()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithSort(
-			EntityField.Type.DATE_TIME,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(
-					account1, entityField.getName(),
-					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
-			});
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithSortDouble()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithSort(
-			EntityField.Type.DOUBLE,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0.1);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 0.5);
-			});
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithSortInteger()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithSort(
-			EntityField.Type.INTEGER,
-			(entityField, account1, account2) -> {
-				BeanTestUtil.setProperty(account1, entityField.getName(), 0);
-				BeanTestUtil.setProperty(account2, entityField.getName(), 1);
-			});
-	}
-
-	@Test
-	public void testGetOrganizationAccountsPageWithSortString()
-		throws Exception {
-
-		testGetOrganizationAccountsPageWithSort(
-			EntityField.Type.STRING,
-			(entityField, account1, account2) -> {
-				Class<?> clazz = account1.getClass();
-
-				String entityFieldName = entityField.getName();
-
-				Method method = clazz.getMethod(
-					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
-
-				Class<?> returnType = method.getReturnType();
-
-				if (returnType.isAssignableFrom(Map.class)) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
-				}
-				else if (entityFieldName.contains("email")) {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-				}
-				else {
-					BeanTestUtil.setProperty(
-						account1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanTestUtil.setProperty(
-						account2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-				}
-			});
-	}
-
-	protected void testGetOrganizationAccountsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, Account, Account, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String organizationId =
-			testGetOrganizationAccountsPage_getOrganizationId();
-
-		Account account1 = randomAccount();
-		Account account2 = randomAccount();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, account1, account2);
-		}
-
-		account1 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, account1);
-
-		account2 = testGetOrganizationAccountsPage_addAccount(
-			organizationId, account2);
-
-		Page<Account> page = accountResource.getOrganizationAccountsPage(
-			organizationId, null, null, null, null);
-
-		for (EntityField entityField : entityFields) {
-			Page<Account> ascPage = accountResource.getOrganizationAccountsPage(
-				organizationId, null, null,
-				Pagination.of(1, (int)page.getTotalCount() + 1),
-				entityField.getName() + ":asc");
-
-			assertContains(account1, (List<Account>)ascPage.getItems());
-			assertContains(account2, (List<Account>)ascPage.getItems());
-
-			Page<Account> descPage =
-				accountResource.getOrganizationAccountsPage(
-					organizationId, null, null,
-					Pagination.of(1, (int)page.getTotalCount() + 1),
-					entityField.getName() + ":desc");
-
-			assertContains(account2, (List<Account>)descPage.getItems());
-			assertContains(account1, (List<Account>)descPage.getItems());
-		}
-	}
-
-	protected Account testGetOrganizationAccountsPage_addAccount(
-			String organizationId, Account account)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String testGetOrganizationAccountsPage_getOrganizationId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetOrganizationAccountsPage_getIrrelevantOrganizationId()
-		throws Exception {
-
-		return null;
 	}
 
 	@Test
@@ -3658,46 +3671,23 @@ public abstract class BaseAccountResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			204,
-			accountResource.postOrganizationAccountsHttpResponse(null, null));
+			accountResource.postOrganizationAccountsHttpResponse(
+				testPostOrganizationAccounts_getOrganizationId(), null));
 
 		assertHttpResponseStatusCode(
 			404,
-			accountResource.postOrganizationAccountsHttpResponse(null, null));
+			accountResource.postOrganizationAccountsHttpResponse(
+				testPostOrganizationAccounts_getOrganizationId(), null));
+	}
+
+	protected Long testPostOrganizationAccounts_getOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected Account testPostOrganizationAccounts_addAccount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteOrganizationAccountsByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Account account =
-			testDeleteOrganizationAccountsByExternalReferenceCode_addAccount();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountResource.
-				deleteOrganizationAccountsByExternalReferenceCodeHttpResponse(
-					testDeleteOrganizationAccountsByExternalReferenceCode_getOrganizationId(),
-					null));
-	}
-
-	protected Long
-			testDeleteOrganizationAccountsByExternalReferenceCode_getOrganizationId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Account
-			testDeleteOrganizationAccountsByExternalReferenceCode_addAccount()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -3716,13 +3706,23 @@ public abstract class BaseAccountResourceTestCase {
 			204,
 			accountResource.
 				postOrganizationAccountsByExternalReferenceCodeHttpResponse(
-					null, null));
+					testPostOrganizationAccountsByExternalReferenceCode_getOrganizationId(),
+					null));
 
 		assertHttpResponseStatusCode(
 			404,
 			accountResource.
 				postOrganizationAccountsByExternalReferenceCodeHttpResponse(
-					null, null));
+					testPostOrganizationAccountsByExternalReferenceCode_getOrganizationId(),
+					null));
+	}
+
+	protected Long
+			testPostOrganizationAccountsByExternalReferenceCode_getOrganizationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected Account
@@ -3731,6 +3731,238 @@ public abstract class BaseAccountResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostOrganizationByExternalReferenceCodeAccounts()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account =
+			testPostOrganizationByExternalReferenceCodeAccounts_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.
+				postOrganizationByExternalReferenceCodeAccountsHttpResponse(
+					testPostOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
+						account),
+					null));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountResource.
+				postOrganizationByExternalReferenceCodeAccountsHttpResponse(
+					testPostOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
+						account),
+					null));
+	}
+
+	protected String
+			testPostOrganizationByExternalReferenceCodeAccounts_getExternalReferenceCode(
+				Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Account
+			testPostOrganizationByExternalReferenceCodeAccounts_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Account account =
+			testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountResource.
+				postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
+					testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode(),
+					null));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountResource.
+				postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCodeHttpResponse(
+					testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode(),
+					null));
+	}
+
+	protected String
+			testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_getOrganizationExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Account
+			testPostOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAccount() throws Exception {
+		Account postAccount = testPutAccount_addAccount();
+
+		Account randomAccount = randomAccount();
+
+		Account putAccount = accountResource.putAccount(
+			postAccount.getId(), randomAccount);
+
+		assertEquals(randomAccount, putAccount);
+		assertValid(putAccount);
+
+		Account getAccount = accountResource.getAccount(putAccount.getId());
+
+		assertEquals(randomAccount, getAccount);
+		assertValid(getAccount);
+	}
+
+	protected Account testPutAccount_addAccount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAccountByExternalReferenceCode() throws Exception {
+		Account postAccount =
+			testPutAccountByExternalReferenceCode_addAccount();
+
+		Account randomAccount = randomAccount();
+
+		Account putAccount = accountResource.putAccountByExternalReferenceCode(
+			postAccount.getExternalReferenceCode(), randomAccount);
+
+		assertEquals(randomAccount, putAccount);
+		assertValid(putAccount);
+
+		Account getAccount = accountResource.getAccountByExternalReferenceCode(
+			putAccount.getExternalReferenceCode());
+
+		assertEquals(randomAccount, getAccount);
+		assertValid(getAccount);
+
+		Account newAccount =
+			testPutAccountByExternalReferenceCode_createAccount();
+
+		putAccount = accountResource.putAccountByExternalReferenceCode(
+			newAccount.getExternalReferenceCode(), newAccount);
+
+		assertEquals(newAccount, putAccount);
+		assertValid(putAccount);
+
+		getAccount = accountResource.getAccountByExternalReferenceCode(
+			putAccount.getExternalReferenceCode());
+
+		assertEquals(newAccount, getAccount);
+
+		Assert.assertEquals(
+			newAccount.getExternalReferenceCode(),
+			putAccount.getExternalReferenceCode());
+	}
+
+	protected Account testPutAccountByExternalReferenceCode_addAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Account testPutAccountByExternalReferenceCode_createAccount()
+		throws Exception {
+
+		return randomAccount();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Account account1 = testBatchEngineDeleteImportTask_addAccount();
+
+		testBatchEngineDeleteImportTask_deleteAccount(
+			200, account1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+
+		account1 = testBatchEngineDeleteImportTask_addAccount();
+
+		testBatchEngineDeleteImportTask_deleteAccount(
+			200, null, account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+
+		account1 = testBatchEngineDeleteImportTask_addAccount();
+		Account account2 = testBatchEngineDeleteImportTask_addAccount();
+
+		testBatchEngineDeleteImportTask_deleteAccount(
+			200, account2.getExternalReferenceCode(), account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account1.getId()));
+		assertHttpResponseStatusCode(
+			200, accountResource.getAccountHttpResponse(account2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteAccount(
+			200, account2.getExternalReferenceCode(), account1.getId());
+
+		assertHttpResponseStatusCode(
+			404, accountResource.getAccountHttpResponse(account2.getId()));
+	}
+
+	protected Account testBatchEngineDeleteImportTask_addAccount()
+		throws Exception {
+
+		return testDeleteAccount_addAccount();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteAccount(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.user.dto.v1_0.Account", null, null,
+				null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -3957,6 +4189,14 @@ public abstract class BaseAccountResourceTestCase {
 
 			if (Objects.equals("keywords", additionalAssertFieldName)) {
 				if (account.getKeywords() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("logoBase64", additionalAssertFieldName)) {
+				if (account.getLogoBase64() == null) {
 					valid = false;
 				}
 
@@ -4413,6 +4653,16 @@ public abstract class BaseAccountResourceTestCase {
 			if (Objects.equals("keywords", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getKeywords(), account2.getKeywords())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("logoBase64", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						account1.getLogoBase64(), account2.getLogoBase64())) {
 
 					return false;
 				}
@@ -5003,6 +5253,52 @@ public abstract class BaseAccountResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("logoBase64")) {
+			Object object = account.getLogoBase64();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("logoExternalReferenceCode")) {
 			Object object = account.getLogoExternalReferenceCode();
 
@@ -5343,6 +5639,8 @@ public abstract class BaseAccountResourceTestCase {
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
+				logoBase64 = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				logoExternalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				logoId = RandomTestUtil.randomLong();
@@ -5368,7 +5666,30 @@ public abstract class BaseAccountResourceTestCase {
 		return randomAccount();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AccountResource accountResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

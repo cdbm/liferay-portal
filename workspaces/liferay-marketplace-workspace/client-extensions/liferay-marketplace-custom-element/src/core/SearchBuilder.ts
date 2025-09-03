@@ -4,13 +4,15 @@
  */
 
 type Key = string;
-type Value = string | number | boolean;
+type Value = string | number | boolean | null;
 
 export type Operators =
 	| 'contains'
 	| 'eq'
 	| 'ge'
 	| 'gt'
+	| 'lambda'
+	| 'lambdaContains'
 	| 'le'
 	| 'lt'
 	| 'ne'
@@ -53,7 +55,11 @@ export default class SearchBuilder {
 			return operator
 				.replace(
 					'{values}',
-					values.map((value) => `'${value}'`).join(',')
+					values
+						.map((value) =>
+							typeof value === 'number' ? value : `'${value}'`
+						)
+						.join(',')
 				)
 				.trim();
 		}
@@ -63,6 +69,10 @@ export default class SearchBuilder {
 
 	static lambda(key: Key, value: Value) {
 		return `(${key}/any(x:(x eq '${value}')))`;
+	}
+
+	static lambdaContains(key: Key, value: Value) {
+		return `(${key}/any(x:contains(x, '${value}')))`;
 	}
 
 	static ne(key: Key, value: Value) {
@@ -138,8 +148,22 @@ export default class SearchBuilder {
 		return this.setContext(parseFn(SearchBuilder.lambda(key, value)));
 	}
 
+	public lambdaContains(key: Key, value: Value, options = {unquote: false}) {
+		const parseFn = options.unquote
+			? SearchBuilder.unquote
+			: (fn: any) => fn;
+
+		return this.setContext(
+			parseFn(SearchBuilder.lambdaContains(key, value))
+		);
+	}
+
 	public gt(key: Key, values: Value) {
 		return this.setContext(SearchBuilder.gt(key, values));
+	}
+
+	public group(type: 'CLOSE' | 'OPEN') {
+		return this.setContext(SearchBuilder.group(type));
 	}
 
 	public lt(key: Key, values: Value) {
@@ -170,12 +194,16 @@ export default class SearchBuilder {
 		return this.group('CLOSE');
 	}
 
-	public ne(key: Key, value: Value) {
-		return this.setContext(SearchBuilder.ne(key, value));
+	public ne(key: Key, value: Value, options = {unquote: false}) {
+		const parseFn = options.unquote
+			? SearchBuilder.unquote
+			: (fn: any) => fn;
+
+		return this.setContext(parseFn(SearchBuilder.ne(key, value)));
 	}
 
-	public group(type: 'CLOSE' | 'OPEN') {
-		return this.setContext(SearchBuilder.group(type));
+	public not() {
+		return this.setContext('not');
 	}
 
 	private setContext(query: string) {

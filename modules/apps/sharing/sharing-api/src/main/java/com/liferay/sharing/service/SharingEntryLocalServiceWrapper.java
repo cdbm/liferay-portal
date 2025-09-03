@@ -51,8 +51,9 @@ public class SharingEntryLocalServiceWrapper
 	 */
 	@Override
 	public com.liferay.sharing.model.SharingEntry addOrUpdateSharingEntry(
-			String externalReferenceCode, long userId, long toUserId,
-			long classNameId, long classPK, long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			java.util.Collection
 				<com.liferay.sharing.security.permission.SharingEntryAction>
 					sharingEntryActions,
@@ -61,8 +62,8 @@ public class SharingEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sharingEntryLocalService.addOrUpdateSharingEntry(
-			externalReferenceCode, userId, toUserId, classNameId, classPK,
-			groupId, shareable, sharingEntryActions, expirationDate,
+			externalReferenceCode, userId, toUserGroupId, toUserId, classNameId,
+			classPK, groupId, shareable, sharingEntryActions, expirationDate,
 			serviceContext);
 	}
 
@@ -106,8 +107,9 @@ public class SharingEntryLocalServiceWrapper
 	 */
 	@Override
 	public com.liferay.sharing.model.SharingEntry addSharingEntry(
-			String externalReferenceCode, long userId, long toUserId,
-			long classNameId, long classPK, long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			java.util.Collection
 				<com.liferay.sharing.security.permission.SharingEntryAction>
 					sharingEntryActions,
@@ -116,8 +118,8 @@ public class SharingEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sharingEntryLocalService.addSharingEntry(
-			externalReferenceCode, userId, toUserId, classNameId, classPK,
-			groupId, shareable, sharingEntryActions, expirationDate,
+			externalReferenceCode, userId, toUserGroupId, toUserId, classNameId,
+			classPK, groupId, shareable, sharingEntryActions, expirationDate,
 			serviceContext);
 	}
 
@@ -143,6 +145,12 @@ public class SharingEntryLocalServiceWrapper
 		long sharingEntryId) {
 
 		return _sharingEntryLocalService.createSharingEntry(sharingEntryId);
+	}
+
+	@Override
+	public void deleteCompanySharingEntries(long companyId, long classNameId) {
+		_sharingEntryLocalService.deleteCompanySharingEntries(
+			companyId, classNameId);
 	}
 
 	/**
@@ -424,6 +432,12 @@ public class SharingEntryLocalServiceWrapper
 	}
 
 	@Override
+	public int getCompanySharingEntriesCount(long companyId, long classNameId) {
+		return _sharingEntryLocalService.getCompanySharingEntriesCount(
+			companyId, classNameId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
 		getExportActionableDynamicQuery(
 			com.liferay.exportimport.kernel.lar.PortletDataContext
@@ -572,10 +586,13 @@ public class SharingEntryLocalServiceWrapper
 	 */
 	@Override
 	public java.util.List<com.liferay.sharing.model.SharingEntry>
-		getSharingEntries(long classNameId, long classPK, int start, int end) {
+		getSharingEntries(
+			long classNameId, long classPK, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.sharing.model.SharingEntry> orderByComparator) {
 
 		return _sharingEntryLocalService.getSharingEntries(
-			classNameId, classPK, start, end);
+			classNameId, classPK, start, end, orderByComparator);
 	}
 
 	/**

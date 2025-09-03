@@ -8,12 +8,12 @@ package com.liferay.headless.commerce.delivery.order.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.order.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.order.client.serdes.v1_0.ShipmentSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -150,6 +150,27 @@ public class Shipment implements Cloneable, Serializable {
 
 	protected Long id;
 
+	public Integer getItemsCount() {
+		return itemsCount;
+	}
+
+	public void setItemsCount(Integer itemsCount) {
+		this.itemsCount = itemsCount;
+	}
+
+	public void setItemsCount(
+		UnsafeSupplier<Integer, Exception> itemsCountUnsafeSupplier) {
+
+		try {
+			itemsCount = itemsCountUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer itemsCount;
+
 	public Date getModifiedDate() {
 		return modifiedDate;
 	}
@@ -170,6 +191,27 @@ public class Shipment implements Cloneable, Serializable {
 	}
 
 	protected Date modifiedDate;
+
+	public String getOneLineAddress() {
+		return oneLineAddress;
+	}
+
+	public void setOneLineAddress(String oneLineAddress) {
+		this.oneLineAddress = oneLineAddress;
+	}
+
+	public void setOneLineAddress(
+		UnsafeSupplier<String, Exception> oneLineAddressUnsafeSupplier) {
+
+		try {
+			oneLineAddress = oneLineAddressUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String oneLineAddress;
 
 	public String getOrderExternalReferenceCode() {
 		return orderExternalReferenceCode;

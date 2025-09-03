@@ -41,6 +41,10 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.NodeResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.NodeSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -55,10 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -184,6 +184,28 @@ public abstract class BaseNodeResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProcessNode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Node node = testDeleteProcessNode_addNode();
+
+		assertHttpResponseStatusCode(
+			204,
+			nodeResource.deleteProcessNodeHttpResponse(
+				testDeleteProcessNode_getProcessId(node), node.getId()));
+	}
+
+	protected Node testDeleteProcessNode_addNode() throws Exception {
+		return testPostProcessNode_addNode(randomNode());
+	}
+
+	protected Long testDeleteProcessNode_getProcessId(Node node)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetProcessNodesPage() throws Exception {
 		Long processId = testGetProcessNodesPage_getProcessId();
 		Long irrelevantProcessId =
@@ -273,30 +295,8 @@ public abstract class BaseNodeResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteProcessNode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Node node = testDeleteProcessNode_addNode();
-
-		assertHttpResponseStatusCode(
-			204,
-			nodeResource.deleteProcessNodeHttpResponse(
-				testDeleteProcessNode_getProcessId(node), node.getId()));
-	}
-
-	protected Long testDeleteProcessNode_getProcessId(Node node)
-		throws Exception {
-
-		return node.getProcessId();
-	}
-
-	protected Node testDeleteProcessNode_addNode() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Node testGraphQLNode_addNode() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(Node node, List<Node> nodes) {

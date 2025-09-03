@@ -521,44 +521,38 @@ public class CommerceTermEntryLocalServiceImpl
 		long companyId, long commerceTermEntryId,
 		Map<Locale, String> descriptionMap, Map<Locale, String> labelMap) {
 
-		Set<Locale> localeSet = new HashSet<>();
+		Set<Locale> locales = new HashSet<>();
 
 		if (descriptionMap != null) {
-			localeSet.addAll(descriptionMap.keySet());
+			locales.addAll(descriptionMap.keySet());
 		}
 
 		if (labelMap != null) {
-			localeSet.addAll(labelMap.keySet());
+			locales.addAll(labelMap.keySet());
 		}
 
-		List<CTermEntryLocalization> cTermEntryLocalizations =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			locales,
+			locale -> {
+				String description = null;
+				String label = null;
 
-		for (Locale locale : localeSet) {
-			String description = null;
-			String label = null;
+				if (descriptionMap != null) {
+					description = descriptionMap.get(locale);
+				}
 
-			if (descriptionMap != null) {
-				description = descriptionMap.get(locale);
-			}
+				if (labelMap != null) {
+					label = labelMap.get(locale);
+				}
 
-			if (labelMap != null) {
-				label = labelMap.get(locale);
-			}
+				if (Validator.isNull(description) && Validator.isNull(label)) {
+					return null;
+				}
 
-			if (Validator.isNull(description) && Validator.isNull(label)) {
-				continue;
-			}
-
-			CTermEntryLocalization cTermEntryLocalization =
-				_addCommerceTermEntryLocalizedFields(
+				return _addCommerceTermEntryLocalizedFields(
 					companyId, commerceTermEntryId, description, label,
 					LocaleUtil.toLanguageId(locale));
-
-			cTermEntryLocalizations.add(cTermEntryLocalization);
-		}
-
-		return cTermEntryLocalizations;
+			});
 	}
 
 	private CTermEntryLocalization _addCommerceTermEntryLocalizedFields(

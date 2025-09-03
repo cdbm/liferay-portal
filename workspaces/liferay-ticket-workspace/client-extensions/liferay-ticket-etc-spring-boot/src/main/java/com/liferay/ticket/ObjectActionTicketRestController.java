@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Raymond Augé
@@ -44,6 +45,8 @@ public class ObjectActionTicketRestController extends BaseRestController {
 
 		log(jwt, _log, json);
 
+		JSONObject objectEntryDTOJ3Y7TicketPatchJSONObject = new JSONObject();
+
 		JSONObject jsonObject = new JSONObject(json);
 
 		JSONObject objectEntryDTOJ3Y7TicketJSONObject =
@@ -52,25 +55,25 @@ public class ObjectActionTicketRestController extends BaseRestController {
 		JSONObject propertiesJSONObject =
 			objectEntryDTOJ3Y7TicketJSONObject.getJSONObject("properties");
 
-		propertiesJSONObject.put(
+		objectEntryDTOJ3Y7TicketPatchJSONObject.put(
 			"suggestions",
 			_getSuggestionsJSONArray(
 				propertiesJSONObject.getString("subject")));
 
-		JSONObject ticketStatusJSONObject = propertiesJSONObject.getJSONObject(
-			"ticketStatus");
-
-		ticketStatusJSONObject.put("key", "queued");
-		ticketStatusJSONObject.remove("name");
-
 		if (_log.isInfoEnabled()) {
-			_log.info("Properties: " + propertiesJSONObject.toString(4));
+			_log.info(
+				"Patch: " +
+					objectEntryDTOJ3Y7TicketPatchJSONObject.toString(4));
 		}
 
 		patch(
-			"Bearer " + jwt.getTokenValue(), propertiesJSONObject.toString(),
-			"/o/c/j3y7tickets/" +
-				objectEntryDTOJ3Y7TicketJSONObject.getString("id"));
+			"Bearer " + jwt.getTokenValue(),
+			objectEntryDTOJ3Y7TicketPatchJSONObject.toString(),
+			UriComponentsBuilder.fromPath(
+				"/o/c/j3y7tickets/" +
+					objectEntryDTOJ3Y7TicketJSONObject.getString("id")
+			).build(
+			).toUri());
 
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
@@ -85,7 +88,7 @@ public class ObjectActionTicketRestController extends BaseRestController {
 					).put(
 						"includeAssetSearchSummary", true
 					).put(
-						"includeassetURL", true
+						"includeAssetURL", true
 					).put(
 						"sxpBlueprintId", 3628599
 					));
@@ -117,8 +120,8 @@ public class ObjectActionTicketRestController extends BaseRestController {
 
 			Page<SuggestionsContributorResults> page =
 				suggestionResource.postSuggestionsPage(
-					"https://learn.liferay.com", "/search", 3190049L, "", 1434L,
-					"this-site", subject,
+					"https://learn.liferay.com", "/search", 23484947L, "",
+					5313L, "this-site", subject,
 					new SuggestionsContributorConfiguration[] {
 						_getSuggestionsContributorConfiguration()
 					});

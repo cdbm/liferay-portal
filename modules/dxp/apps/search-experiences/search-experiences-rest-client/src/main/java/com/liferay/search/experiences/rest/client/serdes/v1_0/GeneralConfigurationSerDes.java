@@ -8,13 +8,13 @@ package com.liferay.search.experiences.rest.client.serdes.v1_0;
 import com.liferay.search.experiences.rest.client.dto.v1_0.GeneralConfiguration;
 import com.liferay.search.experiences.rest.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Brian Wing Shun Chan
@@ -106,6 +106,31 @@ public class GeneralConfigurationSerDes {
 			sb.append("]");
 		}
 
+		if (generalConfiguration.getCollectionProvider() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collectionProvider\": ");
+
+			sb.append(generalConfiguration.getCollectionProvider());
+		}
+
+		if (generalConfiguration.getCollectionProviderType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collectionProviderType\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(generalConfiguration.getCollectionProviderType()));
+
+			sb.append("\"");
+		}
+
 		if (generalConfiguration.getEmptySearchEnabled() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -148,6 +173,16 @@ public class GeneralConfigurationSerDes {
 			sb.append(_escape(generalConfiguration.getLanguageId()));
 
 			sb.append("\"");
+		}
+
+		if (generalConfiguration.getLegacyAssetCollectionProvider() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"legacyAssetCollectionProvider\": ");
+
+			sb.append(generalConfiguration.getLegacyAssetCollectionProvider());
 		}
 
 		if (generalConfiguration.getQueryString() != null) {
@@ -245,6 +280,25 @@ public class GeneralConfigurationSerDes {
 					generalConfiguration.getClauseContributorsIncludes()));
 		}
 
+		if (generalConfiguration.getCollectionProvider() == null) {
+			map.put("collectionProvider", null);
+		}
+		else {
+			map.put(
+				"collectionProvider",
+				String.valueOf(generalConfiguration.getCollectionProvider()));
+		}
+
+		if (generalConfiguration.getCollectionProviderType() == null) {
+			map.put("collectionProviderType", null);
+		}
+		else {
+			map.put(
+				"collectionProviderType",
+				String.valueOf(
+					generalConfiguration.getCollectionProviderType()));
+		}
+
 		if (generalConfiguration.getEmptySearchEnabled() == null) {
 			map.put("emptySearchEnabled", null);
 		}
@@ -279,6 +333,16 @@ public class GeneralConfigurationSerDes {
 			map.put(
 				"languageId",
 				String.valueOf(generalConfiguration.getLanguageId()));
+		}
+
+		if (generalConfiguration.getLegacyAssetCollectionProvider() == null) {
+			map.put("legacyAssetCollectionProvider", null);
+		}
+		else {
+			map.put(
+				"legacyAssetCollectionProvider",
+				String.valueOf(
+					generalConfiguration.getLegacyAssetCollectionProvider()));
 		}
 
 		if (generalConfiguration.getQueryString() == null) {
@@ -337,6 +401,16 @@ public class GeneralConfigurationSerDes {
 				return false;
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "collectionProvider")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "collectionProviderType")) {
+
+				return false;
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "emptySearchEnabled")) {
 
 				return false;
@@ -350,6 +424,11 @@ public class GeneralConfigurationSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "languageId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "legacyAssetCollectionProvider")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "queryString")) {
@@ -389,6 +468,22 @@ public class GeneralConfigurationSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "collectionProvider")) {
+
+				if (jsonParserFieldValue != null) {
+					generalConfiguration.setCollectionProvider(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "collectionProviderType")) {
+
+				if (jsonParserFieldValue != null) {
+					generalConfiguration.setCollectionProviderType(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "emptySearchEnabled")) {
 
 				if (jsonParserFieldValue != null) {
@@ -414,6 +509,14 @@ public class GeneralConfigurationSerDes {
 				if (jsonParserFieldValue != null) {
 					generalConfiguration.setLanguageId(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "legacyAssetCollectionProvider")) {
+
+				if (jsonParserFieldValue != null) {
+					generalConfiguration.setLegacyAssetCollectionProvider(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "queryString")) {

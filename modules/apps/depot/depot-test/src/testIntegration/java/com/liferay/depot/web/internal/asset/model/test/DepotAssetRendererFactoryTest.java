@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
@@ -33,10 +34,12 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -49,6 +52,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
  * @author Alicia García
@@ -72,6 +77,7 @@ public class DepotAssetRendererFactoryTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "description"
 			).build(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 		_group = GroupTestUtil.addGroup();
 	}
@@ -159,7 +165,9 @@ public class DepotAssetRendererFactoryTest {
 	public void testGetAssetRendererJournalArticleWithRelatedGroup()
 		throws Exception {
 
-		ServiceContextThreadLocal.pushServiceContext(_getServiceContext());
+		ServiceContext serviceContext = _getServiceContext();
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
 		try {
 			DepotEntryGroupRel depotEntryGroupRel =
@@ -169,7 +177,7 @@ public class DepotAssetRendererFactoryTest {
 			JournalArticle journalArticle = JournalTestUtil.addArticle(
 				_depotEntry.getGroupId(),
 				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-				Collections.emptyMap());
+				serviceContext);
 
 			AssetRendererFactory<JournalArticle> assetRendererFactory =
 				AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
@@ -188,6 +196,10 @@ public class DepotAssetRendererFactoryTest {
 				journalArticle.getResourcePrimKey());
 
 			Assert.assertNull(assetRenderer);
+
+			Assert.assertEquals(
+				_group.getGroupId(),
+				serviceContext.getAttribute("scopeGroupId"));
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -201,6 +213,18 @@ public class DepotAssetRendererFactoryTest {
 			ServiceContextTestUtil.getServiceContext(_group, user.getUserId());
 
 		serviceContext.setLanguageId(LocaleUtil.toLanguageId(user.getLocale()));
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		ThemeDisplay themeDisplay = new ThemeDisplay();
+
+		themeDisplay.setScopeGroupId(_group.getGroupId());
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, themeDisplay);
+
+		serviceContext.setRequest(mockHttpServletRequest);
 
 		return serviceContext;
 	}

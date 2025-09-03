@@ -26,6 +26,11 @@ export default function MarketplaceViews() {
 	const {
 		marketplaceConfiguration,
 		marketplaceRest,
+		permissions = {
+			installFreeApps: false,
+			purchaseAndInstallPaidApps: false,
+			viewApps: false,
+		},
 		product,
 		setProduct,
 		setView,
@@ -65,6 +70,24 @@ export default function MarketplaceViews() {
 		[placedOrders]
 	);
 
+	const getButtonConfiguration = (product: Product) => {
+		if (isProductInstalled(product)) {
+			return {
+				disabled: true,
+				title: Liferay.Language.get('installed'),
+			};
+		}
+
+		const marketplaceProduct = new MarketplaceProduct(product);
+
+		if (!marketplaceProduct.hasPermissionToInstall(permissions)) {
+			return {
+				disabled: true,
+				title: Liferay.Language.get('action-not-allowed'),
+			};
+		}
+	};
+
 	useEffect(() => {
 		marketplaceRest
 			.getPlacedOrders(
@@ -89,7 +112,8 @@ export default function MarketplaceViews() {
 			.getProjectUsage()
 			.then(setCloudUserProject)
 			.catch(console.error);
-	}, [cloudProject, marketplaceRest, product]);
+	}, [cloudProject, marketplaceRest]);
+
 	const getState = useCallback(() => {
 		if (!cloudProject) {
 			return States.NO_PROJECT;
@@ -139,10 +163,7 @@ export default function MarketplaceViews() {
 				>
 					{(product) => (
 						<ClayButton
-							{...(isProductInstalled(product) && {
-								disabled: true,
-								title: Liferay.Language.get('installed'),
-							})}
+							{...getButtonConfiguration(product)}
 							className="w-100"
 							onClick={() => {
 								setProduct(product);
@@ -159,12 +180,10 @@ export default function MarketplaceViews() {
 
 			{view === MarketplaceView.STOREFRONT && (
 				<Marketplace.Storefront
+					onClickBack={() => setView(MarketplaceView.PRODUCTS)}
 					primaryButton={
 						<ClayButton
-							{...(isProductInstalled(product) && {
-								disabled: true,
-								title: Liferay.Language.get('installed'),
-							})}
+							{...getButtonConfiguration(product)}
 							className="ml-auto mt-3 rounded"
 							onClick={() => {
 								setState(States.CONFIRM_INSTALLATION);
@@ -179,18 +198,30 @@ export default function MarketplaceViews() {
 
 			{view === MarketplaceView.PURCHASE && (
 				<Marketplace.Purchase
-					rightTitle={
-						<small className="align-items-end d-flex flex-column">
-							<span className="font-weight-bold">
-								{cloudProject}
-							</span>
+					productPurchaseChildren={
+						getState() !== States.NO_PROJECT ? (
+							<>
+								<hr />
 
-							<span>
-								{marketplaceProduct?.getCloudResourceLabel(
-									cloudUserProject as CloudUserProject
-								)}
-							</span>
-						</small>
+								<div className="d-flex flex-row justify-content-between">
+									<strong className="align-self-center">
+										{Liferay.Language.get('project-name')}
+									</strong>
+
+									<small className="align-items-end d-flex flex-column">
+										<span className="font-weight-bold">
+											{cloudProject}
+										</span>
+
+										<span>
+											{marketplaceProduct?.getCloudResourceLabel(
+												cloudUserProject as CloudUserProject
+											)}
+										</span>
+									</small>
+								</div>
+							</>
+						) : null
 					}
 				>
 					<MarketplacePurchase

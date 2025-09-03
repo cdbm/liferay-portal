@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.delivery.order.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.order.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.order.client.serdes.v1_0.PlacedOrderSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -110,6 +110,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 	}
 
 	protected String author;
+
+	public Long getAuthorId() {
+		return authorId;
+	}
+
+	public void setAuthorId(Long authorId) {
+		this.authorId = authorId;
+	}
+
+	public void setAuthorId(
+		UnsafeSupplier<Long, Exception> authorIdUnsafeSupplier) {
+
+		try {
+			authorId = authorIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long authorId;
 
 	public Long getChannelId() {
 		return channelId;
@@ -760,6 +781,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 	}
 
 	protected String purchaseOrderNumber;
+
+	public Date getRequestedDeliveryDate() {
+		return requestedDeliveryDate;
+	}
+
+	public void setRequestedDeliveryDate(Date requestedDeliveryDate) {
+		this.requestedDeliveryDate = requestedDeliveryDate;
+	}
+
+	public void setRequestedDeliveryDate(
+		UnsafeSupplier<Date, Exception> requestedDeliveryDateUnsafeSupplier) {
+
+		try {
+			requestedDeliveryDate = requestedDeliveryDateUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date requestedDeliveryDate;
 
 	public Shipment getShipments() {
 		return shipments;

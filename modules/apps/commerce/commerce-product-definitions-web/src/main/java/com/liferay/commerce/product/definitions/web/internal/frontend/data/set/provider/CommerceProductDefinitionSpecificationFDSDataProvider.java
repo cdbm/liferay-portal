@@ -26,10 +26,11 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,7 +60,7 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 		return TransformUtil.transform(
 			_cpDefinitionSpecificationOptionValueService.
 				getCPDefinitionSpecificationOptionValues(
-					cpDefinitionId, fdsPagination.getStartPosition(),
+					cpDefinitionId, null, fdsPagination.getStartPosition(),
 					fdsPagination.getEndPosition(), null),
 			cpDefinitionSpecificationOptionValue -> {
 				CPSpecificationOption cpSpecificationOption =
@@ -69,8 +70,10 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 				return new ProductSpecification(
 					cpDefinitionSpecificationOptionValue.
 						getCPDefinitionSpecificationOptionValueId(),
-					cpSpecificationOption.getTitle(languageId),
-					cpDefinitionSpecificationOptionValue.getValue(languageId),
+					_getCPSpecificationOptionTitle(
+						cpSpecificationOption, languageId),
+					_getLocalizedSpecificationOptionValue(
+						cpDefinitionSpecificationOptionValue, languageId),
 					_getCPOptionCategoryTitle(
 						cpDefinitionSpecificationOptionValue, languageId),
 					cpDefinitionSpecificationOptionValue.getPriority());
@@ -86,7 +89,7 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 			httpServletRequest, "cpDefinitionId");
 
 		return _cpDefinitionSpecificationOptionValueService.
-			getCPDefinitionSpecificationOptionValuesCount(cpDefinitionId);
+			getCPDefinitionSpecificationOptionValuesCount(cpDefinitionId, null);
 	}
 
 	private String _getCPOptionCategoryTitle(
@@ -118,6 +121,47 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private String _getCPSpecificationOptionTitle(
+		CPSpecificationOption cpSpecificationOption, String languageId) {
+
+		String[] availableLanguageIds =
+			cpSpecificationOption.getAvailableLanguageIds();
+
+		if (availableLanguageIds.length == 1) {
+			return cpSpecificationOption.getTitle(availableLanguageIds[0]);
+		}
+
+		if (Validator.isBlank(cpSpecificationOption.getTitle(languageId))) {
+			return cpSpecificationOption.getTitle(
+				cpSpecificationOption.getDefaultLanguageId());
+		}
+
+		return cpSpecificationOption.getTitle(languageId);
+	}
+
+	private String _getLocalizedSpecificationOptionValue(
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue,
+		String languageId) {
+
+		String[] availableLanguageIds =
+			cpDefinitionSpecificationOptionValue.getAvailableLanguageIds();
+
+		if (availableLanguageIds.length == 1) {
+			return cpDefinitionSpecificationOptionValue.getValue(
+				availableLanguageIds[0]);
+		}
+
+		if (Validator.isBlank(
+				cpDefinitionSpecificationOptionValue.getValue(languageId))) {
+
+			return cpDefinitionSpecificationOptionValue.getValue(
+				cpDefinitionSpecificationOptionValue.getDefaultLanguageId());
+		}
+
+		return cpDefinitionSpecificationOptionValue.getValue(languageId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -8,6 +8,7 @@ import {FrameLocator, Locator, Page} from '@playwright/test';
 import {CommerceDNDTablePage} from '../commerceDNDTablePage';
 
 export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
+	readonly cancelButton: Locator;
 	readonly checkoutButton: Locator;
 	readonly commerceOrderAccountEntryName: Locator;
 	readonly editEntryActionLink: (
@@ -15,6 +16,7 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		action: string
 	) => Promise<Locator>;
 	readonly editPaymentMethodFrame: FrameLocator;
+	readonly expandProductButton: Locator;
 	readonly headerDetailsTitle: Locator;
 	readonly orderDetailsEntryDescription: (
 		infoName: string
@@ -23,9 +25,11 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 	readonly orderDetailsModalHeader: (headname: string) => Promise<Locator>;
 	readonly orderDetailsModalField: (fieldName: string) => Promise<Locator>;
 	readonly orderDetailsTab: (tabName: string) => Promise<Locator>;
+	readonly orderId: Locator;
 	readonly orderItemActions: Locator;
 	readonly orderItemActionEdit: Locator;
 	readonly orderItemFrame: FrameLocator;
+	readonly orderItemFrameCloseButton: Locator;
 	readonly orderItemDecimalQuantity: Locator;
 	readonly orderItemQuantityColumn: (quantity: string) => Promise<Locator>;
 	readonly orderItemSaveButton: Locator;
@@ -42,6 +46,8 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		paymentMethod: string
 	) => Promise<Locator>;
 	readonly reorderButton: Locator;
+	readonly acceptOrderButton: Locator;
+	readonly createShipmentButton: Locator;
 	readonly saveButton: Locator;
 	readonly selectDeliveryTerms: Locator;
 	readonly selectPaymentTerms: Locator;
@@ -53,6 +59,10 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 			page,
 			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_editOrderContainer .fds table'
 		);
+		this.cancelButton = page.getByRole('link', {
+			exact: true,
+			name: 'Cancel',
+		});
 		this.checkoutButton = page.getByRole('button', {
 			exact: true,
 			name: 'Checkout',
@@ -71,6 +81,9 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		this.editPaymentMethodFrame = page.frameLocator(
 			'iframe[title="Edit Payment Method"]'
 		);
+		this.expandProductButton = page
+			.locator('.autofit-col-toggle')
+			.getByRole('button');
 		this.headerDetailsTitle = page.getByTestId('headerDetailsTitle');
 		this.orderDetailsEntryDescription = async (infoName: string) => {
 			return page.locator(
@@ -87,9 +100,13 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		this.orderDetailsTab = async (tabName: string) => {
 			return page.getByRole('link', {exact: true, name: tabName});
 		};
+		this.orderId = page.locator('span:has-text("ID")+strong');
 		this.orderItemActions = page.getByRole('button', {name: 'Actions'});
 		this.orderItemActionEdit = page.getByRole('menuitem', {name: 'Edit'});
 		this.orderItemFrame = page.frameLocator('iframe');
+		this.orderItemFrameCloseButton = this.orderItemFrame
+			.locator('button.side-panel-iframe-close')
+			.first();
 		this.orderItemDecimalQuantity =
 			this.orderItemFrame.getByLabel('Decimal Quantity');
 		this.orderItemSaveButton = this.orderItemFrame.getByRole('button', {
@@ -103,10 +120,12 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		};
 		this.orderNotesLink = page.getByRole('link', {
 			exact: true,
-			name: 'Notes',
+			name: 'Questions and Answers',
 		});
 		this.orderNotesTextArea = page.getByPlaceholder('Type your note here.');
-		this.orderSummaryLink = page.locator('#order-summary-modal');
+		this.orderSummaryLink = page
+			.getByText('Order Summary')
+			.getByRole('link', {name: 'edit'});
 		this.orderSummaryFrame = page.frameLocator(
 			'iframe[title="Order Summary"]'
 		);
@@ -117,10 +136,9 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 			'Subtotal',
 			{exact: true}
 		);
-		this.orderSummarySaveButton = this.orderSummaryFrame.getByRole(
-			'button',
-			{name: 'Submit'}
-		);
+		this.orderSummarySaveButton = page
+			.locator('.modal-item-last')
+			.getByRole('button', {name: 'Submit'});
 		this.page = page;
 		this.paymentMethodRadioButton = async (paymentMethod: string) => {
 			return this.editPaymentMethodFrame
@@ -132,6 +150,14 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 			exact: true,
 			name: 'Reorder',
 		});
+		this.acceptOrderButton = page.getByRole('link', {
+			exact: true,
+			name: 'Accept Order',
+		});
+		this.createShipmentButton = page.getByRole('link', {
+			exact: true,
+			name: 'Create Shipment',
+		});
 		this.saveButton = this.page.getByRole('button', {name: 'Save'});
 		this.selectPaymentTerms = this.page
 			.frameLocator('iframe[title="Payment Terms"]')
@@ -139,10 +165,9 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 		this.selectDeliveryTerms = this.page
 			.frameLocator('iframe[title="Delivery Terms"]')
 			.getByLabel('Title');
-		this.submitPaymentMethod = this.editPaymentMethodFrame.getByRole(
-			'button',
-			{exact: true, name: 'Submit'}
-		);
+		this.submitPaymentMethod = page
+			.locator('.modal-item-last')
+			.getByRole('button', {exact: true, name: 'Submit'});
 		this.submitModalButton = this.page.getByRole('button', {
 			name: 'Submit',
 		});
@@ -169,10 +194,5 @@ export class CommerceAdminOrderDetailsPage extends CommerceDNDTablePage {
 			await this.orderDetailsModalField('Region')
 		).selectOption(region);
 		await this.submitModalButton.click();
-	}
-
-	async reorder() {
-		this.reorderButton.click();
-		this.checkoutButton.click();
 	}
 }

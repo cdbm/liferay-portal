@@ -42,6 +42,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -244,12 +244,12 @@ public abstract class BaseShippingMethodResourceTestCase {
 
 		Long channelId = testGetChannelShippingMethodsPage_getChannelId();
 
-		Page<ShippingMethod> shippingMethodPage =
+		Page<ShippingMethod> shippingMethodsPage =
 			shippingMethodResource.getChannelShippingMethodsPage(
 				channelId, null);
 
 		int totalCount = GetterUtil.getInteger(
-			shippingMethodPage.getTotalCount());
+			shippingMethodsPage.getTotalCount());
 
 		ShippingMethod shippingMethod1 =
 			testGetChannelShippingMethodsPage_addShippingMethod(
@@ -359,11 +359,9 @@ public abstract class BaseShippingMethodResourceTestCase {
 		return null;
 	}
 
-	protected ShippingMethod testGraphQLShippingMethod_addShippingMethod()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(

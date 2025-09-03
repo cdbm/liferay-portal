@@ -8,27 +8,27 @@ import {Outlet, useLocation, useNavigate} from 'react-router-dom';
 
 import {useMarketplaceContext} from '../../context/MarketplaceContext';
 import {Analytics} from '../../core/Analytics';
+import {SkuOptions} from '../../enums/Product';
+import useAccountAddresses from '../../hooks/useAccountAddresses';
 import useCart from '../../hooks/useCart';
 import useCommerceRegions from '../../hooks/useCommerceRegions';
-import useGetAddresses from '../../hooks/useGetAddresses';
 import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
-import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
-import HeadlessAdminUserImpl from '../../services/rest/HeadlessAdminUser';
+import CommerceSelectAccount from '../../services/rest/CommerceSelectAccount';
+import HeadlessAdminUser from '../../services/rest/HeadlessAdminUser';
 import {Region} from '../../services/rest/HeadlessCommerceAdminAddress';
 import {
 	getPaymentMethodURL,
 	postCheckoutCart,
 	postEmailAppInformation,
 } from '../../utils/api';
+import {getProductPriceModel} from '../../utils/productUtils';
 import {useGetAppContext} from './GetAppContextProvider';
 import ProductHeader from './containers/ProductHeader';
 import ProductStepWizard from './containers/ProductStepWizard';
 import {PaymentMethod} from './enums/paymentMethod';
-import {SkuOptions} from './enums/skuOptions';
 import buildNewCart from './utils/buildNewCart';
 import {getProductOrderTypes} from './utils/getProductOrderTypes';
-import getProductPriceModel from './utils/getProductPriceModel';
 import {getProductSpecificationValues} from './utils/getProductSpecificationValues';
 import getReplaceCurrentURL from './utils/getReplaceCurrentURL';
 import {postCartByPaymentMethod} from './utils/postCartByPaymentMethod';
@@ -130,7 +130,9 @@ const GetAppOutlet = () => {
 	] = useGetAppContext();
 
 	const [loading, setLoading] = useState(false);
-	const {addresses} = useGetAddresses(account?.id);
+	const {data: addressResponse = {items: []}} = useAccountAddresses(
+		account?.id
+	);
 	const {channel} = useMarketplaceContext();
 	const location = useLocation();
 
@@ -187,7 +189,7 @@ const GetAppOutlet = () => {
 		setLoading(true);
 
 		if (billingAddress.saveAddress) {
-			await HeadlessAdminUserImpl.postAddress(account?.id as number, {
+			await HeadlessAdminUser.postAddress(account?.id as number, {
 				addressCountry: getCountryNameByCode(
 					regions,
 					billingAddress?.country
@@ -272,9 +274,7 @@ const GetAppOutlet = () => {
 				nextStepsCallbackURL
 			);
 
-			await CommerceSelectAccountImpl.selectAccount(
-				account?.id as number
-			);
+			await CommerceSelectAccount.selectAccount(account?.id as number);
 
 			window.location.href = paymentMethodURL || nextStepsCallbackURL;
 		}
@@ -314,7 +314,7 @@ const GetAppOutlet = () => {
 						<Outlet
 							context={{
 								account,
-								addresses,
+								addresses: addressResponse.items,
 								cartUtil,
 								handleGetApp,
 								isFreeApp,

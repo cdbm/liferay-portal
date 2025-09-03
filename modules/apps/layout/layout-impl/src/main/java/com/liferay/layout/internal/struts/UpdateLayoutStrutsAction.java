@@ -55,12 +55,12 @@ import com.liferay.portal.util.LayoutClone;
 import com.liferay.portal.util.LayoutCloneFactory;
 import com.liferay.portal.util.WebAppPool;
 
+import jakarta.portlet.PortletPreferences;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -103,7 +103,7 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 				throw new IllegalArgumentException("Portlet ID is null");
 			}
 
-			_checkPortletPermission(portletId, themeDisplay);
+			_checkPortletPermission(layout.getPlid(), portletId, themeDisplay);
 
 			String columnId = ParamUtil.getString(
 				httpServletRequest, "p_p_col_id", null);
@@ -397,11 +397,11 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 	}
 
 	private void _checkPortletPermission(
-			String portletId, ThemeDisplay themeDisplay)
+			long plid, String portletId, ThemeDisplay themeDisplay)
 		throws Exception {
 
 		PortletPermissionUtil.check(
-			themeDisplay.getPermissionChecker(), portletId,
+			themeDisplay.getPermissionChecker(), plid, portletId,
 			ActionKeys.ADD_TO_PAGE);
 
 		LayoutTypePortlet layoutTypePortlet =
@@ -429,8 +429,8 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 		for (PortletCategory curPortletCategory :
 				portletCategory.getCategories()) {
 
-			if (!curPortletCategory.isHidden() &&
-				categoryNames.contains(curPortletCategory.getName())) {
+			if (_containsPortletCategoryPermission(
+					categoryNames, curPortletCategory)) {
 
 				return;
 			}
@@ -441,6 +441,29 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 			StringBundler.concat(
 				Portlet.class.getName(), StringPool.UNDERLINE, portletId),
 			0, ActionKeys.ADD_TO_PAGE);
+	}
+
+	private boolean _containsPortletCategoryPermission(
+		Set<String> categoryNames, PortletCategory portletCategory) {
+
+		if (!portletCategory.isHidden() &&
+			(categoryNames.contains(portletCategory.getName()) ||
+			 categoryNames.contains(portletCategory.getPath()))) {
+
+			return true;
+		}
+
+		for (PortletCategory childPortletCategory :
+				portletCategory.getCategories()) {
+
+			if (_containsPortletCategoryPermission(
+					categoryNames, childPortletCategory)) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Reference

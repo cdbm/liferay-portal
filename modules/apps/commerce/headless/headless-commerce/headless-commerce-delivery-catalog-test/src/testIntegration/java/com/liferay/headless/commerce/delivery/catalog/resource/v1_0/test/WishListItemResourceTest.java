@@ -18,6 +18,7 @@ import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.service.CommerceWishListLocalService;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.WishListItem;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -42,7 +43,8 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 		_user = UserTestUtil.addUser(testCompany);
 
 		_accountEntry = AccountEntryLocalServiceUtil.addAccountEntry(
-			_user.getUserId(), AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
+			StringPool.BLANK, _user.getUserId(),
+			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null,
 			RandomTestUtil.randomString(),
@@ -81,6 +83,20 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 	}
 
 	@Override
+	protected Long testBatchEngineDeleteImportTask_getAccountId()
+		throws Exception {
+
+		return _accountEntry.getAccountEntryId();
+	}
+
+	@Override
+	protected String testBatchEngineDeleteImportTask_getCurrencyCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Override
 	protected WishListItem testDeleteWishListItem_addWishListItem()
 		throws Exception {
 
@@ -96,6 +112,18 @@ public class WishListItemResourceTest extends BaseWishListItemResourceTestCase {
 
 	@Override
 	protected String testDeleteWishListItem_getCurrencyCode() throws Exception {
+		return null;
+	}
+
+	@Override
+	protected Long testDeleteWishListItemBatch_getAccountId() throws Exception {
+		return _accountEntry.getAccountEntryId();
+	}
+
+	@Override
+	protected String testDeleteWishListItemBatch_getCurrencyCode()
+		throws Exception {
+
 		return null;
 	}
 

@@ -27,9 +27,9 @@ import com.liferay.headless.commerce.admin.pricing.internal.odata.entity.v1_0.Pr
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.PriceListAccountGroupUtil;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.TierPriceUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.PriceListResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -44,14 +44,14 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -232,7 +232,7 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		CommercePriceList commercePriceList =
 			_commercePriceListService.addOrUpdateCommercePriceList(
-				externalReferenceCode, commerceCatalog.getGroupId(), 0L,
+				externalReferenceCode, 0L, commerceCatalog.getGroupId(),
 				commerceCurrency.getCode(), true,
 				CommercePriceListConstants.TYPE_PRICE_LIST, 0, false,
 				priceList.getName(),

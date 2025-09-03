@@ -8,12 +8,12 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.SettingsSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -66,16 +66,16 @@ public class Settings implements Cloneable, Serializable {
 
 	protected String css;
 
-	public Object getFavIcon() {
+	public FavIcon getFavIcon() {
 		return favIcon;
 	}
 
-	public void setFavIcon(Object favIcon) {
+	public void setFavIcon(FavIcon favIcon) {
 		this.favIcon = favIcon;
 	}
 
 	public void setFavIcon(
-		UnsafeSupplier<Object, Exception> favIconUnsafeSupplier) {
+		UnsafeSupplier<FavIcon, Exception> favIconUnsafeSupplier) {
 
 		try {
 			favIcon = favIconUnsafeSupplier.get();
@@ -85,7 +85,7 @@ public class Settings implements Cloneable, Serializable {
 		}
 	}
 
-	protected Object favIcon;
+	protected FavIcon favIcon;
 
 	public ClientExtension[] getGlobalCSSClientExtensions() {
 		return globalCSSClientExtensions;

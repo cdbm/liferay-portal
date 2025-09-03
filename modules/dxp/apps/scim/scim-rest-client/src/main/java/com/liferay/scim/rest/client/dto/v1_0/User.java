@@ -8,11 +8,11 @@ package com.liferay.scim.rest.client.dto.v1_0;
 import com.liferay.scim.rest.client.function.UnsafeSupplier;
 import com.liferay.scim.rest.client.serdes.v1_0.UserSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Olivér Kecskeméty
@@ -46,16 +46,16 @@ public class User implements Cloneable, Serializable {
 
 	protected Boolean active;
 
-	public Object[] getAddresses() {
+	public Address[] getAddresses() {
 		return addresses;
 	}
 
-	public void setAddresses(Object[] addresses) {
+	public void setAddresses(Address[] addresses) {
 		this.addresses = addresses;
 	}
 
 	public void setAddresses(
-		UnsafeSupplier<Object[], Exception> addressesUnsafeSupplier) {
+		UnsafeSupplier<Address[], Exception> addressesUnsafeSupplier) {
 
 		try {
 			addresses = addressesUnsafeSupplier.get();
@@ -65,7 +65,7 @@ public class User implements Cloneable, Serializable {
 		}
 	}
 
-	protected Object[] addresses;
+	protected Address[] addresses;
 
 	public String getDisplayName() {
 		return displayName;

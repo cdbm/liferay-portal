@@ -48,9 +48,9 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -129,10 +129,10 @@ public class DefaultDLViewFileVersionDisplayContextTest {
 		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
 
 		return _layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-			_group.getGroupId(), PortalUtil.getClassNameId(FileEntry.class),
-			fileEntry.getFileEntryId(), StringPool.BLANK,
-			RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
-			layout.getPlid(), _serviceContext);
+			_group.getGroupId(), StringPool.BLANK,
+			PortalUtil.getClassNameId(FileEntry.class),
+			fileEntry.getFileEntryId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomLong(), layout.getPlid(), _serviceContext);
 	}
 
 	private List<DropdownItem> _getDropdownGroupItems(
@@ -169,11 +169,11 @@ public class DefaultDLViewFileVersionDisplayContextTest {
 			new MockLiferayPortletURL());
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			mockLiferayPortletRenderRequest);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();

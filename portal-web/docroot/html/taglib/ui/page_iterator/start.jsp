@@ -275,7 +275,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 								<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
 							</button>
 
-							<div class="dropdown-menu dropdown-menu-top-center">
+							<div class="dropdown-menu dropdown-menu-top dropdown-menu-width-shrink">
 								<ul aria-expanded="false" class="inline-scroller link-list" id="dropdown-pages-1" role="menu">
 
 									<%
@@ -317,7 +317,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 								<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
 							</button>
 
-							<div class="dropdown-menu dropdown-menu-top-center">
+							<div class="dropdown-menu dropdown-menu-top dropdown-menu-width-shrink">
 								<ul aria-expanded="false" class="inline-scroller link-list" data-max-index="<%= pages - 2 %>" id="dropdown-pages-2" role="menu">
 
 									<%
@@ -366,7 +366,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 									<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
 								</button>
 
-								<div class="dropdown-menu dropdown-menu-top-center">
+								<div class="dropdown-menu dropdown-menu-top dropdown-menu-width-shrink">
 									<ul aria-expanded="false" class="inline-scroller link-list" data-max-index="<%= cur - 1 %>" id="dropdown-pages-3">
 						</c:if>
 
@@ -418,7 +418,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 									<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
 								</button>
 
-								<div class="dropdown-menu dropdown-menu-top-center">
+								<div class="dropdown-menu dropdown-menu-top dropdown-menu-width-shrink">
 									<ul aria-expanded="false" class="inline-scroller link-list" data-current-index="<%= cur + 2 %>" id="dropdown-pages-4">
 						</c:if>
 
@@ -446,7 +446,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 
 						<li class="page-item">
 							<liferay-ui:csp>
-								<a aria-label="<%= LanguageUtil.format(request, "page-x", pages) %>" class="page-link" href="<%= _getHREF(formName, namespace + curParam, pages, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, pages) : "" %>"><%= pages %></a>
+								<a aria-label="<%= LanguageUtil.format(request, "page-x", pages) %>" class="page-link" href="<%= _getHREF(formName, namespace + curParam, pages, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, pages) : "" %>" role="menuitem"><%= pages %></a>
 							</liferay-ui:csp>
 						</li>
 					</c:otherwise>
@@ -489,13 +489,14 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 			'<%= randomNamespace %>dynamicInlineScroll',
 			new Liferay.Util.DynamicInlineScroll(
 				{
+					applyNamespaceToCurParam: <%= Validator.isNotNull(namespace) %>,
 					cur: '<%= cur %>',
 					curParam: '<%= curParam %>',
 					forcePost: <%= forcePost %>,
 					formName: '<%= formName %>',
 					initialPages: '<%= initialPages %>',
 					jsCall: '<%= jsCall %>',
-					namespace: '<%= Validator.isNotNull(namespace) ? namespace : id %>',
+					namespace: '<%= namespace %>',
 					pages: '<%= pages %>',
 					randomNamespace: '<%= randomNamespace %>',
 					url: '<%= HtmlUtil.escapeJS(HttpComponentsUtil.removeParameter(url, namespace + curParam)) %>',
@@ -521,18 +522,6 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 				data: data
 			}
 		);
-	}
-</aui:script>
-
-<aui:script senna="temporary" type="text/javascript">
-	var pageIterator = document.getElementById('<%= namespace + id %>');
-	var button = pageIterator?.querySelector('.pagination .dropdown-toggle');
-
-	if (button) {
-		var list = pageIterator.querySelector('.pagination .dropdown-menu');
-		var options = list?.querySelectorAll('.pagination .dropdown-item');
-
-		<portlet:namespace />handleDropdownKeyPress(button, list, options, pageIterator);
 	}
 </aui:script>
 

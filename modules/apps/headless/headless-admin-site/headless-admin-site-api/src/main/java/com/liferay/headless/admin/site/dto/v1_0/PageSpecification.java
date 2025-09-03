@@ -21,6 +21,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -28,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -71,6 +71,59 @@ public abstract class PageSpecification implements Serializable {
 	public static PageSpecification unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(PageSpecification.class, json);
 	}
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "Custom fields associated with the page specification. Not available if this page specification belongs to a utility page."
+	)
+	@Valid
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
+		if (_customFieldsSupplier != null) {
+			customFields = _customFieldsSupplier.get();
+
+			_customFieldsSupplier = null;
+		}
+
+		return customFields;
+	}
+
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
+		this.customFields = customFields;
+
+		_customFieldsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCustomFields(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
+
+		_customFieldsSupplier = () -> {
+			try {
+				return customFieldsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "Custom fields associated with the page specification. Not available if this page specification belongs to a utility page."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page specification's external reference code, unique per site."
@@ -158,6 +211,61 @@ public abstract class PageSpecification implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Settings> _settingsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The site template page specification's external reference code."
+	)
+	public String getSiteTemplatePageSpecificationExternalReferenceCode() {
+		if (_siteTemplatePageSpecificationExternalReferenceCodeSupplier !=
+				null) {
+
+			siteTemplatePageSpecificationExternalReferenceCode =
+				_siteTemplatePageSpecificationExternalReferenceCodeSupplier.
+					get();
+
+			_siteTemplatePageSpecificationExternalReferenceCodeSupplier = null;
+		}
+
+		return siteTemplatePageSpecificationExternalReferenceCode;
+	}
+
+	public void setSiteTemplatePageSpecificationExternalReferenceCode(
+		String siteTemplatePageSpecificationExternalReferenceCode) {
+
+		this.siteTemplatePageSpecificationExternalReferenceCode =
+			siteTemplatePageSpecificationExternalReferenceCode;
+
+		_siteTemplatePageSpecificationExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSiteTemplatePageSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			siteTemplatePageSpecificationExternalReferenceCodeUnsafeSupplier) {
+
+		_siteTemplatePageSpecificationExternalReferenceCodeSupplier = () -> {
+			try {
+				return siteTemplatePageSpecificationExternalReferenceCodeUnsafeSupplier.
+					get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The site template page specification's external reference code."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String siteTemplatePageSpecificationExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String>
+		_siteTemplatePageSpecificationExternalReferenceCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The status of the page specification."
@@ -296,6 +404,29 @@ public abstract class PageSpecification implements Serializable {
 
 		sb.append("{");
 
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(customFields[i]);
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		String externalReferenceCode = getExternalReferenceCode();
 
 		if (externalReferenceCode != null) {
@@ -322,6 +453,25 @@ public abstract class PageSpecification implements Serializable {
 			sb.append("\"settings\": ");
 
 			sb.append(String.valueOf(settings));
+		}
+
+		String siteTemplatePageSpecificationExternalReferenceCode =
+			getSiteTemplatePageSpecificationExternalReferenceCode();
+
+		if (siteTemplatePageSpecificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"siteTemplatePageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(siteTemplatePageSpecificationExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Status status = getStatus();

@@ -7,8 +7,8 @@ package com.liferay.commerce.product.content.web.internal.fragment.renderer;
 
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
@@ -16,7 +16,6 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -35,16 +34,16 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,7 +60,7 @@ public class AddToCartFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
@@ -83,7 +82,7 @@ public class AddToCartFragmentRenderer implements FragmentRenderer {
 				_log.debug(jsonException);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -130,7 +129,7 @@ public class AddToCartFragmentRenderer implements FragmentRenderer {
 					CommerceUtil.getCommerceAccountId(commerceContext),
 					commerceContext.getCommerceChannelGroupId(),
 					cpDefinition.getCPDefinitionId(),
-					_portal.getLocale(httpServletRequest)));
+					_portal.getLocale(httpServletRequest), false));
 
 			FragmentEntryLink fragmentEntryLink =
 				fragmentRendererContext.getFragmentEntryLink();
@@ -142,8 +141,8 @@ public class AddToCartFragmentRenderer implements FragmentRenderer {
 				"liferay-commerce:add-to-cart:inline",
 				GetterUtil.getBoolean(
 					_fragmentEntryConfigurationParser.getFieldValue(
-						fragmentEntryLink.getConfiguration(),
-						fragmentEntryLink.getEditableValues(),
+						fragmentEntryLink.getConfigurationJSONObject(),
+						fragmentEntryLink.getEditableValuesJSONObject(),
 						LocaleUtil.getMostRelevantLocale(), "inline")));
 
 			String namespace = (String)httpServletRequest.getAttribute(
@@ -183,8 +182,8 @@ public class AddToCartFragmentRenderer implements FragmentRenderer {
 
 		return GetterUtil.getString(
 			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				LocaleUtil.getMostRelevantLocale(), name));
 	}
 

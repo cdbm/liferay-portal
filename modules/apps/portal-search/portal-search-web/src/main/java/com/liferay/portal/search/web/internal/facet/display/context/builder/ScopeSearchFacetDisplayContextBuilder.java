@@ -23,16 +23,17 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.ScopeSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.site.facet.configuration.SiteFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
+
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author André de Oliveira
@@ -177,14 +178,10 @@ public class ScopeSearchFacetDisplayContextBuilder {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_siteFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_siteFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected List<BucketDisplayContext>

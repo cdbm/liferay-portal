@@ -14,7 +14,6 @@ import './SecurityVulnerabilitiesList.css';
 
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar/lib/PaginationBarWithBasicItems';
 import {useMemo} from 'react';
-import {Link} from 'react-router-dom';
 import {SVWaves} from '~/assets/SVWaves';
 import {FILTER_OPTIONS} from '~/features/security-vulnerabilities/utils/constants/filterOptions';
 import {JiraEnum} from '~/features/security-vulnerabilities/utils/constants/jiraEnum';
@@ -60,6 +59,7 @@ const SecurityVulnerabilitiesList = () => {
 
 	const columns = [
 		{
+			className: 'sv-priority-summary-column',
 			columnKey: 'prioritySummary',
 			label: i18n.translate('priority-summary'),
 		},
@@ -110,16 +110,12 @@ const SecurityVulnerabilitiesList = () => {
 								{issue[JiraEnum.FIELDS]?.[JiraEnum.SEVERITY]}
 							</div>
 
-							<div className="font-weight-bold sv-name">
-								<Link
-									className="sv-name-link"
-									to={`/${issue?.[JiraEnum.KEY]}`}
-								>
-									{issue[JiraEnum.FIELDS]?.[JiraEnum.CVE_IDS]}
-								</Link>
+							<div className="font-weight-bold sv-name sv-wrap-text">
+								{issue[JiraEnum.FIELDS]?.[JiraEnum.CVE_IDS]}
 							</div>
 						</div>
-						<div className="sv-summary text-neutral-8">
+
+						<div className="sv-summary sv-wrap-text text-neutral-8">
 							{issue[JiraEnum.FIELDS]?.[JiraEnum.SUMMARY]}
 						</div>
 					</div>
@@ -149,6 +145,7 @@ const SecurityVulnerabilitiesList = () => {
 							onChange={(keywords) =>
 								updateSearchParams({
 									[JiraEnum.KEYWORDS]: keywords,
+									[JiraEnum.PAGE]: 1,
 								})
 							}
 						/>
@@ -168,7 +165,10 @@ const SecurityVulnerabilitiesList = () => {
 									[JiraEnum.AFFECTED_VERSIONS]: jiraVersions,
 								}}
 								onChange={(params) =>
-									updateSearchParams(params)
+									updateSearchParams({
+										...params,
+										[JiraEnum.PAGE]: 1,
+									})
 								}
 								params={searchParams}
 								sortOptions={SORT_OPTIONS}

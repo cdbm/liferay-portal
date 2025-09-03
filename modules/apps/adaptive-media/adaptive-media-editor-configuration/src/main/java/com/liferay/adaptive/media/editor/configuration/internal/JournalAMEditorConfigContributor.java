@@ -10,7 +10,7 @@ import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriteri
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.journal.item.selector.criterion.JournalItemSelectorCriterion;
+import com.liferay.journal.item.selector.JournalItemSelectorCriterion;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 
 import org.osgi.service.component.annotations.Component;
@@ -22,7 +22,7 @@ import org.osgi.service.component.annotations.Component;
 	property = {
 		"editor.name=alloyeditor", "editor.name=ckeditor",
 		"editor.name=ckeditor_classic",
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"service.ranking:Integer=101"
 	},
 	service = EditorConfigContributor.class

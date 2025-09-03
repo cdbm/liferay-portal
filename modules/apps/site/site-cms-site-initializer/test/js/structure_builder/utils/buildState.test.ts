@@ -3,10 +3,22 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {State} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/contexts/StateContext';
 import buildObjectDefinition from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/buildObjectDefinition';
 import buildState from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/buildState';
 import {Field} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/field';
 import getUuid from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/getUuid';
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/config',
+	() => {
+		return {
+			config: {
+				objectFolderExternalReferenceCode: 'L_CMS_CONTENT_STRUCTURES',
+			},
+		};
+	}
+);
 
 const DATE_TIME_FIELD_UUID = getUuid();
 const TEXT_FIELD_UUID = getUuid();
@@ -17,6 +29,7 @@ const DATE_TIME_FIELD: Field = {
 	label: {en_US: 'Date and Time Field'},
 	localized: true,
 	name: 'datetimeField',
+	parent: getUuid(),
 	required: false,
 	settings: {
 		timeStorage: 'convertToUTC',
@@ -35,77 +48,227 @@ const TEXT_FIELD: Field = {
 	label: {en_US: 'Text Field'},
 	localized: false,
 	name: 'textField',
+	parent: getUuid(),
 	required: true,
 	settings: {},
 	type: 'text',
 	uuid: TEXT_FIELD_UUID,
 };
 
+function getChildren(fields: Field[]) {
+	const children = new Map();
+
+	for (const field of fields) {
+		children.set(field.uuid, field);
+	}
+
+	return children;
+}
+
 describe('buildState', () => {
 	it('Builds state with two fields ', () => {
-		const initialState = {
+		const structure: State['structure'] = {
+			children: new Map(),
 			erc: 'structureERC',
-			error: null,
-			id: 1,
-			invalids: new Set(),
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
-			publishedFields: new Set(),
-			selection: [],
+			spaces: [],
 			status: 'draft',
+			type: 'L_CMS_CONTENT_STRUCTURES',
+			uuid: getUuid(),
 		};
 
-		const objectDefinition = buildObjectDefinition({
-			erc: initialState.erc,
-			fields: Array.from([TEXT_FIELD, DATE_TIME_FIELD]),
-			id: initialState.id,
-			label: initialState.label,
-			name: initialState.name,
-		});
-
-		const result = buildState(objectDefinition);
-
-		const {fields, uuid} = result!;
-
-		expect(result).toEqual({...initialState, fields, uuid});
-	});
-
-	it('Takes into account the status of the object definition', () => {
-		const initialState = {
-			erc: 'structureERC',
+		const initialState: State = {
 			error: null,
-			id: 1,
-			invalids: new Set(),
-			label: {en_US: 'Structure'},
-			name: 'myStructure',
+			history: {deletedChildren: false},
+			invalids: new Map(),
+			publishedChildren: new Set(),
 			selection: [],
-			status: 'published',
+			structure,
+			unsavedChanges: false,
 		};
 
 		const objectDefinition = buildObjectDefinition({
-			erc: initialState.erc,
-			fields: Array.from([TEXT_FIELD, DATE_TIME_FIELD]),
-			id: initialState.id,
-			label: initialState.label,
-			name: initialState.name,
+			children: getChildren([TEXT_FIELD, DATE_TIME_FIELD]),
+			erc: structure.erc,
+			label: structure.label,
+			name: structure.name,
+			spaces: structure.spaces,
 		});
 
 		const result = buildState({
-			...objectDefinition,
-			status: {
-				label: 'approved',
-			},
+			mainObjectDefinition: objectDefinition,
+			objectDefinitions: {},
 		});
 
-		const {fields, uuid} = result!;
+		const {children, uuid} = result!.structure;
 
-		const publishedFields = new Set(fields.keys());
-
-		expect(result).toEqual({
+		const nextState = {
 			...initialState,
-			fields,
-			publishedFields,
-			uuid,
+			structure: {
+				...structure,
+				children,
+				uuid,
+			},
+		};
+
+		expect(result).toEqual(nextState);
+	});
+
+	it('Takes into account the status of the object definition', () => {
+		const structure: State['structure'] = {
+			children: new Map(),
+			erc: 'structureERC',
+			label: {en_US: 'Structure'},
+			name: 'myStructure',
+			spaces: [],
+			status: 'published',
+			type: 'L_CMS_CONTENT_STRUCTURES',
+			uuid: getUuid(),
+		};
+
+		const initialState: State = {
+			error: null,
+			history: {deletedChildren: false},
+			invalids: new Map(),
+			publishedChildren: new Set(),
+			selection: [],
+			structure,
+			unsavedChanges: false,
+		};
+
+		const objectDefinition = buildObjectDefinition({
+			children: getChildren([TEXT_FIELD, DATE_TIME_FIELD]),
+			erc: structure.erc,
+			label: structure.label,
+			name: structure.name,
+			spaces: structure.spaces,
 		});
+
+		const result = buildState({
+			mainObjectDefinition: {
+				...objectDefinition,
+				status: {
+					code: 0,
+				},
+			},
+			objectDefinitions: {},
+		});
+
+		const {children, uuid} = result!.structure;
+
+		const publishedChildren = new Set(children.keys());
+
+		const nextState = {
+			...initialState,
+			publishedChildren,
+			structure: {
+				...structure,
+				children,
+				uuid,
+			},
+		};
+
+		expect(result).toEqual(nextState);
+	});
+
+	it('Takes into account spaces', () => {
+		const structure: State['structure'] = {
+			children: new Map(),
+			erc: 'structureERC',
+			label: {en_US: 'Structure'},
+			name: 'myStructure',
+			spaces: ['space-1-erc', 'space-2-erc'],
+			status: 'published',
+			type: 'L_CMS_CONTENT_STRUCTURES',
+			uuid: getUuid(),
+		};
+
+		const initialState: State = {
+			error: null,
+			history: {deletedChildren: false},
+			invalids: new Map(),
+			publishedChildren: new Set(),
+			selection: [],
+			structure,
+			unsavedChanges: false,
+		};
+
+		const objectDefinition = buildObjectDefinition({
+			children: getChildren([TEXT_FIELD, DATE_TIME_FIELD]),
+			erc: structure.erc,
+			label: structure.label,
+			name: structure.name,
+			spaces: structure.spaces,
+		});
+
+		const result = buildState({
+			mainObjectDefinition: {
+				...objectDefinition,
+				status: {
+					code: 0,
+				},
+			},
+			objectDefinitions: {},
+		});
+
+		const {children, uuid} = result!.structure;
+
+		const publishedChildren = new Set(children.keys());
+
+		const nextState = {
+			...initialState,
+			publishedChildren,
+			structure: {
+				...structure,
+				children,
+				uuid,
+			},
+		};
+
+		expect(result).toEqual(nextState);
+	});
+
+	it('It works with Double fields ', () => {
+		const objectDefinition = {
+			enableFriendlyURLCustomization: true,
+			enableIndexSearch: true,
+			enableLocalization: true,
+			enableObjectEntryDraft: true,
+			enableObjectEntrySchedule: true,
+			enableObjectEntryVersioning: true,
+			externalReferenceCode: 'ca7f96e2-3436-4aa4-9626-265d006bea87',
+			label: {
+				en_US: 'Untitled Structure',
+			},
+			objectFields: [
+				{
+					DBType: 'Double',
+					businessType: 'Decimal',
+					externalReferenceCode: 'decimal-field',
+					indexed: true,
+					label: {
+						en_US: 'Decimal',
+					},
+					localized: true,
+					name: 'decimal',
+					required: false,
+					type: 'Double',
+				},
+			],
+			pluralLabel: {
+				en_US: 'Untitled Structure',
+			},
+			scope: 'depot' as const,
+		};
+
+		const state = buildState({
+			mainObjectDefinition: objectDefinition,
+			objectDefinitions: {},
+		});
+
+		const [, field] = [...state!.structure.children][0];
+
+		expect(field).toEqual(expect.objectContaining({type: 'decimal'}));
 	});
 });

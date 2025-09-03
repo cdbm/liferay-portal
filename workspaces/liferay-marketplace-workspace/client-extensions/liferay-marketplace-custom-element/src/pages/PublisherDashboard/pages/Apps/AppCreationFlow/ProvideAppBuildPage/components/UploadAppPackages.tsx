@@ -7,11 +7,11 @@ import {filesize} from 'filesize';
 
 import {DropzoneUpload} from '../../../../../../../components/DropzoneUpload/DropzoneUpload';
 import {FileList} from '../../../../../../../components/FileList/FileList';
-import {ProductType} from '../../../../../../../enums/ProductType';
+import {ProductType} from '../../../../../../../enums/Product';
 import i18n from '../../../../../../../i18n';
 import {getRandomID} from '../../../../../../../utils/string';
 import {useAppContext} from '../../AppContext/AppManageState';
-import {TYPES} from '../../AppContext/actionTypes';
+import {ActionTypes} from '../../AppContext/actionTypes';
 
 type UploadAppPackagesComponentProps = {
 	isProcessing: boolean;
@@ -33,6 +33,9 @@ export const acceptFileTypes = {
 		'application/octet-stream': ['.war'],
 	},
 	[ProductType.LOW_CODE_CONFIGURATION]: {
+		'application/java-archive': ['.zip'],
+	},
+	[ProductType.OTHER]: {
 		'application/java-archive': ['.zip'],
 	},
 };
@@ -76,7 +79,7 @@ export function UploadAppPackagesComponent({
 					: newUploadedPackage,
 				versionName,
 			},
-			type: TYPES.UPLOAD_BUILD_PACKAGE_FILES,
+			type: ActionTypes.UPLOAD_BUILD_PACKAGE_FILES,
 		});
 	};
 
@@ -88,7 +91,7 @@ export function UploadAppPackagesComponent({
 				),
 				versionName,
 			},
-			type: TYPES.UPLOAD_BUILD_PACKAGE_FILES,
+			type: ActionTypes.UPLOAD_BUILD_PACKAGE_FILES,
 		});
 
 	return (

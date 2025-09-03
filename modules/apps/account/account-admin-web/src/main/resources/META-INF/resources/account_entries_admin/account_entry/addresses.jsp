@@ -100,6 +100,25 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 					value="<%= addressDisplay.getType(themeDisplay.getLocale()) %>"
 				/>
 
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-small table-cell-minw-150"
+					href="<%= rowURL %>"
+					name="subtype"
+					value="<%= addressDisplay.getSubtype() %>"
+				/>
+
+				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-47858") %>'>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand-small table-cell-minw-150"
+						name="status"
+					>
+						<clay:label
+							displayType="<%= WorkflowConstants.getStatusStyle(addressDisplay.getStatus()) %>"
+							label="<%= WorkflowConstants.getStatusLabel(addressDisplay.getStatus()) %>"
+						/>
+					</liferay-ui:search-container-column-text>
+				</c:if>
+
 				<liferay-ui:search-container-column-jsp
 					path="/account_entries_admin/account_entry_address_action.jsp"
 				/>

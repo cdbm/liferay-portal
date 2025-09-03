@@ -32,12 +32,12 @@ import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -62,7 +62,7 @@ public class IGConfigurationDisplayContext {
 		_igRequestHelper = igRequestHelper;
 
 		_renderRequest = (RenderRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}

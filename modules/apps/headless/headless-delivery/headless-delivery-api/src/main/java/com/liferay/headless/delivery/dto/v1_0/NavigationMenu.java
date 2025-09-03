@@ -19,6 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -30,12 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -469,6 +469,53 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<NavigationType> _navigationTypeSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public com.liferay.portal.vulcan.permission.Permission[] getPermissions() {
+		if (_permissionsSupplier != null) {
+			permissions = _permissionsSupplier.get();
+
+			_permissionsSupplier = null;
+		}
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.portal.vulcan.permission.Permission[] permissions) {
+
+		this.permissions = permissions;
+
+		_permissionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.permission.Permission[], Exception>
+				permissionsUnsafeSupplier) {
+
+		_permissionsSupplier = () -> {
+			try {
+				return permissionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.permission.Permission[] permissions;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.permission.Permission[]>
+		_permissionsSupplier;
+
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the site to which this navigation menu is scoped."
 	)
@@ -680,6 +727,29 @@ public class NavigationMenu implements Serializable {
 			sb.append(navigationType);
 
 			sb.append("\"");
+		}
+
+		com.liferay.portal.vulcan.permission.Permission[] permissions =
+			getPermissions();
+
+		if (permissions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < permissions.length; i++) {
+				sb.append(permissions[i]);
+
+				if ((i + 1) < permissions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		Long siteId = getSiteId();

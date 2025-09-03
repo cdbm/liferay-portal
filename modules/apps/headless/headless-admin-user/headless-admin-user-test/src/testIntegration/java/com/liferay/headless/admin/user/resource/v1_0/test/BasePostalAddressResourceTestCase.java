@@ -18,6 +18,9 @@ import com.liferay.headless.admin.user.client.http.HttpInvoker;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.resource.v1_0.PostalAddressResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.PostalAddressSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -52,6 +55,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -69,16 +82,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -125,6 +128,16 @@ public abstract class BasePostalAddressResourceTestCase {
 			testCompany.getCompanyId());
 
 		postalAddressResource = PostalAddressResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -194,6 +207,7 @@ public abstract class BasePostalAddressResourceTestCase {
 		postalAddress.setAddressCountry(regex);
 		postalAddress.setAddressLocality(regex);
 		postalAddress.setAddressRegion(regex);
+		postalAddress.setAddressSubtype(regex);
 		postalAddress.setAddressType(regex);
 		postalAddress.setExternalReferenceCode(regex);
 		postalAddress.setName(regex);
@@ -212,6 +226,7 @@ public abstract class BasePostalAddressResourceTestCase {
 		Assert.assertEquals(regex, postalAddress.getAddressCountry());
 		Assert.assertEquals(regex, postalAddress.getAddressLocality());
 		Assert.assertEquals(regex, postalAddress.getAddressRegion());
+		Assert.assertEquals(regex, postalAddress.getAddressSubtype());
 		Assert.assertEquals(regex, postalAddress.getAddressType());
 		Assert.assertEquals(regex, postalAddress.getExternalReferenceCode());
 		Assert.assertEquals(regex, postalAddress.getName());
@@ -220,6 +235,221 @@ public abstract class BasePostalAddressResourceTestCase {
 		Assert.assertEquals(regex, postalAddress.getStreetAddressLine1());
 		Assert.assertEquals(regex, postalAddress.getStreetAddressLine2());
 		Assert.assertEquals(regex, postalAddress.getStreetAddressLine3());
+	}
+
+	@Test
+	public void testDeletePostalAddress() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PostalAddress postalAddress =
+			testDeletePostalAddress_addPostalAddress();
+
+		assertHttpResponseStatusCode(
+			204,
+			postalAddressResource.deletePostalAddressHttpResponse(
+				postalAddress.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress.getId()));
+		assertHttpResponseStatusCode(
+			404, postalAddressResource.getPostalAddressHttpResponse(0L));
+	}
+
+	protected PostalAddress testDeletePostalAddress_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeletePostalAddress() throws Exception {
+
+		// No namespace
+
+		PostalAddress postalAddress1 =
+			testGraphQLDeletePostalAddress_addPostalAddress();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deletePostalAddress",
+						new HashMap<String, Object>() {
+							{
+								put("postalAddressId", postalAddress1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deletePostalAddress"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"postalAddress",
+					new HashMap<String, Object>() {
+						{
+							put("postalAddressId", postalAddress1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		PostalAddress postalAddress2 =
+			testGraphQLDeletePostalAddress_addPostalAddress();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deletePostalAddress",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"postalAddressId",
+										postalAddress2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deletePostalAddress"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"postalAddress",
+						new HashMap<String, Object>() {
+							{
+								put("postalAddressId", postalAddress2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected PostalAddress testGraphQLDeletePostalAddress_addPostalAddress()
+		throws Exception {
+
+		return testGraphQLPostalAddress_addPostalAddress();
+	}
+
+	@Test
+	public void testDeletePostalAddressBatch() throws Exception {
+		PostalAddress postalAddress1 =
+			testDeletePostalAddressBatch_addPostalAddress();
+
+		testDeletePostalAddressBatch_deletePostalAddress(
+			202, postalAddress1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+
+		postalAddress1 = testDeletePostalAddressBatch_addPostalAddress();
+
+		testDeletePostalAddressBatch_deletePostalAddress(
+			202, null, postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+
+		postalAddress1 = testDeletePostalAddressBatch_addPostalAddress();
+		PostalAddress postalAddress2 =
+			testDeletePostalAddressBatch_addPostalAddress();
+
+		testDeletePostalAddressBatch_deletePostalAddress(
+			202, postalAddress2.getExternalReferenceCode(),
+			postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress2.getId()));
+
+		testDeletePostalAddressBatch_deletePostalAddress(
+			202, postalAddress2.getExternalReferenceCode(),
+			postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress2.getId()));
+	}
+
+	protected PostalAddress testDeletePostalAddressBatch_addPostalAddress()
+		throws Exception {
+
+		return testDeletePostalAddress_addPostalAddress();
+	}
+
+	protected void testDeletePostalAddressBatch_deletePostalAddress(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			postalAddressResource.deletePostalAddressBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeletePostalAddressByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PostalAddress postalAddress =
+			testDeletePostalAddressByExternalReferenceCode_addPostalAddress();
+
+		assertHttpResponseStatusCode(
+			204,
+			postalAddressResource.
+				deletePostalAddressByExternalReferenceCodeHttpResponse(
+					postalAddress.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.
+				getPostalAddressByExternalReferenceCodeHttpResponse(
+					postalAddress.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.
+				getPostalAddressByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected PostalAddress
+			testDeletePostalAddressByExternalReferenceCode_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -412,25 +642,6 @@ public abstract class BasePostalAddressResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountPostalAddress() throws Exception {
-		PostalAddress randomPostalAddress = randomPostalAddress();
-
-		PostalAddress postPostalAddress =
-			testPostAccountPostalAddress_addPostalAddress(randomPostalAddress);
-
-		assertEquals(randomPostalAddress, postPostalAddress);
-		assertValid(postPostalAddress);
-	}
-
-	protected PostalAddress testPostAccountPostalAddress_addPostalAddress(
-			PostalAddress postalAddress)
-		throws Exception {
-
-		return postalAddressResource.postAccountPostalAddress(
-			testGetAccountPostalAddressesPage_getAccountId(), postalAddress);
-	}
-
-	@Test
 	public void testGetOrganizationByExternalReferenceCodePostalAddressesPage()
 		throws Exception {
 
@@ -615,375 +826,6 @@ public abstract class BasePostalAddressResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testDeletePostalAddressByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PostalAddress postalAddress =
-			testDeletePostalAddressByExternalReferenceCode_addPostalAddress();
-
-		assertHttpResponseStatusCode(
-			204,
-			postalAddressResource.
-				deletePostalAddressByExternalReferenceCodeHttpResponse(
-					postalAddress.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			postalAddressResource.
-				getPostalAddressByExternalReferenceCodeHttpResponse(
-					postalAddress.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			postalAddressResource.
-				getPostalAddressByExternalReferenceCodeHttpResponse(
-					postalAddress.getExternalReferenceCode()));
-	}
-
-	protected PostalAddress
-			testDeletePostalAddressByExternalReferenceCode_addPostalAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetPostalAddressByExternalReferenceCode() throws Exception {
-		PostalAddress postPostalAddress =
-			testGetPostalAddressByExternalReferenceCode_addPostalAddress();
-
-		PostalAddress getPostalAddress =
-			postalAddressResource.getPostalAddressByExternalReferenceCode(
-				postPostalAddress.getExternalReferenceCode());
-
-		assertEquals(postPostalAddress, getPostalAddress);
-		assertValid(getPostalAddress);
-	}
-
-	protected PostalAddress
-			testGetPostalAddressByExternalReferenceCode_addPostalAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetPostalAddressByExternalReferenceCode()
-		throws Exception {
-
-		PostalAddress postalAddress =
-			testGraphQLGetPostalAddressByExternalReferenceCode_addPostalAddress();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				postalAddress,
-				PostalAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"postalAddressByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												postalAddress.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/postalAddressByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				postalAddress,
-				PostalAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"postalAddressByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													postalAddress.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/postalAddressByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetPostalAddressByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"postalAddressByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"postalAddressByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected PostalAddress
-			testGraphQLGetPostalAddressByExternalReferenceCode_addPostalAddress()
-		throws Exception {
-
-		return testGraphQLPostalAddress_addPostalAddress();
-	}
-
-	@Test
-	public void testPatchPostalAddressByExternalReferenceCode()
-		throws Exception {
-
-		PostalAddress postPostalAddress =
-			testPatchPostalAddressByExternalReferenceCode_addPostalAddress();
-
-		PostalAddress randomPatchPostalAddress = randomPatchPostalAddress();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PostalAddress patchPostalAddress =
-			postalAddressResource.patchPostalAddressByExternalReferenceCode(
-				postPostalAddress.getExternalReferenceCode(),
-				randomPatchPostalAddress);
-
-		PostalAddress expectedPatchPostalAddress = postPostalAddress.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchPostalAddress, expectedPatchPostalAddress);
-
-		PostalAddress getPostalAddress =
-			postalAddressResource.getPostalAddressByExternalReferenceCode(
-				patchPostalAddress.getExternalReferenceCode());
-
-		assertEquals(expectedPatchPostalAddress, getPostalAddress);
-		assertValid(getPostalAddress);
-	}
-
-	protected PostalAddress
-			testPatchPostalAddressByExternalReferenceCode_addPostalAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutPostalAddressByExternalReferenceCode() throws Exception {
-		PostalAddress postPostalAddress =
-			testPutPostalAddressByExternalReferenceCode_addPostalAddress();
-
-		PostalAddress randomPostalAddress = randomPostalAddress();
-
-		PostalAddress putPostalAddress =
-			postalAddressResource.putPostalAddressByExternalReferenceCode(
-				postPostalAddress.getExternalReferenceCode(),
-				randomPostalAddress);
-
-		assertEquals(randomPostalAddress, putPostalAddress);
-		assertValid(putPostalAddress);
-
-		PostalAddress getPostalAddress =
-			postalAddressResource.getPostalAddressByExternalReferenceCode(
-				putPostalAddress.getExternalReferenceCode());
-
-		assertEquals(randomPostalAddress, getPostalAddress);
-		assertValid(getPostalAddress);
-
-		PostalAddress newPostalAddress =
-			testPutPostalAddressByExternalReferenceCode_createPostalAddress();
-
-		putPostalAddress =
-			postalAddressResource.putPostalAddressByExternalReferenceCode(
-				newPostalAddress.getExternalReferenceCode(), newPostalAddress);
-
-		assertEquals(newPostalAddress, putPostalAddress);
-		assertValid(putPostalAddress);
-
-		getPostalAddress =
-			postalAddressResource.getPostalAddressByExternalReferenceCode(
-				putPostalAddress.getExternalReferenceCode());
-
-		assertEquals(newPostalAddress, getPostalAddress);
-
-		Assert.assertEquals(
-			newPostalAddress.getExternalReferenceCode(),
-			putPostalAddress.getExternalReferenceCode());
-	}
-
-	protected PostalAddress
-			testPutPostalAddressByExternalReferenceCode_createPostalAddress()
-		throws Exception {
-
-		return randomPostalAddress();
-	}
-
-	protected PostalAddress
-			testPutPostalAddressByExternalReferenceCode_addPostalAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeletePostalAddress() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PostalAddress postalAddress =
-			testDeletePostalAddress_addPostalAddress();
-
-		assertHttpResponseStatusCode(
-			204,
-			postalAddressResource.deletePostalAddressHttpResponse(
-				postalAddress.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			postalAddressResource.getPostalAddressHttpResponse(
-				postalAddress.getId()));
-
-		assertHttpResponseStatusCode(
-			404, postalAddressResource.getPostalAddressHttpResponse(0L));
-	}
-
-	protected PostalAddress testDeletePostalAddress_addPostalAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeletePostalAddress() throws Exception {
-
-		// No namespace
-
-		PostalAddress postalAddress1 =
-			testGraphQLDeletePostalAddress_addPostalAddress();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deletePostalAddress",
-						new HashMap<String, Object>() {
-							{
-								put("postalAddressId", postalAddress1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deletePostalAddress"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"postalAddress",
-					new HashMap<String, Object>() {
-						{
-							put("postalAddressId", postalAddress1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		PostalAddress postalAddress2 =
-			testGraphQLDeletePostalAddress_addPostalAddress();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"deletePostalAddress",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"postalAddressId",
-										postalAddress2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-				"Object/deletePostalAddress"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminUser_v1_0",
-					new GraphQLField(
-						"postalAddress",
-						new HashMap<String, Object>() {
-							{
-								put("postalAddressId", postalAddress2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected PostalAddress testGraphQLDeletePostalAddress_addPostalAddress()
-		throws Exception {
-
-		return testGraphQLPostalAddress_addPostalAddress();
 	}
 
 	@Test
@@ -1296,30 +1138,20 @@ public abstract class BasePostalAddressResourceTestCase {
 	}
 
 	@Test
-	public void testPatchPostalAddress() throws Exception {
+	public void testGetPostalAddressByExternalReferenceCode() throws Exception {
 		PostalAddress postPostalAddress =
-			testPatchPostalAddress_addPostalAddress();
+			testGetPostalAddressByExternalReferenceCode_addPostalAddress();
 
-		PostalAddress randomPatchPostalAddress = randomPatchPostalAddress();
+		PostalAddress getPostalAddress =
+			postalAddressResource.getPostalAddressByExternalReferenceCode(
+				postPostalAddress.getExternalReferenceCode());
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PostalAddress patchPostalAddress =
-			postalAddressResource.patchPostalAddress(
-				postPostalAddress.getId(), randomPatchPostalAddress);
-
-		PostalAddress expectedPatchPostalAddress = postPostalAddress.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchPostalAddress, expectedPatchPostalAddress);
-
-		PostalAddress getPostalAddress = postalAddressResource.getPostalAddress(
-			patchPostalAddress.getId());
-
-		assertEquals(expectedPatchPostalAddress, getPostalAddress);
+		assertEquals(postPostalAddress, getPostalAddress);
 		assertValid(getPostalAddress);
 	}
 
-	protected PostalAddress testPatchPostalAddress_addPostalAddress()
+	protected PostalAddress
+			testGetPostalAddressByExternalReferenceCode_addPostalAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1327,30 +1159,116 @@ public abstract class BasePostalAddressResourceTestCase {
 	}
 
 	@Test
-	public void testPutPostalAddress() throws Exception {
-		PostalAddress postPostalAddress =
-			testPutPostalAddress_addPostalAddress();
-
-		PostalAddress randomPostalAddress = randomPostalAddress();
-
-		PostalAddress putPostalAddress = postalAddressResource.putPostalAddress(
-			postPostalAddress.getId(), randomPostalAddress);
-
-		assertEquals(randomPostalAddress, putPostalAddress);
-		assertValid(putPostalAddress);
-
-		PostalAddress getPostalAddress = postalAddressResource.getPostalAddress(
-			putPostalAddress.getId());
-
-		assertEquals(randomPostalAddress, getPostalAddress);
-		assertValid(getPostalAddress);
-	}
-
-	protected PostalAddress testPutPostalAddress_addPostalAddress()
+	public void testGraphQLGetPostalAddressByExternalReferenceCode()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		PostalAddress postalAddress =
+			testGraphQLGetPostalAddressByExternalReferenceCode_addPostalAddress();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				postalAddress,
+				PostalAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"postalAddressByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												postalAddress.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/postalAddressByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				postalAddress,
+				PostalAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"postalAddressByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													postalAddress.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/postalAddressByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetPostalAddressByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"postalAddressByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"postalAddressByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected PostalAddress
+			testGraphQLGetPostalAddressByExternalReferenceCode_addPostalAddress()
+		throws Exception {
+
+		return testGraphQLPostalAddress_addPostalAddress();
 	}
 
 	@Test
@@ -1540,6 +1458,268 @@ public abstract class BasePostalAddressResourceTestCase {
 		return null;
 	}
 
+	@Test
+	public void testPatchPostalAddress() throws Exception {
+		PostalAddress postPostalAddress =
+			testPatchPostalAddress_addPostalAddress();
+
+		PostalAddress randomPatchPostalAddress = randomPatchPostalAddress();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PostalAddress patchPostalAddress =
+			postalAddressResource.patchPostalAddress(
+				postPostalAddress.getId(), randomPatchPostalAddress);
+
+		PostalAddress expectedPatchPostalAddress = postPostalAddress.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchPostalAddress, expectedPatchPostalAddress);
+
+		PostalAddress getPostalAddress = postalAddressResource.getPostalAddress(
+			patchPostalAddress.getId());
+
+		assertEquals(expectedPatchPostalAddress, getPostalAddress);
+		assertValid(getPostalAddress);
+	}
+
+	protected PostalAddress testPatchPostalAddress_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchPostalAddressByExternalReferenceCode()
+		throws Exception {
+
+		PostalAddress postPostalAddress =
+			testPatchPostalAddressByExternalReferenceCode_addPostalAddress();
+
+		PostalAddress randomPatchPostalAddress = randomPatchPostalAddress();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PostalAddress patchPostalAddress =
+			postalAddressResource.patchPostalAddressByExternalReferenceCode(
+				postPostalAddress.getExternalReferenceCode(),
+				randomPatchPostalAddress);
+
+		PostalAddress expectedPatchPostalAddress = postPostalAddress.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchPostalAddress, expectedPatchPostalAddress);
+
+		PostalAddress getPostalAddress =
+			postalAddressResource.getPostalAddressByExternalReferenceCode(
+				patchPostalAddress.getExternalReferenceCode());
+
+		assertEquals(expectedPatchPostalAddress, getPostalAddress);
+		assertValid(getPostalAddress);
+	}
+
+	protected PostalAddress
+			testPatchPostalAddressByExternalReferenceCode_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountPostalAddress() throws Exception {
+		PostalAddress randomPostalAddress = randomPostalAddress();
+
+		PostalAddress postPostalAddress =
+			testPostAccountPostalAddress_addPostalAddress(randomPostalAddress);
+
+		assertEquals(randomPostalAddress, postPostalAddress);
+		assertValid(postPostalAddress);
+	}
+
+	protected PostalAddress testPostAccountPostalAddress_addPostalAddress(
+			PostalAddress postalAddress)
+		throws Exception {
+
+		return postalAddressResource.postAccountPostalAddress(
+			testGetAccountPostalAddressesPage_getAccountId(), postalAddress);
+	}
+
+	@Test
+	public void testPutPostalAddress() throws Exception {
+		PostalAddress postPostalAddress =
+			testPutPostalAddress_addPostalAddress();
+
+		PostalAddress randomPostalAddress = randomPostalAddress();
+
+		PostalAddress putPostalAddress = postalAddressResource.putPostalAddress(
+			postPostalAddress.getId(), randomPostalAddress);
+
+		assertEquals(randomPostalAddress, putPostalAddress);
+		assertValid(putPostalAddress);
+
+		PostalAddress getPostalAddress = postalAddressResource.getPostalAddress(
+			putPostalAddress.getId());
+
+		assertEquals(randomPostalAddress, getPostalAddress);
+		assertValid(getPostalAddress);
+	}
+
+	protected PostalAddress testPutPostalAddress_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutPostalAddressByExternalReferenceCode() throws Exception {
+		PostalAddress postPostalAddress =
+			testPutPostalAddressByExternalReferenceCode_addPostalAddress();
+
+		PostalAddress randomPostalAddress = randomPostalAddress();
+
+		PostalAddress putPostalAddress =
+			postalAddressResource.putPostalAddressByExternalReferenceCode(
+				postPostalAddress.getExternalReferenceCode(),
+				randomPostalAddress);
+
+		assertEquals(randomPostalAddress, putPostalAddress);
+		assertValid(putPostalAddress);
+
+		PostalAddress getPostalAddress =
+			postalAddressResource.getPostalAddressByExternalReferenceCode(
+				putPostalAddress.getExternalReferenceCode());
+
+		assertEquals(randomPostalAddress, getPostalAddress);
+		assertValid(getPostalAddress);
+
+		PostalAddress newPostalAddress =
+			testPutPostalAddressByExternalReferenceCode_createPostalAddress();
+
+		putPostalAddress =
+			postalAddressResource.putPostalAddressByExternalReferenceCode(
+				newPostalAddress.getExternalReferenceCode(), newPostalAddress);
+
+		assertEquals(newPostalAddress, putPostalAddress);
+		assertValid(putPostalAddress);
+
+		getPostalAddress =
+			postalAddressResource.getPostalAddressByExternalReferenceCode(
+				putPostalAddress.getExternalReferenceCode());
+
+		assertEquals(newPostalAddress, getPostalAddress);
+
+		Assert.assertEquals(
+			newPostalAddress.getExternalReferenceCode(),
+			putPostalAddress.getExternalReferenceCode());
+	}
+
+	protected PostalAddress
+			testPutPostalAddressByExternalReferenceCode_addPostalAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected PostalAddress
+			testPutPostalAddressByExternalReferenceCode_createPostalAddress()
+		throws Exception {
+
+		return randomPostalAddress();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		PostalAddress postalAddress1 =
+			testBatchEngineDeleteImportTask_addPostalAddress();
+
+		testBatchEngineDeleteImportTask_deletePostalAddress(
+			200, postalAddress1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+
+		postalAddress1 = testBatchEngineDeleteImportTask_addPostalAddress();
+
+		testBatchEngineDeleteImportTask_deletePostalAddress(
+			200, null, postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+
+		postalAddress1 = testBatchEngineDeleteImportTask_addPostalAddress();
+		PostalAddress postalAddress2 =
+			testBatchEngineDeleteImportTask_addPostalAddress();
+
+		testBatchEngineDeleteImportTask_deletePostalAddress(
+			200, postalAddress2.getExternalReferenceCode(),
+			postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress2.getId()));
+
+		testBatchEngineDeleteImportTask_deletePostalAddress(
+			200, postalAddress2.getExternalReferenceCode(),
+			postalAddress1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			postalAddressResource.getPostalAddressHttpResponse(
+				postalAddress2.getId()));
+	}
+
+	protected PostalAddress testBatchEngineDeleteImportTask_addPostalAddress()
+		throws Exception {
+
+		return testDeletePostalAddress_addPostalAddress();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deletePostalAddress(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.admin.user.dto.v1_0.PostalAddress", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	protected PostalAddress testGraphQLPostalAddress_addPostalAddress()
 		throws Exception {
 
@@ -1655,6 +1835,14 @@ public abstract class BasePostalAddressResourceTestCase {
 
 			if (Objects.equals("addressRegion", additionalAssertFieldName)) {
 				if (postalAddress.getAddressRegion() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("addressSubtype", additionalAssertFieldName)) {
+				if (postalAddress.getAddressSubtype() == null) {
 					valid = false;
 				}
 
@@ -1899,6 +2087,17 @@ public abstract class BasePostalAddressResourceTestCase {
 				if (!Objects.deepEquals(
 						postalAddress1.getAddressRegion(),
 						postalAddress2.getAddressRegion())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("addressSubtype", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						postalAddress1.getAddressSubtype(),
+						postalAddress2.getAddressSubtype())) {
 
 					return false;
 				}
@@ -2228,6 +2427,52 @@ public abstract class BasePostalAddressResourceTestCase {
 
 		if (entityFieldName.equals("addressRegion")) {
 			Object object = postalAddress.getAddressRegion();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("addressSubtype")) {
+			Object object = postalAddress.getAddressSubtype();
 
 			String value = String.valueOf(object);
 
@@ -2701,6 +2946,8 @@ public abstract class BasePostalAddressResourceTestCase {
 					RandomTestUtil.randomString());
 				addressRegion = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				addressSubtype = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				addressType = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
@@ -2732,7 +2979,30 @@ public abstract class BasePostalAddressResourceTestCase {
 		return randomPostalAddress();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected PostalAddressResource postalAddressResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

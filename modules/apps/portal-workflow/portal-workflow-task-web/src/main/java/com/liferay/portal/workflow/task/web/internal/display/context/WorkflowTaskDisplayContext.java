@@ -9,6 +9,9 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.change.tracking.model.CTCollection;
+import com.liferay.change.tracking.service.CTCollectionLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
@@ -17,6 +20,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.ResultRow;
@@ -37,10 +41,10 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
@@ -64,6 +68,12 @@ import com.liferay.portal.workflow.task.web.internal.display.context.helper.Work
 import com.liferay.portal.workflow.task.web.internal.search.WorkflowTaskSearch;
 import com.liferay.portal.workflow.task.web.internal.util.WorkflowTaskPortletUtil;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.text.Format;
@@ -76,12 +86,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Leonardo Barros
@@ -116,7 +120,22 @@ public class WorkflowTaskDisplayContext {
 	public List<DropdownItem> getActionDropdownItems(WorkflowTask workflowTask)
 		throws PortalException {
 
-		if (workflowTask.isCompleted()) {
+		long ctCollectionId = MapUtil.getLong(
+			workflowTask.getOptionalAttributes(), "ctCollectionId",
+			CTConstants.CT_COLLECTION_ID_PRODUCTION);
+
+		CTCollection ctCollection =
+			CTCollectionLocalServiceUtil.fetchCTCollection(ctCollectionId);
+
+		if ((ctCollection != null) &&
+			(ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED)) {
+
+			ctCollectionId = CTConstants.CT_COLLECTION_ID_PRODUCTION;
+		}
+
+		if (workflowTask.isCompleted() ||
+			(ctCollectionId != CTCollectionThreadLocal.getCTCollectionId())) {
+
 			return Collections.emptyList();
 		}
 
@@ -220,7 +239,7 @@ public class WorkflowTaskDisplayContext {
 		WorkflowHandler<?> workflowHandler = getWorkflowHandler(workflowTask);
 
 		return workflowHandler.getAssetRenderer(
-			getWorkflowContextEntryClassPK(workflowTask));
+			getWorkflowContextEntryClassPK(workflowHandler, workflowTask));
 	}
 
 	public AssetRendererFactory<?> getAssetRendererFactory() {
@@ -234,7 +253,7 @@ public class WorkflowTaskDisplayContext {
 		WorkflowHandler<?> workflowHandler = getWorkflowHandler(workflowTask);
 
 		String title = workflowHandler.getTitle(
-			getWorkflowContextEntryClassPK(workflowTask),
+			getWorkflowContextEntryClassPK(workflowHandler, workflowTask),
 			getTaskContentLocale());
 
 		if (title != null) {
@@ -487,17 +506,16 @@ public class WorkflowTaskDisplayContext {
 	public String getTaglibViewDiffsURL(WorkflowTask workflowTask)
 		throws PortalException, PortletException {
 
-		StringBundler sb = new StringBundler(8);
+		StringBundler sb = new StringBundler(7);
 
-		sb.append("javascript:Liferay.Util.openWindow({");
-		sb.append("dialog: {destroyOnHide: true, modal: true}, id: '");
+		sb.append("javascript:Liferay.Util.openModal({id: '");
 		sb.append(_liferayPortletResponse.getNamespace());
 		sb.append("viewDiffs', title: '");
 		sb.append(
 			HtmlUtil.escapeJS(
 				LanguageUtil.get(
 					_workflowTaskRequestHelper.getRequest(), "diffs")));
-		sb.append("', uri:'");
+		sb.append("', url:'");
 		sb.append(
 			HtmlUtil.escapeJS(
 				PortletURLBuilder.create(
@@ -593,15 +611,13 @@ public class WorkflowTaskDisplayContext {
 		};
 	}
 
-	public long getWorkflowContextEntryClassPK(WorkflowTask workflowTask)
+	public long getWorkflowContextEntryClassPK(
+			WorkflowHandler<?> workflowHandler, WorkflowTask workflowTask)
 		throws PortalException {
 
-		Map<String, Serializable> workflowContext = _getWorkflowContext(
+		return workflowHandler.getEntryClassPK(
+			_workflowTaskRequestHelper.getCompanyId(), _httpServletRequest,
 			workflowTask);
-
-		return GetterUtil.getLong(
-			(String)workflowContext.get(
-				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK));
 	}
 
 	public WorkflowHandler<?> getWorkflowHandler(WorkflowTask workflowTask)
@@ -919,7 +935,7 @@ public class WorkflowTaskDisplayContext {
 		WorkflowHandler<?> workflowHandler = getWorkflowHandler(workflowTask);
 
 		return workflowHandler.getURLEdit(
-			getWorkflowContextEntryClassPK(workflowTask),
+			getWorkflowContextEntryClassPK(workflowHandler, workflowTask),
 			_liferayPortletRequest, _liferayPortletResponse);
 	}
 
@@ -1104,7 +1120,7 @@ public class WorkflowTaskDisplayContext {
 		WorkflowHandler<?> workflowHandler = getWorkflowHandler(workflowTask);
 
 		return workflowHandler.getURLViewDiffs(
-			getWorkflowContextEntryClassPK(workflowTask),
+			getWorkflowContextEntryClassPK(workflowHandler, workflowTask),
 			_liferayPortletRequest, _liferayPortletResponse);
 	}
 

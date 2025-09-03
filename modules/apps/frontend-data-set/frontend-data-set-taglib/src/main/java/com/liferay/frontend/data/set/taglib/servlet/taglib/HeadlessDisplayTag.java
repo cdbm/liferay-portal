@@ -23,13 +23,13 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Marco Leo
@@ -143,6 +143,10 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 		return _showSearch;
 	}
 
+	public boolean isShowSelectAll() {
+		return _showSelectAll;
+	}
+
 	public void setActionParameterName(String actionParameterName) {
 		_actionParameterName = actionParameterName;
 	}
@@ -151,8 +155,10 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 		_apiURL = apiURL;
 	}
 
-	public void setBulkActionDropdownItems(List<DropdownItem> bulkActions) {
-		_bulkActionDropdownItems = bulkActions;
+	public void setBulkActionDropdownItems(
+		List<DropdownItem> bulkActionDropdownItems) {
+
+		_bulkActionDropdownItems = bulkActionDropdownItems;
 	}
 
 	public void setCreationMenu(CreationMenu creationMenu) {
@@ -233,6 +239,10 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 		_showSearch = showSearch;
 	}
 
+	public void setShowSelectAll(boolean showSelectAll) {
+		_showSelectAll = showSelectAll;
+	}
+
 	public void setStyle(String style) {
 		_style = style;
 	}
@@ -263,6 +273,7 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 		_showManagementBar = true;
 		_showPagination = true;
 		_showSearch = true;
+		_showSelectAll = false;
 		_style = "default";
 	}
 
@@ -320,6 +331,8 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 				"showPagination", _showPagination
 			).put(
 				"showSearch", _showSearch
+			).put(
+				"showSelectAll", _showSelectAll
 			).put(
 				"sorts", _fdsSortItemList
 			).put(
@@ -379,6 +392,7 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 	private boolean _showManagementBar = true;
 	private boolean _showPagination = true;
 	private boolean _showSearch = true;
+	private boolean _showSelectAll;
 	private String _style = "default";
 
 }

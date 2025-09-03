@@ -11,6 +11,8 @@ import com.liferay.change.tracking.model.CTEntryTable;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
+import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
+import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -24,8 +26,11 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.UserTable;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -34,19 +39,18 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -71,7 +75,6 @@ public class ViewRelatedEntriesDisplayContext {
 		_ctCollectionId = ParamUtil.getLong(renderRequest, "ctCollectionId");
 		_ctEntryIds = StringUtil.split(
 			ParamUtil.getString(httpServletRequest, "id"), 0L);
-		_force = ParamUtil.getBoolean(renderRequest, "force");
 		_modelClassNameId = ParamUtil.getLong(
 			renderRequest, "modelClassNameId");
 		_modelClassPK = ParamUtil.getLong(renderRequest, "modelClassPK");
@@ -86,41 +89,21 @@ public class ViewRelatedEntriesDisplayContext {
 	public <T extends BaseModel<T>> Map<String, Object> getReactData()
 		throws Exception {
 
-		Map<Long, List<CTEntry>> relatedCTEntriesMap = new HashMap<>();
+		List<Long> ctEntryIds = ListUtil.fromArray(_ctEntryIds);
 
 		if ((_modelClassNameId > 0) && (_modelClassPK > 0)) {
-			relatedCTEntriesMap.putAll(
-				_ctCollectionLocalService.getRelatedCTEntriesMap(
-					_ctCollectionId, _modelClassNameId, _modelClassPK));
-		}
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+				_ctCollectionId, _modelClassNameId, _modelClassPK);
 
-		for (long ctEntryId : _ctEntryIds) {
-			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(ctEntryId);
-
-			CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
-				_ctDisplayRendererRegistry.getCTSQLMode(
-					_ctCollectionId, ctEntry);
-
-			T model = _ctDisplayRendererRegistry.fetchCTModel(
-				ctEntry.getCtCollectionId(), ctSQLMode,
-				ctEntry.getModelClassNameId(), ctEntry.getModelClassPK());
-
-			if ((model == null) ||
-				!_ctDisplayRendererRegistry.isMovable(
-					model, ctEntry.getModelClassNameId())) {
-
-				continue;
+			if (ctEntry != null) {
+				ctEntryIds.add(ctEntry.getCtEntryId());
 			}
-
-			Map<Long, List<CTEntry>> currentRelatedCTEntriesMap =
-				_ctCollectionLocalService.getRelatedCTEntriesMap(
-					_ctCollectionId, ctEntry.getModelClassNameId(),
-					ctEntry.getModelClassPK());
-
-			currentRelatedCTEntriesMap.forEach(
-				(key, value) -> relatedCTEntriesMap.merge(
-					key, value, (v1, v2) -> ListUtil.concat(v1, v2)));
 		}
+
+		Map<Long, List<CTEntry>> relatedCTEntriesMap =
+			_ctCollectionLocalService.getRelatedCTEntriesMap(
+				_ctCollectionId,
+				ListUtil.toLongArray(ctEntryIds, GetterUtil::getLong));
 
 		Set<CTEntry> ctEntries = new HashSet<>();
 
@@ -128,45 +111,79 @@ public class ViewRelatedEntriesDisplayContext {
 			ctEntries.addAll(value);
 		}
 
-		return HashMapBuilder.<String, Object>put(
-			"ctEntriesJSONArray",
-			() -> {
-				JSONArray ctEntriesJSONArray =
-					JSONFactoryUtil.createJSONArray();
+		JSONArray ctEntriesJSONArray = JSONFactoryUtil.createJSONArray();
+		int nonsystemCTEntriesCount = 0;
 
-				for (CTEntry ctEntry : ctEntries) {
-					ResourceURL dataURL = _renderResponse.createResourceURL();
+		for (CTEntry ctEntry : ctEntries) {
+			CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
+				_ctDisplayRendererRegistry.getCTSQLMode(
+					_ctCollectionId, ctEntry);
 
-					dataURL.setResourceID(
-						"/change_tracking/get_entry_render_data");
-					dataURL.setParameter(
-						"ctEntryId", String.valueOf(ctEntry.getCtEntryId()));
+			T ctModel = _ctDisplayRendererRegistry.fetchCTModel(
+				_ctCollectionId, ctSQLMode, ctEntry.getModelClassNameId(),
+				ctEntry.getModelClassPK());
 
-					ctEntriesJSONArray.put(
-						JSONUtil.put(
-							"ctEntryId", ctEntry.getCtEntryId()
-						).put(
-							"dataURL", dataURL.toString()
-						).put(
-							"description",
-							_ctDisplayRendererRegistry.getEntryDescription(
-								_httpServletRequest, ctEntry)
-						).put(
-							"modelClassNameId", ctEntry.getModelClassNameId()
-						).put(
-							"modelClassPK", ctEntry.getModelClassPK()
-						).put(
-							"title",
-							_ctDisplayRendererRegistry.getTitle(
-								ctEntry.getCtCollectionId(), ctEntry,
-								_themeDisplay.getLocale())
-						).put(
-							"userId", ctEntry.getUserId()
-						));
-				}
-
-				return ctEntriesJSONArray;
+			if (ctModel == null) {
+				ctModel = _ctDisplayRendererRegistry.fetchCTModel(
+					ctEntry.getModelClassNameId(), ctEntry.getModelClassPK());
 			}
+
+			if (!isShowHideable() &&
+				_ctDisplayRendererRegistry.isHideable(
+					ctModel, ctEntry.getModelClassNameId())) {
+
+				continue;
+			}
+
+			if (!_ctDisplayRendererRegistry.isHideable(
+					ctModel, ctEntry.getModelClassNameId())) {
+
+				nonsystemCTEntriesCount++;
+			}
+
+			ResourceURL dataURL = _renderResponse.createResourceURL();
+
+			dataURL.setResourceID("/change_tracking/get_entry_render_data");
+			dataURL.setParameter(
+				"ctEntryId", String.valueOf(ctEntry.getCtEntryId()));
+
+			ctEntriesJSONArray.put(
+				JSONUtil.put(
+					"ctEntryId", ctEntry.getCtEntryId()
+				).put(
+					"dataURL", dataURL.toString()
+				).put(
+					"description",
+					_ctDisplayRendererRegistry.getEntryDescription(
+						_httpServletRequest, ctEntry)
+				).put(
+					"modelClassNameId", ctEntry.getModelClassNameId()
+				).put(
+					"modelClassPK", ctEntry.getModelClassPK()
+				).put(
+					"title",
+					_ctDisplayRendererRegistry.getTitle(
+						ctEntry.getCtCollectionId(), ctEntry,
+						_themeDisplay.getLocale())
+				).put(
+					"userId", ctEntry.getUserId()
+				));
+		}
+
+		boolean showWarning = false;
+
+		if ((ctEntryIds.size() == 1) && (nonsystemCTEntriesCount > 1)) {
+			showWarning = true;
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"actionType",
+			(String)_renderRequest.getAttribute(
+				CTWebKeys.VIEW_RELATED_ENTRIES_ACTION_TYPE)
+		).put(
+			"ctEntriesJSONArray", ctEntriesJSONArray
+		).put(
+			"showWarning", showWarning
 		).put(
 			"spritemap", _themeDisplay.getPathThemeSpritemap()
 		).put(
@@ -199,7 +216,7 @@ public class ViewRelatedEntriesDisplayContext {
 		).buildString();
 	}
 
-	public List<SelectOption> getSelectOptions() {
+	public List<SelectOption> getSelectOptions() throws Exception {
 		List<SelectOption> selectOptions = new ArrayList<>();
 
 		List<CTCollection> ctCollections =
@@ -213,7 +230,11 @@ public class ViewRelatedEntriesDisplayContext {
 				StringPool.BLANK));
 
 		for (CTCollection ctCollection : ctCollections) {
-			if (ctCollection.getCtCollectionId() != _ctCollectionId) {
+			if ((ctCollection.getCtCollectionId() != _ctCollectionId) &&
+				CTCollectionPermission.contains(
+					PermissionThreadLocal.getPermissionChecker(), ctCollection,
+					ActionKeys.UPDATE)) {
+
 				selectOptions.add(
 					new SelectOption(
 						ctCollection.getName(),
@@ -235,8 +256,6 @@ public class ViewRelatedEntriesDisplayContext {
 			"ctCollectionId", _ctCollectionId
 		).setParameter(
 			"ctEntryIds", StringUtil.merge(_ctEntryIds)
-		).setParameter(
-			"force", _force
 		).setParameter(
 			"modelClassNameId", _modelClassNameId
 		).setParameter(
@@ -260,6 +279,10 @@ public class ViewRelatedEntriesDisplayContext {
 		).setParameter(
 			"modelClassPK", _modelClassPK
 		).buildString();
+	}
+
+	public boolean isShowHideable() {
+		return ParamUtil.getBoolean(_renderRequest, "showHideable");
 	}
 
 	private Predicate _getPredicate(List<CTEntry> ctEntries) {
@@ -286,7 +309,6 @@ public class ViewRelatedEntriesDisplayContext {
 	private final CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 	private final long[] _ctEntryIds;
 	private final CTEntryLocalService _ctEntryLocalService;
-	private final boolean _force;
 	private final HttpServletRequest _httpServletRequest;
 	private final long _modelClassNameId;
 	private final long _modelClassPK;

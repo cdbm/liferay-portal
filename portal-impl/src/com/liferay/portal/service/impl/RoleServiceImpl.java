@@ -6,6 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
@@ -13,6 +14,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
@@ -24,7 +26,6 @@ import com.liferay.portal.service.base.RoleServiceBaseImpl;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +91,19 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 
 		RoleMembershipPolicyUtil.propagateRoles(
 			new long[] {userId}, roleIds, null);
+	}
+
+	@Override
+	public Role copyRole(
+			long userId, String name, long sourceRoleId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		PortalPermissionUtil.contains(
+			getPermissionChecker(), ActionKeys.ADD_ROLE);
+
+		return roleLocalService.copyRole(
+			userId, name, sourceRoleId, serviceContext);
 	}
 
 	/**
@@ -178,6 +192,27 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 		return roleFinder.filterCountByGroupRoleAndTeamRole(
 			companyId, name, excludedNames, title, description, types,
 			excludedTeamRoleId, teamGroupId);
+	}
+
+	public Role getOrAddEmptyRole(
+			String externalReferenceCode, String className, long classPK,
+			String name, int type)
+		throws Exception {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		Role role = fetchRoleByExternalReferenceCode(
+			externalReferenceCode, permissionChecker.getCompanyId());
+
+		if (role != null) {
+			return role;
+		}
+
+		PortalPermissionUtil.check(getPermissionChecker(), ActionKeys.ADD_ROLE);
+
+		return roleLocalService.getOrAddEmptyRole(
+			externalReferenceCode, permissionChecker.getCompanyId(),
+			permissionChecker.getUserId(), className, classPK, name, type);
 	}
 
 	/**
@@ -449,9 +484,9 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 	 */
 	@Override
 	public Role updateRole(
-			long roleId, String name, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String subtype,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long roleId, String name,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String subtype, ServiceContext serviceContext)
 		throws PortalException {
 
 		RolePermissionUtil.check(
@@ -465,7 +500,8 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 			oldExpandoBridge.getAttributes();
 
 		Role role = roleLocalService.updateRole(
-			roleId, name, titleMap, descriptionMap, subtype, serviceContext);
+			externalReferenceCode, roleId, name, titleMap, descriptionMap,
+			subtype, serviceContext);
 
 		if (role.getType() == RoleConstants.TYPE_ORGANIZATION) {
 			OrganizationMembershipPolicyUtil.verifyPolicy(
@@ -493,18 +529,18 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 	}
 
 	protected List<Role> filterRoles(List<Role> roles) throws PortalException {
-		List<Role> filteredRoles = new ArrayList<>();
+		return TransformUtil.transform(
+			roles,
+			role -> {
+				if (RolePermissionUtil.contains(
+						getPermissionChecker(), role.getRoleId(),
+						ActionKeys.VIEW)) {
 
-		for (Role role : roles) {
-			if (RolePermissionUtil.contains(
-					getPermissionChecker(), role.getRoleId(),
-					ActionKeys.VIEW)) {
+					return role;
+				}
 
-				filteredRoles.add(role);
-			}
-		}
-
-		return filteredRoles;
+				return null;
+			});
 	}
 
 }

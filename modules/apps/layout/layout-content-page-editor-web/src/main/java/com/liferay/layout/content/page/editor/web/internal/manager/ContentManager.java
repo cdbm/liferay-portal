@@ -71,7 +71,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -117,6 +116,16 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.taglib.security.PermissionsURLTag;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,16 +135,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.WindowState;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -460,17 +459,17 @@ public class ContentManager {
 		LayoutClassedModelUsage layoutClassedModelUsage) {
 
 		return _generateUniqueLayoutClassedModelUsageKey(
+			layoutClassedModelUsage.getClassExternalReferenceCode(),
 			layoutClassedModelUsage.getClassNameId(),
-			layoutClassedModelUsage.getClassPK(),
-			layoutClassedModelUsage.getClassedModelExternalReferenceCode());
+			layoutClassedModelUsage.getClassPK());
 	}
 
 	private String _generateUniqueLayoutClassedModelUsageKey(
-		long classNameId, long classPK, String externalReferenceCode) {
+		String classExternalReferenceCode, long classNameId, long classPK) {
 
 		return StringBundler.concat(
 			classNameId, StringPool.DASH, classPK, StringPool.DASH,
-			externalReferenceCode);
+			classExternalReferenceCode);
 	}
 
 	private JSONObject _getActionsJSONObject(
@@ -485,9 +484,9 @@ public class ContentManager {
 				InfoItemPermissionProvider.class, className);
 
 		InfoItemReference infoItemReference = _getInfoItemIdentifier(
+			layoutClassedModelUsage.getClassExternalReferenceCode(),
 			layoutClassedModelUsage.getClassName(),
-			layoutClassedModelUsage.getClassPK(),
-			layoutClassedModelUsage.getClassedModelExternalReferenceCode());
+			layoutClassedModelUsage.getClassPK());
 
 		boolean hasUpdatePermission = false;
 
@@ -524,7 +523,7 @@ public class ContentManager {
 
 				PortletResponse portletResponse =
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE);
+						JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 				return JSONUtil.put(
 					"editImageURL",
@@ -560,7 +559,7 @@ public class ContentManager {
 
 				PortletResponse portletResponse =
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE);
+						JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 				return _layoutLockManager.getUnlockDraftLayoutURL(
 					_portal.getLiferayPortletResponse(portletResponse),
@@ -796,7 +795,7 @@ public class ContentManager {
 
 		PortletResponse portletResponse =
 			(PortletResponse)liferayPortletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		LiferayPortletResponse liferayPortletResponse =
 			_portal.getLiferayPortletResponse(portletResponse);
@@ -820,20 +819,10 @@ public class ContentManager {
 			FragmentEntryLink fragmentEntryLink,
 			Set<String> uniqueLayoutClassedModelUsageKeys) {
 
-		JSONObject editableValuesJSONObject = null;
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
-		try {
-			editableValuesJSONObject = _jsonFactory.createJSONObject(
-				fragmentEntryLink.getEditableValues());
-		}
-		catch (JSONException jsonException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to create JSON object from " +
-						fragmentEntryLink.getEditableValues(),
-					jsonException);
-			}
-
+		if (editableValuesJSONObject == null) {
 			return Collections.emptySet();
 		}
 
@@ -1001,7 +990,7 @@ public class ContentManager {
 	}
 
 	private InfoItemReference _getInfoItemIdentifier(
-		String className, long classPK, String externalReferenceCode) {
+		String classExternalReferenceCode, String className, long classPK) {
 
 		InfoItemIdentifier infoItemIdentifier = null;
 
@@ -1010,7 +999,7 @@ public class ContentManager {
 		}
 		else {
 			infoItemIdentifier = new ERCInfoItemIdentifier(
-				externalReferenceCode);
+				classExternalReferenceCode);
 		}
 
 		return new InfoItemReference(className, infoItemIdentifier);
@@ -1106,10 +1095,9 @@ public class ContentManager {
 			LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 				layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
 					_getInfoItemIdentifier(
+						layoutClassedModelUsage.getClassExternalReferenceCode(),
 						layoutClassedModelUsage.getClassName(),
-						layoutClassedModelUsage.getClassPK(),
-						layoutClassedModelUsage.
-							getClassedModelExternalReferenceCode()));
+						layoutClassedModelUsage.getClassPK()));
 
 			if (layoutDisplayPageObjectProvider == null) {
 				_layoutClassedModelUsageLocalService.
@@ -1150,13 +1138,19 @@ public class ContentManager {
 			return;
 		}
 
+		String className = _portal.fetchClassName(classNameId);
+
+		if (Validator.isNull(className)) {
+			return;
+		}
+
 		long classPK = jsonObject.getLong("classPK");
 		String externalReferenceCode = jsonObject.getString(
 			"externalReferenceCode");
 
 		String uniqueLayoutClassedModelUsageKey =
 			_generateUniqueLayoutClassedModelUsageKey(
-				classNameId, classPK, externalReferenceCode);
+				externalReferenceCode, classNameId, classPK);
 
 		if (((classPK <= 0) && Validator.isNull(externalReferenceCode)) ||
 			uniqueLayoutClassedModelUsageKeys.contains(
@@ -1165,8 +1159,7 @@ public class ContentManager {
 			return;
 		}
 
-		String className = _infoSearchClassMapperRegistry.getClassName(
-			_portal.getClassName(classNameId));
+		className = _infoSearchClassMapperRegistry.getClassName(className);
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
@@ -1181,7 +1174,7 @@ public class ContentManager {
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
 				_getInfoItemIdentifier(
-					className, classPK, externalReferenceCode));
+					externalReferenceCode, className, classPK));
 
 		if (layoutDisplayPageObjectProvider == null) {
 			return;

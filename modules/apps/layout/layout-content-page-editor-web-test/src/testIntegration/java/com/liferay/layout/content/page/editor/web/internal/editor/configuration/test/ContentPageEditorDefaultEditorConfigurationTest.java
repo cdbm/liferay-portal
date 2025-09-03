@@ -27,13 +27,11 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collections;
-import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -103,11 +101,9 @@ public class ContentPageEditorDefaultEditorConfigurationTest {
 	private void _assertItemSelectorURL(String eventName, String url) {
 		Assert.assertTrue(
 			url,
-			StringUtil.contains(
-				url,
+			url.contains(
 				"_com_liferay_item_selector_web_portlet_ItemSelectorPortlet_" +
-					"itemSelectedEventName=_EDITOR_NAME_" + eventName,
-				StringPool.BLANK));
+					"itemSelectedEventName=_EDITOR_NAME_" + eventName));
 	}
 
 	private void _assertTextEditorConfigJSONObject(
@@ -142,9 +138,13 @@ public class ContentPageEditorDefaultEditorConfigurationTest {
 	private void _assertToolbarsJSONObject(JSONObject jsonObject) {
 		JSONObject addJSONObject = jsonObject.getJSONObject("add");
 
-		Objects.equals(
-			JSONUtil.putAll("image", "hline"),
-			addJSONObject.getJSONArray("buttons"));
+		JSONArray buttonsJSONArray = addJSONObject.getJSONArray("buttons");
+
+		Assert.assertEquals(
+			JSONUtil.putAll(
+				"image", "hline"
+			).toString(),
+			buttonsJSONArray.toString());
 
 		JSONObject stylesJSONObject = jsonObject.getJSONObject("styles");
 
@@ -155,7 +155,10 @@ public class ContentPageEditorDefaultEditorConfigurationTest {
 			selectionsStylesJSONArray.toString(), 4,
 			selectionsStylesJSONArray.length());
 
-		Objects.equals(
+		JSONObject selectionsStylesJSONObject =
+			selectionsStylesJSONArray.getJSONObject(0);
+
+		Assert.assertEquals(
 			JSONUtil.put(
 				"buttons",
 				JSONUtil.putAll("imageLeft", "imageCenter", "imageRight")
@@ -163,23 +166,27 @@ public class ContentPageEditorDefaultEditorConfigurationTest {
 				"name", "image"
 			).put(
 				"test", "AlloyEditor.SelectionTest.image"
-			),
-			selectionsStylesJSONArray.getJSONObject(0));
+			).toString(),
+			selectionsStylesJSONObject.toString());
 
-		Objects.equals(
+		selectionsStylesJSONObject = selectionsStylesJSONArray.getJSONObject(1);
+
+		Assert.assertEquals(
 			JSONUtil.put(
 				"buttons", JSONUtil.put("linkEditBrowse")
 			).put(
 				"name", "link"
 			).put(
 				"test", "AlloyEditor.SelectionTest.link"
-			),
-			selectionsStylesJSONArray.getJSONObject(1));
+			).toString(),
+			selectionsStylesJSONObject.toString());
 
 		_assertToolbarStylesSelectionsTextJSONObject(
 			selectionsStylesJSONArray.getJSONObject(2));
 
-		Objects.equals(
+		selectionsStylesJSONObject = selectionsStylesJSONArray.getJSONObject(3);
+
+		Assert.assertEquals(
 			JSONUtil.put(
 				"buttons",
 				JSONUtil.putAll(
@@ -194,8 +201,8 @@ public class ContentPageEditorDefaultEditorConfigurationTest {
 				"setPosition", "AlloyEditor.SelectionSetPosition.table"
 			).put(
 				"test", "AlloyEditor.SelectionTest.table"
-			),
-			selectionsStylesJSONArray.getJSONObject(3));
+			).toString(),
+			selectionsStylesJSONObject.toString());
 	}
 
 	private void _assertToolbarStylesSelectionsTextJSONObject(

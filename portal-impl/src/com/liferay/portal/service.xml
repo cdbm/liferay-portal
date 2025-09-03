@@ -34,9 +34,11 @@
 		<column name="street1" type="String" />
 		<column name="street2" type="String" />
 		<column name="street3" type="String" />
+		<column name="subtype" type="String" />
 		<column name="validationDate" type="Date" />
 		<column name="validationStatus" type="int" />
 		<column name="zip" type="String" />
+		<column name="status" type="int" />
 
 		<!-- Order -->
 
@@ -616,7 +618,7 @@
 		<column name="masterLayoutPlid" type="long" />
 		<column name="layoutPrototypeUuid" type="String" />
 		<column name="layoutPrototypeLinkEnabled" type="boolean" />
-		<column name="sourcePrototypeLayoutUuid" type="String" />
+		<column name="layoutSetPrototypeLayoutERC" type="String" />
 		<column name="publishDate" type="Date" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
@@ -648,8 +650,8 @@
 		<finder name="LayoutPrototypeUuid" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="layoutPrototypeUuid" />
 		</finder>
-		<finder name="SourcePrototypeLayoutUuid" return-type="Collection" where="system = [$FALSE$]">
-			<finder-column name="sourcePrototypeLayoutUuid" />
+		<finder name="LayoutSetPrototypeLayoutERC" return-type="Collection" where="system = [$FALSE$]">
+			<finder-column name="layoutSetPrototypeLayoutERC" />
 		</finder>
 		<finder name="G_P" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="groupId" />
@@ -695,10 +697,10 @@
 			<finder-column name="privateLayout" />
 			<finder-column name="friendlyURL" />
 		</finder>
-		<finder name="G_P_SPLU" return-type="Collection">
+		<finder name="G_P_LSPLE" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="privateLayout" />
-			<finder-column name="sourcePrototypeLayoutUuid" />
+			<finder-column name="layoutSetPrototypeLayoutERC" />
 		</finder>
 		<finder name="G_P_ST" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="groupId" />
@@ -1075,7 +1077,7 @@
 			<finder-column name="master" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="LayoutSetPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="LayoutSetPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1222,6 +1224,7 @@
 		<column name="statusListTypeId" type="long" />
 		<column name="comments" type="String" />
 		<column name="logoId" type="long" />
+		<column name="status" type="int" />
 
 		<!-- Relationships -->
 
@@ -1603,7 +1606,7 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="C_P" return-type="Portlet" unique="true">
+		<finder name="C_P" pretouch="true" return-type="Portlet" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="portletId" />
 		</finder>
@@ -1946,13 +1949,14 @@
 		<column name="schemaVersion" type="String" />
 		<column name="buildNumber" type="int" />
 		<column name="buildDate" type="Date" />
+		<column name="versionDisplayName" type="String" />
 		<column name="verified" type="boolean" />
 		<column name="state" type="int" />
 		<column name="testString" type="String" />
 
 		<!-- Finder methods -->
 
-		<finder name="ServletContextName" return-type="Release" unique="true">
+		<finder name="ServletContextName" pretouch="true" return-type="Release" unique="true">
 			<finder-column case-sensitive="false" name="servletContextName" />
 		</finder>
 	</entity>
@@ -2014,6 +2018,9 @@
 
 		<finder name="GroupId" return-type="Collection">
 			<finder-column name="groupId" />
+		</finder>
+		<finder name="PortletId" return-type="Collection">
+			<finder-column name="portletId" />
 		</finder>
 		<finder name="G_N_P" return-type="Repository" unique="true">
 			<finder-column name="groupId" />
@@ -2159,7 +2166,7 @@
 			<finder-column arrayable-operator="OR" arrayable-pagination="true" name="roleId" />
 			<finder-column name="viewActionId" />
 		</finder>
-		<finder name="C_N_S_P_R_V" return-type="Collection">
+		<finder name="C_N_S_P_R_V" return-type="Collection" skip-db-index-optimization-and-finder-generation="true">
 			<finder-column name="companyId" />
 			<finder-column name="name" />
 			<finder-column name="scope" />
@@ -2218,7 +2225,7 @@
 		<finder name="Subtype" return-type="Collection">
 			<finder-column name="subtype" />
 		</finder>
-		<finder name="C_N" return-type="Role" unique="true">
+		<finder name="C_N" pretouch="true" return-type="Role" unique="true">
 			<finder-column name="companyId" />
 			<finder-column case-sensitive="false" name="name" />
 		</finder>
@@ -3125,6 +3132,10 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="G_C_C" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
@@ -3146,7 +3157,7 @@
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="G_C_C_C_T" return-type="WorkflowDefinitionLink">
+		<finder name="G_C_C_C_T" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
 			<finder-column name="classNameId" />
@@ -3186,6 +3197,10 @@
 
 		<!-- Finder methods -->
 
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="G_C_C" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
@@ -3201,6 +3216,7 @@
 	<exceptions>
 		<exception>AddressCity</exception>
 		<exception>AddressStreet</exception>
+		<exception>AddressSubtype</exception>
 		<exception>AddressZip</exception>
 		<exception>AvailableLocale</exception>
 		<exception>CompanyMaxUsers</exception>

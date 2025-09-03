@@ -8,19 +8,23 @@ package com.liferay.portal.upgrade.v7_4_x;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DBColumnSizeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.DeleteDuplicateUniqueFinderRowsUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.GuestUnsupportedResourcePermissionsUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.kernel.upgrade.util.UpgradeModulesFactory;
 import com.liferay.portal.kernel.upgrade.util.UpgradeVersionTreeMap;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.upgrade.util.PortalUpgradeProcessRegistry;
 import com.liferay.portal.upgrade.util.UpgradePartitionedControlTable;
+import com.liferay.portal.upgrade.v7_4_x.util.AssetTagGroupRelTable;
 import com.liferay.portal.upgrade.v7_4_x.util.AssetVocabularyGroupRelTable;
 import com.liferay.portal.upgrade.v7_4_x.util.RememberMeTokenTable;
 
@@ -594,6 +598,87 @@ public class PortalUpgradeProcessRegistryImpl
 			new Version(31, 17, 0),
 			UpgradeProcessFactory.addColumns("Role_", "status INTEGER"),
 			UpgradeProcessFactory.runSQL("update Role_ set status = 0"));
+
+		upgradeVersionTreeMap.put(
+			new Version(31, 18, 0), AssetTagGroupRelTable.create());
+
+		upgradeVersionTreeMap.put(
+			new Version(31, 19, 0),
+			UpgradeProcessFactory.addColumns(
+				"Address", "subtype VARCHAR(75) null"));
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 0, 0),
+			new DeleteDuplicateUniqueFinderRowsUpgradeProcess(
+				"PortalPreferences", new String[] {"ownerType", "ownerId"},
+				"portalPreferencesId asc"),
+			new DeleteDuplicateUniqueFinderRowsUpgradeProcess(
+				"PortletItem",
+				new String[] {"groupId", "classNameId", "portletId", "name"},
+				"portletItemId asc"),
+			new DeleteDuplicateUniqueFinderRowsUpgradeProcess(
+				"SocialActivitySetting",
+				new String[] {"groupId", "classNameId", "activityType", "name"},
+				"activitySettingId asc"),
+			new DeleteDuplicateUniqueFinderRowsUpgradeProcess(
+				"Ticket", new String[] {"key_"}, "ticketId asc"));
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 2, 0),
+			UpgradeProcessFactory.addColumns("AssetCategory", "status INTEGER"),
+			UpgradeProcessFactory.runSQL("update AssetCategory set status = 0"),
+			UpgradeProcessFactory.addColumns(
+				"AssetVocabulary", "status INTEGER"),
+			UpgradeProcessFactory.runSQL(
+				"update AssetVocabulary set status = 0"));
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 3, 0),
+			UpgradeProcessFactory.addColumns("Organization_", "status INTEGER"),
+			UpgradeProcessFactory.runSQL(
+				"update Organization_ set status = 0"));
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 4, 0),
+			UpgradeProcessFactory.addColumns("Address", "status INTEGER"),
+			UpgradeProcessFactory.runSQL("update Address set status = 0"));
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 4, 1), new UpgradePortletPreferenceValueCounter());
+
+		upgradeVersionTreeMap.put(
+			new Version(32, 4, 2), new UpgradeServiceComponent());
+
+		upgradeVersionTreeMap.put(new Version(33, 0, 0), new UpgradeJakarta());
+
+		upgradeVersionTreeMap.put(
+			new Version(33, 1, 0),
+			new CTModelUpgradeProcess("LayoutSetPrototype"));
+
+		upgradeVersionTreeMap.put(
+			new Version(33, 2, 0),
+			UpgradeProcessFactory.addColumns(
+				"Release_", "versionDisplayName VARCHAR(75) null"),
+			UpgradeProcessFactory.runSQL(
+				StringBundler.concat(
+					"update Release_ set versionDisplayName = '",
+					ReleaseInfo.getVersionDisplayName(),
+					"' where servletContextName = '",
+					ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME, "'")));
+
+		upgradeVersionTreeMap.put(
+			new Version(34, 0, 0),
+			new LayoutLayoutSetPrototypeLayoutERCUpgradeProcess());
+
+		upgradeVersionTreeMap.put(new Version(34, 1, 0), new UpgradeDB2());
+
+		upgradeVersionTreeMap.put(
+			new Version(34, 1, 1),
+			UpgradeProcessFactory.runSQL(
+				StringBundler.concat(
+					"update Release_ set verified = [$FALSE$] where ",
+					"servletContextName = '",
+					ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME, "'")));
 	}
 
 }

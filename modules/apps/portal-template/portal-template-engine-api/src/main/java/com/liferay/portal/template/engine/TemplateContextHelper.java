@@ -69,7 +69,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ParamUtil_IW;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsUtil_IW;
 import com.liferay.portal.kernel.util.SessionClicks_IW;
 import com.liferay.portal.kernel.util.StaticFieldGetter;
 import com.liferay.portal.kernel.util.StringUtil_IW;
@@ -88,6 +88,15 @@ import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
 import com.liferay.portal.template.ServiceLocator;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -99,15 +108,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 
@@ -218,7 +218,7 @@ public class TemplateContextHelper {
 
 		PortletConfig portletConfig =
 			(PortletConfig)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_CONFIG);
+				JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		if (portletConfig != null) {
 			contextObjects.put("portletConfig", portletConfig);
@@ -228,7 +228,7 @@ public class TemplateContextHelper {
 
 		final PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		if ((portletRequest != null) &&
 			(portletRequest instanceof RenderRequest)) {
@@ -240,7 +240,7 @@ public class TemplateContextHelper {
 
 		final PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if ((portletResponse != null) &&
 			(portletResponse instanceof RenderResponse)) {
@@ -603,7 +603,7 @@ public class TemplateContextHelper {
 		// Props util
 
 		try {
-			variables.put("propsUtil", PropsUtil.getProps());
+			variables.put("propsUtil", PropsUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);

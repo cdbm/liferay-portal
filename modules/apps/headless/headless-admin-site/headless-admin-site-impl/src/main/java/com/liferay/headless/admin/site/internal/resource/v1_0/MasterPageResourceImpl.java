@@ -5,16 +5,16 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0;
 
+import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
-import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.MasterPage;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
+import com.liferay.headless.admin.site.internal.resource.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.GroupUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
+import com.liferay.headless.admin.site.internal.resource.v1_0.util.PageSpecificationUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.ServiceContextUtil;
 import com.liferay.headless.admin.site.resource.v1_0.MasterPageResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
-import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -22,16 +22,13 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -39,7 +36,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -116,37 +112,17 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 		long groupId = GroupUtil.getGroupId(
 			true, contextCompany.getCompanyId(), siteExternalReferenceCode);
 
-		if (Validator.isNull(search)) {
-			return Page.of(
-				transform(
-					_layoutPageTemplateEntryService.
-						getLayoutPageTemplateEntries(
-							groupId,
-							LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-							pagination.getStartPosition(),
-							pagination.getEndPosition(), null),
-					layoutPageTemplateEntry -> _masterPageDTOConverter.toDTO(
-						layoutPageTemplateEntry)),
-				pagination,
-				_layoutPageTemplateEntryService.
-					getLayoutPageTemplateEntriesCount(
-						groupId,
-						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT));
-		}
-
 		return Page.of(
 			transform(
 				_layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
-					groupId, 0, 0, search,
-					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+					groupId, LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 					pagination.getStartPosition(), pagination.getEndPosition(),
 					null),
 				layoutPageTemplateEntry -> _masterPageDTOConverter.toDTO(
 					layoutPageTemplateEntry)),
 			pagination,
 			_layoutPageTemplateEntryService.getLayoutPageTemplateEntriesCount(
-				groupId, 0, 0, search,
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT));
+				groupId, LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT));
 	}
 
 	@Override
@@ -194,7 +170,7 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 
 		return (ContentPageSpecification)_pageSpecificationDTOConverter.toDTO(
 			LayoutUtil.addDraftToLayout(
-				contentPageSpecification,
+				_cetManager, contentPageSpecification,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
 				ServiceContextUtil.createServiceContext(
@@ -224,18 +200,8 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 			return _addMasterPage(groupId, masterPage);
 		}
 
-		if (Validator.isNotNull(masterPage.getMarkedAsDefault()) &&
-			!Objects.equals(
-				GetterUtil.getBoolean(masterPage.getMarkedAsDefault()),
-				layoutPageTemplateEntry.isDefaultTemplate())) {
-
-			layoutPageTemplateEntry =
-				_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-					layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-					GetterUtil.getBoolean(masterPage.getMarkedAsDefault()));
-		}
-
-		long previewFileEntryId = _getPreviewFileEntryId(groupId, masterPage);
+		long previewFileEntryId = FileEntryUtil.getPreviewFileEntryId(
+			groupId, masterPage.getThumbnail());
 
 		if (previewFileEntryId !=
 				layoutPageTemplateEntry.getPreviewFileEntryId()) {
@@ -246,15 +212,64 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 					previewFileEntryId);
 		}
 
-		return _masterPageDTOConverter.toDTO(
-			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-				masterPage.getName()));
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		ServiceContext serviceContext = _getServiceContext(groupId, masterPage);
+
+		layout = LayoutUtil.updateContentLayout(
+			_cetManager, layout, layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getRobotsMap(),
+			layout.getFriendlyURLMap(), masterPage.getPageSpecifications(),
+			serviceContext);
+
+		if (!layoutPageTemplateEntry.isApproved() && layout.isPublished()) {
+			layoutPageTemplateEntry =
+				_layoutPageTemplateEntryService.updateStatus(
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+					WorkflowConstants.STATUS_APPROVED);
+		}
+
+		if (!Objects.equals(
+				GetterUtil.getBoolean(masterPage.getMarkedAsDefault()),
+				layoutPageTemplateEntry.isDefaultTemplate())) {
+
+			layoutPageTemplateEntry =
+				_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+					GetterUtil.getBoolean(masterPage.getMarkedAsDefault()));
+		}
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			return _masterPageDTOConverter.toDTO(
+				_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+					masterPage.getName()));
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
 	}
 
 	@Override
 	protected void preparePatch(
 		MasterPage masterPage, MasterPage existingMasterPage) {
+
+		if (masterPage.getKeywords() != null) {
+			existingMasterPage.setKeywords(masterPage::getKeywords);
+		}
+
+		if (masterPage.getPageSpecifications() != null) {
+			existingMasterPage.setPageSpecifications(
+				masterPage::getPageSpecifications);
+		}
+
+		if (masterPage.getTaxonomyCategoryItemExternalReferences() != null) {
+			existingMasterPage.setTaxonomyCategoryItemExternalReferences(
+				masterPage::getTaxonomyCategoryItemExternalReferences);
+		}
 
 		if (masterPage.getThumbnail() != null) {
 			existingMasterPage.setThumbnail(masterPage::getThumbnail);
@@ -265,14 +280,9 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 		throws Exception {
 
 		boolean defaultTemplate = false;
-		int status = WorkflowConstants.STATUS_DRAFT;
 
 		if (GetterUtil.getBoolean(masterPage.getMarkedAsDefault())) {
 			defaultTemplate = true;
-			status = WorkflowConstants.STATUS_APPROVED;
-		}
-		else if (_isPublishedLayout(masterPage.getPageSpecifications())) {
-			status = WorkflowConstants.STATUS_APPROVED;
 		}
 
 		ServiceContext serviceContext = _getServiceContext(groupId, masterPage);
@@ -284,8 +294,12 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 				masterPage.getKey(), 0, 0, masterPage.getName(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				_getPreviewFileEntryId(groupId, masterPage), defaultTemplate, 0,
-				_getLayoutPlid(groupId, masterPage, serviceContext), 0, status,
+				FileEntryUtil.getPreviewFileEntryId(
+					groupId, masterPage.getThumbnail()),
+				defaultTemplate, 0,
+				_getLayoutPlid(groupId, masterPage, serviceContext), 0,
+				PageSpecificationUtil.getPublishedStatus(
+					masterPage.getPageSpecifications()),
 				serviceContext));
 	}
 
@@ -293,174 +307,37 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 			long groupId, MasterPage masterPage, ServiceContext serviceContext)
 		throws Exception {
 
-		PageSpecification[] pageSpecifications =
-			masterPage.getPageSpecifications();
-
-		if (pageSpecifications == null) {
-			return 0;
-		}
-
-		if (pageSpecifications.length != 2) {
-			throw new UnsupportedOperationException();
-		}
-
-		ContentPageSpecification draftContentPageSpecification = null;
-		ContentPageSpecification publishedContentPageSpecification =
-			(ContentPageSpecification)pageSpecifications[0];
-
-		if (Validator.isNull(
-				publishedContentPageSpecification.
-					getDraftContentPageSpecificationExternalReferenceCode())) {
-
-			draftContentPageSpecification = publishedContentPageSpecification;
-			publishedContentPageSpecification =
-				(ContentPageSpecification)pageSpecifications[1];
-		}
-		else {
-			draftContentPageSpecification =
-				(ContentPageSpecification)pageSpecifications[1];
-		}
-
-		if (Validator.isNull(
-				publishedContentPageSpecification.
-					getDraftContentPageSpecificationExternalReferenceCode()) ||
-			!Objects.equals(
-				draftContentPageSpecification.getExternalReferenceCode(),
-				publishedContentPageSpecification.
-					getDraftContentPageSpecificationExternalReferenceCode())) {
-
-			throw new UnsupportedOperationException();
-		}
-
-		Map<Locale, String> titleMap = Collections.singletonMap(
+		Map<Locale, String> nameMap = Collections.singletonMap(
 			_portal.getSiteDefaultLocale(groupId), masterPage.getName());
 
-		String published;
-
-		if (Objects.equals(
-				publishedContentPageSpecification.getStatus(),
-				PageSpecification.Status.APPROVED)) {
-
-			published = "true";
-		}
-		else {
-			published = null;
-		}
-
-		serviceContext.setAttribute(
-			"draftLayoutExternalReferenceCode",
-			draftContentPageSpecification.getExternalReferenceCode());
 		serviceContext.setAttribute(
 			"layout.instanceable.allowed", Boolean.TRUE);
 		serviceContext.setAttribute(
 			"layout.page.template.entry.type",
 			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
-		serviceContext.setAttribute(
-			"published", GetterUtil.getBoolean(published));
 
-		Layout layout = _layoutLocalService.addLayout(
-			publishedContentPageSpecification.getExternalReferenceCode(),
-			contextUser.getUserId(), groupId, true, 0, 0, 0, titleMap, titleMap,
-			null, null, null, LayoutConstants.TYPE_CONTENT,
-			UnicodePropertiesBuilder.create(
-				true
-			).setProperty(
-				LayoutTypeSettingsConstants.KEY_PUBLISHED, () -> published
-			).setProperty(
-				"lfr-theme:regular:show-footer", Boolean.FALSE.toString()
-			).setProperty(
-				"lfr-theme:regular:show-header", Boolean.FALSE.toString()
-			).setProperty(
-				"lfr-theme:regular:show-header-search", Boolean.FALSE.toString()
-			).setProperty(
-				"lfr-theme:regular:wrap-widget-page-content",
-				Boolean.FALSE.toString()
-			).buildString(),
-			true, true, new HashMap<>(), 0, serviceContext);
-
-		Layout draftLayout = LayoutUtil.updateLayout(
-			layout.fetchDraftLayout(),
-			draftContentPageSpecification.getSettings(), serviceContext);
-
-		if (Objects.equals(
-				draftContentPageSpecification.getStatus(),
-				PageSpecification.Status.DRAFT)) {
-
-			_layoutLocalService.updateStatus(
-				contextUser.getUserId(), draftLayout.getPlid(),
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
-		}
-
-		layout = LayoutUtil.updateLayout(
-			layout, publishedContentPageSpecification.getSettings(),
-			serviceContext);
+		Layout layout = LayoutUtil.addContentLayout(
+			_cetManager, groupId, masterPage.getPageSpecifications(), true,
+			nameMap, nameMap, nameMap, null, LayoutConstants.TYPE_CONTENT, null,
+			true, true, Collections.emptyMap(),
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		return layout.getPlid();
 	}
 
-	private long _getPreviewFileEntryId(long groupId, MasterPage masterPage)
+	private ServiceContext _getServiceContext(
+			long groupId, MasterPage masterPage)
 		throws Exception {
 
-		ItemExternalReference itemExternalReference = masterPage.getThumbnail();
-
-		if ((itemExternalReference == null) ||
-			Validator.isNull(
-				itemExternalReference.getExternalReferenceCode())) {
-
-			return 0;
-		}
-
-		FileEntry fileEntry =
-			_portletFileRepository.getPortletFileEntryByExternalReferenceCode(
-				itemExternalReference.getExternalReferenceCode(), groupId);
-
-		return fileEntry.getFileEntryId();
+		return ServiceContextUtil.createServiceContext(
+			masterPage.getTaxonomyCategoryItemExternalReferences(),
+			masterPage.getDateCreated(), groupId, contextHttpServletRequest,
+			masterPage.getKeywords(), masterPage.getDateModified(),
+			contextUser.getUserId(), masterPage.getUuid());
 	}
 
-	private ServiceContext _getServiceContext(
-		long groupId, MasterPage masterPage) {
-
-		ServiceContext serviceContext = ServiceContextBuilder.create(
-			groupId, contextHttpServletRequest, null
-		).build();
-
-		serviceContext.setCreateDate(masterPage.getDateCreated());
-		serviceContext.setModifiedDate(masterPage.getDateModified());
-		serviceContext.setUserId(contextUser.getUserId());
-		serviceContext.setUuid(masterPage.getUuid());
-
-		return serviceContext;
-	}
-
-	private boolean _isPublishedLayout(PageSpecification[] pageSpecifications) {
-		if (pageSpecifications == null) {
-			return false;
-		}
-
-		if (pageSpecifications.length != 2) {
-			throw new UnsupportedOperationException();
-		}
-
-		ContentPageSpecification publishedContentPageSpecification =
-			(ContentPageSpecification)pageSpecifications[0];
-
-		if (Validator.isNull(
-				publishedContentPageSpecification.
-					getDraftContentPageSpecificationExternalReferenceCode())) {
-
-			publishedContentPageSpecification =
-				(ContentPageSpecification)pageSpecifications[1];
-		}
-
-		if (Objects.equals(
-				publishedContentPageSpecification.getStatus(),
-				PageSpecification.Status.APPROVED)) {
-
-			return true;
-		}
-
-		return false;
-	}
+	@Reference
+	private CETManager _cetManager;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -482,8 +359,5 @@ public class MasterPageResourceImpl extends BaseMasterPageResourceImpl {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletFileRepository _portletFileRepository;
 
 }

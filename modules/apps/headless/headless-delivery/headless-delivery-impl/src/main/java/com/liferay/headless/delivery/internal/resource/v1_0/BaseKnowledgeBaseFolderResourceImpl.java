@@ -18,8 +18,6 @@ import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -56,6 +54,17 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.NotSupportedException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -67,23 +76,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 /**
  * @author Javier Gamarra
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseKnowledgeBaseFolderResourceImpl
 	implements EntityModelResource, KnowledgeBaseFolderResource,
 			   VulcanBatchEngineTaskItemDelegate<KnowledgeBaseFolder>,
@@ -112,14 +110,14 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public void deleteKnowledgeBaseFolder(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
 			Long knowledgeBaseFolderId)
 		throws Exception {
 	}
@@ -144,14 +142,14 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/knowledge-base-folders/batch")
-	@javax.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/knowledge-base-folders/batch")
+	@jakarta.ws.rs.Produces("application/json")
 	@Override
 	public Response deleteKnowledgeBaseFolderBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
+			@jakarta.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
 			Object object)
 		throws Exception {
@@ -170,6 +168,51 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			vulcanBatchEngineImportTaskResource.deleteImportTask(
 				KnowledgeBaseFolder.class.getName(), callbackURL, object)
 		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the knowledge base folder by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path(
+		"/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
 	}
 
 	/**
@@ -207,14 +250,14 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public KnowledgeBaseFolder getKnowledgeBaseFolder(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
 			Long knowledgeBaseFolderId)
 		throws Exception {
 
@@ -224,124 +267,36 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates only the fields received in the request body, leaving any other fields untouched."
+		description = "Retrieves the knowledge base folder's subfolders."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "knowledgeBaseFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public KnowledgeBaseFolder patchKnowledgeBaseFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
-			Long knowledgeBaseFolderId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception {
-
-		KnowledgeBaseFolder existingKnowledgeBaseFolder =
-			getKnowledgeBaseFolder(knowledgeBaseFolderId);
-
-		existingKnowledgeBaseFolder.setCustomFields(
-			knowledgeBaseFolder.getCustomFields());
-
-		if (knowledgeBaseFolder.getDescription() != null) {
-			existingKnowledgeBaseFolder.setDescription(
-				knowledgeBaseFolder.getDescription());
-		}
-
-		if (knowledgeBaseFolder.getExternalReferenceCode() != null) {
-			existingKnowledgeBaseFolder.setExternalReferenceCode(
-				knowledgeBaseFolder.getExternalReferenceCode());
-		}
-
-		if (knowledgeBaseFolder.getName() != null) {
-			existingKnowledgeBaseFolder.setName(knowledgeBaseFolder.getName());
-		}
-
-		if (knowledgeBaseFolder.getParentKnowledgeBaseFolderId() != null) {
-			existingKnowledgeBaseFolder.setParentKnowledgeBaseFolderId(
-				knowledgeBaseFolder.getParentKnowledgeBaseFolderId());
-		}
-
-		if (knowledgeBaseFolder.getViewableBy() != null) {
-			existingKnowledgeBaseFolder.setViewableBy(
-				knowledgeBaseFolder.getViewableBy());
-		}
-
-		preparePatch(knowledgeBaseFolder, existingKnowledgeBaseFolder);
-
-		return putKnowledgeBaseFolder(
-			knowledgeBaseFolderId, existingKnowledgeBaseFolder);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Replaces the knowledge base folder with the information sent in the request body. Any missing fields are deleted, unless they are required."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "knowledgeBaseFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public KnowledgeBaseFolder putKnowledgeBaseFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
-			Long knowledgeBaseFolderId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception {
-
-		return new KnowledgeBaseFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				name = "parentKnowledgeBaseFolderId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
 			)
 		}
 	)
@@ -352,32 +307,22 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/knowledge-base-folders/batch")
-	@javax.ws.rs.Produces("application/json")
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response putKnowledgeBaseFolderBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
+	public Page<KnowledgeBaseFolder>
+			getKnowledgeBaseFolderKnowledgeBaseFoldersPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("parentKnowledgeBaseFolderId")
+				Long parentKnowledgeBaseFolderId,
+				@jakarta.ws.rs.core.Context Pagination pagination)
 		throws Exception {
 
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.putImportTask(
-				KnowledgeBaseFolder.class.getName(), callbackURL, object)
-		).build();
+		return Page.of(Collections.emptyList());
 	}
 
 	/**
@@ -416,19 +361,19 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
 		"/knowledge-base-folders/{knowledgeBaseFolderId}/permissions"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Page<Permission> getKnowledgeBaseFolderPermissionsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
 			Long knowledgeBaseFolderId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
+			@jakarta.ws.rs.QueryParam("roleNames")
 			String roleNames)
 		throws Exception {
 
@@ -460,6 +405,565 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the site's knowledge base folder by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
+		"/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public KnowledgeBaseFolder
+			getSiteKnowledgeBaseFolderByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("siteId")
+				Long siteId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+
+		return new KnowledgeBaseFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/permissions")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(siteId);
+
+		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getSiteKnowledgeBaseFolderPermissionsPage", portletName,
+					siteId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putSiteKnowledgeBaseFolderPermissionsPage", portletName,
+					siteId)
+			).build(),
+			siteId, portletName, roleNames);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the site's knowledge base folders. Results can be paginated."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<KnowledgeBaseFolder> getSiteKnowledgeBaseFoldersPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			@jakarta.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates only the fields received in the request body, leaving any other fields untouched."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "knowledgeBaseFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public KnowledgeBaseFolder patchKnowledgeBaseFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
+			Long knowledgeBaseFolderId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception {
+
+		KnowledgeBaseFolder existingKnowledgeBaseFolder =
+			getKnowledgeBaseFolder(knowledgeBaseFolderId);
+
+		if (knowledgeBaseFolder.getCustomFields() != null) {
+			existingKnowledgeBaseFolder.setCustomFields(
+				knowledgeBaseFolder.getCustomFields());
+		}
+
+		if (knowledgeBaseFolder.getDescription() != null) {
+			existingKnowledgeBaseFolder.setDescription(
+				knowledgeBaseFolder.getDescription());
+		}
+
+		if (knowledgeBaseFolder.getExternalReferenceCode() != null) {
+			existingKnowledgeBaseFolder.setExternalReferenceCode(
+				knowledgeBaseFolder.getExternalReferenceCode());
+		}
+
+		if (knowledgeBaseFolder.getName() != null) {
+			existingKnowledgeBaseFolder.setName(knowledgeBaseFolder.getName());
+		}
+
+		if (knowledgeBaseFolder.getParentKnowledgeBaseFolderId() != null) {
+			existingKnowledgeBaseFolder.setParentKnowledgeBaseFolderId(
+				knowledgeBaseFolder.getParentKnowledgeBaseFolderId());
+		}
+
+		if (knowledgeBaseFolder.getViewableBy() != null) {
+			existingKnowledgeBaseFolder.setViewableBy(
+				knowledgeBaseFolder.getViewableBy());
+		}
+
+		preparePatch(knowledgeBaseFolder, existingKnowledgeBaseFolder);
+
+		return putKnowledgeBaseFolder(
+			knowledgeBaseFolderId, existingKnowledgeBaseFolder);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a knowledge base folder inside the parent folder."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "parentKnowledgeBaseFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
+		"/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders"
+	)
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("parentKnowledgeBaseFolderId")
+			Long parentKnowledgeBaseFolderId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception {
+
+		return new KnowledgeBaseFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a new knowledge base folder."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception {
+
+		return new KnowledgeBaseFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/batch")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response postSiteKnowledgeBaseFolderBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.postImportTask(
+				KnowledgeBaseFolder.class.getName(), callbackURL, null, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/export-batch")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/json")
+	@Override
+	public Response postSiteKnowledgeBaseFoldersPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.DefaultValue("JSON")
+			@jakarta.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				KnowledgeBaseFolder.class.getName(), callbackURL, contentType,
+				fieldNames)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Replaces the knowledge base folder with the information sent in the request body. Any missing fields are deleted, unless they are required."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "knowledgeBaseFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/knowledge-base-folders/{knowledgeBaseFolderId}")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
+	@Override
+	public KnowledgeBaseFolder putKnowledgeBaseFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
+			Long knowledgeBaseFolderId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception {
+
+		return new KnowledgeBaseFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "KnowledgeBaseFolder"
+			)
+		}
+	)
+	@jakarta.ws.rs.Consumes("application/json")
+	@jakarta.ws.rs.Path("/knowledge-base-folders/batch")
+	@jakarta.ws.rs.Produces("application/json")
+	@jakarta.ws.rs.PUT
+	@Override
+	public Response putKnowledgeBaseFolderBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.putImportTask(
+				KnowledgeBaseFolder.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/permissions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -477,17 +981,17 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
 		"/knowledge-base-folders/{knowledgeBaseFolderId}/permissions"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
 	public Page<Permission> putKnowledgeBaseFolderPermissionsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("knowledgeBaseFolderId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("knowledgeBaseFolderId")
 			Long knowledgeBaseFolderId,
 			Permission[] permissions)
 		throws Exception {
@@ -558,439 +1062,6 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the knowledge base folder's subfolders."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "parentKnowledgeBaseFolderId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<KnowledgeBaseFolder>
-			getKnowledgeBaseFolderKnowledgeBaseFoldersPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("parentKnowledgeBaseFolderId")
-				Long parentKnowledgeBaseFolderId,
-				@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Creates a knowledge base folder inside the parent folder."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "parentKnowledgeBaseFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("parentKnowledgeBaseFolderId")
-			Long parentKnowledgeBaseFolderId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception {
-
-		return new KnowledgeBaseFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the site's knowledge base folders. Results can be paginated."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<KnowledgeBaseFolder> getSiteKnowledgeBaseFoldersPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/export-batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/export-batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response postSiteKnowledgeBaseFoldersPageExportBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
-		throws Exception {
-
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				KnowledgeBaseFolder.class.getName(), callbackURL, contentType,
-				fieldNames)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Creates a new knowledge base folder."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception {
-
-		return new KnowledgeBaseFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response postSiteKnowledgeBaseFolderBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.postImportTask(
-				KnowledgeBaseFolder.class.getName(), callbackURL, null, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the knowledge base folder by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the site's knowledge base folder by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public KnowledgeBaseFolder
-			getSiteKnowledgeBaseFolderByExternalReferenceCode(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteId")
-				Long siteId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
-		throws Exception {
-
-		return new KnowledgeBaseFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentKnowledgeBaseFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
@@ -1015,98 +1086,27 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path(
 		"/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
 	public KnowledgeBaseFolder
 			putSiteKnowledgeBaseFolderByExternalReferenceCode(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteId")
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("siteId")
 				Long siteId,
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
+				@jakarta.validation.constraints.NotNull
+				@jakarta.ws.rs.PathParam("externalReferenceCode")
 				String externalReferenceCode,
 				KnowledgeBaseFolder knowledgeBaseFolder)
 		throws Exception {
 
 		return new KnowledgeBaseFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "KnowledgeBaseFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(siteId);
-
-		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getSiteKnowledgeBaseFolderPermissionsPage", portletName,
-					siteId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putSiteKnowledgeBaseFolderPermissionsPage", portletName,
-					siteId)
-			).build(),
-			siteId, portletName, roleNames);
 	}
 
 	/**
@@ -1129,15 +1129,15 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Consumes({"application/json", "application/xml"})
+	@jakarta.ws.rs.Path("/sites/{siteId}/knowledge-base-folders/permissions")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.PUT
 	@Override
 	public Page<Permission> putSiteKnowledgeBaseFolderPermissionsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("siteId")
 			Long siteId,
 			Permission[] permissions)
 		throws Exception {
@@ -1228,34 +1228,26 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			String updateStrategy = (String)parameters.getOrDefault(
 				"updateStrategy", "UPDATE");
 
-			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				knowledgeBaseFolderUnsafeFunction = knowledgeBaseFolder ->
-					putSiteKnowledgeBaseFolderByExternalReferenceCode(
-						knowledgeBaseFolder.getSiteId() != null ?
-							knowledgeBaseFolder.getSiteId() :
-								(Long)parameters.get("siteId"),
-						knowledgeBaseFolder.getExternalReferenceCode(),
-						knowledgeBaseFolder);
-			}
-
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 				knowledgeBaseFolderUnsafeFunction = knowledgeBaseFolder -> {
+					KnowledgeBaseFolder getKnowledgeBaseFolder = null;
 					KnowledgeBaseFolder persistedKnowledgeBaseFolder = null;
 
 					try {
-						KnowledgeBaseFolder getKnowledgeBaseFolder =
-							getSiteKnowledgeBaseFolderByExternalReferenceCode(
-								knowledgeBaseFolder.getSiteId() != null ?
-									knowledgeBaseFolder.getSiteId() :
-										(Long)parameters.get("siteId"),
-								knowledgeBaseFolder.getExternalReferenceCode());
+						if (parameters.containsKey("siteId")) {
+							getKnowledgeBaseFolder =
+								getSiteKnowledgeBaseFolderByExternalReferenceCode(
+									(Long)parameters.get("siteId"),
+									knowledgeBaseFolder.
+										getExternalReferenceCode());
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [siteId]");
+						}
 
 						persistedKnowledgeBaseFolder = patchKnowledgeBaseFolder(
-							getKnowledgeBaseFolder.getId() != null ?
-								getKnowledgeBaseFolder.getId() :
-									_parseLong(
-										(String)parameters.get(
-											"knowledgeBaseFolderId")),
+							getKnowledgeBaseFolder.getId(),
 							knowledgeBaseFolder);
 					}
 					catch (NoSuchModelException noSuchModelException) {
@@ -1265,6 +1257,30 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 									(Long)parameters.get("siteId"),
 									knowledgeBaseFolder);
 						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [siteId]");
+						}
+					}
+
+					return persistedKnowledgeBaseFolder;
+				};
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				knowledgeBaseFolderUnsafeFunction = knowledgeBaseFolder -> {
+					KnowledgeBaseFolder persistedKnowledgeBaseFolder = null;
+
+					if (parameters.containsKey("siteId")) {
+						persistedKnowledgeBaseFolder =
+							putSiteKnowledgeBaseFolderByExternalReferenceCode(
+								(Long)parameters.get("siteId"),
+								knowledgeBaseFolder.getExternalReferenceCode(),
+								knowledgeBaseFolder);
+					}
+					else {
+						throw new NotSupportedException(
+							"One of the following parameters must be specified: [siteId]");
 					}
 
 					return persistedKnowledgeBaseFolder;
@@ -1341,13 +1357,6 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			new MultivaluedHashMap<String, Object>(multivaluedMap));
 	}
 
-	@Override
-	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
-		throws Exception {
-
-		return null;
-	}
-
 	public String getResourceName() {
 		return "KnowledgeBaseFolder";
 	}
@@ -1358,7 +1367,9 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 
 	@Override
 	public Page<KnowledgeBaseFolder> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1409,23 +1420,13 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 			knowledgeBaseFolderUnsafeFunction =
 				knowledgeBaseFolder -> patchKnowledgeBaseFolder(
-					knowledgeBaseFolder.getId() != null ?
-						knowledgeBaseFolder.getId() :
-							_parseLong(
-								(String)parameters.get(
-									"knowledgeBaseFolderId")),
-					knowledgeBaseFolder);
+					knowledgeBaseFolder.getId(), knowledgeBaseFolder);
 		}
 
 		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
 			knowledgeBaseFolderUnsafeFunction =
 				knowledgeBaseFolder -> putKnowledgeBaseFolder(
-					knowledgeBaseFolder.getId() != null ?
-						knowledgeBaseFolder.getId() :
-							_parseLong(
-								(String)parameters.get(
-									"knowledgeBaseFolderId")),
-					knowledgeBaseFolder);
+					knowledgeBaseFolder.getId(), knowledgeBaseFolder);
 		}
 
 		if (knowledgeBaseFolderUnsafeFunction == null) {
@@ -1451,10 +1452,9 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 		}
 	}
 
-	private Long _parseLong(String value) {
-		if (value != null) {
-			return Long.parseLong(value);
-		}
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
 
 		return null;
 	}
@@ -1683,7 +1683,8 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1739,7 +1740,7 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1764,7 +1765,7 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1782,13 +1783,13 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1799,7 +1800,7 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1850,6 +1851,20 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
+	public static <R, E extends Throwable> R[] transform(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] transform(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
+
+		return TransformUtil.transform(array, unsafeFunction, clazz);
+	}
+
 	protected <T, R, E extends Throwable> R[] transform(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
 		Class<? extends R> clazz) {
@@ -1865,6 +1880,80 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		Collection<T> collection,
+		UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[] transformToBooleanArray(
+		T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction) {
+
+		return TransformUtil.transformToBooleanArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] transformToByteArray(
+		T[] array, UnsafeFunction<T, Byte, E> unsafeFunction) {
+
+		return TransformUtil.transformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		Collection<T> collection, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[] transformToDoubleArray(
+		T[] array, UnsafeFunction<T, Double, E> unsafeFunction) {
+
+		return TransformUtil.transformToDoubleArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		Collection<T> collection, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] transformToFloatArray(
+		T[] array, UnsafeFunction<T, Float, E> unsafeFunction) {
+
+		return TransformUtil.transformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] transformToIntArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] transformToIntArray(
+		T[] array, UnsafeFunction<T, Integer, E> unsafeFunction) {
+
+		return TransformUtil.transformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		int[] array, UnsafeFunction<Integer, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> transformToList(
+		long[] array, UnsafeFunction<Long, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> transformToList(
 		T[] array, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -1877,11 +1966,45 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 		return TransformUtil.transformToLongArray(collection, unsafeFunction);
 	}
 
+	public static <T, E extends Throwable> long[] transformToLongArray(
+		T[] array, UnsafeFunction<T, Long, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		Collection<T> collection, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] transformToShortArray(
+		T[] array, UnsafeFunction<T, Short, E> unsafeFunction) {
+
+		return TransformUtil.transformToShortArray(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
+	}
+
+	public static <R, E extends Throwable> R[] unsafeTransform(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction,
+			Class<? extends R> clazz)
+		throws E {
+
+		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
@@ -1901,6 +2024,104 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 			collection, unsafeFunction, clazz);
 	}
 
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> boolean[]
+			unsafeTransformToBooleanArray(
+				T[] array, UnsafeFunction<T, Boolean, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToBooleanArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			Collection<T> collection, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> byte[] unsafeTransformToByteArray(
+			T[] array, UnsafeFunction<T, Byte, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToByteArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				Collection<T> collection,
+				UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> double[]
+			unsafeTransformToDoubleArray(
+				T[] array, UnsafeFunction<T, Double, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToDoubleArray(
+			array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> float[] unsafeTransformToFloatArray(
+			T[] array, UnsafeFunction<T, Float, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToFloatArray(array, unsafeFunction);
+	}
+
+	public static <T, R, E extends Throwable> int[] unsafeTransformToIntArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> int[] unsafeTransformToIntArray(
+			T[] array, UnsafeFunction<T, Integer, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToIntArray(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			int[] array, UnsafeFunction<Integer, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
+	public static <R, E extends Throwable> List<R> unsafeTransformToList(
+			long[] array, UnsafeFunction<Long, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransformToList(
 			T[] array, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
@@ -1914,6 +2135,29 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 
 		return TransformUtil.unsafeTransformToLongArray(
 			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> long[] unsafeTransformToLongArray(
+			T[] array, UnsafeFunction<T, Long, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(array, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			Collection<T> collection,
+			UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(
+			collection, unsafeFunction);
+	}
+
+	public static <T, E extends Throwable> short[] unsafeTransformToShortArray(
+			T[] array, UnsafeFunction<T, Short, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToShortArray(array, unsafeFunction);
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
@@ -1931,7 +2175,8 @@ public abstract class BaseKnowledgeBaseFolderResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

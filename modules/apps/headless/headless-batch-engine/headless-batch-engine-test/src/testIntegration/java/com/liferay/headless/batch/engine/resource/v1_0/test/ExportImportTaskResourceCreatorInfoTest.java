@@ -94,9 +94,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -114,9 +116,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -143,9 +147,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -159,9 +165,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -186,9 +194,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -205,9 +215,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -231,9 +243,11 @@ public class ExportImportTaskResourceCreatorInfoTest {
 
 		_objectEntry1 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry1.getExternalReferenceCode(),
+			_objectEntry1.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 		_objectEntry2 = _objectEntryLocalService.getObjectEntry(
 			_objectEntry2.getExternalReferenceCode(),
+			_objectEntry2.getGroupId(),
 			_objectDefinition1.getObjectDefinitionId());
 
 		Assert.assertEquals(
@@ -248,7 +262,7 @@ public class ExportImportTaskResourceCreatorInfoTest {
 		throws Exception {
 
 		return _objectEntryLocalService.addObjectEntry(
-			user.getUserId(), 0L, objectDefinition.getObjectDefinitionId(),
+			0L, user.getUserId(), objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
 			HashMapBuilder.<String, Serializable>put(
@@ -263,7 +277,7 @@ public class ExportImportTaskResourceCreatorInfoTest {
 		throws Exception {
 
 		return _objectEntryLocalService.addObjectEntry(
-			user.getUserId(), 0L, objectDefinition.getObjectDefinitionId(),
+			0L, user.getUserId(), objectDefinition.getObjectDefinitionId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
 			HashMapBuilder.<String, Serializable>put(

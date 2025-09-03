@@ -4,8 +4,8 @@
  */
 
 import {CardButton} from '../../../../components/CardButton/CardButton';
+import {GetAppStepTypes} from '../../enums/GetAppStepTypes';
 import {PaymentMethod} from '../../enums/paymentMethod';
-import {StepType} from '../../enums/stepType';
 
 const getPaymentMethods = (
 	disablePaidMethods: boolean,
@@ -37,12 +37,11 @@ const getPaymentMethods = (
 export function PaymentMethodSelector({
 	selectedPaymentMethod,
 	setSelectedPaymentMethod,
-	step,
 }: {
 	enableTrial: boolean;
 	selectedPaymentMethod: PaymentMethod;
 	setSelectedPaymentMethod: (value: PaymentMethod) => void;
-	step: StepType;
+	step: GetAppStepTypes;
 }) {
 	const disablePaidMethods =
 		selectedPaymentMethod !== PaymentMethod.PAY &&
@@ -66,7 +65,6 @@ export function PaymentMethodSelector({
 						}
 					}}
 					selected={paymentMethod.method === selectedPaymentMethod}
-					step={step}
 				/>
 			))}
 		</>

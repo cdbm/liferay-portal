@@ -10,12 +10,15 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.asset.util.AssetRendererFactoryWrapper;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
+import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.depot.web.internal.application.controller.DepotApplicationController;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -25,14 +28,14 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 
-import java.util.Locale;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
 
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
+import java.util.Locale;
 
 /**
  * @author Adolfo Pérez
@@ -108,6 +111,19 @@ public class DepotAssetRendererFactoryWrapper<T>
 						_getGroupId(group.getGroupId())),
 				groupId)) {
 
+			return assetRenderer;
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-17564")) {
+
+			return null;
+		}
+
+		DepotEntry depotEntry = _depotEntryLocalService.getGroupDepotEntry(
+			groupId);
+
+		if (depotEntry.getType() == DepotConstants.TYPE_SPACE) {
 			return assetRenderer;
 		}
 
@@ -306,10 +322,11 @@ public class DepotAssetRendererFactoryWrapper<T>
 			return fallbackGroup;
 		}
 
-		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+		long scopeGroupId = GetterUtil.getLong(
+			serviceContext.getAttribute("scopeGroupId"));
 
-		if (themeDisplay != null) {
-			return themeDisplay.getScopeGroup();
+		if (scopeGroupId != 0) {
+			return _groupLocalService.fetchGroup(scopeGroupId);
 		}
 
 		return _groupLocalService.fetchGroup(serviceContext.getScopeGroupId());

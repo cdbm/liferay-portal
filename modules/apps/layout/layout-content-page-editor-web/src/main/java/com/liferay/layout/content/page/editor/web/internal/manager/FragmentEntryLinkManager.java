@@ -61,6 +61,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -68,9 +71,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -178,8 +178,8 @@ public class FragmentEntryLinkManager {
 		themeDisplay.setIsolated(true);
 
 		try {
-			JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
-				fragmentEntryLink.getEditableValues());
+			JSONObject editableValuesJSONObject =
+				fragmentEntryLink.getEditableValuesJSONObject();
 
 			String content = _getContent(
 				defaultFragmentRendererContext, editableValuesJSONObject,
@@ -238,8 +238,7 @@ public class FragmentEntryLinkManager {
 					"editableTypes", Collections.emptyMap()
 				).put(
 					"editableValues",
-					_jsonFactory.createJSONObject(
-						fragmentEntryLink.getEditableValues())
+					fragmentEntryLink.getEditableValuesJSONObject()
 				).put(
 					"fragmentEntryId", 0
 				).put(
@@ -266,11 +265,9 @@ public class FragmentEntryLinkManager {
 
 			defaultFragmentRendererContext.setLocale(themeDisplay.getLocale());
 
-			String configuration = _fragmentRendererController.getConfiguration(
-				defaultFragmentRendererContext);
-
-			JSONObject configurationJSONObject = _jsonFactory.createJSONObject(
-				configuration);
+			JSONObject configurationJSONObject =
+				_fragmentRendererController.getConfigurationJSONObject(
+					defaultFragmentRendererContext);
 
 			FragmentEntryLinkItemSelectorUtil.
 				addFragmentEntryLinkFieldsSelectorURL(
@@ -308,7 +305,8 @@ public class FragmentEntryLinkManager {
 			).put(
 				"defaultConfigurationValues",
 				_fragmentEntryConfigurationParser.
-					getConfigurationDefaultValuesJSONObject(configuration)
+					getConfigurationDefaultValuesJSONObject(
+						configurationJSONObject)
 			).put(
 				"editableTypes",
 				EditableFragmentEntryProcessorUtil.getEditableTypes(content)

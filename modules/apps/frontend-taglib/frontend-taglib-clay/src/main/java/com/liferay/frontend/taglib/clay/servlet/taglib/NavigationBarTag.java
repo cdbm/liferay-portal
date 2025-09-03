@@ -12,12 +12,12 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Chema Balsas
@@ -101,9 +101,11 @@ public class NavigationBarTag extends BaseContainerTag {
 		if (_navigationItems != null) {
 			JspWriter jspWriter = pageContext.getOut();
 
-			jspWriter.write("<div class=\"container-fluid\"><div class=\"");
+			jspWriter.write("<div class=\"container-fluid ");
+			jspWriter.write("container-fluid-max-xxxl\"><div class=\"");
 			jspWriter.write("collapse navbar-collapse\"><div class=\"");
-			jspWriter.write("container-fluid\"><ul class=\"navbar-nav\">");
+			jspWriter.write("container-fluid container-fluid-max-xxxl\"><ul ");
+			jspWriter.write("class=\"navbar-nav\">");
 
 			for (int i = 0; i < _navigationItems.size(); i++) {
 				NavigationItem navigationItem = _navigationItems.get(i);

@@ -25,12 +25,15 @@ import aQute.lib.filter.Filter;
 import com.liferay.ant.bnd.jsp.JspAnalyzerPlugin;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.persistence.ReloadablePersistenceManager;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.deploy.auto.AutoDeployException;
 import com.liferay.portal.kernel.deploy.auto.AutoDeployListener;
 import com.liferay.portal.kernel.deploy.auto.context.AutoDeploymentContext;
 import com.liferay.portal.kernel.deploy.hot.DependencyManagementThreadLocal;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PortletConstants;
@@ -65,6 +68,7 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.util.JS;
 import com.liferay.whip.util.ReflectionUtil;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
@@ -347,9 +351,29 @@ public class WabProcessor {
 				if (!name.contains("/") &&
 					name.endsWith(".client-extension-config.json")) {
 
-					Files.copy(
-						zipFile.getInputStream(zipEntry),
-						osgiInfConfiguratorPath.resolve(name));
+					try (InputStream inputStream = zipFile.getInputStream(
+							zipEntry)) {
+
+						JSONObject jsonObject =
+							JSONFactoryUtil.createJSONObject(
+								new String(inputStream.readAllBytes()));
+
+						for (String key : jsonObject.keySet()) {
+							JSONObject configurationJSONObject =
+								jsonObject.getJSONObject(key);
+
+							configurationJSONObject.put(
+								ReloadablePersistenceManager.STORAGE_POLICY_KEY,
+								ReloadablePersistenceManager.
+									STORAGE_POLICY_VALUE_EPHEMERAL);
+						}
+
+						String json = jsonObject.toString();
+
+						Files.copy(
+							new ByteArrayInputStream(json.getBytes()),
+							osgiInfConfiguratorPath.resolve(name));
+					}
 				}
 				else if (name.startsWith(batchPathString)) {
 					Files.copy(
@@ -1326,11 +1350,7 @@ public class WabProcessor {
 
 				String fileName = file.getName();
 
-				if (fileName.endsWith(".tld")) {
-					return true;
-				}
-
-				return false;
+				return fileName.endsWith(".tld");
 			});
 
 		for (File file : files) {
@@ -1567,11 +1587,17 @@ public class WabProcessor {
 
 			_processExcludedJSPs(analyzer);
 
-			analyzer.setProperties(pluginPackageProperties);
-
 			_processBeans(analyzer);
 
 			_processOSGiConfigurator(jar, analyzer);
+
+			for (String stringPropertyName :
+					pluginPackageProperties.stringPropertyNames()) {
+
+				analyzer.setProperty(
+					stringPropertyName,
+					pluginPackageProperties.getProperty(stringPropertyName));
+			}
 
 			try {
 				jar = analyzer.build();
@@ -1691,8 +1717,10 @@ public class WabProcessor {
 	private static final String _XPATHS_JAVAEE = StringUtil.merge(
 		new String[] {
 			"//j2ee:filter-class", "//j2ee:listener-class",
-			"//j2ee:servlet-class", "//javaee:filter-class",
-			"//javaee:listener-class", "//javaee:servlet-class"
+			"//j2ee:servlet-class", "//jakartaee:filter-class",
+			"//jakartaee:listener-class", "//jakartaee:servlet-class",
+			"//javaee:filter-class", "//javaee:listener-class",
+			"//javaee:servlet-class"
 		},
 		"|");
 
@@ -1762,6 +1790,8 @@ public class WabProcessor {
 		).put(
 			"j2ee", "http://java.sun.com/xml/ns/j2ee"
 		).put(
+			"jakartaee", "https://jakarta.ee/xml/ns/jakartaee"
+		).put(
 			"javaee", "http://java.sun.com/xml/ns/javaee"
 		).put(
 			"jee", "http://www.springframework.org/schema/jee"
@@ -1792,9 +1822,8 @@ public class WabProcessor {
 	static {
 		List<AutoDeployListener> autoDeployListeners = new ArrayList<>();
 
-		String[] autoDeployListenerClassNames =
-			com.liferay.portal.util.PropsUtil.getArray(
-				PropsKeys.AUTO_DEPLOY_LISTENERS);
+		String[] autoDeployListenerClassNames = PropsUtil.getArray(
+			PropsKeys.AUTO_DEPLOY_LISTENERS);
 
 		for (String autoDeployListenerClassName :
 				autoDeployListenerClassNames) {

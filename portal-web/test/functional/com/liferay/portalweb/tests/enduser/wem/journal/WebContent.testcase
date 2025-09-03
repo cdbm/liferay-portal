@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -1373,7 +1373,7 @@ definition {
 	@description = "This is a test for LPS-90066 and LPS-127728. A user can preview a scheduled web content via View Usage. The warning message should have link in Web Content Display."
 	@priority = 5
 	test PreviewScheduledWebContentInWCD {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("Add a web content article with a future display date") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -1406,14 +1406,10 @@ definition {
 			IFrame.closeFrame();
 		}
 
-		task ("Access to web content editor via warning message link") {
+		task ("Assert web content warning message link") {
 			Click(
 				key_warningMessage = "Web Content Title is scheduled and will be displayed on 11/20/00, 1:01 AM.",
 				locator1 = "Message#WARNING_SPECIFIC_LINK");
-
-			WebContent.viewCP(
-				webContentContent = "Web Content Content",
-				webContentTitle = "Web Content Title");
 		}
 
 		task ("View the usages of the Web Content article") {
@@ -2375,7 +2371,7 @@ definition {
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-			WebContent.publishWithPermissions();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {

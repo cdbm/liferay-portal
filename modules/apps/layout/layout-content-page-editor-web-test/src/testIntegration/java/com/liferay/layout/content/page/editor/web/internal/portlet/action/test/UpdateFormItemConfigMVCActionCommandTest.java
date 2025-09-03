@@ -82,18 +82,18 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -203,8 +203,8 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 					fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 			Object value = _fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				LocaleUtil.getMostRelevantLocale(), "type");
 
 			Assert.assertTrue(
@@ -224,8 +224,8 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 			Assert.assertEquals(
 				"next",
 				_fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getConfiguration(),
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getConfigurationJSONObject(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					LocaleUtil.getMostRelevantLocale(), "type"));
 		}
 	}
@@ -722,8 +722,8 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 			Assert.assertEquals(
 				"submit",
 				_fragmentEntryConfigurationParser.getFieldValue(
-					fragmentEntryLink.getConfiguration(),
-					fragmentEntryLink.getEditableValues(),
+					fragmentEntryLink.getConfigurationJSONObject(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					LocaleUtil.getMostRelevantLocale(), "type"));
 		}
 
@@ -742,8 +742,8 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 					fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 			Object value = _fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				LocaleUtil.getMostRelevantLocale(), "type");
 
 			if (Objects.equals(value, "previous") ||
@@ -1382,8 +1382,8 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 		Assert.assertEquals(
 			expectedType,
 			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				LocaleUtil.getMostRelevantLocale(), "type"));
 	}
 
@@ -1468,7 +1468,7 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 
 		String inputFieldId = GetterUtil.getString(
 			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				new FragmentConfigurationField(
 					"inputFieldId", "string", "", false, "text"),
 				LocaleUtil.getMostRelevantLocale()));

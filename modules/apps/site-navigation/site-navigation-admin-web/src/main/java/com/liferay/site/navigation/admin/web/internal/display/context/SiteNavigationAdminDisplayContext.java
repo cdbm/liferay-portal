@@ -57,16 +57,16 @@ import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.template.constants.TemplatePortletKeys;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pavel Savinov
@@ -483,10 +483,10 @@ public class SiteNavigationAdminDisplayContext {
 
 					RenderRequest renderRequest =
 						(RenderRequest)_httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_REQUEST);
+							JavaConstants.JAKARTA_PORTLET_REQUEST);
 					RenderResponse renderResponse =
 						(RenderResponse)_httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_RESPONSE);
+							JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 					return String.valueOf(
 						siteNavigationMenuItemType.getAddURL(

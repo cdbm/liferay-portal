@@ -21,9 +21,9 @@ import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.exception.CommerceOrderAccountLimitException;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
-import com.liferay.commerce.order.CommerceOrderThreadLocal;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -34,7 +34,7 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCustomCommerceContextFactory;
 import com.liferay.commerce.test.util.context.TestCustomCommerceContextHttp;
-import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.commerce.util.CommerceOrderThreadLocal;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Country;
@@ -1146,14 +1146,14 @@ public class CommerceOrderTest {
 		}
 
 		return _commerceAddressLocalService.addCommerceAddress(
-			AccountEntry.class.getName(), commerceAccountId,
+			StringPool.BLANK, AccountEntry.class.getName(), commerceAccountId,
+			_country.getCountryId(), _region.getRegionId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			String.valueOf(30133), _region.getRegionId(),
-			_country.getCountryId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), StringPool.BLANK,
 			CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING,
-			_serviceContext);
+			String.valueOf(30133), _serviceContext);
 	}
 
 	private Role _addSalesAgentRole() throws Exception {

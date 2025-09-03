@@ -7,8 +7,6 @@ package com.liferay.headless.admin.site.resource.v1_0;
 
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -22,17 +20,17 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -48,6 +46,24 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DisplayPageTemplateResource {
 
+	public void deleteSiteSiteByExternalReferenceCodeDisplayPageTemplate(
+			String siteExternalReferenceCode,
+			String displayPageTemplateExternalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteDisplayPageTemplatePermissionsPage(
+				String siteExternalReferenceCode,
+				String displayPageTemplateExternalReferenceCode,
+				String roleNames)
+		throws Exception;
+
+	public DisplayPageTemplate
+			getSiteSiteByExternalReferenceCodeDisplayPageTemplate(
+				String siteExternalReferenceCode,
+				String displayPageTemplateExternalReferenceCode)
+		throws Exception;
+
 	public Page<DisplayPageTemplate>
 			getSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderDisplayPageTemplatesPage(
 				String siteExternalReferenceCode,
@@ -55,46 +71,13 @@ public interface DisplayPageTemplateResource {
 				Boolean flatten)
 		throws Exception;
 
-	public DisplayPageTemplate
-			postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderDisplayPageTemplate(
-				String siteExternalReferenceCode,
-				String displayPageTemplateFolderExternalReferenceCode,
-				DisplayPageTemplate displayPageTemplate)
-		throws Exception;
-
 	public Page<DisplayPageTemplate>
 			getSiteSiteByExternalReferenceCodeDisplayPageTemplatesPage(
 				String siteExternalReferenceCode, String search,
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public DisplayPageTemplate
-			postSiteSiteByExternalReferenceCodeDisplayPageTemplate(
-				String siteExternalReferenceCode,
-				DisplayPageTemplate displayPageTemplate)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteSiteByExternalReferenceCodeDisplayPageTemplatePermissionsPage(
-				String siteExternalReferenceCode, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putSiteSiteByExternalReferenceCodeDisplayPageTemplatePermissionsPage(
-				String siteExternalReferenceCode,
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public void deleteSiteSiteByExternalReferenceCodeDisplayPageTemplate(
-			String siteExternalReferenceCode,
-			String displayPageTemplateExternalReferenceCode)
-		throws Exception;
-
-	public DisplayPageTemplate
-			getSiteSiteByExternalReferenceCodeDisplayPageTemplate(
-				String siteExternalReferenceCode,
-				String displayPageTemplateExternalReferenceCode)
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public DisplayPageTemplate
@@ -105,9 +88,15 @@ public interface DisplayPageTemplateResource {
 		throws Exception;
 
 	public DisplayPageTemplate
-			putSiteSiteByExternalReferenceCodeDisplayPageTemplate(
+			postSiteSiteByExternalReferenceCodeDisplayPageTemplate(
 				String siteExternalReferenceCode,
-				String displayPageTemplateExternalReferenceCode,
+				DisplayPageTemplate displayPageTemplate)
+		throws Exception;
+
+	public DisplayPageTemplate
+			postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderDisplayPageTemplate(
+				String siteExternalReferenceCode,
+				String displayPageTemplateFolderExternalReferenceCode,
 				DisplayPageTemplate displayPageTemplate)
 		throws Exception;
 
@@ -119,16 +108,17 @@ public interface DisplayPageTemplateResource {
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteSiteExternalReferenceCodeDisplayPageTemplatePermissionsPage(
+			putSiteDisplayPageTemplatePermissionsPage(
 				String siteExternalReferenceCode,
 				String displayPageTemplateExternalReferenceCode,
-				String roleNames)
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putSiteSiteExternalReferenceCodeDisplayPageTemplatePermissionsPage(
+	public DisplayPageTemplate
+			putSiteSiteByExternalReferenceCodeDisplayPageTemplate(
 				String siteExternalReferenceCode,
-				String displayPageTemplateExternalReferenceCode)
+				String displayPageTemplateExternalReferenceCode,
+				DisplayPageTemplate displayPageTemplate)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -153,7 +143,8 @@ public interface DisplayPageTemplateResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -178,19 +169,23 @@ public interface DisplayPageTemplateResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

@@ -56,6 +56,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +83,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -551,9 +551,9 @@ public abstract class BaseFormResourceTestCase {
 	public void testGetSiteFormsPageWithPagination() throws Exception {
 		Long siteId = testGetSiteFormsPage_getSiteId();
 
-		Page<Form> formPage = formResource.getSiteFormsPage(siteId, null);
+		Page<Form> formsPage = formResource.getSiteFormsPage(siteId, null);
 
-		int totalCount = GetterUtil.getInteger(formPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(formsPage.getTotalCount());
 
 		Form form1 = testGetSiteFormsPage_addForm(siteId, randomForm());
 
@@ -701,6 +701,11 @@ public abstract class BaseFormResourceTestCase {
 
 	protected Form testGraphQLGetSiteFormsPage_addForm() throws Exception {
 		return testGraphQLForm_addForm();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Test

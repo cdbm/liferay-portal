@@ -6,8 +6,8 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer;
 
 import com.liferay.headless.admin.site.dto.v1_0.FormConfig;
+import com.liferay.headless.admin.site.dto.v1_0.FormPageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
-import com.liferay.headless.admin.site.dto.v1_0.PageFormDefinition;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
 import com.liferay.headless.delivery.dto.v1_0.ClassTypeReference;
@@ -42,19 +42,19 @@ public class FormLayoutStructureItemImporter
 						pageElement, layoutStructure),
 					pageElement.getPosition());
 
-		PageFormDefinition pageFormDefinition =
-			(PageFormDefinition)pageElement.getDefinition();
+		FormPageElementDefinition formPageElementDefinition =
+			(FormPageElementDefinition)pageElement.getPageElementDefinition();
 
-		if (pageFormDefinition == null) {
+		if (formPageElementDefinition == null) {
 			return formStyledLayoutStructureItem;
 		}
 
 		formStyledLayoutStructureItem.setCssClasses(
-			SetUtil.fromArray(pageFormDefinition.getCssClasses()));
+			SetUtil.fromArray(formPageElementDefinition.getCssClasses()));
 		formStyledLayoutStructureItem.setCustomCSS(
-			pageFormDefinition.getCustomCSS());
+			formPageElementDefinition.getCustomCSS());
 
-		FormConfig formConfig = pageFormDefinition.getFormConfig();
+		FormConfig formConfig = formPageElementDefinition.getFormConfig();
 
 		if (formConfig.getFormReference() instanceof ContextReference) {
 			formStyledLayoutStructureItem.setFormConfig(
@@ -77,8 +77,9 @@ public class FormLayoutStructureItemImporter
 		formStyledLayoutStructureItem.setFormType(
 			_toFormType(formConfig.getFormType()));
 		formStyledLayoutStructureItem.setIndexed(
-			pageFormDefinition.getIndexed());
-		formStyledLayoutStructureItem.setName(pageFormDefinition.getName());
+			formPageElementDefinition.getIndexed());
+		formStyledLayoutStructureItem.setName(
+			formPageElementDefinition.getName());
 		formStyledLayoutStructureItem.setNumberOfSteps(
 			formConfig.getNumberOfSteps());
 

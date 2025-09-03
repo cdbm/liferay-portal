@@ -1,0 +1,45 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.exportimport.vulcan.batch.engine;
+
+import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
+
+import java.io.Serializable;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author Alejandro Tardín
+ */
+public interface ExportImportVulcanBatchEngineTaskItemDelegate<T>
+	extends VulcanBatchEngineTaskItemDelegate<T> {
+
+	public ExportImportDescriptor getExportImportDescriptor();
+
+	public interface ExportImportDescriptor {
+
+		public default List<String> getNestedFields() {
+			return null;
+		}
+
+		public default Map<String, Serializable> getParameters() {
+			return null;
+		}
+
+		public String getPortletId();
+
+		public Scope getScope();
+
+	}
+
+	public enum Scope {
+
+		COMPANY, SITE
+
+	}
+
+}

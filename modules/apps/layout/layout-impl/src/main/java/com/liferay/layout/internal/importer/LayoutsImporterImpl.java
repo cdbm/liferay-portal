@@ -20,6 +20,7 @@ import com.liferay.fragment.listener.FragmentEntryLinkListener;
 import com.liferay.fragment.listener.FragmentEntryLinkListenerRegistry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentCollectionService;
@@ -47,15 +48,16 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.importer.LayoutsImportStrategy;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.importer.LayoutsImporterResultEntry;
+import com.liferay.layout.importer.PortletPermissionsImporter;
 import com.liferay.layout.internal.importer.exception.DropzoneLayoutStructureItemException;
 import com.liferay.layout.internal.importer.helper.PortletConfigurationImporterHelper;
-import com.liferay.layout.internal.importer.helper.PortletPermissionsImporterHelper;
 import com.liferay.layout.internal.importer.structure.util.CollectionItemLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.CollectionLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.ColumnLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.ContainerLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.DropZoneLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.FormLayoutStructureItemImporter;
+import com.liferay.layout.internal.importer.structure.util.FormRelationshipLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.FormStepContainerLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.FormStepItemLayoutStructureItemImporter;
 import com.liferay.layout.internal.importer.structure.util.FragmentDropZoneLayoutStructureItemImporter;
@@ -186,6 +188,10 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 		ZipReader zipReader = _zipReaderFactory.getZipReader(file);
 
+		_processMasterLayoutLayoutPageTemplateEntries(
+			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
+			preserveItemIds, userId, zipReader);
+
 		_processBasicLayoutPageTemplateEntries(
 			groupId, layoutPageTemplateCollectionId,
 			layoutsImporterResultEntries, layoutsImportStrategy,
@@ -204,9 +210,6 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			layoutsImportStrategy, preserveItemIds, userId, zipReader);
 
 		_processLayoutUtilityPageEntries(
-			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
-			preserveItemIds, userId, zipReader);
-		_processMasterLayoutLayoutPageTemplateEntries(
 			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
 			preserveItemIds, userId, zipReader);
 
@@ -252,16 +255,16 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 	@Override
 	public List<FragmentEntryLink> importPageElement(
-			Layout layout, LayoutStructure layoutStructure, String parentItemId,
-			String pageElementJSON, int position, boolean preserveItemIds,
-			long segmentsExperienceId)
+			long userId, Layout layout, LayoutStructure layoutStructure,
+			String parentItemId, String pageElementJSON, int position,
+			boolean preserveItemIds, long segmentsExperienceId)
 		throws Exception {
 
 		Consumer<LayoutStructure> consumer = processedLayoutStructure -> {
 			try {
 				_layoutPageTemplateStructureLocalService.
 					updateLayoutPageTemplateStructureData(
-						layout.getGroupId(), layout.getPlid(),
+						userId, layout.getGroupId(), layout.getPlid(),
 						segmentsExperienceId,
 						processedLayoutStructure.toString());
 			}
@@ -353,6 +356,8 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				_fragmentRendererRegistry));
 		_addLayoutStructureItemImporter(new FormLayoutStructureItemImporter());
 		_addLayoutStructureItemImporter(
+			new FormRelationshipLayoutStructureItemImporter());
+		_addLayoutStructureItemImporter(
 			new FormStepContainerLayoutStructureItemImporter());
 		_addLayoutStructureItemImporter(
 			new FormStepItemLayoutStructureItemImporter());
@@ -365,16 +370,14 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				_fragmentEntryLocalService, _fragmentEntryProcessorRegistry,
 				_fragmentEntryValidator, _fragmentRendererRegistry,
 				_portletConfigurationImporterHelper, _portletFileRepository,
-				_portletLocalService, _portletPermissionsImporterHelper,
+				_portletLocalService, _portletPermissionsImporter,
 				_segmentsExperienceLocalService));
 		_addLayoutStructureItemImporter(new RowLayoutStructureItemImporter());
 		_addLayoutStructureItemImporter(
 			new WidgetLayoutStructureItemImporter(
 				_fragmentEntryLinkLocalService, _fragmentEntryProcessorRegistry,
 				_portletConfigurationImporterHelper, _portletLocalService,
-				_portletPermissionsImporterHelper,
-				_portletPreferencesLocalService,
-				_segmentsExperienceLocalService));
+				_portletPermissionsImporter, _portletRegistry));
 	}
 
 	private void _addClientExtensionEntryRel(
@@ -2438,10 +2441,13 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 	private PortletLocalService _portletLocalService;
 
 	@Reference
-	private PortletPermissionsImporterHelper _portletPermissionsImporterHelper;
+	private PortletPermissionsImporter _portletPermissionsImporter;
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 	@Reference
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

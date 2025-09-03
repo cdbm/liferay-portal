@@ -5,14 +5,14 @@
 
 package com.liferay.commerce.product.type.virtual.order.content.web.internal.portlet.action;
 
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.type.virtual.order.constants.CommerceVirtualOrderPortletKeys;
 import com.liferay.commerce.product.type.virtual.order.content.web.internal.display.context.CommerceVirtualOrderItemContentDisplayContext;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItemFileEntry;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
 import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
@@ -21,10 +21,10 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.portlet.PortletConfig;
+import jakarta.portlet.PortletConfig;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "javax.portlet.name=" + CommerceVirtualOrderPortletKeys.COMMERCE_VIRTUAL_ORDER_ITEM_CONTENT,
+	property = "jakarta.portlet.name=" + CommerceVirtualOrderPortletKeys.COMMERCE_VIRTUAL_ORDER_ITEM_CONTENT,
 	service = ConfigurationAction.class
 )
 public class CommerceVirtualOrderItemContentConfigurationAction

@@ -43,6 +43,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -186,6 +186,39 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testDeleteAccountIdAccountOrganization() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganizationNotFound()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
 	public void testGetAccountByExternalReferenceCodeAccountOrganizationsPage()
 		throws Exception {
 
@@ -266,13 +299,13 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountOrganizationsPage_getExternalReferenceCode();
 
-		Page<AccountOrganization> accountOrganizationPage =
+		Page<AccountOrganization> accountOrganizationsPage =
 			accountOrganizationResource.
 				getAccountByExternalReferenceCodeAccountOrganizationsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountOrganizationPage.getTotalCount());
+			accountOrganizationsPage.getTotalCount());
 
 		AccountOrganization accountOrganization1 =
 			testGetAccountByExternalReferenceCodeAccountOrganizationsPage_addAccountOrganization(
@@ -402,52 +435,17 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
-		AccountOrganization randomAccountOrganization =
-			randomAccountOrganization();
-
-		AccountOrganization postAccountOrganization =
-			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
-				randomAccountOrganization);
-
-		assertEquals(randomAccountOrganization, postAccountOrganization);
-		assertValid(postAccountOrganization);
-	}
-
-	protected AccountOrganization
-			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
-				AccountOrganization accountOrganization)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
+	public void testGetAccountIdAccountOrganization() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
-	public void testGetAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
+	public void testGraphQLGetAccountIdAccountOrganization() throws Exception {
 		Assert.assertTrue(true);
 	}
 
 	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganizationNotFound()
+	public void testGraphQLGetAccountIdAccountOrganizationNotFound()
 		throws Exception {
 
 		Assert.assertTrue(true);
@@ -523,12 +521,12 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 
 		Long id = testGetAccountIdAccountOrganizationsPage_getId();
 
-		Page<AccountOrganization> accountOrganizationPage =
+		Page<AccountOrganization> accountOrganizationsPage =
 			accountOrganizationResource.getAccountIdAccountOrganizationsPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountOrganizationPage.getTotalCount());
+			accountOrganizationsPage.getTotalCount());
 
 		AccountOrganization accountOrganization1 =
 			testGetAccountIdAccountOrganizationsPage_addAccountOrganization(
@@ -652,6 +650,30 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
+	public void testPostAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		AccountOrganization randomAccountOrganization =
+			randomAccountOrganization();
+
+		AccountOrganization postAccountOrganization =
+			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
+				randomAccountOrganization);
+
+		assertEquals(randomAccountOrganization, postAccountOrganization);
+		assertValid(postAccountOrganization);
+	}
+
+	protected AccountOrganization
+			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
+				AccountOrganization accountOrganization)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountIdAccountOrganization() throws Exception {
 		AccountOrganization randomAccountOrganization =
 			randomAccountOrganization();
@@ -674,24 +696,7 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetAccountIdAccountOrganizationNotFound()
-		throws Exception {
-
+	public void testBatchEngineDeleteImportTask() throws Exception {
 		Assert.assertTrue(true);
 	}
 

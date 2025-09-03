@@ -15,13 +15,13 @@ import com.liferay.commerce.order.importer.item.CommerceOrderImporterItemImpl;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterType;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
@@ -41,6 +41,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.math.BigDecimal;
@@ -48,9 +51,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -225,7 +225,9 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 
 			long cpConfigurationListId = 0;
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-10889")) {
+			if (FeatureFlagManagerUtil.isEnabled(
+					cpInstance.getCompanyId(), "LPD-10889")) {
+
 				CommerceChannel commerceChannel =
 					_commerceChannelLocalService.getCommerceChannelByGroupId(
 						commerceOrder.getGroupId());

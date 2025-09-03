@@ -7,7 +7,7 @@ import {act, cleanup, render} from '@testing-library/react';
 import {PageProvider} from 'data-engine-js-components-web';
 import React from 'react';
 
-import OptionFieldKeyValue from '../../../src/main/resources/META-INF/resources/OptionFieldKeyValue/OptionFieldKeyValue';
+import OptionFieldKeyValue from '../../../src/main/resources/META-INF/resources/js/OptionFieldKeyValue/OptionFieldKeyValue';
 
 const globalLanguageDirection = Liferay.Language.direction;
 
@@ -225,7 +225,7 @@ describe('OptionFieldKeyValue', () => {
 		);
 
 		const OptionFieldKeyValueInput = container.querySelectorAll(
-			'[id*="keyValueName"]:not([id*="_fieldError"])'
+			'[id*="keyValueName"]:not([id*="_fieldFeedback"])'
 		);
 
 		expect(OptionFieldKeyValueInput.length).toBe(1);

@@ -13,6 +13,7 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.helper.CommerceShippingHelper;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderType;
@@ -46,7 +47,6 @@ import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedO
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
-import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.commerce.util.comparator.CommerceShippingMethodPriorityComparator;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -63,14 +63,16 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -601,10 +603,29 @@ public class DefaultCommerceCheckoutStepHttpHelper
 					commerceOrder.getCommerceShippingMethodId());
 
 			if (commerceShippingMethod.isActive()) {
-				return _hasCommerceOrderPermission(
-					CommerceOrderActionKeys.
-						MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS,
-					commerceOrder, httpServletRequest);
+				boolean hasCommerceOrderPermission =
+					_hasCommerceOrderPermission(
+						CommerceOrderActionKeys.
+							MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS,
+						commerceOrder, httpServletRequest);
+
+				if (!hasCommerceOrderPermission) {
+					CommerceShippingOption defaultCommerceShippingOption =
+						_getDefaultCommerceShippingOption(
+							commerceContext, commerceOrder,
+							_portal.getLocale(httpServletRequest));
+
+					if (defaultCommerceShippingOption != null) {
+						_updateCommerceOrder(
+							commerceContext, commerceOrder,
+							defaultCommerceShippingOption.
+								getCommerceShippingMethodKey(),
+							defaultCommerceShippingOption.getKey(),
+							httpServletRequest);
+					}
+				}
+
+				return hasCommerceOrderPermission;
 			}
 		}
 
@@ -710,6 +731,61 @@ public class DefaultCommerceCheckoutStepHttpHelper
 		}
 
 		return filteredCommercePaymentMethodGroupRels;
+	}
+
+	private CommerceShippingOption _getDefaultCommerceShippingOption(
+			CommerceContext commerceContext, CommerceOrder commerceOrder,
+			Locale locale)
+		throws PortalException {
+
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+		CommerceShippingOptionAccountEntryRel
+			commerceShippingOptionAccountEntryRel =
+				_commerceShippingOptionAccountEntryRelService.
+					fetchCommerceShippingOptionAccountEntryRel(
+						accountEntry.getAccountEntryId(),
+						commerceContext.getCommerceChannelId());
+
+		if (commerceShippingOptionAccountEntryRel == null) {
+			return null;
+		}
+
+		CommerceShippingMethod commerceShippingMethod =
+			_commerceShippingMethodLocalService.fetchCommerceShippingMethod(
+				commerceContext.getCommerceChannelGroupId(),
+				commerceShippingOptionAccountEntryRel.
+					getCommerceShippingMethodKey());
+
+		if ((commerceShippingMethod == null) ||
+			!commerceShippingMethod.isActive() ||
+			(commerceShippingMethod.getCommerceShippingMethodId() !=
+				commerceOrder.getCommerceShippingMethodId())) {
+
+			return null;
+		}
+
+		CommerceShippingEngine commerceShippingEngine =
+			_commerceShippingEngineRegistry.getCommerceShippingEngine(
+				commerceShippingMethod.getEngineKey());
+
+		List<CommerceShippingOption> commerceShippingOptions =
+			commerceShippingEngine.getEnabledCommerceShippingOptions(
+				commerceContext, commerceOrder, locale);
+
+		for (CommerceShippingOption commerceShippingOption :
+				commerceShippingOptions) {
+
+			if (StringUtil.equals(
+					commerceShippingOption.getKey(),
+					commerceShippingOptionAccountEntryRel.
+						getCommerceShippingOptionKey())) {
+
+				return commerceShippingOption;
+			}
+		}
+
+		return null;
 	}
 
 	private CommerceShippingOption _getSingleCommerceShippingOption(

@@ -6,10 +6,13 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.mail.kernel.model.MailMessage;
-import com.liferay.mail.kernel.service.MailService;
+import com.liferay.mail.kernel.service.MailServiceUtil;
 import com.liferay.mail.kernel.template.MailTemplate;
 import com.liferay.mail.kernel.template.MailTemplateContext;
 import com.liferay.mail.kernel.template.MailTemplateContextBuilder;
@@ -114,6 +117,7 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptorUtil;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.service.BrowserTrackerLocalService;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ContactLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -153,7 +157,6 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BatchProcessor;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.EscapableObject;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
@@ -170,6 +173,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -180,6 +184,7 @@ import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.model.impl.LayoutImpl;
 import com.liferay.portal.model.impl.UserCacheModel;
 import com.liferay.portal.model.impl.UserImpl;
+import com.liferay.portal.model.impl.UserModelImpl;
 import com.liferay.portal.security.auth.AuthPipeline;
 import com.liferay.portal.security.auth.EmailAddressGeneratorFactory;
 import com.liferay.portal.security.auth.EmailAddressValidatorFactory;
@@ -191,7 +196,6 @@ import com.liferay.portal.security.pwd.PwdAuthenticator;
 import com.liferay.portal.security.pwd.PwdToolkitUtil;
 import com.liferay.portal.security.pwd.RegExpToolkit;
 import com.liferay.portal.service.base.UserLocalServiceBaseImpl;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
@@ -201,6 +205,10 @@ import com.liferay.social.kernel.service.SocialRequestLocalService;
 import com.liferay.social.kernel.service.persistence.SocialRelationPersistence;
 import com.liferay.users.admin.kernel.file.uploads.UserFileUploadsSettings;
 import com.liferay.util.dao.orm.CustomSQLUtil;
+
+import jakarta.mail.internet.InternetAddress;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -230,10 +238,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javax.mail.internet.InternetAddress;
-
-import javax.portlet.PortletPreferences;
+import java.util.function.BiConsumer;
 
 /**
  * Provides the local service for accessing, adding, authenticating, deleting,
@@ -1459,6 +1464,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		workflowServiceContext.setAttribute("autoPassword", autoPassword);
 		workflowServiceContext.setAttribute("sendEmail", sendEmail);
+		workflowServiceContext.setIndexingEnabled(true);
 
 		user = WorkflowHandlerRegistryUtil.startWorkflowInstance(
 			companyId, WorkflowConstants.DEFAULT_GROUP_ID, workflowUserId,
@@ -1783,10 +1789,10 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		String[] digestArray = StringUtil.split(user.getDigest());
 
 		for (String ha1 : digestArray) {
-			String ha2 = DigesterUtil.digestHex(Digester.MD5, method, uri);
+			String ha2 = DigesterUtil.digestHex(DigesterUtil.MD5, method, uri);
 
 			String curResponse = DigesterUtil.digestHex(
-				Digester.MD5, ha1, nonce, ha2);
+				DigesterUtil.MD5, ha1, nonce, ha2);
 
 			if (response.equals(curResponse)) {
 				resetFailedLoginAttempts(user);
@@ -2280,7 +2286,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		if ((users.size() > 1) && _log.isWarnEnabled()) {
 			_log.warn(
 				StringBundler.concat(
-					"Multiple users exist with company ID ", companyId,
+					"More than one user uses company ID ", companyId,
 					" and facebook ID ", facebookId));
 		}
 
@@ -2318,9 +2324,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			return null;
 		}
 
-		if (users.size() > 1) {
-			_log.error(
-				"Portrait ID " + portraitId + " is used by more than one user");
+		if ((users.size() > 1) && _log.isWarnEnabled()) {
+			_log.warn("More than one user uses portrait ID " + portraitId);
 		}
 
 		return users.get(users.size() - 1);
@@ -3144,8 +3149,27 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 */
 	@Override
 	public User loadGetGuestUser(long companyId) throws PortalException {
-		return userPersistence.findByC_T_First(
+		User user = userPersistence.findByC_T_First(
 			companyId, UserConstants.TYPE_GUEST, null);
+
+		long[] userGroupIds = new long[0];
+
+		user.setUserGroupIds(userGroupIds);
+
+		try {
+			java.lang.reflect.Field field = ReflectionUtil.getDeclaredField(
+				UserModelImpl.class, "userGroupIdsUpdateEntityCacheBiConsumer");
+
+			BiConsumer<User, long[]> biConsumer =
+				(BiConsumer<User, long[]>)field.get(null);
+
+			biConsumer.accept(user, userGroupIds);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return user;
 	}
 
 	/**
@@ -4495,6 +4519,26 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		Group companyGroup = company.getGroup();
 
+		if (assetCategoryIds == null) {
+			for (AssetVocabulary assetVocabulary :
+					_assetVocabularyLocalService.getGroupVocabularies(
+						companyGroup.getGroupId())) {
+
+				if (assetVocabulary.isRequired(
+						_classNameLocalService.getClassNameId(
+							User.class.getName()),
+						user.getUserId(), companyGroup.getGroupId())) {
+
+					AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+						companyGroup.getGroupId(), user.getUuid());
+
+					assetCategoryIds = assetEntry.getCategoryIds();
+
+					break;
+				}
+			}
+		}
+
 		_assetEntryLocalService.updateEntry(
 			userId, companyGroup.getGroupId(), user.getCreateDate(),
 			user.getModifiedDate(), User.class.getName(), user.getUserId(),
@@ -4875,6 +4919,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return user;
 	}
 
+	@CTAware(onProduction = true)
 	@Override
 	public User updateLanguageId(long userId, String languageId)
 		throws PortalException {
@@ -5195,7 +5240,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				userId, modelListenerException);
 		}
 
-		if (!silentUpdate) {
+		if (!silentUpdate &&
+			(user.getStatus() == WorkflowConstants.STATUS_APPROVED)) {
+
 			user.setPasswordModified(false);
 
 			sendPasswordNotification(
@@ -7039,11 +7086,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				emailAddress, emailAddressValidator);
 		}
 
-		String pop3User = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_POP3_USER,
-			PropsValues.MAIL_SESSION_MAIL_POP3_USER);
-
-		if (StringUtil.equalsIgnoreCase(emailAddress, pop3User)) {
+		if (MailServiceUtil.isPopServerUser(emailAddress)) {
 			throw new UserEmailAddressException.MustNotBePOP3User(emailAddress);
 		}
 
@@ -7174,6 +7217,14 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			throw new UserScreenNameException.MustNotBeNull(userId);
 		}
 
+		int screenNameMaxLength = ModelHintsUtil.getMaxLength(
+			User.class.getName(), "screenName");
+
+		if (screenName.length() > screenNameMaxLength) {
+			throw new UserScreenNameException.MustNotExceedMaximumLength(
+				screenName, screenNameMaxLength);
+		}
+
 		ScreenNameValidator screenNameValidator =
 			ScreenNameValidatorFactory.getInstance();
 
@@ -7226,9 +7277,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			}
 		}
 	}
-
-	@BeanReference(type = MailService.class)
-	protected MailService mailService;
 
 	private User _checkPasswordPolicy(User user) throws PortalException {
 
@@ -7361,10 +7409,10 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				toUser.getCompanyId());
 
 			mailMessage.setMessageId(
-				PortalUtil.getMailId(
+				MailServiceUtil.getMailId(
 					company.getMx(), "user", System.currentTimeMillis()));
 
-			mailService.sendEmail(mailMessage);
+			MailServiceUtil.sendEmail(mailMessage);
 		}
 		catch (IOException ioException) {
 			throw new SystemException(ioException);
@@ -7480,10 +7528,16 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	@BeanReference(type = AssetEntryLocalService.class)
 	private AssetEntryLocalService _assetEntryLocalService;
 
+	@BeanReference(type = AssetVocabularyLocalService.class)
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
 	private BatchProcessor<User> _batchProcessor;
 
 	@BeanReference(type = BrowserTrackerLocalService.class)
 	private BrowserTrackerLocalService _browserTrackerLocalService;
+
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
 
 	@BeanReference(type = CompanyLocalService.class)
 	private CompanyLocalService _companyLocalService;

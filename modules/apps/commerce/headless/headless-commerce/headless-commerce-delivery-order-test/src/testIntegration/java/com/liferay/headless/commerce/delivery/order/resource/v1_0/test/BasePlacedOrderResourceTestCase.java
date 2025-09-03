@@ -56,6 +56,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -73,16 +83,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -242,6 +242,455 @@ public abstract class BasePlacedOrderResourceTestCase {
 	}
 
 	@Test
+	public void testGetChannelAccountPlacedOrdersPage() throws Exception {
+		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
+		Long irrelevantAccountId =
+			testGetChannelAccountPlacedOrdersPage_getIrrelevantAccountId();
+		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
+		Long irrelevantChannelId =
+			testGetChannelAccountPlacedOrdersPage_getIrrelevantChannelId();
+
+		Page<PlacedOrder> page =
+			placedOrderResource.getChannelAccountPlacedOrdersPage(
+				accountId, channelId, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantAccountId != null) && (irrelevantChannelId != null)) {
+			PlacedOrder irrelevantPlacedOrder =
+				testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+					irrelevantAccountId, irrelevantChannelId,
+					randomIrrelevantPlacedOrder());
+
+			page = placedOrderResource.getChannelAccountPlacedOrdersPage(
+				irrelevantAccountId, irrelevantChannelId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantPlacedOrder, (List<PlacedOrder>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelAccountPlacedOrdersPage_getExpectedActions(
+					irrelevantAccountId, irrelevantChannelId));
+		}
+
+		PlacedOrder placedOrder1 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		PlacedOrder placedOrder2 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		page = placedOrderResource.getChannelAccountPlacedOrdersPage(
+			accountId, channelId, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(placedOrder1, (List<PlacedOrder>)page.getItems());
+		assertContains(placedOrder2, (List<PlacedOrder>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelAccountPlacedOrdersPage_getExpectedActions(
+				accountId, channelId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelAccountPlacedOrdersPage_getExpectedActions(
+				Long accountId, Long channelId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
+		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
+
+		PlacedOrder placedOrder1 = randomPlacedOrder();
+
+		placedOrder1 = testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+			accountId, channelId, placedOrder1);
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> page =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null,
+					getFilterString(entityField, "between", placedOrder1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(placedOrder1),
+				(List<PlacedOrder>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithFilterStringContains()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetChannelAccountPlacedOrdersPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
+		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
+
+		PlacedOrder placedOrder1 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PlacedOrder placedOrder2 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> page =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null,
+					getFilterString(entityField, operator, placedOrder1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(placedOrder1),
+				(List<PlacedOrder>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithPagination()
+		throws Exception {
+
+		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
+		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
+
+		Page<PlacedOrder> placedOrdersPage =
+			placedOrderResource.getChannelAccountPlacedOrdersPage(
+				accountId, channelId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			placedOrdersPage.getTotalCount());
+
+		PlacedOrder placedOrder1 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		PlacedOrder placedOrder2 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		PlacedOrder placedOrder3 =
+			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+				accountId, channelId, randomPlacedOrder());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PlacedOrder> page1 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(placedOrder1, (List<PlacedOrder>)page1.getItems());
+
+			Page<PlacedOrder> page2 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(placedOrder2, (List<PlacedOrder>)page2.getItems());
+
+			Page<PlacedOrder> page3 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
+		}
+		else {
+			Page<PlacedOrder> page1 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<PlacedOrder> placedOrders1 =
+				(List<PlacedOrder>)page1.getItems();
+
+			Assert.assertEquals(
+				placedOrders1.toString(), totalCount + 2, placedOrders1.size());
+
+			Page<PlacedOrder> page2 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PlacedOrder> placedOrders2 =
+				(List<PlacedOrder>)page2.getItems();
+
+			Assert.assertEquals(
+				placedOrders2.toString(), 1, placedOrders2.size());
+
+			Page<PlacedOrder> page3 =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(placedOrder1, (List<PlacedOrder>)page3.getItems());
+			assertContains(placedOrder2, (List<PlacedOrder>)page3.getItems());
+			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithSortDateTime()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithSortDouble()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					placedOrder2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithSortInteger()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					placedOrder2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetChannelAccountPlacedOrdersPageWithSortString()
+		throws Exception {
+
+		testGetChannelAccountPlacedOrdersPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, placedOrder1, placedOrder2) -> {
+				Class<?> clazz = placedOrder1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetChannelAccountPlacedOrdersPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, PlacedOrder, PlacedOrder, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
+		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
+
+		PlacedOrder placedOrder1 = randomPlacedOrder();
+		PlacedOrder placedOrder2 = randomPlacedOrder();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, placedOrder1, placedOrder2);
+		}
+
+		placedOrder1 = testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+			accountId, channelId, placedOrder1);
+
+		placedOrder2 = testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+			accountId, channelId, placedOrder2);
+
+		Page<PlacedOrder> page =
+			placedOrderResource.getChannelAccountPlacedOrdersPage(
+				accountId, channelId, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> ascPage =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(placedOrder1, (List<PlacedOrder>)ascPage.getItems());
+			assertContains(placedOrder2, (List<PlacedOrder>)ascPage.getItems());
+
+			Page<PlacedOrder> descPage =
+				placedOrderResource.getChannelAccountPlacedOrdersPage(
+					accountId, channelId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(
+				placedOrder2, (List<PlacedOrder>)descPage.getItems());
+			assertContains(
+				placedOrder1, (List<PlacedOrder>)descPage.getItems());
+		}
+	}
+
+	protected PlacedOrder testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
+			Long accountId, Long channelId, PlacedOrder placedOrder)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetChannelAccountPlacedOrdersPage_getAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGetChannelAccountPlacedOrdersPage_getIrrelevantAccountId()
+		throws Exception {
+
+		return null;
+	}
+
+	protected Long testGetChannelAccountPlacedOrdersPage_getChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGetChannelAccountPlacedOrdersPage_getIrrelevantChannelId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage()
 		throws Exception {
 
@@ -258,7 +707,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 			placedOrderResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 					accountExternalReferenceCode, channelExternalReferenceCode,
-					Pagination.of(1, 10));
+					null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -275,8 +724,8 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						irrelevantAccountExternalReferenceCode,
-						irrelevantChannelExternalReferenceCode,
-						Pagination.of(1, (int)totalCount + 1));
+						irrelevantChannelExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 1), null);
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
@@ -303,7 +752,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 			placedOrderResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 					accountExternalReferenceCode, channelExternalReferenceCode,
-					Pagination.of(1, 10));
+					null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -327,6 +776,118 @@ public abstract class BasePlacedOrderResourceTestCase {
 	}
 
 	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getAccountExternalReferenceCode();
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getChannelExternalReferenceCode();
+
+		PlacedOrder placedOrder1 = randomPlacedOrder();
+
+		placedOrder1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				accountExternalReferenceCode, channelExternalReferenceCode,
+				placedOrder1);
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> page =
+				placedOrderResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+						accountExternalReferenceCode,
+						channelExternalReferenceCode, null,
+						getFilterString(entityField, "between", placedOrder1),
+						Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(placedOrder1),
+				(List<PlacedOrder>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilterStringContains()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getAccountExternalReferenceCode();
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getChannelExternalReferenceCode();
+
+		PlacedOrder placedOrder1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				accountExternalReferenceCode, channelExternalReferenceCode,
+				randomPlacedOrder());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PlacedOrder placedOrder2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				accountExternalReferenceCode, channelExternalReferenceCode,
+				randomPlacedOrder());
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> page =
+				placedOrderResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+						accountExternalReferenceCode,
+						channelExternalReferenceCode, null,
+						getFilterString(entityField, operator, placedOrder1),
+						Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(placedOrder1),
+				(List<PlacedOrder>)page.getItems());
+		}
+	}
+
+	@Test
 	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithPagination()
 		throws Exception {
 
@@ -335,13 +896,14 @@ public abstract class BasePlacedOrderResourceTestCase {
 		String channelExternalReferenceCode =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getChannelExternalReferenceCode();
 
-		Page<PlacedOrder> placedOrderPage =
+		Page<PlacedOrder> placedOrdersPage =
 			placedOrderResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 					accountExternalReferenceCode, channelExternalReferenceCode,
-					null);
+					null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(placedOrderPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			placedOrdersPage.getTotalCount());
 
 		PlacedOrder placedOrder1 =
 			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
@@ -367,10 +929,11 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
+						channelExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-							pageSizeLimit));
+							pageSizeLimit),
+						null);
 
 			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
@@ -380,10 +943,11 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
+						channelExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-							pageSizeLimit));
+							pageSizeLimit),
+						null);
 
 			assertContains(placedOrder2, (List<PlacedOrder>)page2.getItems());
 
@@ -391,10 +955,11 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
+						channelExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-							pageSizeLimit));
+							pageSizeLimit),
+						null);
 
 			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
 		}
@@ -403,8 +968,8 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
-						Pagination.of(1, totalCount + 2));
+						channelExternalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
 
 			List<PlacedOrder> placedOrders1 =
 				(List<PlacedOrder>)page1.getItems();
@@ -416,8 +981,8 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
-						Pagination.of(2, totalCount + 2));
+						channelExternalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -431,12 +996,175 @@ public abstract class BasePlacedOrderResourceTestCase {
 				placedOrderResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
 						accountExternalReferenceCode,
-						channelExternalReferenceCode,
-						Pagination.of(1, (int)totalCount + 3));
+						channelExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
 
 			assertContains(placedOrder1, (List<PlacedOrder>)page3.getItems());
 			assertContains(placedOrder2, (List<PlacedOrder>)page3.getItems());
 			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSortDateTime()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSortDouble()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					placedOrder2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSortInteger()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, placedOrder1, placedOrder2) -> {
+				BeanTestUtil.setProperty(
+					placedOrder1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					placedOrder2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSortString()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, placedOrder1, placedOrder2) -> {
+				Class<?> clazz = placedOrder1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						placedOrder1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						placedOrder2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPageWithSort(
+				EntityField.Type type,
+				UnsafeTriConsumer
+					<EntityField, PlacedOrder, PlacedOrder, Exception>
+						unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String accountExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getAccountExternalReferenceCode();
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getChannelExternalReferenceCode();
+
+		PlacedOrder placedOrder1 = randomPlacedOrder();
+		PlacedOrder placedOrder2 = randomPlacedOrder();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, placedOrder1, placedOrder2);
+		}
+
+		placedOrder1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				accountExternalReferenceCode, channelExternalReferenceCode,
+				placedOrder1);
+
+		placedOrder2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				accountExternalReferenceCode, channelExternalReferenceCode,
+				placedOrder2);
+
+		Page<PlacedOrder> page =
+			placedOrderResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+					accountExternalReferenceCode, channelExternalReferenceCode,
+					null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<PlacedOrder> ascPage =
+				placedOrderResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+						accountExternalReferenceCode,
+						channelExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
+
+			assertContains(placedOrder1, (List<PlacedOrder>)ascPage.getItems());
+			assertContains(placedOrder2, (List<PlacedOrder>)ascPage.getItems());
+
+			Page<PlacedOrder> descPage =
+				placedOrderResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+						accountExternalReferenceCode,
+						channelExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
+
+			assertContains(
+				placedOrder2, (List<PlacedOrder>)descPage.getItems());
+			assertContains(
+				placedOrder1, (List<PlacedOrder>)descPage.getItems());
 		}
 	}
 
@@ -663,12 +1391,13 @@ public abstract class BasePlacedOrderResourceTestCase {
 		String externalReferenceCode =
 			testGetChannelByExternalReferenceCodePlacedOrdersPage_getExternalReferenceCode();
 
-		Page<PlacedOrder> placedOrderPage =
+		Page<PlacedOrder> placedOrdersPage =
 			placedOrderResource.
 				getChannelByExternalReferenceCodePlacedOrdersPage(
 					externalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(placedOrderPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			placedOrdersPage.getTotalCount());
 
 		PlacedOrder placedOrder1 =
 			testGetChannelByExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
@@ -942,201 +1671,6 @@ public abstract class BasePlacedOrderResourceTestCase {
 	}
 
 	@Test
-	public void testGetChannelAccountPlacedOrdersPage() throws Exception {
-		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
-		Long irrelevantAccountId =
-			testGetChannelAccountPlacedOrdersPage_getIrrelevantAccountId();
-		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
-		Long irrelevantChannelId =
-			testGetChannelAccountPlacedOrdersPage_getIrrelevantChannelId();
-
-		Page<PlacedOrder> page =
-			placedOrderResource.getChannelAccountPlacedOrdersPage(
-				accountId, channelId, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if ((irrelevantAccountId != null) && (irrelevantChannelId != null)) {
-			PlacedOrder irrelevantPlacedOrder =
-				testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-					irrelevantAccountId, irrelevantChannelId,
-					randomIrrelevantPlacedOrder());
-
-			page = placedOrderResource.getChannelAccountPlacedOrdersPage(
-				irrelevantAccountId, irrelevantChannelId,
-				Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantPlacedOrder, (List<PlacedOrder>)page.getItems());
-			assertValid(
-				page,
-				testGetChannelAccountPlacedOrdersPage_getExpectedActions(
-					irrelevantAccountId, irrelevantChannelId));
-		}
-
-		PlacedOrder placedOrder1 =
-			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-				accountId, channelId, randomPlacedOrder());
-
-		PlacedOrder placedOrder2 =
-			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-				accountId, channelId, randomPlacedOrder());
-
-		page = placedOrderResource.getChannelAccountPlacedOrdersPage(
-			accountId, channelId, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(placedOrder1, (List<PlacedOrder>)page.getItems());
-		assertContains(placedOrder2, (List<PlacedOrder>)page.getItems());
-		assertValid(
-			page,
-			testGetChannelAccountPlacedOrdersPage_getExpectedActions(
-				accountId, channelId));
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetChannelAccountPlacedOrdersPage_getExpectedActions(
-				Long accountId, Long channelId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetChannelAccountPlacedOrdersPageWithPagination()
-		throws Exception {
-
-		Long accountId = testGetChannelAccountPlacedOrdersPage_getAccountId();
-		Long channelId = testGetChannelAccountPlacedOrdersPage_getChannelId();
-
-		Page<PlacedOrder> placedOrderPage =
-			placedOrderResource.getChannelAccountPlacedOrdersPage(
-				accountId, channelId, null);
-
-		int totalCount = GetterUtil.getInteger(placedOrderPage.getTotalCount());
-
-		PlacedOrder placedOrder1 =
-			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-				accountId, channelId, randomPlacedOrder());
-
-		PlacedOrder placedOrder2 =
-			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-				accountId, channelId, randomPlacedOrder());
-
-		PlacedOrder placedOrder3 =
-			testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-				accountId, channelId, randomPlacedOrder());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<PlacedOrder> page1 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(placedOrder1, (List<PlacedOrder>)page1.getItems());
-
-			Page<PlacedOrder> page2 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(placedOrder2, (List<PlacedOrder>)page2.getItems());
-
-			Page<PlacedOrder> page3 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
-		}
-		else {
-			Page<PlacedOrder> page1 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId, Pagination.of(1, totalCount + 2));
-
-			List<PlacedOrder> placedOrders1 =
-				(List<PlacedOrder>)page1.getItems();
-
-			Assert.assertEquals(
-				placedOrders1.toString(), totalCount + 2, placedOrders1.size());
-
-			Page<PlacedOrder> page2 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<PlacedOrder> placedOrders2 =
-				(List<PlacedOrder>)page2.getItems();
-
-			Assert.assertEquals(
-				placedOrders2.toString(), 1, placedOrders2.size());
-
-			Page<PlacedOrder> page3 =
-				placedOrderResource.getChannelAccountPlacedOrdersPage(
-					accountId, channelId,
-					Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(placedOrder1, (List<PlacedOrder>)page3.getItems());
-			assertContains(placedOrder2, (List<PlacedOrder>)page3.getItems());
-			assertContains(placedOrder3, (List<PlacedOrder>)page3.getItems());
-		}
-	}
-
-	protected PlacedOrder testGetChannelAccountPlacedOrdersPage_addPlacedOrder(
-			Long accountId, Long channelId, PlacedOrder placedOrder)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetChannelAccountPlacedOrdersPage_getAccountId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long
-			testGetChannelAccountPlacedOrdersPage_getIrrelevantAccountId()
-		throws Exception {
-
-		return null;
-	}
-
-	protected Long testGetChannelAccountPlacedOrdersPage_getChannelId()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long
-			testGetChannelAccountPlacedOrdersPage_getIrrelevantChannelId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
 	public void testGetChannelPlacedOrdersPage() throws Exception {
 		Long channelId = testGetChannelPlacedOrdersPage_getChannelId();
 		Long irrelevantChannelId =
@@ -1295,11 +1829,12 @@ public abstract class BasePlacedOrderResourceTestCase {
 
 		Long channelId = testGetChannelPlacedOrdersPage_getChannelId();
 
-		Page<PlacedOrder> placedOrderPage =
+		Page<PlacedOrder> placedOrdersPage =
 			placedOrderResource.getChannelPlacedOrdersPage(
 				channelId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(placedOrderPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			placedOrdersPage.getTotalCount());
 
 		PlacedOrder placedOrder1 =
 			testGetChannelPlacedOrdersPage_addPlacedOrder(
@@ -1552,182 +2087,6 @@ public abstract class BasePlacedOrderResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testGetPlacedOrderByExternalReferenceCode() throws Exception {
-		PlacedOrder postPlacedOrder =
-			testGetPlacedOrderByExternalReferenceCode_addPlacedOrder();
-
-		PlacedOrder getPlacedOrder =
-			placedOrderResource.getPlacedOrderByExternalReferenceCode(
-				postPlacedOrder.getExternalReferenceCode());
-
-		assertEquals(postPlacedOrder, getPlacedOrder);
-		assertValid(getPlacedOrder);
-	}
-
-	protected PlacedOrder
-			testGetPlacedOrderByExternalReferenceCode_addPlacedOrder()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetPlacedOrderByExternalReferenceCode()
-		throws Exception {
-
-		PlacedOrder placedOrder =
-			testGraphQLGetPlacedOrderByExternalReferenceCode_addPlacedOrder();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				placedOrder,
-				PlacedOrderSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"placedOrderByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												placedOrder.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/placedOrderByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceDeliveryOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				placedOrder,
-				PlacedOrderSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceDeliveryOrder_v1_0",
-								new GraphQLField(
-									"placedOrderByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													placedOrder.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceDeliveryOrder_v1_0",
-						"Object/placedOrderByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetPlacedOrderByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"placedOrderByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceDeliveryOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceDeliveryOrder_v1_0",
-						new GraphQLField(
-							"placedOrderByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected PlacedOrder
-			testGraphQLGetPlacedOrderByExternalReferenceCode_addPlacedOrder()
-		throws Exception {
-
-		return testGraphQLPlacedOrder_addPlacedOrder();
-	}
-
-	@Test
-	public void testPatchPlacedOrderByExternalReferenceCode() throws Exception {
-		PlacedOrder postPlacedOrder =
-			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder();
-
-		PlacedOrder randomPatchPlacedOrder = randomPatchPlacedOrder();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PlacedOrder patchPlacedOrder =
-			placedOrderResource.patchPlacedOrderByExternalReferenceCode(
-				postPlacedOrder.getExternalReferenceCode(),
-				randomPatchPlacedOrder);
-
-		PlacedOrder expectedPatchPlacedOrder = postPlacedOrder.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchPlacedOrder, expectedPatchPlacedOrder);
-
-		PlacedOrder getPlacedOrder =
-			placedOrderResource.getPlacedOrderByExternalReferenceCode(
-				patchPlacedOrder.getExternalReferenceCode());
-
-		assertEquals(expectedPatchPlacedOrder, getPlacedOrder);
-		assertValid(getPlacedOrder);
-	}
-
-	protected PlacedOrder
-			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetPlacedOrderByExternalReferenceCodePaymentURL()
-		throws Exception {
-
-		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -2033,6 +2392,153 @@ public abstract class BasePlacedOrderResourceTestCase {
 	}
 
 	@Test
+	public void testGetPlacedOrderByExternalReferenceCode() throws Exception {
+		PlacedOrder postPlacedOrder =
+			testGetPlacedOrderByExternalReferenceCode_addPlacedOrder();
+
+		PlacedOrder getPlacedOrder =
+			placedOrderResource.getPlacedOrderByExternalReferenceCode(
+				postPlacedOrder.getExternalReferenceCode());
+
+		assertEquals(postPlacedOrder, getPlacedOrder);
+		assertValid(getPlacedOrder);
+	}
+
+	protected PlacedOrder
+			testGetPlacedOrderByExternalReferenceCode_addPlacedOrder()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetPlacedOrderByExternalReferenceCode()
+		throws Exception {
+
+		PlacedOrder placedOrder =
+			testGraphQLGetPlacedOrderByExternalReferenceCode_addPlacedOrder();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				placedOrder,
+				PlacedOrderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"placedOrderByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												placedOrder.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/placedOrderByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceDeliveryOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				placedOrder,
+				PlacedOrderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryOrder_v1_0",
+								new GraphQLField(
+									"placedOrderByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													placedOrder.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryOrder_v1_0",
+						"Object/placedOrderByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetPlacedOrderByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"placedOrderByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryOrder_v1_0",
+						new GraphQLField(
+							"placedOrderByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected PlacedOrder
+			testGraphQLGetPlacedOrderByExternalReferenceCode_addPlacedOrder()
+		throws Exception {
+
+		return testGraphQLPlacedOrder_addPlacedOrder();
+	}
+
+	@Test
+	public void testGetPlacedOrderByExternalReferenceCodePaymentURL()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetPlacedOrderPaymentURL() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPatchPlacedOrder() throws Exception {
 		PlacedOrder postPlacedOrder = testPatchPlacedOrder_addPlacedOrder();
 
@@ -2062,8 +2568,42 @@ public abstract class BasePlacedOrderResourceTestCase {
 	}
 
 	@Test
-	public void testGetPlacedOrderPaymentURL() throws Exception {
-		Assert.assertTrue(false);
+	public void testPatchPlacedOrderByExternalReferenceCode() throws Exception {
+		PlacedOrder postPlacedOrder =
+			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder();
+
+		PlacedOrder randomPatchPlacedOrder = randomPatchPlacedOrder();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		PlacedOrder patchPlacedOrder =
+			placedOrderResource.patchPlacedOrderByExternalReferenceCode(
+				postPlacedOrder.getExternalReferenceCode(),
+				randomPatchPlacedOrder);
+
+		PlacedOrder expectedPatchPlacedOrder = postPlacedOrder.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchPlacedOrder, expectedPatchPlacedOrder);
+
+		PlacedOrder getPlacedOrder =
+			placedOrderResource.getPlacedOrderByExternalReferenceCode(
+				patchPlacedOrder.getExternalReferenceCode());
+
+		assertEquals(expectedPatchPlacedOrder, getPlacedOrder);
+		assertValid(getPlacedOrder);
+	}
+
+	protected PlacedOrder
+			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule
@@ -2179,6 +2719,14 @@ public abstract class BasePlacedOrderResourceTestCase {
 
 			if (Objects.equals("author", additionalAssertFieldName)) {
 				if (placedOrder.getAuthor() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("authorId", additionalAssertFieldName)) {
+				if (placedOrder.getAuthorId() == null) {
 					valid = false;
 				}
 
@@ -2445,6 +2993,16 @@ public abstract class BasePlacedOrderResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"requestedDeliveryDate", additionalAssertFieldName)) {
+
+				if (placedOrder.getRequestedDeliveryDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("shipments", additionalAssertFieldName)) {
 				if (placedOrder.getShipments() == null) {
 					valid = false;
@@ -2673,6 +3231,17 @@ public abstract class BasePlacedOrderResourceTestCase {
 			if (Objects.equals("author", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						placedOrder1.getAuthor(), placedOrder2.getAuthor())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("authorId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						placedOrder1.getAuthorId(),
+						placedOrder2.getAuthorId())) {
 
 					return false;
 				}
@@ -3036,6 +3605,19 @@ public abstract class BasePlacedOrderResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"requestedDeliveryDate", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						placedOrder1.getRequestedDeliveryDate(),
+						placedOrder2.getRequestedDeliveryDate())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("shipments", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						placedOrder1.getShipments(),
@@ -3340,6 +3922,11 @@ public abstract class BasePlacedOrderResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("authorId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("channelId")) {
@@ -4098,6 +4685,36 @@ public abstract class BasePlacedOrderResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("requestedDeliveryDate")) {
+			if (operator.equals("between")) {
+				Date date = placedOrder.getRequestedDeliveryDate();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(
+					_format.format(placedOrder.getRequestedDeliveryDate()));
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("shipments")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -4314,6 +4931,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 				account = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				accountId = RandomTestUtil.randomLong();
 				author = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				authorId = RandomTestUtil.randomLong();
 				channelId = RandomTestUtil.randomLong();
 				couponCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -4348,6 +4966,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 					RandomTestUtil.randomString());
 				purchaseOrderNumber = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				requestedDeliveryDate = RandomTestUtil.nextDate();
 				shippingMethod = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				shippingOption = StringUtil.toLowerCase(

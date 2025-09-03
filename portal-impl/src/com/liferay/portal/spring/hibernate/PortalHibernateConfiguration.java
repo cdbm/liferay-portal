@@ -20,10 +20,10 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
@@ -112,7 +112,7 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 		properties.setProperty(
 			"hibernate.query.sql.jdbc_style_params_base", "true");
-		properties.setProperty("javax.persistence.validation.mode", "none");
+		properties.setProperty("jakarta.persistence.validation.mode", "none");
 
 		setHibernateProperties(properties);
 

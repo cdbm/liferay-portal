@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +61,7 @@ public abstract class BasePortalInstanceOperationTestCase
 		_deleteConfiguration();
 	}
 
-	protected void assertConfigurationIsDeletedAfterDeploy(String pid)
+	protected void assertConfigurationFileIsDeletedAfterDeploy(String pid)
 		throws Exception {
 
 		Assert.assertNull(
@@ -73,6 +74,21 @@ public abstract class BasePortalInstanceOperationTestCase
 				new Class<?>[] {String.class}, pid));
 	}
 
+	protected void assertConfigurationIsDeletedAfterDeploy(String pid)
+		throws Exception {
+
+		Assert.assertNull(
+			_configurationAdmin.listConfigurations(
+				"(service.pid=" + pid + ")"));
+
+		Dictionary<Object, Object> dictionary = ReflectionTestUtil.invoke(
+			_persistenceManager, "_getDictionary",
+			new Class<?>[] {String.class}, pid);
+
+		Assert.assertTrue(
+			(boolean)dictionary.get("_felix_.cm.newConfiguration"));
+	}
+
 	protected void assertLog(LogCapture logCapture, String expectedMessage) {
 		List<LogEntry> logEntries = logCapture.getLogEntries();
 
@@ -83,7 +99,38 @@ public abstract class BasePortalInstanceOperationTestCase
 		Assert.assertEquals(expectedMessage, logEntry.getMessage());
 	}
 
-	protected void deployConfiguration(String pid, String content)
+	protected void assertLogException(
+		LogCapture logCapture, String expectedMessage) {
+
+		List<LogEntry> logEntries = logCapture.getLogEntries();
+
+		Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+		LogEntry logEntry = logEntries.get(0);
+
+		Throwable throwable = logEntry.getThrowable();
+
+		Assert.assertEquals(expectedMessage, throwable.getMessage());
+	}
+
+	protected void deployConfiguration(
+			String pid, Dictionary<String, Object> properties)
+		throws Exception {
+
+		Assert.assertNull(
+			_configurationAdmin.listConfigurations(
+				"(service.pid=" + pid + ")"));
+
+		try (AutoCloseable autoCloseable =
+				_registerOnAfterDeleteConfigurationModelListener(pid)) {
+
+			ConfigurationTestUtil.saveConfiguration(pid, properties);
+
+			_countDownLatch.await(180, TimeUnit.SECONDS);
+		}
+	}
+
+	protected void deployConfigurationFile(String pid, String content)
 		throws Exception {
 
 		Assert.assertNull(
@@ -96,7 +143,7 @@ public abstract class BasePortalInstanceOperationTestCase
 		try (AutoCloseable autoCloseable =
 				_registerOnAfterDeleteConfigurationModelListener(pid)) {
 
-			_createConfiguration(pid, content);
+			_createConfigurationFile(pid, content);
 
 			Assert.assertNotNull(
 				_configurationAdmin.listConfigurations(
@@ -108,7 +155,7 @@ public abstract class BasePortalInstanceOperationTestCase
 
 	protected abstract String getComponentName();
 
-	private Configuration _createConfiguration(
+	private Configuration _createConfigurationFile(
 			String configurationPid, String content)
 		throws Exception {
 

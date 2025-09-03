@@ -20,6 +20,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.defaultpermissions.util.PortalDefaultPermissionsUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -125,6 +126,8 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.ArrayDeque;
@@ -143,8 +146,6 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Provides the local service for accessing, adding, deleting, exporting,
@@ -250,12 +251,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
 		if (system &&
-			((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) &&
+			(((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) ||
+			   Objects.equals(type, LayoutConstants.TYPE_UTILITY)) &&
 			  (classPK > 0) &&
 			  (classNameId == _classNameLocalService.getClassNameId(
 				  Layout.class.getName()))) ||
-			 Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
-			 Objects.equals(type, LayoutConstants.TYPE_UTILITY))) {
+			 Objects.equals(type, LayoutConstants.TYPE_CONTENT))) {
 
 			friendlyURLMap = _getDraftFriendlyURLMap(groupId, friendlyURLMap);
 		}
@@ -275,7 +276,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		if (!system) {
 			priority = layoutLocalServiceHelper.getNextPriority(
-				groupId, privateLayout, parentLayoutId, null, -1);
+				groupId, null, privateLayout, parentLayoutId, -1);
 		}
 
 		layoutLocalServiceHelper.validate(
@@ -362,6 +363,13 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			layout.setLayoutPrototypeLinkEnabled(layoutPrototypeLinkEnabled);
 		}
 
+		String layoutSetPrototypeLayoutERC = ParamUtil.getString(
+			serviceContext, "layoutSetPrototypeLayoutERC");
+
+		if (Validator.isNotNull(layoutSetPrototypeLayoutERC)) {
+			layout.setLayoutSetPrototypeLayoutERC(layoutSetPrototypeLayoutERC);
+		}
+
 		layout.setPublishDate(serviceContext.getModifiedDate(date));
 
 		if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
@@ -372,6 +380,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			!system) {
 
 			layout.setStatus(WorkflowConstants.STATUS_DRAFT);
+		}
+		else if (type.equals(LayoutConstants.TYPE_EMPTY)) {
+			layout.setStatus(WorkflowConstants.STATUS_EMPTY);
 		}
 		else {
 			layout.setStatus(WorkflowConstants.STATUS_APPROVED);
@@ -444,6 +455,15 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		if (!layout.isDraftLayout() &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 
+			serviceContext.setAttribute(
+				"defaultSegmentsExperienceExternalReferenceCode",
+				serviceContext.getAttribute(
+					"draftLayoutDefaultSegmentsExperienceExternalReference" +
+						"Code"));
+			serviceContext.setAttribute(
+				"layoutSetPrototypeLayoutERC",
+				serviceContext.getAttribute(
+					"draftLayoutLayoutSetPrototypeLayoutERC"));
 			serviceContext.setModifiedDate(date);
 
 			addLayout(
@@ -1082,8 +1102,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return null;
 		}
 
-		if (layouts.size() > 1) {
-			_log.error("Layout ID " + plid + " has more than one draft");
+		if ((layouts.size() > 1) && _log.isWarnEnabled()) {
+			_log.warn("More than one draft layout uses layout ID " + plid);
 		}
 
 		return layouts.get(layouts.size() - 1);
@@ -1147,9 +1167,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return null;
 		}
 
-		if (layouts.size() > 1) {
-			_log.error(
-				"Image ID " + iconImageId + " is used by more than one layout");
+		if ((layouts.size() > 1) && _log.isWarnEnabled()) {
+			_log.warn("More than one layout uses icon image ID " + iconImageId);
 		}
 
 		return layouts.get(layouts.size() - 1);
@@ -2032,8 +2051,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return count;
 		}
 
-		long[] userGroupIds = _userPersistence.getUserGroupPrimaryKeys(
-			group.getClassPK());
+		User user = _userPersistence.findByPrimaryKey(group.getClassPK());
+
+		long[] userGroupIds = user.getUserGroupIds();
 
 		if (userGroupIds.length != 0) {
 			long userGroupClassNameId = _classNameLocalService.getClassNameId(
@@ -2940,8 +2960,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 				_getParentPlid(groupId, privateLayout, parentLayoutId));
 
 			int priority = layoutLocalServiceHelper.getNextPriority(
-				groupId, privateLayout, parentLayoutId,
-				layout.getSourcePrototypeLayoutUuid(), -1);
+				groupId, layout.getLayoutSetPrototypeLayoutERC(), privateLayout,
+				parentLayoutId, -1);
 
 			layout.setPriority(priority);
 		}
@@ -3103,6 +3123,14 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			layout, iconBytes != null, iconBytes, "iconImageId", 0, 0, 0);
 
 		return layoutPersistence.update(layout);
+	}
+
+	@Override
+	public void updateLayoutContent(
+			String data, Layout layout, long segmentsExperienceId)
+		throws Exception {
+
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -3275,8 +3303,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 				_getParentPlid(groupId, privateLayout, parentLayoutId));
 
 			int priority = layoutLocalServiceHelper.getNextPriority(
-				groupId, privateLayout, parentLayoutId,
-				layout.getSourcePrototypeLayoutUuid(), -1);
+				groupId, layout.getLayoutSetPrototypeLayoutERC(), privateLayout,
+				parentLayoutId, -1);
 
 			layout.setPriority(priority);
 		}
@@ -3336,8 +3364,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		if (parentLayoutId != layout.getParentLayoutId()) {
 			int priority = layoutLocalServiceHelper.getNextPriority(
-				layout.getGroupId(), layout.isPrivateLayout(), parentLayoutId,
-				layout.getSourcePrototypeLayoutUuid(), -1);
+				layout.getGroupId(), layout.getLayoutSetPrototypeLayoutERC(),
+				layout.isPrivateLayout(), parentLayoutId, -1);
 
 			layout.setPriority(priority);
 		}
@@ -3396,9 +3424,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		for (Layout layout : layouts) {
 			int nextPriority = layoutLocalServiceHelper.getNextPriority(
-				layout.getGroupId(), layout.isPrivateLayout(),
-				layout.getParentLayoutId(),
-				layout.getSourcePrototypeLayoutUuid(), layout.getPriority());
+				layout.getGroupId(), layout.getLayoutSetPrototypeLayoutERC(),
+				layout.isPrivateLayout(), layout.getParentLayoutId(),
+				layout.getPriority());
 
 			layout.setPriority(nextPriority);
 
@@ -3433,9 +3461,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		int oldPriority = layout.getPriority();
 
 		int nextPriority = layoutLocalServiceHelper.getNextPriority(
-			layout.getGroupId(), layout.isPrivateLayout(),
-			layout.getParentLayoutId(), layout.getSourcePrototypeLayoutUuid(),
-			priority);
+			layout.getGroupId(), layout.getLayoutSetPrototypeLayoutERC(),
+			layout.isPrivateLayout(), layout.getParentLayoutId(), priority);
 
 		if (oldPriority == nextPriority) {
 			return layout;
@@ -3479,9 +3506,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		for (Layout curLayout : layouts) {
 			int curNextPriority = layoutLocalServiceHelper.getNextPriority(
-				layout.getGroupId(), layout.isPrivateLayout(),
-				layout.getParentLayoutId(),
-				curLayout.getSourcePrototypeLayoutUuid(), newPriority++);
+				layout.getGroupId(), curLayout.getLayoutSetPrototypeLayoutERC(),
+				layout.isPrivateLayout(), layout.getParentLayoutId(),
+				newPriority++);
 
 			if (curLayout.getPriority() == curNextPriority) {
 				continue;
@@ -3631,6 +3658,20 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 			typeSettingsUnicodeProperties.put(
 				"published", Boolean.TRUE.toString());
+		}
+
+		if ((layout.getClassPK() > 0) &&
+			(layout.getClassNameId() == _classNameLocalService.getClassNameId(
+				Layout.class.getName())) &&
+			GetterUtil.getBoolean(
+				layout.getTypeSettingsProperty("autogenerated")) &&
+			layout.isTypeAssetDisplay() &&
+			(status == WorkflowConstants.STATUS_DRAFT)) {
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				layout.getTypeSettingsProperties();
+
+			typeSettingsUnicodeProperties.remove("autogenerated");
 		}
 
 		layout = layoutPersistence.update(layout);
@@ -4254,6 +4295,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return false;
 		}
 
+		arguments = ArrayUtil.append(
+			arguments, CTCollectionThreadLocal.getCTCollectionId());
+
 		Group group = layout.getGroup();
 
 		if (MergeLayoutPrototypesThreadLocal.isMergeComplete(
@@ -4264,7 +4308,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		}
 
 		if (Validator.isNull(layout.getLayoutPrototypeUuid()) &&
-			Validator.isNull(layout.getSourcePrototypeLayoutUuid())) {
+			Validator.isNull(layout.getLayoutSetPrototypeLayoutERC())) {
 
 			return false;
 		}
@@ -4280,7 +4324,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 			sites.mergeLayoutPrototypeLayout(group, layout);
 
-			if (Validator.isNotNull(layout.getSourcePrototypeLayoutUuid())) {
+			if (Validator.isNotNull(layout.getLayoutSetPrototypeLayoutERC())) {
 				sites.mergeLayoutSetPrototypeLayouts(group, layoutSet);
 			}
 		}
@@ -4301,6 +4345,9 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	private boolean _mergeLayouts(
 		Group group, LayoutSet layoutSet, Object... arguments) {
+
+		arguments = ArrayUtil.append(
+			arguments, CTCollectionThreadLocal.getCTCollectionId());
 
 		if ((MergeLayoutPrototypesThreadLocal.isMergeComplete(
 				"getLayouts", arguments) &&

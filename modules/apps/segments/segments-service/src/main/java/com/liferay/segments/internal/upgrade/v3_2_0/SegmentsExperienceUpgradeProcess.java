@@ -77,15 +77,19 @@ public class SegmentsExperienceUpgradeProcess extends UpgradeProcess {
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			while (resultSet.next()) {
+				Layout layout = _layoutLocalService.fetchLayout(
+					resultSet.getLong("plid"));
+
+				if (layout == null) {
+					continue;
+				}
+
+				Layout draftLayout = layout.fetchDraftLayout();
+
 				long ctCollectionId = resultSet.getLong("ctCollectionId");
 				long groupId = resultSet.getLong("groupId");
 				String segmentsExperienceKey = resultSet.getString(
 					"segmentsExperienceKey");
-
-				Layout layout = _layoutLocalService.fetchLayout(
-					resultSet.getLong("plid"));
-
-				Layout draftLayout = layout.fetchDraftLayout();
 
 				if ((draftLayout == null) ||
 					_existDraftLayoutSegmentsExperience(

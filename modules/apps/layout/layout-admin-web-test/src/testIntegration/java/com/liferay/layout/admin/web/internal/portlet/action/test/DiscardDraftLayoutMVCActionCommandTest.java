@@ -26,7 +26,10 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUti
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
+import com.liferay.portal.kernel.test.portlet.MockActionResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -44,9 +47,9 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionResponse;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -56,6 +59,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
@@ -254,6 +258,17 @@ public class DiscardDraftLayoutMVCActionCommandTest {
 
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
+
+		HttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, themeDisplay);
+		mockHttpServletRequest.setAttribute(
+			WebKeys.USER_ID, TestPropsValues.getUserId());
+
+		mockLiferayPortletActionRequest.setAttribute(
+			PortletServlet.PORTLET_SERVLET_REQUEST, mockHttpServletRequest);
 
 		mockLiferayPortletActionRequest.setParameter(
 			"name", RandomTestUtil.randomString());

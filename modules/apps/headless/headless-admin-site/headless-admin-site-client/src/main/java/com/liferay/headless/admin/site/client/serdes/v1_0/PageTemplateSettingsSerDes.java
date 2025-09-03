@@ -10,13 +10,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.PageTemplateSettings;
 import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageTemplateSettings;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -49,12 +49,12 @@ public class PageTemplateSettingsSerDes {
 		if (type != null) {
 			String typeString = type.toString();
 
-			if (typeString.equals("ContentPageTemplate")) {
+			if (typeString.equals("ContentPageTemplateSettings")) {
 				return ContentPageTemplateSettingsSerDes.toJSON(
 					(ContentPageTemplateSettings)pageTemplateSettings);
 			}
 
-			if (typeString.equals("WidgetPageTemplate")) {
+			if (typeString.equals("WidgetPageTemplateSettings")) {
 				return WidgetPageTemplateSettingsSerDes.toJSON(
 					(WidgetPageTemplateSettings)pageTemplateSettings);
 			}
@@ -123,11 +123,11 @@ public class PageTemplateSettingsSerDes {
 			if (type != null) {
 				String typeString = type.toString();
 
-				if (typeString.equals("ContentPageTemplate")) {
+				if (typeString.equals("ContentPageTemplateSettings")) {
 					return ContentPageTemplateSettings.toDTO(json);
 				}
 
-				if (typeString.equals("WidgetPageTemplate")) {
+				if (typeString.equals("WidgetPageTemplateSettings")) {
 					return WidgetPageTemplateSettings.toDTO(json);
 				}
 

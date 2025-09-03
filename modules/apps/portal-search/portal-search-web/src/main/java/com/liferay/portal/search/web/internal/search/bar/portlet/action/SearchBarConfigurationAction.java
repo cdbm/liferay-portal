@@ -9,7 +9,6 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
@@ -18,8 +17,10 @@ import com.liferay.portal.search.web.constants.SearchBarPortletKeys;
 import com.liferay.portal.search.web.internal.search.bar.portlet.configuration.SearchBarPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.search.bar.portlet.display.context.SearchBarPortletDisplayContext;
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,10 +29,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author André de Oliveira
  */
 @Component(
-	property = "javax.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
+	property = "jakarta.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
 	service = ConfigurationAction.class
 )
-public class SearchBarConfigurationAction extends DefaultConfigurationAction {
+public class SearchBarConfigurationAction extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -49,15 +50,10 @@ public class SearchBarConfigurationAction extends DefaultConfigurationAction {
 			searchBarPortletInstanceConfiguration =
 				_getSearchBarPortletInstanceConfiguration(themeDisplay);
 
-		long displayStyleGroupId =
-			searchBarPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = themeDisplay.getScopeGroupId();
-		}
-
 		searchBarPortletDisplayContext.setDisplayStyleGroupId(
-			displayStyleGroupId);
+			_getDisplayStyleGroupId(
+				searchBarPortletInstanceConfiguration, themeDisplay));
+
 		searchBarPortletDisplayContext.setDisplayWarningIgnoredConfiguration(
 			searchBarPrecedenceHelper.isDisplayWarningIgnoredConfiguration(
 				themeDisplay, true));
@@ -88,6 +84,17 @@ public class SearchBarConfigurationAction extends DefaultConfigurationAction {
 
 	@Reference
 	protected SearchCapabilities searchCapabilities;
+
+	private long _getDisplayStyleGroupId(
+		SearchBarPortletInstanceConfiguration
+			searchBarPortletInstanceConfiguration,
+		ThemeDisplay themeDisplay) {
+
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			searchBarPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			themeDisplay);
+	}
 
 	private SearchBarPortletInstanceConfiguration
 		_getSearchBarPortletInstanceConfiguration(ThemeDisplay themeDisplay) {

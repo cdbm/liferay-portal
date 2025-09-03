@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceMode;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.EmailAddress;
+import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.model.role.RoleConstants;
@@ -25,11 +26,11 @@ import com.liferay.portal.service.base.CompanyServiceBaseImpl;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 import com.liferay.ratings.kernel.transformer.RatingsDataTransformerUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.InputStream;
 
 import java.util.List;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * Provides the local service for accessing, adding, checking, and updating
@@ -351,7 +352,8 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 			companyId, oldCompanyPortletPreferences, unicodeProperties);
 
 		UsersAdminUtil.updateAddresses(
-			Company.class.getName(), company.getCompanyId(), addresses);
+			Company.class.getName(), company.getCompanyId(), addresses,
+			ListTypeConstants.COMPANY_ADDRESS);
 
 		UsersAdminUtil.updateEmailAddresses(
 			Company.class.getName(), company.getCompanyId(), emailAddresses);

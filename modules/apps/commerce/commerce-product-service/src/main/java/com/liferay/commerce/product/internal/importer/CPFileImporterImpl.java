@@ -75,6 +75,8 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.ThemeSettingImpl;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,8 +91,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -249,7 +249,8 @@ public class CPFileImporterImpl implements CPFileImporter {
 			String layoutName = layoutJSONObject.getString("name");
 
 			if (layoutName.equals("Returns") &&
-				!FeatureFlagManagerUtil.isEnabled("LPD-10562")) {
+				!FeatureFlagManagerUtil.isEnabled(
+					serviceContext.getCompanyId(), "LPD-10562")) {
 
 				continue;
 			}

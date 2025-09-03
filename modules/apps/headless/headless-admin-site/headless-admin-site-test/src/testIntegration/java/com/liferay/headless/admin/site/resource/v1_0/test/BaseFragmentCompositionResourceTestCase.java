@@ -45,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -193,6 +193,226 @@ public abstract class BaseFragmentCompositionResourceTestCase {
 			regex, fragmentComposition.getFragmentSetExternalReferenceCode());
 		Assert.assertEquals(regex, fragmentComposition.getKey());
 		Assert.assertEquals(regex, fragmentComposition.getName());
+	}
+
+	@Test
+	public void testDeleteSiteSiteByExternalReferenceCodeFragmentComposition()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		FragmentComposition fragmentComposition =
+			testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition();
+
+		assertHttpResponseStatusCode(
+			204,
+			fragmentCompositionResource.
+				deleteSiteSiteByExternalReferenceCodeFragmentCompositionHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					fragmentComposition.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			fragmentCompositionResource.
+				getSiteSiteByExternalReferenceCodeFragmentCompositionHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					fragmentComposition.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			fragmentCompositionResource.
+				getSiteSiteByExternalReferenceCodeFragmentCompositionHttpResponse(
+					testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					"-"));
+	}
+
+	protected FragmentComposition
+			testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSiteSiteByExternalReferenceCodeFragmentComposition()
+		throws Exception {
+
+		FragmentComposition postFragmentComposition =
+			testGetSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition();
+
+		FragmentComposition getFragmentComposition =
+			fragmentCompositionResource.
+				getSiteSiteByExternalReferenceCodeFragmentComposition(
+					testGetSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					postFragmentComposition.getExternalReferenceCode());
+
+		assertEquals(postFragmentComposition, getFragmentComposition);
+		assertValid(getFragmentComposition);
+	}
+
+	protected FragmentComposition
+			testGetSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition()
+		throws Exception {
+
+		FragmentComposition fragmentComposition =
+			testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				fragmentComposition,
+				FragmentCompositionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"siteByExternalReferenceCodeFragmentComposition",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteExternalReferenceCode",
+											"\"" +
+												testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode() +
+													"\"");
+										put(
+											"fragmentCompositionExternalReferenceCode",
+											"\"" +
+												fragmentComposition.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/siteByExternalReferenceCodeFragmentComposition"))));
+
+		// Using the namespace headlessAdminSite_v1_0
+
+		Assert.assertTrue(
+			equals(
+				fragmentComposition,
+				FragmentCompositionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminSite_v1_0",
+								new GraphQLField(
+									"siteByExternalReferenceCodeFragmentComposition",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteExternalReferenceCode",
+												"\"" +
+													testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode() +
+														"\"");
+											put(
+												"fragmentCompositionExternalReferenceCode",
+												"\"" +
+													fragmentComposition.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminSite_v1_0",
+						"Object/siteByExternalReferenceCodeFragmentComposition"))));
+	}
+
+	protected String
+			testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeFragmentCompositionNotFound()
+		throws Exception {
+
+		String irrelevantFragmentCompositionExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"siteByExternalReferenceCodeFragmentComposition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteExternalReferenceCode",
+									"\"" +
+										irrelevantGroup.
+											getExternalReferenceCode() + "\"");
+								put(
+									"fragmentCompositionExternalReferenceCode",
+									irrelevantFragmentCompositionExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminSite_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminSite_v1_0",
+						new GraphQLField(
+							"siteByExternalReferenceCodeFragmentComposition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteExternalReferenceCode",
+										"\"" +
+											irrelevantGroup.
+												getExternalReferenceCode() +
+													"\"");
+									put(
+										"fragmentCompositionExternalReferenceCode",
+										irrelevantFragmentCompositionExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected FragmentComposition
+			testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		return testGraphQLFragmentComposition_addFragmentComposition();
 	}
 
 	@Test
@@ -383,13 +603,13 @@ public abstract class BaseFragmentCompositionResourceTestCase {
 		String siteExternalReferenceCode =
 			testGetSiteSiteByExternalReferenceCodeFragmentCompositionsPage_getSiteExternalReferenceCode();
 
-		Page<FragmentComposition> fragmentCompositionPage =
+		Page<FragmentComposition> fragmentCompositionsPage =
 			fragmentCompositionResource.
 				getSiteSiteByExternalReferenceCodeFragmentCompositionsPage(
 					siteExternalReferenceCode, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			fragmentCompositionPage.getTotalCount());
+			fragmentCompositionsPage.getTotalCount());
 
 		FragmentComposition fragmentComposition1 =
 			testGetSiteSiteByExternalReferenceCodeFragmentCompositionsPage_addFragmentComposition(
@@ -673,15 +893,54 @@ public abstract class BaseFragmentCompositionResourceTestCase {
 			testGetSiteSiteByExternalReferenceCodeFragmentCompositionsPage_getSiteExternalReferenceCode()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGroup.getExternalReferenceCode();
 	}
 
 	protected String
 			testGetSiteSiteByExternalReferenceCodeFragmentCompositionsPage_getIrrelevantSiteExternalReferenceCode()
 		throws Exception {
 
-		return null;
+		return irrelevantGroup.getExternalReferenceCode();
+	}
+
+	@Test
+	public void testPatchSiteSiteByExternalReferenceCodeFragmentComposition()
+		throws Exception {
+
+		FragmentComposition postFragmentComposition =
+			testPatchSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition();
+
+		FragmentComposition randomPatchFragmentComposition =
+			randomPatchFragmentComposition();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		FragmentComposition patchFragmentComposition =
+			fragmentCompositionResource.
+				patchSiteSiteByExternalReferenceCodeFragmentComposition(
+					null, postFragmentComposition.getExternalReferenceCode(),
+					randomPatchFragmentComposition);
+
+		FragmentComposition expectedPatchFragmentComposition =
+			postFragmentComposition.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchFragmentComposition, expectedPatchFragmentComposition);
+
+		FragmentComposition getFragmentComposition =
+			fragmentCompositionResource.
+				getSiteSiteByExternalReferenceCodeFragmentComposition(
+					null, patchFragmentComposition.getExternalReferenceCode());
+
+		assertEquals(expectedPatchFragmentComposition, getFragmentComposition);
+		assertValid(getFragmentComposition);
+	}
+
+	protected FragmentComposition
+			testPatchSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -709,49 +968,66 @@ public abstract class BaseFragmentCompositionResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteSiteSiteByExternalReferenceCodeFragmentComposition()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeFragmentComposition()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeFragmentComposition()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeFragmentCompositionNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchSiteSiteByExternalReferenceCodeFragmentComposition()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testPutSiteSiteByExternalReferenceCodeFragmentComposition()
 		throws Exception {
 
-		Assert.assertTrue(false);
+		FragmentComposition postFragmentComposition =
+			testPutSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition();
+
+		FragmentComposition randomFragmentComposition =
+			randomFragmentComposition();
+
+		FragmentComposition putFragmentComposition =
+			fragmentCompositionResource.
+				putSiteSiteByExternalReferenceCodeFragmentComposition(
+					testPutSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					postFragmentComposition.getExternalReferenceCode(),
+					randomFragmentComposition);
+
+		assertEquals(randomFragmentComposition, putFragmentComposition);
+		assertValid(putFragmentComposition);
+
+		FragmentComposition getFragmentComposition =
+			fragmentCompositionResource.
+				getSiteSiteByExternalReferenceCodeFragmentComposition(
+					testPutSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode(),
+					putFragmentComposition.getExternalReferenceCode());
+
+		assertEquals(randomFragmentComposition, getFragmentComposition);
+		assertValid(getFragmentComposition);
+	}
+
+	protected FragmentComposition
+			testPutSiteSiteByExternalReferenceCodeFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPutSiteSiteByExternalReferenceCodeFragmentComposition_getSiteExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected FragmentComposition
+			testGraphQLFragmentComposition_addFragmentComposition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	protected void assertContains(
 		FragmentComposition fragmentComposition,

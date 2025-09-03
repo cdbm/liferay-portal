@@ -29,7 +29,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 		PortletDataHandler portletDataHandler = portlet.getPortletDataHandlerInstance();
 
-		if (!portletDataHandler.isEnabled(company.getCompanyId()) || (portletDataHandler.isCompany() != stagingGroupHelper.isCompanyGroup(group))) {
+		if (!portletDataHandler.isEnabled(company.getCompanyId()) || (portletDataHandler.isDataPortalLevel() && !stagingGroupHelper.isCompanyGroup(group))) {
 			continue;
 		}
 
@@ -51,10 +51,6 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 			exportControls = stagingControls;
 		}
 
-		if (ArrayUtil.isEmpty(exportControls) && ArrayUtil.isEmpty(metadataControls)) {
-			continue;
-		}
-
 		if (useRequestValues) {
 			dateRange = ExportImportDateUtil.getDateRange(renderRequest, exportGroupId, privateLayout, 0, portlet.getRootPortletId(), defaultRange);
 		}
@@ -70,10 +66,9 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 		long exportModelCount = portletDataHandler.getExportModelCount(manifestSummary);
 
-		boolean modelCountSupported = portletDataHandler.isModelCountSupported();
 		long modelDeletionCount = manifestSummary.getModelDeletionCount(portletDataHandler.getDeletionSystemEventStagedModelTypes());
 
-		if (modelCountSupported && (exportModelCount <= 0) && (modelDeletionCount <= 0) && !showAllPortlets) {
+		if ((exportModelCount <= 0) && (modelDeletionCount <= 0) && !showAllPortlets) {
 			continue;
 		}
 
@@ -88,12 +83,12 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 		boolean showPortletDataInput = MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE + portlet.getPortletId(), portletDataHandler.isPublishToLiveByDefault()) || MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL);
 	%>
 
-		<li class="tree-item <%= ((exportModelCount > 0) || !modelCountSupported || showAllPortlets) ? StringPool.BLANK : "deletions" %>">
+		<li class="tree-item <%= ((exportModelCount > 0) || showAllPortlets) ? StringPool.BLANK : "deletions" %>">
 			<liferay-staging:checkbox
 				checked="<%= showPortletDataInput %>"
 				deletions="<%= modelDeletionCount %>"
 				disabled="<%= disableInputs %>"
-				items="<%= modelCountSupported ? exportModelCount : 0 %>"
+				items="<%= exportModelCount %>"
 				label="<%= portletTitle %>"
 				name="<%= PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE + portlet.getPortletId() %>"
 			/>
@@ -245,7 +240,19 @@ html = html.trim();
 </ul>
 
 <c:if test="<%= type.equals(Constants.EXPORT) && !stagingGroupHelper.isCompanyGroup(group) %>">
-	<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-export-their">
+	<liferay-util:buffer
+		var="selectedContentOptionsLabel"
+	>
+		<liferay-ui:message key="for-each-of-the-selected-content-types,-export-their" />
+
+		<span aria-label="<%= LanguageUtil.get(request, "comments-associated-to-object-entries-are-currently-excluded-from-the-export") %>" class="lfr-portal-tooltip ml-1" title="<%= LanguageUtil.get(request, "comments-associated-to-object-entries-are-currently-excluded-from-the-export") %>">
+			<clay:icon
+				symbol="question-circle-full"
+			/>
+		</span>
+	</liferay-util:buffer>
+
+	<aui:fieldset cssClass="content-options" label="<%= selectedContentOptionsLabel %>">
 		<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
 
 		<span <%= !disableInputs ? StringPool.BLANK : "class=\"hide\"" %>>

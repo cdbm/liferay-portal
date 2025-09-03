@@ -26,6 +26,7 @@ import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -56,17 +57,17 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -129,8 +130,8 @@ public class ContentLayoutTestUtil {
 
 		LayoutPageTemplateStructureLocalServiceUtil.
 			updateLayoutPageTemplateStructureData(
-				layout.getGroupId(), layout.getPlid(), segmentsExperienceId,
-				layoutStructure.toString());
+				layout.getUserId(), layout.getGroupId(), layout.getPlid(),
+				segmentsExperienceId, layoutStructure.toString());
 
 		return itemId;
 	}
@@ -178,7 +179,7 @@ public class ContentLayoutTestUtil {
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(), inputHTML,
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, false, FragmentConstants.TYPE_INPUT,
+					null, 0, false, false, FragmentConstants.TYPE_INPUT,
 					JSONUtil.put(
 						"fieldTypes", JSONUtil.put(infoFieldType.getName())
 					).toString(),
@@ -204,7 +205,7 @@ public class ContentLayoutTestUtil {
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(), inputHTML,
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, false, FragmentConstants.TYPE_INPUT,
+					null, 0, false, false, FragmentConstants.TYPE_INPUT,
 					JSONUtil.put(
 						"fieldTypes", JSONUtil.put("captcha")
 					).toString(),
@@ -277,8 +278,8 @@ public class ContentLayoutTestUtil {
 
 		LayoutPageTemplateStructureLocalServiceUtil.
 			updateLayoutPageTemplateStructureData(
-				layout.getGroupId(), layout.getPlid(), segmentsExperienceId,
-				layoutStructure.toString());
+				layout.getUserId(), layout.getGroupId(), layout.getPlid(),
+				segmentsExperienceId, layoutStructure.toString());
 
 		return layoutStructureItem.getItemId();
 	}
@@ -297,8 +298,9 @@ public class ContentLayoutTestUtil {
 				null, layout.getGroupId(), 0, 0, segmentsExperienceId,
 				layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
 				StringPool.BLANK,
-				fragmentRenderer.getConfiguration(
-					defaultFragmentRendererContext),
+				JSONFactoryUtil.toString(
+					fragmentRenderer.getConfigurationJSONObject(
+						defaultFragmentRendererContext)),
 				editableValues, StringPool.BLANK, 0, fragmentRenderer.getKey(),
 				fragmentRenderer.getType(),
 				ServiceContextTestUtil.getServiceContext(
@@ -330,7 +332,7 @@ public class ContentLayoutTestUtil {
 				StringUtil.randomString(), StringUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), false, "{fieldSets: []}", null,
-				0, false, FragmentConstants.TYPE_COMPONENT, null,
+				0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(
 					layout.getGroupId(), TestPropsValues.getUserId()));
@@ -507,7 +509,7 @@ public class ContentLayoutTestUtil {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 
 		MockHttpServletRequest mockHttpServletRequest =

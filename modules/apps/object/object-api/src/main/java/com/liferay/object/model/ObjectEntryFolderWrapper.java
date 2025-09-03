@@ -46,9 +46,11 @@ public class ObjectEntryFolderWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put(
 			"parentObjectEntryFolderId", getParentObjectEntryFolderId());
+		attributes.put("description", getDescription());
 		attributes.put("label", getLabel());
 		attributes.put("name", getName());
 		attributes.put("treePath", getTreePath());
+		attributes.put("status", getStatus());
 
 		return attributes;
 	}
@@ -123,6 +125,12 @@ public class ObjectEntryFolderWrapper
 			setParentObjectEntryFolderId(parentObjectEntryFolderId);
 		}
 
+		String description = (String)attributes.get("description");
+
+		if (description != null) {
+			setDescription(description);
+		}
+
 		String label = (String)attributes.get("label");
 
 		if (label != null) {
@@ -140,6 +148,12 @@ public class ObjectEntryFolderWrapper
 		if (treePath != null) {
 			setTreePath(treePath);
 		}
+
+		Integer status = (Integer)attributes.get("status");
+
+		if (status != null) {
+			setStatus(status);
+		}
 	}
 
 	@Override
@@ -152,6 +166,13 @@ public class ObjectEntryFolderWrapper
 	@Override
 	public ObjectEntryFolder cloneWithOriginalValues() {
 		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
+	public java.util.List<Long> getAncestorObjectEntryFolderIds()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAncestorObjectEntryFolderIds();
 	}
 
 	@Override
@@ -202,6 +223,16 @@ public class ObjectEntryFolderWrapper
 	@Override
 	public String getDefaultLanguageId() {
 		return model.getDefaultLanguageId();
+	}
+
+	/**
+	 * Returns the description of this object entry folder.
+	 *
+	 * @return the description of this object entry folder
+	 */
+	@Override
+	public String getDescription() {
+		return model.getDescription();
 	}
 
 	/**
@@ -371,6 +402,16 @@ public class ObjectEntryFolderWrapper
 	}
 
 	/**
+	 * Returns the status of this object entry folder.
+	 *
+	 * @return the status of this object entry folder
+	 */
+	@Override
+	public int getStatus() {
+		return model.getStatus();
+	}
+
+	/**
 	 * Returns the tree path of this object entry folder.
 	 *
 	 * @return the tree path of this object entry folder
@@ -421,6 +462,11 @@ public class ObjectEntryFolderWrapper
 	}
 
 	@Override
+	public boolean isRoot() {
+		return model.isRoot();
+	}
+
+	@Override
 	public void persist() {
 		model.persist();
 	}
@@ -468,6 +514,16 @@ public class ObjectEntryFolderWrapper
 	@Override
 	public void setCreateDate(Date createDate) {
 		model.setCreateDate(createDate);
+	}
+
+	/**
+	 * Sets the description of this object entry folder.
+	 *
+	 * @param description the description of this object entry folder
+	 */
+	@Override
+	public void setDescription(String description) {
+		model.setDescription(description);
 	}
 
 	/**
@@ -622,6 +678,16 @@ public class ObjectEntryFolderWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the status of this object entry folder.
+	 *
+	 * @param status the status of this object entry folder
+	 */
+	@Override
+	public void setStatus(int status) {
+		model.setStatus(status);
 	}
 
 	/**

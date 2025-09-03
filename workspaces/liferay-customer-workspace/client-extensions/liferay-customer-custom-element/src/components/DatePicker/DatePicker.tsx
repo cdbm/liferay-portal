@@ -10,11 +10,14 @@ import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import {useField} from 'formik';
 import {
-	required as requiredVaidation,
+	required as requiredValidation,
 	validate,
 } from '~/utils/validations.form';
 
 import './DatePicker.css';
+
+import {IYears} from '@clayui/date-picker/lib/types';
+import getIconSpriteMap from '~/utils/getIconSpriteMap';
 
 interface IProps {
 	badgeClassName?: string;
@@ -30,27 +33,31 @@ interface IProps {
 	placeholder?: string;
 	required?: boolean;
 	validations?: ((value: any) => string | undefined)[];
+	years?: IYears;
+	yearsCheck?: boolean;
 }
 
 const DatePicker: React.FC<IProps> = ({
 	badgeClassName,
 	className,
 	id,
-	name,
 	dateFormat = 'MM/dd/yyyy',
 	groupStyle,
 	helper,
 	label,
+	name,
 	onBlur,
 	onChange,
 	placeholder,
 	required,
 	validations = [],
+	years,
+	yearsCheck,
 }) => {
 	if (required) {
 		validations = validations
-			? [...validations, (value: string) => requiredVaidation(value)]
-			: [(value: string) => requiredVaidation(value)];
+			? [...validations, (value: string) => requiredValidation(value)]
+			: [(value: string) => requiredValidation(value)];
 	}
 
 	const [field, meta, helpers] = useField({
@@ -102,7 +109,10 @@ const DatePicker: React.FC<IProps> = ({
 					onBlur={handleBlur}
 					onChange={handleChange}
 					placeholder={placeholder}
+					spritemap={getIconSpriteMap()}
 					value={field.value}
+					years={years}
+					yearsCheck={yearsCheck}
 				/>
 			</label>
 

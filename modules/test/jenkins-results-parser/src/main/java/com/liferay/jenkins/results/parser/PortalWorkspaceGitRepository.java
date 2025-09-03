@@ -74,11 +74,18 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 				JenkinsResultsParserUtil.getCanonicalPath(deletedFile));
 		}
 
-		if (!multiPattern.matchesAll(filePaths.toArray(new String[0]))) {
-			return false;
+		return multiPattern.matchesAll(filePaths.toArray(new String[0]));
+	}
+
+	public Properties getAppServerProperties() {
+		if (_appServerProperties != null) {
+			return _appServerProperties;
 		}
 
-		return true;
+		_appServerProperties = JenkinsResultsParserUtil.getProperties(
+			new File(getDirectory(), "app.server.properties"));
+
+		return _appServerProperties;
 	}
 
 	public String getLiferayFacesAlloyURL() {
@@ -332,5 +339,7 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 	private static final int _SETUP_PROFILE_DXP_RETRY_COUNT = 2;
 
 	private static final int _SETUP_PROFILE_DXP_RETRY_DELAY = 5;
+
+	private Properties _appServerProperties;
 
 }

@@ -7,6 +7,7 @@ package com.liferay.scim.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -14,9 +15,12 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -24,6 +28,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
@@ -67,14 +72,6 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		BaseUserResourceTestCase.setUpClass();
-
-		UserResource.Builder builder = UserResource.builder();
-
-		_userResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
-		).locale(
-			LocaleUtil.getDefault()
-		).build();
 	}
 
 	@Before
@@ -94,6 +91,21 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 			).put(
 				"userId", TestPropsValues.getUserId()
 			).build());
+
+		UserResource.Builder builder = UserResource.builder();
+
+		Company company = _companyLocalService.getCompany(
+			TestPropsValues.getCompanyId());
+		com.liferay.portal.kernel.model.User user = _userLocalService.getUser(
+			TestPropsValues.getUserId());
+
+		_userResource = builder.authentication(
+			user.getEmailAddress(), PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			company.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 	}
 
 	@After
@@ -281,7 +293,7 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 
 		PatchOp patchOp = new PatchOp();
 
-		String displayName = StringUtil.toLowerCase(
+		String displayName1 = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
 
 		patchOp.setOperations(
@@ -290,7 +302,7 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 					{
 						setOp("replace");
 						setPath("displayName");
-						setValue(displayName);
+						setValue(displayName1);
 					}
 				}
 			});
@@ -299,7 +311,31 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 
 		Group patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
 
-		Assert.assertEquals(displayName, patchGroup.getDisplayName());
+		Assert.assertEquals(displayName1, patchGroup.getDisplayName());
+
+		String displayName2 = StringUtil.toLowerCase(
+			RandomTestUtil.randomString());
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("replace");
+						setValue(
+							JSONFactoryUtil.createJSONObject(
+								LinkedHashMapBuilder.put(
+									"id",
+									String.valueOf(userGroup.getUserGroupId())
+								).put(
+									"displayName", displayName2
+								).build()));
+					}
+				}
+			});
+
+		patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertEquals(displayName2, patchGroup.getDisplayName());
 
 		User user2 = _addUser();
 
@@ -589,6 +625,13 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 		String emailPrefix = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
 
+		StringBundler profileUrlSB = new StringBundler(3);
+
+		profileUrlSB.append("http://");
+		profileUrlSB.append(
+			StringUtil.toLowerCase(RandomTestUtil.randomString()));
+		profileUrlSB.append(".com");
+
 		HttpInvoker.HttpResponse httpResponse =
 			_userResource.postV2UserHttpResponse(
 				new User() {
@@ -620,8 +663,7 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 							RandomTestUtil.randomString());
 						preferredLanguage = StringUtil.toLowerCase(
 							RandomTestUtil.randomString());
-						profileUrl = StringUtil.toLowerCase(
-							RandomTestUtil.randomString());
+						profileUrl = profileUrlSB.toString();
 						schemas = new String[] {
 							"urn:ietf:params:scim:schemas:core:2.0:User"
 						};
@@ -713,13 +755,20 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 		return _getGroup(userGroupId);
 	}
 
-	private static String _pid;
-	private static UserResource _userResource;
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private JSONFactory _jsonFactory;
 
+	private String _pid;
+
 	@Inject
 	private UserGroupLocalService _userGroupLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	private UserResource _userResource;
 
 }

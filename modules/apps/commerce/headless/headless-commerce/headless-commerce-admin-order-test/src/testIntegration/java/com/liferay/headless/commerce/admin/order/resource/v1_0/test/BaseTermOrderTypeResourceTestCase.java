@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.TermOrderType;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -42,6 +45,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
 import java.text.Format;
@@ -56,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +104,16 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 			testCompany.getCompanyId());
 
 		termOrderTypeResource = TermOrderTypeResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -184,12 +197,108 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 
 	@Test
 	public void testDeleteTermOrderType() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		TermOrderType termOrderType =
+			testDeleteTermOrderType_addTermOrderType();
+
+		assertHttpResponseStatusCode(
+			204,
+			termOrderTypeResource.deleteTermOrderTypeHttpResponse(
+				termOrderType.getTermOrderTypeId()));
+	}
+
+	protected TermOrderType testDeleteTermOrderType_addTermOrderType()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteTermOrderType() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		TermOrderType termOrderType1 =
+			testGraphQLDeleteTermOrderType_addTermOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTermOrderType",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"termOrderTypeId",
+									termOrderType1.getTermOrderTypeId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteTermOrderType"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		TermOrderType termOrderType2 =
+			testGraphQLDeleteTermOrderType_addTermOrderType();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteTermOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"termOrderTypeId",
+										termOrderType2.getTermOrderTypeId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteTermOrderType"));
+	}
+
+	protected TermOrderType testGraphQLDeleteTermOrderType_addTermOrderType()
+		throws Exception {
+
+		return testGraphQLTermOrderType_addTermOrderType();
+	}
+
+	@Test
+	public void testDeleteTermOrderTypeBatch() throws Exception {
+		TermOrderType termOrderType1 =
+			testDeleteTermOrderTypeBatch_addTermOrderType();
+
+		testDeleteTermOrderTypeBatch_deleteTermOrderType(
+			202, null, termOrderType1.getTermOrderTypeId());
+	}
+
+	protected TermOrderType testDeleteTermOrderTypeBatch_addTermOrderType()
+		throws Exception {
+
+		return testDeleteTermOrderType_addTermOrderType();
+	}
+
+	protected void testDeleteTermOrderTypeBatch_deleteTermOrderType(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			termOrderTypeResource.deleteTermOrderTypeBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"termOrderTypeId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -251,6 +360,12 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 			page,
 			testGetTermByExternalReferenceCodeTermOrderTypesPage_getExpectedActions(
 				externalReferenceCode));
+
+		termOrderTypeResource.deleteTermOrderType(
+			termOrderType1.getTermOrderTypeId());
+
+		termOrderTypeResource.deleteTermOrderType(
+			termOrderType2.getTermOrderTypeId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -270,13 +385,13 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 		String externalReferenceCode =
 			testGetTermByExternalReferenceCodeTermOrderTypesPage_getExternalReferenceCode();
 
-		Page<TermOrderType> termOrderTypePage =
+		Page<TermOrderType> termOrderTypesPage =
 			termOrderTypeResource.
 				getTermByExternalReferenceCodeTermOrderTypesPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			termOrderTypePage.getTotalCount());
+			termOrderTypesPage.getTotalCount());
 
 		TermOrderType termOrderType1 =
 			testGetTermByExternalReferenceCodeTermOrderTypesPage_addTermOrderType(
@@ -398,29 +513,6 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 	}
 
 	@Test
-	public void testPostTermByExternalReferenceCodeTermOrderType()
-		throws Exception {
-
-		TermOrderType randomTermOrderType = randomTermOrderType();
-
-		TermOrderType postTermOrderType =
-			testPostTermByExternalReferenceCodeTermOrderType_addTermOrderType(
-				randomTermOrderType);
-
-		assertEquals(randomTermOrderType, postTermOrderType);
-		assertValid(postTermOrderType);
-	}
-
-	protected TermOrderType
-			testPostTermByExternalReferenceCodeTermOrderType_addTermOrderType(
-				TermOrderType termOrderType)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetTermIdTermOrderTypesPage() throws Exception {
 		Long id = testGetTermIdTermOrderTypesPage_getId();
 		Long irrelevantId = testGetTermIdTermOrderTypesPage_getIrrelevantId();
@@ -466,6 +558,12 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 		assertContains(termOrderType2, (List<TermOrderType>)page.getItems());
 		assertValid(
 			page, testGetTermIdTermOrderTypesPage_getExpectedActions(id));
+
+		termOrderTypeResource.deleteTermOrderType(
+			termOrderType1.getTermOrderTypeId());
+
+		termOrderTypeResource.deleteTermOrderType(
+			termOrderType2.getTermOrderTypeId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -483,11 +581,11 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 
 		Long id = testGetTermIdTermOrderTypesPage_getId();
 
-		Page<TermOrderType> termOrderTypePage =
+		Page<TermOrderType> termOrderTypesPage =
 			termOrderTypeResource.getTermIdTermOrderTypesPage(id, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			termOrderTypePage.getTotalCount());
+			termOrderTypesPage.getTotalCount());
 
 		TermOrderType termOrderType1 =
 			testGetTermIdTermOrderTypesPage_addTermOrderType(
@@ -595,6 +693,29 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 	}
 
 	@Test
+	public void testPostTermByExternalReferenceCodeTermOrderType()
+		throws Exception {
+
+		TermOrderType randomTermOrderType = randomTermOrderType();
+
+		TermOrderType postTermOrderType =
+			testPostTermByExternalReferenceCodeTermOrderType_addTermOrderType(
+				randomTermOrderType);
+
+		assertEquals(randomTermOrderType, postTermOrderType);
+		assertValid(postTermOrderType);
+	}
+
+	protected TermOrderType
+			testPostTermByExternalReferenceCodeTermOrderType_addTermOrderType(
+				TermOrderType termOrderType)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostTermIdTermOrderType() throws Exception {
 		TermOrderType randomTermOrderType = randomTermOrderType();
 
@@ -607,6 +728,63 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 
 	protected TermOrderType testPostTermIdTermOrderType_addTermOrderType(
 			TermOrderType termOrderType)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		TermOrderType termOrderType1 =
+			testBatchEngineDeleteImportTask_addTermOrderType();
+
+		testBatchEngineDeleteImportTask_deleteTermOrderType(
+			200, null, termOrderType1.getTermOrderTypeId());
+	}
+
+	protected TermOrderType testBatchEngineDeleteImportTask_addTermOrderType()
+		throws Exception {
+
+		return testDeleteTermOrderType_addTermOrderType();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteTermOrderType(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.TermOrderType",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"termOrderTypeId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	protected TermOrderType testGraphQLTermOrderType_addTermOrderType()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -685,6 +863,10 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 
 	protected void assertValid(TermOrderType termOrderType) throws Exception {
 		boolean valid = true;
+
+		if (termOrderType.getTermOrderTypeId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -1241,7 +1423,30 @@ public abstract class BaseTermOrderTypeResourceTestCase {
 		return randomTermOrderType();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected TermOrderTypeResource termOrderTypeResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;

@@ -8,7 +8,10 @@ package com.liferay.object.entry.util;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
 
+import java.io.Serializable;
+
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -20,6 +23,18 @@ public class ObjectEntryThreadLocal {
 		Set<Long> validatedObjectEntryIds = _validatedObjectEntryIds.get();
 
 		validatedObjectEntryIds.add(objectEntryId);
+	}
+
+	public static void clearExpandoBridgeAttributes() {
+		_expandoBridgeAttributes.remove();
+	}
+
+	public static Map<String, Serializable> getExpandoBridgeAttributes() {
+		return _expandoBridgeAttributes.get();
+	}
+
+	public static Long getObjectEntryFolderId() {
+		return _objectEntryFolderId.get();
 	}
 
 	public static boolean isDisassociateRelatedModels() {
@@ -51,6 +66,18 @@ public class ObjectEntryThreadLocal {
 			disassociateRelatedModels);
 	}
 
+	public static void setExpandoBridgeAttributes(
+		Map<String, Serializable> expandoValues) {
+
+		_expandoBridgeAttributes.set(expandoValues);
+	}
+
+	public static SafeCloseable setObjectEntryFolderIdWithSafeCloseable(
+		Long objectEntryFolderId) {
+
+		return _objectEntryFolderId.setWithSafeCloseable(objectEntryFolderId);
+	}
+
 	public static void setSkipObjectEntryResourcePermission(
 		boolean skipObjectEntryResourcePermission) {
 
@@ -74,6 +101,12 @@ public class ObjectEntryThreadLocal {
 		_disassociateRelatedModels = new CentralizedThreadLocal<>(
 			ObjectEntryThreadLocal.class + "._disassociateRelatedModels",
 			() -> false);
+	private static final ThreadLocal<Map<String, Serializable>>
+		_expandoBridgeAttributes = new CentralizedThreadLocal<>(
+			ObjectEntryThreadLocal.class + "._expandoBridgeAttributes");
+	private static final CentralizedThreadLocal<Long> _objectEntryFolderId =
+		new CentralizedThreadLocal<>(
+			ObjectEntryThreadLocal.class + "._objectEntryFolderId", () -> null);
 	private static final ThreadLocal<Boolean>
 		_skipObjectEntryResourcePermission = new CentralizedThreadLocal<>(
 			ObjectEntryThreadLocal.class +

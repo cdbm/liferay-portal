@@ -19,6 +19,7 @@ import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.AttachmentBase64;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -53,8 +54,8 @@ public class AttachmentResourceTest extends BaseAttachmentResourceTestCase {
 				TestPropsValues.getUserId());
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			TestPropsValues.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, TestPropsValues.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null,
 			RandomTestUtil.randomString(), "business", 1, serviceContext);
 
@@ -181,15 +182,6 @@ public class AttachmentResourceTest extends BaseAttachmentResourceTestCase {
 		throws Exception {
 
 		return _commerceOrder.getExternalReferenceCode();
-	}
-
-	@Override
-	protected Attachment testGraphQLAttachment_addAttachment()
-		throws Exception {
-
-		return attachmentResource.postPlacedOrderAttachmentByBase64(
-			_commerceOrder.getCommerceOrderId(),
-			_toAttachmentBase64(randomAttachment()));
 	}
 
 	@Override

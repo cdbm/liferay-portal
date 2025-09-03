@@ -16,13 +16,15 @@ type Specification = {
 type LicenceTiersPrices = {
 	developer: LicensePrice[];
 	standard: LicensePrice[];
+	trial: any;
 };
 
 export type LicensePrice = {key: number; value: number};
 
 export type InitialStateProps = {
+	appAreas: Categories[];
 	appBuild: string;
-	appCategories: Categories[];
+	appCategory: string;
 	appDescription: string;
 	appDocumentationURL: Specification;
 	appERC: string;
@@ -67,7 +69,7 @@ export type PriceEntry = {priceEntryId: number; sku: {name: string}};
 
 const initialState = {
 	appBuild: 'upload',
-	appCategories: [],
+	appCategory: '',
 	appDescription: '',
 	appLicense: {value: 'Perpetual'},
 	appLicensePrice: {

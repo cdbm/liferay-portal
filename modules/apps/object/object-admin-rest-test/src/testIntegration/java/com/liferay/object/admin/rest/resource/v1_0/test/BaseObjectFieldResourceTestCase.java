@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
@@ -57,6 +60,16 @@ import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -74,16 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,6 +133,16 @@ public abstract class BaseObjectFieldResourceTestCase {
 			testCompany.getCompanyId());
 
 		objectFieldResource = ObjectFieldResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
 		).authentication(
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
@@ -223,6 +236,148 @@ public abstract class BaseObjectFieldResourceTestCase {
 			regex, objectField.getObjectRelationshipExternalReferenceCode());
 		Assert.assertEquals(
 			regex, objectField.getReadOnlyConditionExpression());
+	}
+
+	@Test
+	public void testDeleteObjectField() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectField objectField = testDeleteObjectField_addObjectField();
+
+		assertHttpResponseStatusCode(
+			204,
+			objectFieldResource.deleteObjectFieldHttpResponse(
+				objectField.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			objectFieldResource.getObjectFieldHttpResponse(
+				objectField.getId()));
+		assertHttpResponseStatusCode(
+			404, objectFieldResource.getObjectFieldHttpResponse(0L));
+	}
+
+	protected ObjectField testDeleteObjectField_addObjectField()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteObjectField() throws Exception {
+
+		// No namespace
+
+		ObjectField objectField1 =
+			testGraphQLDeleteObjectField_addObjectField();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteObjectField",
+						new HashMap<String, Object>() {
+							{
+								put("objectFieldId", objectField1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteObjectField"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectField",
+					new HashMap<String, Object>() {
+						{
+							put("objectFieldId", objectField1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectField objectField2 =
+			testGraphQLDeleteObjectField_addObjectField();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectField",
+							new HashMap<String, Object>() {
+								{
+									put("objectFieldId", objectField2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectField"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectField",
+						new HashMap<String, Object>() {
+							{
+								put("objectFieldId", objectField2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ObjectField testGraphQLDeleteObjectField_addObjectField()
+		throws Exception {
+
+		return testGraphQLObjectField_addObjectField();
+	}
+
+	@Test
+	public void testDeleteObjectFieldBatch() throws Exception {
+		ObjectField objectField1 = testDeleteObjectFieldBatch_addObjectField();
+
+		testDeleteObjectFieldBatch_deleteObjectField(
+			202, null, objectField1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectFieldResource.getObjectFieldHttpResponse(
+				objectField1.getId()));
+	}
+
+	protected ObjectField testDeleteObjectFieldBatch_addObjectField()
+		throws Exception {
+
+		return testDeleteObjectField_addObjectField();
+	}
+
+	protected void testDeleteObjectFieldBatch_deleteObjectField(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectFieldResource.deleteObjectFieldBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -412,12 +567,13 @@ public abstract class BaseObjectFieldResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
 
-		Page<ObjectField> objectFieldPage =
+		Page<ObjectField> objectFieldsPage =
 			objectFieldResource.
 				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
 					externalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(objectFieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			objectFieldsPage.getTotalCount());
 
 		ObjectField objectField1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
@@ -691,29 +847,6 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testPostObjectDefinitionByExternalReferenceCodeObjectField()
-		throws Exception {
-
-		ObjectField randomObjectField = randomObjectField();
-
-		ObjectField postObjectField =
-			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
-				randomObjectField);
-
-		assertEquals(randomObjectField, postObjectField);
-		assertValid(postObjectField);
-	}
-
-	protected ObjectField
-			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
-				ObjectField objectField)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetObjectDefinitionObjectFieldsPage() throws Exception {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectFieldsPage_getObjectDefinitionId();
@@ -898,11 +1031,12 @@ public abstract class BaseObjectFieldResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectFieldsPage_getObjectDefinitionId();
 
-		Page<ObjectField> objectFieldPage =
+		Page<ObjectField> objectFieldsPage =
 			objectFieldResource.getObjectDefinitionObjectFieldsPage(
 				objectDefinitionId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(objectFieldPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			objectFieldsPage.getTotalCount());
 
 		ObjectField objectField1 =
 			testGetObjectDefinitionObjectFieldsPage_addObjectField(
@@ -1160,130 +1294,6 @@ public abstract class BaseObjectFieldResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostObjectDefinitionObjectField() throws Exception {
-		ObjectField randomObjectField = randomObjectField();
-
-		ObjectField postObjectField =
-			testPostObjectDefinitionObjectField_addObjectField(
-				randomObjectField);
-
-		assertEquals(randomObjectField, postObjectField);
-		assertValid(postObjectField);
-	}
-
-	protected ObjectField testPostObjectDefinitionObjectField_addObjectField(
-			ObjectField objectField)
-		throws Exception {
-
-		return objectFieldResource.postObjectDefinitionObjectField(
-			testGetObjectDefinitionObjectFieldsPage_getObjectDefinitionId(),
-			objectField);
-	}
-
-	@Test
-	public void testDeleteObjectField() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectField objectField = testDeleteObjectField_addObjectField();
-
-		assertHttpResponseStatusCode(
-			204,
-			objectFieldResource.deleteObjectFieldHttpResponse(
-				objectField.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			objectFieldResource.getObjectFieldHttpResponse(
-				objectField.getId()));
-
-		assertHttpResponseStatusCode(
-			404, objectFieldResource.getObjectFieldHttpResponse(0L));
-	}
-
-	protected ObjectField testDeleteObjectField_addObjectField()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteObjectField() throws Exception {
-
-		// No namespace
-
-		ObjectField objectField1 =
-			testGraphQLDeleteObjectField_addObjectField();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteObjectField",
-						new HashMap<String, Object>() {
-							{
-								put("objectFieldId", objectField1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteObjectField"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectField",
-					new HashMap<String, Object>() {
-						{
-							put("objectFieldId", objectField1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace objectAdmin_v1_0
-
-		ObjectField objectField2 =
-			testGraphQLDeleteObjectField_addObjectField();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"deleteObjectField",
-							new HashMap<String, Object>() {
-								{
-									put("objectFieldId", objectField2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-				"Object/deleteObjectField"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectAdmin_v1_0",
-					new GraphQLField(
-						"objectField",
-						new HashMap<String, Object>() {
-							{
-								put("objectFieldId", objectField2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ObjectField testGraphQLDeleteObjectField_addObjectField()
-		throws Exception {
-
-		return testGraphQLObjectField_addObjectField();
 	}
 
 	@Test
@@ -1617,6 +1627,50 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
+	public void testPostObjectDefinitionByExternalReferenceCodeObjectField()
+		throws Exception {
+
+		ObjectField randomObjectField = randomObjectField();
+
+		ObjectField postObjectField =
+			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
+				randomObjectField);
+
+		assertEquals(randomObjectField, postObjectField);
+		assertValid(postObjectField);
+	}
+
+	protected ObjectField
+			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
+				ObjectField objectField)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostObjectDefinitionObjectField() throws Exception {
+		ObjectField randomObjectField = randomObjectField();
+
+		ObjectField postObjectField =
+			testPostObjectDefinitionObjectField_addObjectField(
+				randomObjectField);
+
+		assertEquals(randomObjectField, postObjectField);
+		assertValid(postObjectField);
+	}
+
+	protected ObjectField testPostObjectDefinitionObjectField_addObjectField(
+			ObjectField objectField)
+		throws Exception {
+
+		return objectFieldResource.postObjectDefinitionObjectField(
+			testGetObjectDefinitionObjectFieldsPage_getObjectDefinitionId(),
+			objectField);
+	}
+
+	@Test
 	public void testPutObjectField() throws Exception {
 		ObjectField postObjectField = testPutObjectField_addObjectField();
 
@@ -1638,6 +1692,61 @@ public abstract class BaseObjectFieldResourceTestCase {
 	protected ObjectField testPutObjectField_addObjectField() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		ObjectField objectField1 =
+			testBatchEngineDeleteImportTask_addObjectField();
+
+		testBatchEngineDeleteImportTask_deleteObjectField(
+			200, null, objectField1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectFieldResource.getObjectFieldHttpResponse(
+				objectField1.getId()));
+	}
+
+	protected ObjectField testBatchEngineDeleteImportTask_addObjectField()
+		throws Exception {
+
+		return testDeleteObjectField_addObjectField();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteObjectField(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectField", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
@@ -3000,7 +3109,30 @@ public abstract class BaseObjectFieldResourceTestCase {
 		return randomObjectField();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectFieldResource objectFieldResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
