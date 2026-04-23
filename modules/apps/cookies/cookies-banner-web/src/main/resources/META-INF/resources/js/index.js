@@ -15,6 +15,8 @@ export {default as CookiesBannerConfiguration} from '../cookies_banner_configura
 
 export {default as ConfigurationFormEventHandler} from './ConfigurationFormEventHandler';
 
+export {initGPC, isGPCSignalActive} from './GPCUtil';
+
 export {
 	default as toggleThirdPartyCookies,
 	runThirdPartyCookiesInterval,
