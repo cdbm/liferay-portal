@@ -556,7 +556,7 @@ public class JournalContentImpl implements JournalContent {
 						null)));
 	}
 
-	private static final String _NONCE_PLACEHOLDER = "data-lfr-nonce";
+	private static final String _NONCE_PLACEHOLDER = " data-lfr-nonce";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentImpl.class);
