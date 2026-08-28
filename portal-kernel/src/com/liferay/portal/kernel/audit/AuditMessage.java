@@ -5,18 +5,12 @@
 
 package com.liferay.portal.kernel.audit;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalRunMode;
-import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
@@ -63,49 +57,6 @@ public class AuditMessage implements Serializable {
 		_contextName = contextName;
 		_eventType = eventType;
 		_message = message;
-
-		AuditRequestThreadLocal auditRequestThreadLocal =
-			AuditRequestThreadLocal.getAuditThreadLocal();
-
-		_clientHost = auditRequestThreadLocal.getClientHost();
-		_clientIP = auditRequestThreadLocal.getClientIP();
-		_serverName = auditRequestThreadLocal.getServerName();
-		_serverPort = auditRequestThreadLocal.getServerPort();
-		_sessionID = auditRequestThreadLocal.getSessionID();
-		_userEmailAddress = auditRequestThreadLocal.getRealUserEmailAddress();
-
-		long realUserId = auditRequestThreadLocal.getRealUserId();
-
-		long doAsUserId = 0;
-
-		if (PrincipalThreadLocal.getName() != null) {
-			doAsUserId = GetterUtil.getLong(PrincipalThreadLocal.getName());
-		}
-
-		if ((realUserId > 0) && (doAsUserId != realUserId) &&
-			!_additionalInfoJSONObject.has("doAsUserId")) {
-
-			_additionalInfoJSONObject.put(
-				"doAsUserEmailAddress",
-				PortalUtil.getUserEmailAddress(doAsUserId)
-			).put(
-				"doAsUserId", String.valueOf(doAsUserId)
-			).put(
-				"doAsUserName",
-				PortalUtil.getUserName(doAsUserId, StringPool.BLANK)
-			);
-		}
-
-		if (userId == realUserId) {
-			_userLogin = auditRequestThreadLocal.getRealUserLogin();
-		}
-
-		// LPS-172507
-
-		else if ((realUserId > 0) && !PortalRunMode.isTestMode()) {
-			_log.error(
-				"Impersonated actions must be audited on the real user's ID");
-		}
 	}
 
 	public AuditMessage(
@@ -446,8 +397,6 @@ public class AuditMessage implements Serializable {
 	private static final String _USER_LOGIN = "userLogin";
 
 	private static final String _USER_NAME = "userName";
-
-	private static final Log _log = LogFactoryUtil.getLog(AuditMessage.class);
 
 	private long _accountEntryId;
 	private JSONObject _additionalInfoJSONObject;
