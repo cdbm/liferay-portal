@@ -6,7 +6,7 @@
 package com.liferay.portal.action;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -322,14 +322,13 @@ public class LayoutAction implements Action {
 						);
 					}
 
-					AuditMessage auditMessage = new AuditMessage(
-						layout.getGroupId(), realUser.getCompanyId(),
-						realUser.getUserId(), realUser.getFullName(), null,
-						additionalInfoJSONObject, Layout.class.getName(),
-						String.valueOf(layout.getPlid()), ActionKeys.VIEW,
-						null);
-
-					AuditRouterUtil.route(auditMessage);
+					AuditRouterUtil.route(
+						AuditMessageFactoryUtil.getAuditMessage(
+							layout.getGroupId(), realUser.getCompanyId(),
+							realUser.getUserId(), realUser.getFullName(), null,
+							additionalInfoJSONObject, Layout.class.getName(),
+							String.valueOf(layout.getPlid()), ActionKeys.VIEW,
+							null));
 				}
 			}
 

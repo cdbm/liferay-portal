@@ -8,7 +8,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
-import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -154,7 +154,7 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 			long userId = getUserId();
 
 			AuditRouterUtil.route(
-				new AuditMessage(
+				AuditMessageFactoryUtil.getAuditMessage(
 					0, company.getCompanyId(), userId,
 					PortalUtil.getUserName(userId, StringPool.BLANK), null,
 					JSONUtil.put(
@@ -189,7 +189,7 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 			long userId = getUserId();
 
 			AuditRouterUtil.route(
-				new AuditMessage(
+				AuditMessageFactoryUtil.getAuditMessage(
 					0, company.getCompanyId(), userId,
 					PortalUtil.getUserName(userId, StringPool.BLANK), null,
 					JSONUtil.put(
@@ -247,7 +247,7 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 			long userId = getUserId();
 
 			AuditRouterUtil.route(
-				new AuditMessage(
+				AuditMessageFactoryUtil.getAuditMessage(
 					0, company.getCompanyId(), userId,
 					PortalUtil.getUserName(userId, StringPool.BLANK), null,
 					JSONUtil.put(
