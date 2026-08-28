@@ -17,22 +17,34 @@ public class AuditMessageFactory {
 
 	public AuditMessage getAuditMessage(
 		long groupId, long companyId, long userId, String userName,
-		Date timestamp, JSONObject additionalInfoJSONObject, String className,
-		String classPK, String eventType, String message) {
+		Date timestampDate, JSONObject additionalInfoJSONObject,
+		String className, String classPK, String eventType, String message) {
 
-		return new AuditMessage(
-			groupId, companyId, userId, userName, timestamp,
+		return AuditMessageFactoryUtil.getAuditMessage(
+			groupId, companyId, userId, userName, timestampDate,
 			additionalInfoJSONObject, className, classPK, eventType, message);
 	}
 
 	public AuditMessage getAuditMessage(
-		long companyId, long userId, String userName, Date timestamp,
+		long groupId, long companyId, long userId, String userName,
+		Date timestampDate, long accountEntryId,
+		JSONObject additionalInfoJSONObject, String className, String classPK,
+		String contextName, String eventType, String message) {
+
+		return AuditMessageFactoryUtil.getAuditMessage(
+			groupId, companyId, userId, userName, timestampDate, accountEntryId,
+			additionalInfoJSONObject, className, classPK, contextName,
+			eventType, message);
+	}
+
+	public AuditMessage getAuditMessage(
+		long companyId, long userId, String userName, Date timestampDate,
 		JSONObject additionalInfoJSONObject, String className, String classPK,
 		String eventType, String message) {
 
-		return new AuditMessage(
-			companyId, userId, userName, timestamp, additionalInfoJSONObject,
-			className, classPK, eventType, message);
+		return AuditMessageFactoryUtil.getAuditMessage(
+			companyId, userId, userName, timestampDate,
+			additionalInfoJSONObject, className, classPK, eventType, message);
 	}
 
 	public AuditMessage getAuditMessage(
@@ -40,7 +52,7 @@ public class AuditMessageFactory {
 		JSONObject additionalInfoJSONObject, String className, String classPK,
 		String eventType, String message) {
 
-		return new AuditMessage(
+		return AuditMessageFactoryUtil.getAuditMessage(
 			companyId, userId, userName, additionalInfoJSONObject, className,
 			classPK, eventType, message);
 	}
@@ -48,14 +60,15 @@ public class AuditMessageFactory {
 	public AuditMessage getAuditMessage(
 		long companyId, long userId, String userName, String eventType) {
 
-		return new AuditMessage(companyId, userId, userName, eventType);
+		return AuditMessageFactoryUtil.getAuditMessage(
+			companyId, userId, userName, eventType);
 	}
 
 	public AuditMessage getAuditMessage(
 		long companyId, long userId, String userName, String className,
 		String classPK, String eventType) {
 
-		return new AuditMessage(
+		return AuditMessageFactoryUtil.getAuditMessage(
 			companyId, userId, userName, className, classPK, eventType);
 	}
 
@@ -63,7 +76,7 @@ public class AuditMessageFactory {
 		long companyId, long userId, String userName, String className,
 		String classPK, String eventType, String message) {
 
-		return new AuditMessage(
+		return AuditMessageFactoryUtil.getAuditMessage(
 			companyId, userId, userName, className, classPK, eventType,
 			message);
 	}
