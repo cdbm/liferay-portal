@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.AuthFailure;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import java.util.Map;
 
@@ -123,7 +124,7 @@ public class LoginAuthFailure implements AuthFailure {
 			"reason", reason
 		);
 
-		AuditMessage auditMessage = new AuditMessage(
+		AuditMessage auditMessage = AuditMessageBuilder.buildAuditMessage(
 			user.getCompanyId(), user.getUserId(), user.getFullName(),
 			additionalInfoJSONObject, User.class.getName(),
 			String.valueOf(user.getPrimaryKey()), EventTypes.LOGIN_FAILURE,

@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -391,7 +392,7 @@ public class LiferayDynamicRegistrationService
 			"scope", liferayClientRegistrationResponse.getScope()
 		);
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			0, _getCompanyId(), 0, StringPool.BLANK, null,
 			additionalInfoJSONObject, OAuth2Application.class.getName(),
 			GetterUtil.getString(
@@ -521,7 +522,7 @@ public class LiferayDynamicRegistrationService
 			"scope", scope
 		);
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			0, _getCompanyId(), 0, StringPool.BLANK, null,
 			additionalInfoJSONObject, OAuth2Application.class.getName(),
 			StringPool.BLANK,

@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.annotation.Priority;
 
@@ -441,7 +442,7 @@ public class DynamicRegistrationServiceContainerRequestFilter
 		String errorDescription, HttpServletRequest httpServletRequest,
 		String mode) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			0, companyId, 0, StringPool.BLANK, null,
 			JSONUtil.put(
 				"clientHost", clientHost

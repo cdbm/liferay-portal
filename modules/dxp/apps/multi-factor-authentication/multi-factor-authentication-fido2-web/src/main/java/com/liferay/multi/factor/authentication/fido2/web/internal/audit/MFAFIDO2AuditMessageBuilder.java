@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,7 +27,7 @@ public class MFAFIDO2AuditMessageBuilder {
 	public AuditMessage buildNonexistentUserVerificationFailureAuditMessage(
 		long companyId, long userId, String checkerClassName) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			companyId, userId, "Nonexistent",
 			JSONUtil.put("reason", "Nonexistent User"), checkerClassName,
 			String.valueOf(userId),
@@ -36,7 +37,7 @@ public class MFAFIDO2AuditMessageBuilder {
 	public AuditMessage buildNotVerifiedAuditMessage(
 		User user, String checkerClassName, String reason) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			user.getCompanyId(), user.getUserId(), user.getFullName(),
 			JSONUtil.put("reason", reason), checkerClassName,
 			String.valueOf(user.getPrimaryKey()),
@@ -46,7 +47,7 @@ public class MFAFIDO2AuditMessageBuilder {
 	public AuditMessage buildUnconfiguredUserVerificationFailureAuditMessage(
 		long companyId, User user, String checkerClassName) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			companyId, user.getUserId(), "Unconfigured",
 			JSONUtil.put("reason", "Unconfigured for User"), checkerClassName,
 			null, MFAFIDO2EventTypes.MFA_FIDO2_VERIFICATION_FAILURE, null);
@@ -55,7 +56,7 @@ public class MFAFIDO2AuditMessageBuilder {
 	public AuditMessage buildVerificationFailureAuditMessage(
 		User user, String checkerClassName, String reason) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			user.getCompanyId(), user.getUserId(), user.getFullName(),
 			JSONUtil.put("reason", reason), checkerClassName,
 			String.valueOf(user.getPrimaryKey()),
@@ -65,7 +66,7 @@ public class MFAFIDO2AuditMessageBuilder {
 	public AuditMessage buildVerifiedAuditMessage(
 		User user, String checkerClassName) {
 
-		return new AuditMessage(
+		return AuditMessageBuilder.buildAuditMessage(
 			user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 			checkerClassName, String.valueOf(user.getPrimaryKey()),
 			MFAFIDO2EventTypes.MFA_FIDO2_VERIFIED, null);

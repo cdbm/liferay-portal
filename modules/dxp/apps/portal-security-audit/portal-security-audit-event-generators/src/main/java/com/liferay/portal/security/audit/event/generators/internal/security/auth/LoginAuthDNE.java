@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.AuthDNE;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class LoginAuthDNE implements AuthDNE {
 		Map<String, String[]> headerMap, Map<String, String[]> parameterMap) {
 
 		try {
-			AuditMessage auditMessage = new AuditMessage(
+			AuditMessage auditMessage = AuditMessageBuilder.buildAuditMessage(
 				companyId, 0, null,
 				JSONUtil.put(
 					"authType", authType

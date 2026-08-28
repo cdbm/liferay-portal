@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.servlet.filters.invoker.InvokerFilterChain;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,7 +61,7 @@ public class LoginPostAction extends Action {
 
 		invokerFilterChain.doFilter(httpServletRequest, httpServletResponse);
 
-		AuditMessage auditMessage = new AuditMessage(
+		AuditMessage auditMessage = AuditMessageBuilder.buildAuditMessage(
 			user.getCompanyId(), user.getUserId(), user.getFullName(),
 			User.class.getName(), String.valueOf(user.getUserId()),
 			EventTypes.LOGIN);

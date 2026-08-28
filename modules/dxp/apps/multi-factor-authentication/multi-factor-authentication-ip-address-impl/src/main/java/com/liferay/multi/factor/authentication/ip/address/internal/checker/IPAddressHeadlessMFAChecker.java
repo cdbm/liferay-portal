@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.security.access.control.AccessControlUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -138,7 +139,7 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 		public AuditMessage buildNonexistentUserVerificationFailureAuditMessage(
 			long companyId, long userId, String mfaCheckerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				companyId, userId, "Nonexistent",
 				JSONUtil.put("reason", "Nonexistent User"), mfaCheckerClassName,
 				String.valueOf(userId),
@@ -149,7 +150,7 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 		public AuditMessage buildVerificationFailureAuditMessage(
 			User user, String mfaCheckerClassName, String reason) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(),
 				JSONUtil.put("reason", reason), mfaCheckerClassName,
 				String.valueOf(user.getPrimaryKey()),
@@ -160,7 +161,7 @@ public class IPAddressHeadlessMFAChecker implements HeadlessMFAChecker {
 		public AuditMessage buildVerificationSuccessAuditMessage(
 			User user, String mfaCheckerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 				mfaCheckerClassName, String.valueOf(user.getPrimaryKey()),
 				MFAIPAddressEventTypes.MFA_IP_ADDRESS_VERIFICATION_SUCCESS,

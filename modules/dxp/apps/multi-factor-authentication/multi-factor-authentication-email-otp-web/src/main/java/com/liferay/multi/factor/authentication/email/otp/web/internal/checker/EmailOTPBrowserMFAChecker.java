@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -403,7 +404,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 		public AuditMessage buildNonexistentUserVerificationFailureAuditMessage(
 			long companyId, long userId, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				companyId, userId, "Nonexistent",
 				JSONUtil.put("reason", "Nonexistent User"), checkerClassName,
 				String.valueOf(userId),
@@ -413,7 +414,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 		public AuditMessage buildNotVerifiedAuditMessage(
 			User user, String checkerClassName, String reason) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(),
 				JSONUtil.put("reason", reason), checkerClassName,
 				String.valueOf(user.getPrimaryKey()),
@@ -423,7 +424,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 		public AuditMessage buildVerificationFailureAuditMessage(
 			User user, String checkerClassName, String reason) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(),
 				JSONUtil.put("reason", reason), checkerClassName,
 				String.valueOf(user.getPrimaryKey()),
@@ -433,7 +434,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 		public AuditMessage buildVerificationSuccessAuditMessage(
 			User user, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 				checkerClassName, String.valueOf(user.getPrimaryKey()),
 				MFAEmailOTPEventTypes.MFA_EMAIL_OTP_VERIFICATION_SUCCESS, null);
@@ -442,7 +443,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 		public AuditMessage buildVerifiedAuditMessage(
 			User user, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 				checkerClassName, String.valueOf(user.getPrimaryKey()),
 				MFAEmailOTPEventTypes.MFA_EMAIL_OTP_VERIFIED, null);

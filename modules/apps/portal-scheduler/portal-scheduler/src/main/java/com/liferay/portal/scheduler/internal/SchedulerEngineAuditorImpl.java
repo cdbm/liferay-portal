@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.scheduler.TriggerState;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.scheduler.internal.configuration.SchedulerEngineHelperConfiguration;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import java.util.Date;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class SchedulerEngineAuditorImpl implements SchedulerEngineAuditor {
 		}
 
 		try {
-			AuditMessage auditMessage = new AuditMessage(
+			AuditMessage auditMessage = AuditMessageBuilder.buildAuditMessage(
 				CompanyConstants.SYSTEM, 0, StringPool.BLANK, new Date(),
 				_jsonFactory.createJSONObject(_jsonFactory.serialize(message)),
 				SchedulerEngine.class.getName(), "0", SchedulerEngine.SCHEDULER,

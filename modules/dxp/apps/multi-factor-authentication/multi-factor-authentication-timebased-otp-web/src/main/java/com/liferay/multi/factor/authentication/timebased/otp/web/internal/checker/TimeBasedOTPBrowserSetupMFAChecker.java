@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.mail.internet.InternetAddress;
 
@@ -550,7 +551,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 		public AuditMessage buildNonexistentUserVerificationFailureAuditMessage(
 			long companyId, long userId, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				companyId, userId, "Nonexistent",
 				JSONUtil.put("reason", "Nonexistent User"), checkerClassName,
 				String.valueOf(userId),
@@ -562,7 +563,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 		public AuditMessage buildNotVerifiedAuditMessage(
 			User user, String checkerClassName, String reason) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(),
 				JSONUtil.put("reason", reason), checkerClassName,
 				String.valueOf(user.getPrimaryKey()),
@@ -573,7 +574,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 			buildUnconfiguredUserVerificationFailureAuditMessage(
 				long companyId, User user, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				companyId, user.getUserId(), "Unconfigured",
 				JSONUtil.put("reason", "Unconfigured for User"),
 				checkerClassName, null,
@@ -585,7 +586,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 		public AuditMessage buildVerificationFailureAuditMessage(
 			User user, String checkerClassName, String reason) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(),
 				JSONUtil.put("reason", reason), checkerClassName,
 				String.valueOf(user.getPrimaryKey()),
@@ -597,7 +598,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 		public AuditMessage buildVerificationSuccessAuditMessage(
 			User user, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 				checkerClassName, String.valueOf(user.getPrimaryKey()),
 				MFATimeBasedOTPEventTypes.
@@ -608,7 +609,7 @@ public class TimeBasedOTPBrowserSetupMFAChecker
 		public AuditMessage buildVerifiedAuditMessage(
 			User user, String checkerClassName) {
 
-			return new AuditMessage(
+			return AuditMessageBuilder.buildAuditMessage(
 				user.getCompanyId(), user.getUserId(), user.getFullName(), null,
 				checkerClassName, String.valueOf(user.getPrimaryKey()),
 				MFATimeBasedOTPEventTypes.MFA_TIMEBASED_OTP_VERIFIED, null);

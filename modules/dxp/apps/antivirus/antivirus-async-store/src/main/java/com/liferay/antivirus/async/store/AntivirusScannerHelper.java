@@ -20,7 +20,6 @@ import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.audit.AuditRouter;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -34,6 +33,7 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import java.io.InputStream;
 
@@ -179,7 +179,7 @@ public class AntivirusScannerHelper {
 						}
 
 						_auditRouter.route(
-							new AuditMessage(
+							AuditMessageBuilder.buildAuditMessage(
 								companyId, 0, StringPool.BLANK,
 								JSONUtil.put(
 									"fileEntryId", classPK

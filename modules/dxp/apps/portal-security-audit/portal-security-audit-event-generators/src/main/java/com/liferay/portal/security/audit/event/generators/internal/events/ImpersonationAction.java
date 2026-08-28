@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.event.generators.util.AuditMessageBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -89,11 +90,12 @@ public class ImpersonationAction extends Action {
 					"userName", user.getFullName()
 				);
 
-				AuditMessage auditMessage = new AuditMessage(
-					themeDisplay.getCompanyId(), realUser.getUserId(),
-					realUser.getFullName(), additionalInfoJSONObject,
-					User.class.getName(), String.valueOf(user.getUserId()),
-					EventTypes.IMPERSONATE, null);
+				AuditMessage auditMessage =
+					AuditMessageBuilder.buildAuditMessage(
+						themeDisplay.getCompanyId(), realUser.getUserId(),
+						realUser.getFullName(), additionalInfoJSONObject,
+						User.class.getName(), String.valueOf(user.getUserId()),
+						EventTypes.IMPERSONATE, null);
 
 				_auditRouter.route(auditMessage);
 			}
